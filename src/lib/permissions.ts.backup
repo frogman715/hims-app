@@ -1,0 +1,1086 @@
+/**
+ * HANMARINE INTEGRATED MANAGEMENT SYSTEM (HIMS) v2
+ * PERMISSION & ACCESS CONTROL MATRIX
+ * Version 2.0 - November 2025
+ *
+ * Updated according to MASTER SPEC v2 with final roles and sensitivity matrix
+ */
+
+// ==========================================
+// USER ROLES DEFINITION (FINAL)
+// ==========================================
+
+export enum UserRole {
+  DIRECTOR = 'DIRECTOR',        // Top management - full access
+  CDMO = 'CDMO',                // Crew Documentation & Mobilization Officer
+  OPERATIONAL = 'OPERATIONAL',  // Operational staff - limited access
+  ACCOUNTING = 'ACCOUNTING',    // Accounting department
+  HR = 'HR',                    // HR department
+  CREW_PORTAL = 'CREW_PORTAL'   // Crew self-service
+}
+
+export enum PermissionLevel {
+  NO_ACCESS = 'NO_ACCESS',
+  VIEW_ACCESS = 'VIEW_ACCESS',
+  EDIT_ACCESS = 'EDIT_ACCESS',
+  FULL_ACCESS = 'FULL_ACCESS'
+}
+
+export enum ModuleName {
+  // Core modules
+  dashboard = 'dashboard',
+  crew = 'crew',
+  principals = 'principals',
+  contracts = 'contracts',
+  applications = 'applications',
+  assignments = 'assignments',
+  vessels = 'vessels',
+
+  // Document modules
+  documents = 'documents',
+  medical = 'medical',
+  visas = 'visas',
+
+  // Business modules
+  agencyFees = 'agencyFees',
+  accounting = 'accounting',
+  wageScales = 'wageScales',
+  agencyAgreements = 'agencyAgreements',
+
+  // Compliance modules
+  disciplinary = 'disciplinary',
+  quality = 'quality',
+  nationalHolidays = 'nationalHolidays',
+
+  // Operational modules
+  crewing = 'crewing',
+  insurance = 'insurance',
+  dispatches = 'dispatches',
+  pkl = 'pkl'
+}
+
+export enum DataSensitivity {
+  RED = 'RED',      // Highly Sensitive (medical, full SEA, salary breakdown)
+  AMBER = 'AMBER',  // Sensitive (personal data, disciplinary cases)
+  GREEN = 'GREEN'   // Internal/Normal (public vessel info, procedures)
+}
+
+// ==========================================
+// PERMISSION MATRIX (FINAL)
+// ==========================================
+
+export const PERMISSION_MATRIX: Record<UserRole, Record<ModuleName, PermissionLevel>> = {
+  [UserRole.DIRECTOR]: {
+    // Full access to everything
+    dashboard: PermissionLevel.FULL_ACCESS,
+    crew: PermissionLevel.FULL_ACCESS,
+    principals: PermissionLevel.FULL_ACCESS,
+    contracts: PermissionLevel.FULL_ACCESS,
+    applications: PermissionLevel.FULL_ACCESS,
+    assignments: PermissionLevel.FULL_ACCESS,
+    vessels: PermissionLevel.FULL_ACCESS,
+    documents: PermissionLevel.FULL_ACCESS,
+    medical: PermissionLevel.FULL_ACCESS,
+    visas: PermissionLevel.FULL_ACCESS,
+    agencyFees: PermissionLevel.FULL_ACCESS,
+    accounting: PermissionLevel.FULL_ACCESS,
+    wageScales: PermissionLevel.FULL_ACCESS,
+    agencyAgreements: PermissionLevel.FULL_ACCESS,
+    disciplinary: PermissionLevel.FULL_ACCESS,
+    quality: PermissionLevel.FULL_ACCESS,
+    nationalHolidays: PermissionLevel.FULL_ACCESS,
+    crewing: PermissionLevel.FULL_ACCESS,
+    insurance: PermissionLevel.FULL_ACCESS,
+    dispatches: PermissionLevel.FULL_ACCESS,
+    pkl: PermissionLevel.FULL_ACCESS
+  },
+
+  [UserRole.CDMO]: {
+    // Full crew management, documents, contracts, agency agreements
+    dashboard: PermissionLevel.FULL_ACCESS,
+    crew: PermissionLevel.FULL_ACCESS,
+    principals: PermissionLevel.FULL_ACCESS,
+    contracts: PermissionLevel.FULL_ACCESS,
+    applications: PermissionLevel.FULL_ACCESS,
+    assignments: PermissionLevel.FULL_ACCESS,
+    vessels: PermissionLevel.FULL_ACCESS,
+    documents: PermissionLevel.FULL_ACCESS,
+    medical: PermissionLevel.FULL_ACCESS,
+    visas: PermissionLevel.FULL_ACCESS,
+    agencyFees: PermissionLevel.VIEW_ACCESS,
+    accounting: PermissionLevel.NO_ACCESS,
+    wageScales: PermissionLevel.FULL_ACCESS,
+    agencyAgreements: PermissionLevel.FULL_ACCESS,
+    disciplinary: PermissionLevel.FULL_ACCESS,
+    quality: PermissionLevel.EDIT_ACCESS,
+    nationalHolidays: PermissionLevel.VIEW_ACCESS,
+    crewing: PermissionLevel.FULL_ACCESS,
+    insurance: PermissionLevel.EDIT_ACCESS,
+    dispatches: PermissionLevel.FULL_ACCESS,
+    pkl: PermissionLevel.FULL_ACCESS
+  },
+
+  [UserRole.ACCOUNTING]: {
+    // Full financial access, limited crew data
+    dashboard: PermissionLevel.FULL_ACCESS,
+    crew: PermissionLevel.VIEW_ACCESS,
+    principals: PermissionLevel.VIEW_ACCESS,
+    contracts: PermissionLevel.VIEW_ACCESS,
+    applications: PermissionLevel.NO_ACCESS,
+    assignments: PermissionLevel.NO_ACCESS,
+    vessels: PermissionLevel.VIEW_ACCESS,
+    documents: PermissionLevel.NO_ACCESS,
+    medical: PermissionLevel.NO_ACCESS,
+    visas: PermissionLevel.NO_ACCESS,
+    agencyFees: PermissionLevel.FULL_ACCESS,
+    accounting: PermissionLevel.FULL_ACCESS,
+    wageScales: PermissionLevel.VIEW_ACCESS,
+    agencyAgreements: PermissionLevel.VIEW_ACCESS,
+    disciplinary: PermissionLevel.NO_ACCESS,
+    quality: PermissionLevel.NO_ACCESS,
+    nationalHolidays: PermissionLevel.VIEW_ACCESS,
+    crewing: PermissionLevel.NO_ACCESS,
+    insurance: PermissionLevel.VIEW_ACCESS,
+    dispatches: PermissionLevel.NO_ACCESS,
+    pkl: PermissionLevel.VIEW_ACCESS
+  },
+
+  [UserRole.OPERATIONAL]: {
+    // Limited operational access
+    dashboard: PermissionLevel.VIEW_ACCESS,
+    crew: PermissionLevel.VIEW_ACCESS,
+    principals: PermissionLevel.NO_ACCESS,
+    contracts: PermissionLevel.VIEW_ACCESS,
+    applications: PermissionLevel.VIEW_ACCESS,
+    assignments: PermissionLevel.VIEW_ACCESS,
+    vessels: PermissionLevel.VIEW_ACCESS,
+    documents: PermissionLevel.NO_ACCESS,
+    medical: PermissionLevel.NO_ACCESS,
+    visas: PermissionLevel.NO_ACCESS,
+    agencyFees: PermissionLevel.NO_ACCESS,
+    accounting: PermissionLevel.NO_ACCESS,
+    wageScales: PermissionLevel.NO_ACCESS,
+    agencyAgreements: PermissionLevel.NO_ACCESS,
+    disciplinary: PermissionLevel.NO_ACCESS,
+    quality: PermissionLevel.VIEW_ACCESS,
+    nationalHolidays: PermissionLevel.VIEW_ACCESS,
+    crewing: PermissionLevel.EDIT_ACCESS,
+    insurance: PermissionLevel.NO_ACCESS,
+    dispatches: PermissionLevel.FULL_ACCESS,
+    pkl: PermissionLevel.EDIT_ACCESS
+  },
+
+  [UserRole.HR]: {
+    // HR and disciplinary focus
+    dashboard: PermissionLevel.EDIT_ACCESS,
+    crew: PermissionLevel.EDIT_ACCESS,
+    principals: PermissionLevel.NO_ACCESS,
+    contracts: PermissionLevel.VIEW_ACCESS,
+    applications: PermissionLevel.EDIT_ACCESS,
+    assignments: PermissionLevel.VIEW_ACCESS,
+    vessels: PermissionLevel.VIEW_ACCESS,
+    documents: PermissionLevel.EDIT_ACCESS,
+    medical: PermissionLevel.VIEW_ACCESS,
+    visas: PermissionLevel.EDIT_ACCESS,
+    agencyFees: PermissionLevel.NO_ACCESS,
+    accounting: PermissionLevel.NO_ACCESS,
+    wageScales: PermissionLevel.NO_ACCESS,
+    agencyAgreements: PermissionLevel.NO_ACCESS,
+    disciplinary: PermissionLevel.FULL_ACCESS,
+    quality: PermissionLevel.EDIT_ACCESS,
+    nationalHolidays: PermissionLevel.EDIT_ACCESS,
+    crewing: PermissionLevel.EDIT_ACCESS,
+    insurance: PermissionLevel.NO_ACCESS,
+    dispatches: PermissionLevel.VIEW_ACCESS,
+    pkl: PermissionLevel.VIEW_ACCESS
+  },
+
+  [UserRole.CREW_PORTAL]: {
+    // Self-service only - own data only
+    dashboard: PermissionLevel.VIEW_ACCESS,
+    crew: PermissionLevel.VIEW_ACCESS, // Own data only
+    principals: PermissionLevel.NO_ACCESS,
+    contracts: PermissionLevel.VIEW_ACCESS, // Own contracts only
+    applications: PermissionLevel.NO_ACCESS,
+    assignments: PermissionLevel.NO_ACCESS,
+    vessels: PermissionLevel.VIEW_ACCESS, // Assigned vessels only
+    documents: PermissionLevel.VIEW_ACCESS, // Own documents only
+    medical: PermissionLevel.VIEW_ACCESS, // Own medical summary only
+    visas: PermissionLevel.VIEW_ACCESS, // Own visas only
+    agencyFees: PermissionLevel.NO_ACCESS,
+    accounting: PermissionLevel.NO_ACCESS,
+    wageScales: PermissionLevel.NO_ACCESS,
+    agencyAgreements: PermissionLevel.NO_ACCESS,
+    disciplinary: PermissionLevel.NO_ACCESS,
+    quality: PermissionLevel.NO_ACCESS,
+    nationalHolidays: PermissionLevel.VIEW_ACCESS,
+    crewing: PermissionLevel.NO_ACCESS,
+    insurance: PermissionLevel.NO_ACCESS,
+    dispatches: PermissionLevel.NO_ACCESS,
+    pkl: PermissionLevel.VIEW_ACCESS // Own PKL only
+  }
+};
+
+// ==========================================
+// SENSITIVITY ACCESS MATRIX
+// ==========================================
+
+export const SENSITIVITY_ACCESS_MATRIX: Record<UserRole, Record<DataSensitivity, boolean>> = {
+  [UserRole.DIRECTOR]: {
+    [DataSensitivity.RED]: true,    // Can access all RED data
+    [DataSensitivity.AMBER]: true,  // Can access all AMBER data
+    [DataSensitivity.GREEN]: true   // Can access all GREEN data
+  },
+
+  [UserRole.CDMO]: {
+    [DataSensitivity.RED]: true,    // Can access RED data (medical, SEA content)
+    [DataSensitivity.AMBER]: true,  // Can access AMBER data
+    [DataSensitivity.GREEN]: true   // Can access GREEN data
+  },
+
+  [UserRole.ACCOUNTING]: {
+    [DataSensitivity.RED]: false,   // Cannot access RED data (medical, full SEA)
+    [DataSensitivity.AMBER]: true,  // Can access AMBER data (limited personal info)
+    [DataSensitivity.GREEN]: true   // Can access GREEN data
+  },
+
+  [UserRole.OPERATIONAL]: {
+    [DataSensitivity.RED]: false,   // Cannot access RED data
+    [DataSensitivity.AMBER]: false, // Cannot access AMBER data
+    [DataSensitivity.GREEN]: true   // Can access GREEN data only
+  },
+
+  [UserRole.HR]: {
+    [DataSensitivity.RED]: true,    // Can access RED data (disciplinary with medical)
+    [DataSensitivity.AMBER]: true,  // Can access AMBER data
+    [DataSensitivity.GREEN]: true   // Can access GREEN data
+  },
+
+  [UserRole.CREW_PORTAL]: {
+    [DataSensitivity.RED]: true,    // Can access own RED data only
+    [DataSensitivity.AMBER]: true,  // Can access own AMBER data only
+    [DataSensitivity.GREEN]: true   // Can access GREEN data
+  }
+};
+
+// ==========================================
+// UTILITY FUNCTIONS
+// ==========================================
+
+export function hasPermission(
+  userRole: UserRole,
+  module: ModuleName,
+  requiredLevel: PermissionLevel
+): boolean {
+  const userPermissions = PERMISSION_MATRIX[userRole];
+  if (!userPermissions) return false;
+
+  const userLevel = userPermissions[module];
+  if (!userLevel) return false;
+
+  // Permission hierarchy: NO_ACCESS < VIEW_ACCESS < EDIT_ACCESS < FULL_ACCESS
+  const hierarchy = ['NO_ACCESS', 'VIEW_ACCESS', 'EDIT_ACCESS', 'FULL_ACCESS'];
+  const userIndex = hierarchy.indexOf(userLevel);
+  const requiredIndex = hierarchy.indexOf(requiredLevel);
+
+  return userIndex >= requiredIndex;
+}
+
+export function hasSensitivityAccess(
+  userRole: UserRole,
+  sensitivity: DataSensitivity
+): boolean {
+  return SENSITIVITY_ACCESS_MATRIX[userRole]?.[sensitivity] ?? false;
+}
+
+export function canAccessData(
+  userRole: UserRole,
+  module: ModuleName,
+  sensitivity: DataSensitivity,
+  requiredLevel: PermissionLevel = PermissionLevel.VIEW_ACCESS
+): boolean {
+  // Check module permission
+  if (!hasPermission(userRole, module, requiredLevel)) {
+    return false;
+  }
+
+  // Check sensitivity access
+  if (!hasSensitivityAccess(userRole, sensitivity)) {
+    return false;
+  }
+
+  return true;
+}
+
+// ==========================================
+// BUSINESS RULES VALIDATION
+// ==========================================
+
+export function validateCrewPortalAccess(
+  userRole: UserRole,
+  requestedCrewId: string,
+  currentUserCrewId?: string
+): boolean {
+  // CREW_PORTAL can only access their own data
+  if (userRole === UserRole.CREW_PORTAL) {
+    return currentUserCrewId === requestedCrewId;
+  }
+
+  // Other roles can access any crew data (subject to module permissions)
+  return true;
+}
+
+export function validateMedicalDataAccess(
+  userRole: UserRole,
+  isOwnData: boolean = false
+): boolean {
+  // RED medical data access rules
+  if (userRole === UserRole.CREW_PORTAL) {
+    return isOwnData; // Only own medical data
+  }
+
+  if (userRole === UserRole.ACCOUNTING || userRole === UserRole.OPERATIONAL) {
+    return false; // No medical data access
+  }
+
+  return hasSensitivityAccess(userRole, DataSensitivity.RED);
+}
+
+export function validateSEAContentAccess(
+  userRole: UserRole,
+  isOwnContract: boolean = false
+): boolean {
+  // Full SEA content is RED data
+  if (userRole === UserRole.CREW_PORTAL) {
+    return isOwnContract; // Only own SEA
+  }
+
+  if (userRole === UserRole.ACCOUNTING) {
+    return false; // Accounting cannot see full SEA content
+  }
+
+  return hasSensitivityAccess(userRole, DataSensitivity.RED);
+}
+// MODULE CATEGORIES & PERMISSIONS
+// ==========================================
+
+export interface ModulePermission {
+  module: string;
+  category: string;
+  description: string;
+  permissions: Record<UserRole, PermissionLevel>;
+  businessRules: string[];
+  compliance: string[];
+}
+
+// ==========================================
+// 1. EXECUTIVE MANAGEMENT MODULES
+// ==========================================
+
+export const EXECUTIVE_MODULES: ModulePermission[] = [
+  {
+    module: 'dashboard',
+    category: 'EXECUTIVE_OVERVIEW',
+    description: 'Executive dashboard with KPIs and business intelligence',
+    permissions: {
+      [UserRole.CEO]: PermissionLevel.ADMIN,
+      [UserRole.COO]: PermissionLevel.ADMIN,
+      [UserRole.CFO]: PermissionLevel.ADMIN,
+      [UserRole.CTO]: PermissionLevel.ADMIN,
+      [UserRole.FLEET_MANAGER]: PermissionLevel.VIEW,
+      [UserRole.CREWING_MANAGER]: PermissionLevel.VIEW,
+      [UserRole.HR_MANAGER]: PermissionLevel.VIEW,
+      [UserRole.QUALITY_MANAGER]: PermissionLevel.VIEW,
+      [UserRole.ACCOUNTING_HEAD]: PermissionLevel.VIEW,
+      [UserRole.OPERATIONS_HEAD]: PermissionLevel.VIEW,
+      [UserRole.COMPLIANCE_HEAD]: PermissionLevel.VIEW,
+      [UserRole.ADMIN]: PermissionLevel.VIEW,
+      [UserRole.PRINCIPAL_VIEWER]: PermissionLevel.NONE,
+      [UserRole.CREW_MEMBER]: PermissionLevel.NONE,
+      // Default NONE for other roles
+      [UserRole.CREWING_OFFICER]: PermissionLevel.NONE,
+      [UserRole.ACCOUNTING_OFFICER]: PermissionLevel.NONE,
+      [UserRole.HR_OFFICER]: PermissionLevel.NONE,
+      [UserRole.QUALITY_OFFICER]: PermissionLevel.NONE,
+      [UserRole.DOCUMENT_OFFICER]: PermissionLevel.NONE,
+      [UserRole.PRINCIPAL_MANAGER]: PermissionLevel.NONE,
+      [UserRole.BUSINESS_DEVELOPMENT]: PermissionLevel.NONE,
+      [UserRole.IT_SUPPORT]: PermissionLevel.NONE,
+    },
+    businessRules: [
+      'Real-time KPI monitoring',
+      'Business intelligence access',
+      'Strategic decision support'
+    ],
+    compliance: [
+      'ISM Code compliance monitoring',
+      'MLC 2006 oversight',
+      'Financial performance tracking'
+    ]
+  }
+];
+
+// ==========================================
+// 2. PRINCIPAL & BUSINESS RELATIONS
+// ==========================================
+
+export const PRINCIPAL_MODULES: ModulePermission[] = [
+  {
+    module: 'principals',
+    category: 'BUSINESS_RELATIONS',
+    description: 'Principal (ship owner) management and agreements',
+    permissions: {
+      [UserRole.CEO]: PermissionLevel.ADMIN,
+      [UserRole.COO]: PermissionLevel.ADMIN,
+      [UserRole.PRINCIPAL_MANAGER]: PermissionLevel.ADMIN,
+      [UserRole.BUSINESS_DEVELOPMENT]: PermissionLevel.EDIT,
+      [UserRole.FLEET_MANAGER]: PermissionLevel.VIEW,
+      [UserRole.CREWING_MANAGER]: PermissionLevel.VIEW,
+      [UserRole.ACCOUNTING_HEAD]: PermissionLevel.VIEW,
+      [UserRole.PRINCIPAL_VIEWER]: PermissionLevel.VIEW,
+      [UserRole.ADMIN]: PermissionLevel.EDIT,
+      // Limited access for others
+      [UserRole.CFO]: PermissionLevel.VIEW,
+      [UserRole.CTO]: PermissionLevel.NONE,
+      [UserRole.HR_MANAGER]: PermissionLevel.NONE,
+      [UserRole.QUALITY_MANAGER]: PermissionLevel.NONE,
+      [UserRole.OPERATIONS_HEAD]: PermissionLevel.NONE,
+      [UserRole.COMPLIANCE_HEAD]: PermissionLevel.NONE,
+      [UserRole.CREWING_OFFICER]: PermissionLevel.NONE,
+      [UserRole.ACCOUNTING_OFFICER]: PermissionLevel.NONE,
+      [UserRole.HR_OFFICER]: PermissionLevel.NONE,
+      [UserRole.QUALITY_OFFICER]: PermissionLevel.NONE,
+      [UserRole.DOCUMENT_OFFICER]: PermissionLevel.NONE,
+      [UserRole.IT_SUPPORT]: PermissionLevel.NONE,
+      [UserRole.CREW_MEMBER]: PermissionLevel.NONE,
+    },
+    businessRules: [
+      'Principal agreement management',
+      'Contract negotiation support',
+      'Business relationship tracking',
+      'Agency fee calculations'
+    ],
+    compliance: [
+      'Contract law compliance',
+      'Agency agreement standards',
+      'Business ethics compliance'
+    ]
+  },
+  {
+    module: 'agency-fees',
+    category: 'FINANCIAL_RELATIONS',
+    description: 'Agency fees, commissions, and service charges management',
+    permissions: {
+      [UserRole.CEO]: PermissionLevel.ADMIN,
+      [UserRole.CFO]: PermissionLevel.ADMIN,
+      [UserRole.ACCOUNTING_HEAD]: PermissionLevel.ADMIN,
+      [UserRole.PRINCIPAL_MANAGER]: PermissionLevel.EDIT,
+      [UserRole.BUSINESS_DEVELOPMENT]: PermissionLevel.EDIT,
+      [UserRole.ACCOUNTING_OFFICER]: PermissionLevel.EDIT,
+      [UserRole.ADMIN]: PermissionLevel.EDIT,
+      [UserRole.COO]: PermissionLevel.VIEW,
+      [UserRole.PRINCIPAL_VIEWER]: PermissionLevel.VIEW,
+      // No access for operational staff
+      [UserRole.CTO]: PermissionLevel.NONE,
+      [UserRole.FLEET_MANAGER]: PermissionLevel.NONE,
+      [UserRole.CREWING_MANAGER]: PermissionLevel.NONE,
+      [UserRole.HR_MANAGER]: PermissionLevel.NONE,
+      [UserRole.QUALITY_MANAGER]: PermissionLevel.NONE,
+      [UserRole.OPERATIONS_HEAD]: PermissionLevel.NONE,
+      [UserRole.COMPLIANCE_HEAD]: PermissionLevel.NONE,
+      [UserRole.CREWING_OFFICER]: PermissionLevel.NONE,
+      [UserRole.HR_OFFICER]: PermissionLevel.NONE,
+      [UserRole.QUALITY_OFFICER]: PermissionLevel.NONE,
+      [UserRole.DOCUMENT_OFFICER]: PermissionLevel.NONE,
+      [UserRole.IT_SUPPORT]: PermissionLevel.NONE,
+      [UserRole.CREW_MEMBER]: PermissionLevel.NONE,
+    },
+    businessRules: [
+      'Commission calculation and tracking',
+      'Service fee management',
+      'Payment status monitoring',
+      'Financial reporting'
+    ],
+    compliance: [
+      'Tax compliance',
+      'Financial regulations',
+      'Agency fee transparency'
+    ]
+  }
+];
+
+// ==========================================
+// 3. CREW MANAGEMENT MODULES
+// ==========================================
+
+export const CREW_MODULES: ModulePermission[] = [
+  {
+    module: 'crew',
+    category: 'CREW_OPERATIONS',
+    description: 'Crew database and personal information management',
+    permissions: {
+      [UserRole.CEO]: PermissionLevel.ADMIN,
+      [UserRole.COO]: PermissionLevel.ADMIN,
+      [UserRole.CREWING_MANAGER]: PermissionLevel.ADMIN,
+      [UserRole.HR_MANAGER]: PermissionLevel.ADMIN,
+      [UserRole.CREWING_OFFICER]: PermissionLevel.EDIT,
+      [UserRole.HR_OFFICER]: PermissionLevel.EDIT,
+      [UserRole.ADMIN]: PermissionLevel.EDIT,
+      [UserRole.FLEET_MANAGER]: PermissionLevel.VIEW,
+      [UserRole.QUALITY_MANAGER]: PermissionLevel.VIEW,
+      [UserRole.COMPLIANCE_HEAD]: PermissionLevel.VIEW,
+      [UserRole.CREW_MEMBER]: PermissionLevel.VIEW, // Personal data only
+      [UserRole.PRINCIPAL_VIEWER]: PermissionLevel.NONE,
+      // No access for others
+      [UserRole.CFO]: PermissionLevel.NONE,
+      [UserRole.CTO]: PermissionLevel.NONE,
+      [UserRole.ACCOUNTING_HEAD]: PermissionLevel.NONE,
+      [UserRole.OPERATIONS_HEAD]: PermissionLevel.NONE,
+      [UserRole.ACCOUNTING_OFFICER]: PermissionLevel.NONE,
+      [UserRole.QUALITY_OFFICER]: PermissionLevel.NONE,
+      [UserRole.DOCUMENT_OFFICER]: PermissionLevel.NONE,
+      [UserRole.PRINCIPAL_MANAGER]: PermissionLevel.NONE,
+      [UserRole.BUSINESS_DEVELOPMENT]: PermissionLevel.NONE,
+      [UserRole.IT_SUPPORT]: PermissionLevel.NONE,
+    },
+    businessRules: [
+      'Crew database management',
+      'Personal information handling',
+      'Crew availability tracking',
+      'Background verification'
+    ],
+    compliance: [
+      'GDPR compliance',
+      'Personal data protection',
+      'Employment law compliance'
+    ]
+  },
+  {
+    module: 'contracts',
+    category: 'EMPLOYMENT_AGREEMENTS',
+    description: 'Employment contracts and agreements management',
+    permissions: {
+      [UserRole.CEO]: PermissionLevel.ADMIN,
+      [UserRole.COO]: PermissionLevel.ADMIN,
+      [UserRole.CREWING_MANAGER]: PermissionLevel.ADMIN,
+      [UserRole.HR_MANAGER]: PermissionLevel.ADMIN,
+      [UserRole.CREWING_OFFICER]: PermissionLevel.EDIT,
+      [UserRole.HR_OFFICER]: PermissionLevel.EDIT,
+      [UserRole.ADMIN]: PermissionLevel.EDIT,
+      [UserRole.FLEET_MANAGER]: PermissionLevel.VIEW,
+      [UserRole.ACCOUNTING_HEAD]: PermissionLevel.VIEW,
+      [UserRole.COMPLIANCE_HEAD]: PermissionLevel.VIEW,
+      [UserRole.PRINCIPAL_VIEWER]: PermissionLevel.VIEW,
+      [UserRole.CREW_MEMBER]: PermissionLevel.VIEW, // Own contract only
+      // No access for others
+      [UserRole.CFO]: PermissionLevel.NONE,
+      [UserRole.CTO]: PermissionLevel.NONE,
+      [UserRole.OPERATIONS_HEAD]: PermissionLevel.NONE,
+      [UserRole.ACCOUNTING_OFFICER]: PermissionLevel.NONE,
+      [UserRole.QUALITY_OFFICER]: PermissionLevel.NONE,
+      [UserRole.DOCUMENT_OFFICER]: PermissionLevel.NONE,
+      [UserRole.PRINCIPAL_MANAGER]: PermissionLevel.NONE,
+      [UserRole.BUSINESS_DEVELOPMENT]: PermissionLevel.NONE,
+      [UserRole.IT_SUPPORT]: PermissionLevel.NONE,
+    },
+    businessRules: [
+      'Contract lifecycle management',
+      'Wage component tracking',
+      'Contract status monitoring',
+      'Legal compliance'
+    ],
+    compliance: [
+      'MLC 2006 compliance',
+      'Employment contract standards',
+      'Labor law compliance'
+    ]
+  },
+  {
+    module: 'disciplinary',
+    category: 'CREW_DISCIPLINE',
+    description: 'Crew disciplinary actions and violation tracking',
+    permissions: {
+      [UserRole.CEO]: PermissionLevel.ADMIN,
+      [UserRole.COO]: PermissionLevel.ADMIN,
+      [UserRole.CREWING_MANAGER]: PermissionLevel.ADMIN,
+      [UserRole.HR_MANAGER]: PermissionLevel.ADMIN,
+      [UserRole.QUALITY_MANAGER]: PermissionLevel.APPROVE,
+      [UserRole.COMPLIANCE_HEAD]: PermissionLevel.APPROVE,
+      [UserRole.CREWING_OFFICER]: PermissionLevel.EDIT,
+      [UserRole.HR_OFFICER]: PermissionLevel.EDIT,
+      [UserRole.ADMIN]: PermissionLevel.EDIT,
+      [UserRole.FLEET_MANAGER]: PermissionLevel.VIEW,
+      [UserRole.OPERATIONS_HEAD]: PermissionLevel.VIEW,
+      [UserRole.PRINCIPAL_VIEWER]: PermissionLevel.NONE,
+      [UserRole.CREW_MEMBER]: PermissionLevel.NONE,
+      // No access for others
+      [UserRole.CFO]: PermissionLevel.NONE,
+      [UserRole.CTO]: PermissionLevel.NONE,
+      [UserRole.ACCOUNTING_HEAD]: PermissionLevel.NONE,
+      [UserRole.ACCOUNTING_OFFICER]: PermissionLevel.NONE,
+      [UserRole.QUALITY_OFFICER]: PermissionLevel.NONE,
+      [UserRole.DOCUMENT_OFFICER]: PermissionLevel.NONE,
+      [UserRole.PRINCIPAL_MANAGER]: PermissionLevel.NONE,
+      [UserRole.BUSINESS_DEVELOPMENT]: PermissionLevel.NONE,
+      [UserRole.IT_SUPPORT]: PermissionLevel.NONE,
+    },
+    businessRules: [
+      'Disciplinary action recording',
+      'Violation documentation',
+      'Appeal process management',
+      'Progressive discipline tracking'
+    ],
+    compliance: [
+      'Maritime disciplinary standards',
+      'Due process requirements',
+      'Labor law compliance'
+    ]
+  }
+];
+
+// ==========================================
+// 4. FINANCIAL MANAGEMENT MODULES
+// ==========================================
+
+export const FINANCIAL_MODULES: ModulePermission[] = [
+  {
+    module: 'accounting',
+    category: 'FINANCIAL_OPERATIONS',
+    description: 'Accounting, payroll, and financial management',
+    permissions: {
+      [UserRole.CEO]: PermissionLevel.ADMIN,
+      [UserRole.CFO]: PermissionLevel.ADMIN,
+      [UserRole.ACCOUNTING_HEAD]: PermissionLevel.ADMIN,
+      [UserRole.ACCOUNTING_OFFICER]: PermissionLevel.EDIT,
+      [UserRole.ADMIN]: PermissionLevel.EDIT,
+      [UserRole.COO]: PermissionLevel.VIEW,
+      [UserRole.CREWING_MANAGER]: PermissionLevel.VIEW,
+      [UserRole.HR_MANAGER]: PermissionLevel.VIEW,
+      [UserRole.PRINCIPAL_VIEWER]: PermissionLevel.NONE,
+      [UserRole.CREW_MEMBER]: PermissionLevel.NONE,
+      // No access for others
+      [UserRole.CTO]: PermissionLevel.NONE,
+      [UserRole.FLEET_MANAGER]: PermissionLevel.NONE,
+      [UserRole.QUALITY_MANAGER]: PermissionLevel.NONE,
+      [UserRole.OPERATIONS_HEAD]: PermissionLevel.NONE,
+      [UserRole.COMPLIANCE_HEAD]: PermissionLevel.NONE,
+      [UserRole.CREWING_OFFICER]: PermissionLevel.NONE,
+      [UserRole.HR_OFFICER]: PermissionLevel.NONE,
+      [UserRole.QUALITY_OFFICER]: PermissionLevel.NONE,
+      [UserRole.DOCUMENT_OFFICER]: PermissionLevel.NONE,
+      [UserRole.PRINCIPAL_MANAGER]: PermissionLevel.NONE,
+      [UserRole.BUSINESS_DEVELOPMENT]: PermissionLevel.NONE,
+      [UserRole.IT_SUPPORT]: PermissionLevel.NONE,
+    },
+    businessRules: [
+      'Payroll processing',
+      'Financial reporting',
+      'Budget management',
+      'Cost control'
+    ],
+    compliance: [
+      'Financial reporting standards',
+      'Tax compliance',
+      'Accounting regulations'
+    ]
+  },
+  {
+    module: 'wage-scales',
+    category: 'COMPENSATION_MANAGEMENT',
+    description: 'Standard wage rates and compensation structures',
+    permissions: {
+      [UserRole.CEO]: PermissionLevel.ADMIN,
+      [UserRole.CFO]: PermissionLevel.ADMIN,
+      [UserRole.ACCOUNTING_HEAD]: PermissionLevel.ADMIN,
+      [UserRole.HR_MANAGER]: PermissionLevel.ADMIN,
+      [UserRole.CREWING_MANAGER]: PermissionLevel.EDIT,
+      [UserRole.ACCOUNTING_OFFICER]: PermissionLevel.EDIT,
+      [UserRole.HR_OFFICER]: PermissionLevel.EDIT,
+      [UserRole.ADMIN]: PermissionLevel.EDIT,
+      [UserRole.COO]: PermissionLevel.VIEW,
+      [UserRole.FLEET_MANAGER]: PermissionLevel.VIEW,
+      [UserRole.PRINCIPAL_VIEWER]: PermissionLevel.VIEW,
+      [UserRole.CREW_MEMBER]: PermissionLevel.VIEW, // View wage scales
+      // No access for others
+      [UserRole.CTO]: PermissionLevel.NONE,
+      [UserRole.QUALITY_MANAGER]: PermissionLevel.NONE,
+      [UserRole.OPERATIONS_HEAD]: PermissionLevel.NONE,
+      [UserRole.COMPLIANCE_HEAD]: PermissionLevel.NONE,
+      [UserRole.CREWING_OFFICER]: PermissionLevel.NONE,
+      [UserRole.QUALITY_OFFICER]: PermissionLevel.NONE,
+      [UserRole.DOCUMENT_OFFICER]: PermissionLevel.NONE,
+      [UserRole.PRINCIPAL_MANAGER]: PermissionLevel.NONE,
+      [UserRole.BUSINESS_DEVELOPMENT]: PermissionLevel.NONE,
+      [UserRole.IT_SUPPORT]: PermissionLevel.NONE,
+    },
+    businessRules: [
+      'Wage scale standardization',
+      'Compensation policy management',
+      'Cost optimization',
+      'Market competitiveness'
+    ],
+    compliance: [
+      'Minimum wage compliance',
+      'Equal pay standards',
+      'Collective bargaining agreements'
+    ]
+  }
+];
+
+// ==========================================
+// 5. OPERATIONAL MODULES
+// ==========================================
+
+export const OPERATIONAL_MODULES: ModulePermission[] = [
+  {
+    module: 'crewing',
+    category: 'CREW_DEPLOYMENT',
+    description: 'Crew assignment, deployment, and vessel operations',
+    permissions: {
+      [UserRole.CEO]: PermissionLevel.ADMIN,
+      [UserRole.COO]: PermissionLevel.ADMIN,
+      [UserRole.FLEET_MANAGER]: PermissionLevel.ADMIN,
+      [UserRole.CREWING_MANAGER]: PermissionLevel.ADMIN,
+      [UserRole.OPERATIONS_HEAD]: PermissionLevel.ADMIN,
+      [UserRole.CREWING_OFFICER]: PermissionLevel.EDIT,
+      [UserRole.ADMIN]: PermissionLevel.EDIT,
+      [UserRole.HR_MANAGER]: PermissionLevel.VIEW,
+      [UserRole.QUALITY_MANAGER]: PermissionLevel.VIEW,
+      [UserRole.COMPLIANCE_HEAD]: PermissionLevel.VIEW,
+      [UserRole.PRINCIPAL_VIEWER]: PermissionLevel.VIEW,
+      [UserRole.CREW_MEMBER]: PermissionLevel.NONE,
+      // No access for others
+      [UserRole.CFO]: PermissionLevel.NONE,
+      [UserRole.CTO]: PermissionLevel.NONE,
+      [UserRole.ACCOUNTING_HEAD]: PermissionLevel.NONE,
+      [UserRole.ACCOUNTING_OFFICER]: PermissionLevel.NONE,
+      [UserRole.HR_OFFICER]: PermissionLevel.NONE,
+      [UserRole.QUALITY_OFFICER]: PermissionLevel.NONE,
+      [UserRole.DOCUMENT_OFFICER]: PermissionLevel.NONE,
+      [UserRole.PRINCIPAL_MANAGER]: PermissionLevel.NONE,
+      [UserRole.BUSINESS_DEVELOPMENT]: PermissionLevel.NONE,
+      [UserRole.IT_SUPPORT]: PermissionLevel.NONE,
+    },
+    businessRules: [
+      'Crew deployment planning',
+      'Vessel staffing optimization',
+      'Rotation scheduling',
+      'Emergency crew replacement'
+    ],
+    compliance: [
+      'STCW manning requirements',
+      'Flag state regulations',
+      'ISM Code compliance'
+    ]
+  },
+  {
+    module: 'insurance',
+    category: 'RISK_MANAGEMENT',
+    description: 'P&I Club and crew insurance policy management',
+    permissions: {
+      [UserRole.CEO]: PermissionLevel.ADMIN,
+      [UserRole.CFO]: PermissionLevel.ADMIN,
+      [UserRole.FLEET_MANAGER]: PermissionLevel.ADMIN,
+      [UserRole.ACCOUNTING_HEAD]: PermissionLevel.ADMIN,
+      [UserRole.COMPLIANCE_HEAD]: PermissionLevel.ADMIN,
+      [UserRole.ACCOUNTING_OFFICER]: PermissionLevel.EDIT,
+      [UserRole.ADMIN]: PermissionLevel.EDIT,
+      [UserRole.COO]: PermissionLevel.VIEW,
+      [UserRole.CREWING_MANAGER]: PermissionLevel.VIEW,
+      [UserRole.PRINCIPAL_VIEWER]: PermissionLevel.VIEW,
+      [UserRole.CREW_MEMBER]: PermissionLevel.VIEW, // Personal insurance
+      // No access for others
+      [UserRole.CTO]: PermissionLevel.NONE,
+      [UserRole.HR_MANAGER]: PermissionLevel.NONE,
+      [UserRole.QUALITY_MANAGER]: PermissionLevel.NONE,
+      [UserRole.OPERATIONS_HEAD]: PermissionLevel.NONE,
+      [UserRole.CREWING_OFFICER]: PermissionLevel.NONE,
+      [UserRole.HR_OFFICER]: PermissionLevel.NONE,
+      [UserRole.QUALITY_OFFICER]: PermissionLevel.NONE,
+      [UserRole.DOCUMENT_OFFICER]: PermissionLevel.NONE,
+      [UserRole.PRINCIPAL_MANAGER]: PermissionLevel.NONE,
+      [UserRole.BUSINESS_DEVELOPMENT]: PermissionLevel.NONE,
+      [UserRole.IT_SUPPORT]: PermissionLevel.NONE,
+    },
+    businessRules: [
+      'Insurance policy management',
+      'Claim processing support',
+      'Risk assessment',
+      'Premium optimization'
+    ],
+    compliance: [
+      'Insurance regulations',
+      'P&I Club requirements',
+      'Risk management standards'
+    ]
+  }
+];
+
+// ==========================================
+// 6. COMPLIANCE & QUALITY MODULES
+// ==========================================
+
+export const COMPLIANCE_MODULES: ModulePermission[] = [
+  {
+    module: 'quality',
+    category: 'QUALITY_ASSURANCE',
+    description: 'Quality management, audits, and compliance monitoring',
+    permissions: {
+      [UserRole.CEO]: PermissionLevel.ADMIN,
+      [UserRole.COO]: PermissionLevel.ADMIN,
+      [UserRole.QUALITY_MANAGER]: PermissionLevel.ADMIN,
+      [UserRole.COMPLIANCE_HEAD]: PermissionLevel.ADMIN,
+      [UserRole.QUALITY_OFFICER]: PermissionLevel.EDIT,
+      [UserRole.ADMIN]: PermissionLevel.EDIT,
+      [UserRole.FLEET_MANAGER]: PermissionLevel.VIEW,
+      [UserRole.CREWING_MANAGER]: PermissionLevel.VIEW,
+      [UserRole.HR_MANAGER]: PermissionLevel.VIEW,
+      [UserRole.OPERATIONS_HEAD]: PermissionLevel.VIEW,
+      [UserRole.PRINCIPAL_VIEWER]: PermissionLevel.NONE,
+      [UserRole.CREW_MEMBER]: PermissionLevel.NONE,
+      // No access for others
+      [UserRole.CFO]: PermissionLevel.NONE,
+      [UserRole.CTO]: PermissionLevel.NONE,
+      [UserRole.ACCOUNTING_HEAD]: PermissionLevel.NONE,
+      [UserRole.ACCOUNTING_OFFICER]: PermissionLevel.NONE,
+      [UserRole.CREWING_OFFICER]: PermissionLevel.NONE,
+      [UserRole.HR_OFFICER]: PermissionLevel.NONE,
+      [UserRole.DOCUMENT_OFFICER]: PermissionLevel.NONE,
+      [UserRole.PRINCIPAL_MANAGER]: PermissionLevel.NONE,
+      [UserRole.BUSINESS_DEVELOPMENT]: PermissionLevel.NONE,
+      [UserRole.IT_SUPPORT]: PermissionLevel.NONE,
+    },
+    businessRules: [
+      'Quality assurance processes',
+      'Audit management',
+      'Non-conformance tracking',
+      'Continuous improvement'
+    ],
+    compliance: [
+      'ISM Code compliance',
+      'ISO 9001 standards',
+      'Quality management systems'
+    ]
+  },
+  {
+    module: 'documents',
+    category: 'DOCUMENT_MANAGEMENT',
+    description: 'Document control, certification, and record management',
+    permissions: {
+      [UserRole.CEO]: PermissionLevel.ADMIN,
+      [UserRole.COO]: PermissionLevel.ADMIN,
+      [UserRole.COMPLIANCE_HEAD]: PermissionLevel.ADMIN,
+      [UserRole.DOCUMENT_OFFICER]: PermissionLevel.EDIT,
+      [UserRole.ADMIN]: PermissionLevel.EDIT,
+      [UserRole.FLEET_MANAGER]: PermissionLevel.VIEW,
+      [UserRole.CREWING_MANAGER]: PermissionLevel.VIEW,
+      [UserRole.HR_MANAGER]: PermissionLevel.VIEW,
+      [UserRole.QUALITY_MANAGER]: PermissionLevel.VIEW,
+      [UserRole.OPERATIONS_HEAD]: PermissionLevel.VIEW,
+      [UserRole.PRINCIPAL_VIEWER]: PermissionLevel.VIEW,
+      [UserRole.CREW_MEMBER]: PermissionLevel.VIEW, // Personal documents
+      // No access for others
+      [UserRole.CFO]: PermissionLevel.NONE,
+      [UserRole.CTO]: PermissionLevel.NONE,
+      [UserRole.ACCOUNTING_HEAD]: PermissionLevel.NONE,
+      [UserRole.ACCOUNTING_OFFICER]: PermissionLevel.NONE,
+      [UserRole.CREWING_OFFICER]: PermissionLevel.NONE,
+      [UserRole.HR_OFFICER]: PermissionLevel.NONE,
+      [UserRole.QUALITY_OFFICER]: PermissionLevel.NONE,
+      [UserRole.PRINCIPAL_MANAGER]: PermissionLevel.NONE,
+      [UserRole.BUSINESS_DEVELOPMENT]: PermissionLevel.NONE,
+      [UserRole.IT_SUPPORT]: PermissionLevel.NONE,
+    },
+    businessRules: [
+      'Document lifecycle management',
+      'Certification tracking',
+      'Expiry monitoring',
+      'Audit trail maintenance'
+    ],
+    compliance: [
+      'STCW certification requirements',
+      'Document retention policies',
+      'Regulatory compliance'
+    ]
+  },
+  {
+    module: 'national-holidays',
+    category: 'ADMINISTRATIVE',
+    description: 'National holidays and calendar management for payroll',
+    permissions: {
+      [UserRole.CEO]: PermissionLevel.ADMIN,
+      [UserRole.COO]: PermissionLevel.ADMIN,
+      [UserRole.HR_MANAGER]: PermissionLevel.ADMIN,
+      [UserRole.ADMIN]: PermissionLevel.EDIT,
+      [UserRole.HR_OFFICER]: PermissionLevel.EDIT,
+      [UserRole.ACCOUNTING_HEAD]: PermissionLevel.VIEW,
+      [UserRole.ACCOUNTING_OFFICER]: PermissionLevel.VIEW,
+      [UserRole.CREWING_MANAGER]: PermissionLevel.VIEW,
+      [UserRole.CREWING_OFFICER]: PermissionLevel.VIEW,
+      [UserRole.PRINCIPAL_VIEWER]: PermissionLevel.NONE,
+      [UserRole.CREW_MEMBER]: PermissionLevel.NONE,
+      // No access for others
+      [UserRole.CFO]: PermissionLevel.NONE,
+      [UserRole.CTO]: PermissionLevel.NONE,
+      [UserRole.FLEET_MANAGER]: PermissionLevel.NONE,
+      [UserRole.QUALITY_MANAGER]: PermissionLevel.NONE,
+      [UserRole.OPERATIONS_HEAD]: PermissionLevel.NONE,
+      [UserRole.COMPLIANCE_HEAD]: PermissionLevel.NONE,
+      [UserRole.QUALITY_OFFICER]: PermissionLevel.NONE,
+      [UserRole.DOCUMENT_OFFICER]: PermissionLevel.NONE,
+      [UserRole.PRINCIPAL_MANAGER]: PermissionLevel.NONE,
+      [UserRole.BUSINESS_DEVELOPMENT]: PermissionLevel.NONE,
+      [UserRole.IT_SUPPORT]: PermissionLevel.NONE,
+    },
+    businessRules: [
+      'Holiday calendar management',
+      'Payroll calculation support',
+      'Leave planning',
+      'International compliance'
+    ],
+    compliance: [
+      'Labor law compliance',
+      'International holiday standards',
+      'Payroll regulations'
+    ]
+  }
+];
+
+// ==========================================
+// 7. SYSTEM ADMINISTRATION
+// ==========================================
+
+export const ADMIN_MODULES: ModulePermission[] = [
+  {
+    module: 'admin',
+    category: 'SYSTEM_ADMIN',
+    description: 'System administration and user management',
+    permissions: {
+      [UserRole.CEO]: PermissionLevel.ADMIN,
+      [UserRole.CTO]: PermissionLevel.ADMIN,
+      [UserRole.ADMIN]: PermissionLevel.ADMIN,
+      [UserRole.IT_SUPPORT]: PermissionLevel.EDIT,
+      // No access for others - strictly controlled
+      [UserRole.COO]: PermissionLevel.NONE,
+      [UserRole.CFO]: PermissionLevel.NONE,
+      [UserRole.FLEET_MANAGER]: PermissionLevel.NONE,
+      [UserRole.CREWING_MANAGER]: PermissionLevel.NONE,
+      [UserRole.HR_MANAGER]: PermissionLevel.NONE,
+      [UserRole.QUALITY_MANAGER]: PermissionLevel.NONE,
+      [UserRole.ACCOUNTING_HEAD]: PermissionLevel.NONE,
+      [UserRole.OPERATIONS_HEAD]: PermissionLevel.NONE,
+      [UserRole.COMPLIANCE_HEAD]: PermissionLevel.NONE,
+      [UserRole.CREWING_OFFICER]: PermissionLevel.NONE,
+      [UserRole.ACCOUNTING_OFFICER]: PermissionLevel.NONE,
+      [UserRole.HR_OFFICER]: PermissionLevel.NONE,
+      [UserRole.QUALITY_OFFICER]: PermissionLevel.NONE,
+      [UserRole.DOCUMENT_OFFICER]: PermissionLevel.NONE,
+      [UserRole.PRINCIPAL_MANAGER]: PermissionLevel.NONE,
+      [UserRole.BUSINESS_DEVELOPMENT]: PermissionLevel.NONE,
+      [UserRole.PRINCIPAL_VIEWER]: PermissionLevel.NONE,
+      [UserRole.CREW_MEMBER]: PermissionLevel.NONE,
+    },
+    businessRules: [
+      'User account management',
+      'System configuration',
+      'Security administration',
+      'Audit logging'
+    ],
+    compliance: [
+      'Data protection regulations',
+      'Access control standards',
+      'IT security requirements'
+    ]
+  }
+];
+
+// ==========================================
+// COMBINED PERMISSIONS MATRIX
+// ==========================================
+
+export const ALL_MODULES: ModulePermission[] = [
+  ...EXECUTIVE_MODULES,
+  ...PRINCIPAL_MODULES,
+  ...CREW_MODULES,
+  ...FINANCIAL_MODULES,
+  ...OPERATIONAL_MODULES,
+  ...COMPLIANCE_MODULES,
+  ...ADMIN_MODULES
+];
+
+// ==========================================
+// PERMISSION CHECKING UTILITIES
+// ==========================================
+
+export function hasPermission(
+  userRole: UserRole,
+  module: string,
+  requiredPermission: PermissionLevel
+): boolean {
+  const moduleConfig = ALL_MODULES.find(m => m.module === module);
+  if (!moduleConfig) return false;
+
+  const userPermission = moduleConfig.permissions[userRole];
+  if (userPermission === PermissionLevel.NONE) return false;
+
+  // Permission hierarchy: ADMIN > APPROVE > DELETE > EDIT > CREATE > VIEW
+  const permissionHierarchy = {
+    [PermissionLevel.ADMIN]: 6,
+    [PermissionLevel.APPROVE]: 5,
+    [PermissionLevel.DELETE]: 4,
+    [PermissionLevel.EDIT]: 3,
+    [PermissionLevel.CREATE]: 2,
+    [PermissionLevel.VIEW]: 1,
+    [PermissionLevel.NONE]: 0
+  };
+
+  return permissionHierarchy[userPermission] >= permissionHierarchy[requiredPermission];
+}
+
+export function getUserModules(userRole: UserRole): ModulePermission[] {
+  return ALL_MODULES.filter(module =>
+    module.permissions[userRole] !== PermissionLevel.NONE
+  );
+}
+
+export function getModulePermission(
+  userRole: UserRole,
+  module: string
+): PermissionLevel {
+  const moduleConfig = ALL_MODULES.find(m => m.module === module);
+  return moduleConfig?.permissions[userRole] || PermissionLevel.NONE;
+}
+
+// ==========================================
+// BUSINESS RULES SUMMARY
+// ==========================================
+
+export const BUSINESS_RULES = {
+  PRINCIPAL_AGREEMENTS: {
+    access: [UserRole.CEO, UserRole.COO, UserRole.PRINCIPAL_MANAGER, UserRole.BUSINESS_DEVELOPMENT],
+    edit: [UserRole.CEO, UserRole.COO, UserRole.PRINCIPAL_MANAGER],
+    view: [UserRole.FLEET_MANAGER, UserRole.CREWING_MANAGER, UserRole.ACCOUNTING_HEAD, UserRole.PRINCIPAL_VIEWER],
+    description: 'Principal agreements are business contracts between HANMARINE office and ship owners. Only executive management and business development can create/edit agreements.'
+  },
+
+  FINANCIAL_DATA: {
+    access: [UserRole.CEO, UserRole.CFO, UserRole.ACCOUNTING_HEAD, UserRole.ACCOUNTING_OFFICER],
+    edit: [UserRole.CEO, UserRole.CFO, UserRole.ACCOUNTING_HEAD],
+    view: [UserRole.COO, UserRole.CREWING_MANAGER, UserRole.HR_MANAGER],
+    description: 'Financial data including agency fees, wage scales, and accounting information is restricted to financial department and executive management.'
+  },
+
+  CREW_PERSONAL_DATA: {
+    access: [UserRole.CEO, UserRole.COO, UserRole.CREWING_MANAGER, UserRole.HR_MANAGER, UserRole.CREWING_OFFICER, UserRole.HR_OFFICER],
+    edit: [UserRole.CREWING_MANAGER, UserRole.HR_MANAGER, UserRole.CREWING_OFFICER, UserRole.HR_OFFICER],
+    view: [UserRole.FLEET_MANAGER, UserRole.QUALITY_MANAGER, UserRole.COMPLIANCE_HEAD, UserRole.CREW_MEMBER],
+    description: 'Crew personal data is managed by crewing and HR departments. Crew members can only view their own data.'
+  },
+
+  DISCIPLINARY_ACTIONS: {
+    access: [UserRole.CEO, UserRole.COO, UserRole.CREWING_MANAGER, UserRole.HR_MANAGER, UserRole.QUALITY_MANAGER, UserRole.COMPLIANCE_HEAD],
+    edit: [UserRole.CREWING_MANAGER, UserRole.HR_MANAGER, UserRole.CREWING_OFFICER, UserRole.HR_OFFICER],
+    approve: [UserRole.QUALITY_MANAGER, UserRole.COMPLIANCE_HEAD],
+    description: 'Disciplinary actions require approval from quality and compliance departments for fairness and legal compliance.'
+  }
+};

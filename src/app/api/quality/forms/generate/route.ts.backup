@@ -1,0 +1,2279 @@
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import puppeteer from 'puppeteer';
+
+export async function POST(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { formId, formName, crewId, formData } = await request.json();
+
+    let htmlContent = '';
+    let filename = '';
+
+    // Get crew data if crewId is provided
+    let crewData = null;
+    if (crewId) {
+      const { prisma } = await import("@/lib/prisma");
+      crewData = await prisma.crew.findUnique({
+        where: { id: crewId },
+        include: {
+          documents: true,
+          salaries: {
+            orderBy: { createdAt: 'desc' },
+            take: 1
+          }
+        }
+      });
+
+      if (!crewData) {
+        return NextResponse.json({ error: "Crew not found" }, { status: 404 });
+      }
+    }
+
+    // Generate form based on formId
+    switch (formId) {
+      // AC FORMS - Accounting & Finance
+      case 'ac-01':
+        const ac01 = await generateCrewWagePaymentRecord(formData || crewData);
+        htmlContent = ac01.html;
+        filename = ac01.filename;
+        break;
+
+      case 'ac-02':
+        const ac02 = await generateAppointmentsOfficialOrder();
+        htmlContent = ac02.html;
+        filename = ac02.filename;
+        break;
+
+      case 'ac-03':
+        const ac03 = await generatePettyCashVoucher();
+        htmlContent = ac03.html;
+        filename = ac03.filename;
+        break;
+
+      case 'ac-04':
+        const ac04 = await generateAllotmentForm(formData || crewData);
+        htmlContent = ac04.html;
+        filename = ac04.filename;
+        break;
+
+      case 'ac-05':
+        const ac05 = await generateStatementOfAccount();
+        htmlContent = ac05.html;
+        filename = ac05.filename;
+        break;
+
+      case 'ac-06':
+        const ac06 = await generateMonthlyCashReceiptDisbursement();
+        htmlContent = ac06.html;
+        filename = ac06.filename;
+        break;
+
+      case 'ac-07':
+        const ac07 = await generateMonthlyDebitNote();
+        htmlContent = ac07.html;
+        filename = ac07.filename;
+        break;
+
+      // AD FORMS - Administrative Documents
+      case 'ad-01':
+        const ad01 = await generateDepartmentalMeeting();
+        htmlContent = ad01.html;
+        filename = ad01.filename;
+        break;
+
+      case 'ad-07':
+        const ad07 = await generateInternalAuditGuide();
+        htmlContent = ad07.html;
+        filename = ad07.filename;
+        break;
+
+      case 'ad-08':
+        const ad08 = await generateInternalAuditPlan();
+        htmlContent = ad08.html;
+        filename = ad08.filename;
+        break;
+
+      case 'ad-09':
+        const ad09 = await generateInternalAuditReport();
+        htmlContent = ad09.html;
+        filename = ad09.filename;
+        break;
+
+      case 'ad-10':
+        const ad10 = await generateCorrectivePreventiveActionRequest();
+        htmlContent = ad10.html;
+        filename = ad10.filename;
+        break;
+
+      case 'ad-12':
+        const ad12 = await generatePurchaseOrder();
+        htmlContent = ad12.html;
+        filename = ad12.filename;
+        break;
+
+      case 'ad-14':
+        const ad14 = await generateOrientationNewEmployee();
+        htmlContent = ad14.html;
+        filename = ad14.filename;
+        break;
+
+      // CR FORMS - Crew Related
+      case 'cr-02':
+        const cr02 = await generateApplicationForEmployment(formData || crewData);
+        htmlContent = cr02.html;
+        filename = cr02.filename;
+        break;
+
+      case 'cr-03':
+        const cr03 = await generateDepartingCrewChecklist(formData || crewData);
+        htmlContent = cr03.html;
+        filename = cr03.filename;
+        break;
+
+      case 'cr-08':
+        const cr08 = await generateCrewEvaluationReport(formData || crewData);
+        htmlContent = cr08.html;
+        filename = cr08.filename;
+        break;
+
+      case 'cr-10':
+        const cr10 = await generateContractOfEmployment(formData || crewData);
+        htmlContent = cr10.html;
+        filename = cr10.filename;
+        break;
+
+      case 'cr-13':
+        const cr13 = await generateDisembarkationApplication();
+        htmlContent = cr13.html;
+        filename = cr13.filename;
+        break;
+
+      // PRINCIPAL FORMS - Lundqvist Rederierna
+      case 'lr-01':
+        const lr01 = await generateLundqvistApplication(formData || crewData);
+        htmlContent = lr01.html;
+        filename = lr01.filename;
+        break;
+
+      case 'lr-02':
+        const lr02 = await generateOwnerSMSSConfirmation(formData || crewData);
+        htmlContent = lr02.html;
+        filename = lr02.filename;
+        break;
+
+      case 'lr-03':
+        const lr03 = await generateMedicalHistoryChecklist(formData || crewData);
+        htmlContent = lr03.html;
+        filename = lr03.filename;
+        break;
+
+      case 'lr-04':
+        const lr04 = await generateNextOfKinDeclaration(formData || crewData);
+        htmlContent = lr04.html;
+        filename = lr04.filename;
+        break;
+
+      case 'lr-05':
+        const lr05 = await generateSeafarerEmploymentContract(formData || crewData);
+        htmlContent = lr05.html;
+        filename = lr05.filename;
+        break;
+
+      default:
+        return NextResponse.json({ error: "Invalid form ID" }, { status: 400 });
+    }
+
+    // Generate PDF using Puppeteer
+    const browser = await puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
+    });
+
+    const page = await browser.newPage();
+    await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+    const pdfBuffer = await page.pdf({
+      format: 'A4',
+      printBackground: true,
+      margin: {
+        top: '20mm',
+        right: '15mm',
+        bottom: '20mm',
+        left: '15mm'
+      }
+    });
+
+    await browser.close();
+
+    // Return PDF as response
+    return new NextResponse(Buffer.from(pdfBuffer), {
+      headers: {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="${filename}"`,
+      },
+    });
+
+  } catch (error) {
+    console.error("Error generating form:", error);
+    return NextResponse.json(
+      { error: "Failed to generate form" },
+      { status: 500 }
+    );
+  }
+}
+
+// AC FORMS - Accounting & Finance
+async function generateAppointmentsOfficialOrder() {
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>HGF-AC-02 Appointments & Official Order</title>
+      <style>
+        body { font-family: 'Times New Roman', serif; margin: 40px; line-height: 1.6; font-size: 11px; }
+        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #000; padding-bottom: 20px; }
+        .title { font-size: 16px; font-weight: bold; margin-bottom: 10px; }
+        .subtitle { font-size: 12px; margin-bottom: 5px; }
+        .info { font-size: 10px; color: #666; }
+        .section { margin-bottom: 20px; }
+        .field { margin: 8px 0; }
+        .field-label { font-weight: bold; display: inline-block; width: 150px; }
+        .field-line { border-bottom: 1px solid #000; display: inline-block; width: 200px; }
+        .textarea { border: 1px solid #000; width: 100%; min-height: 80px; padding: 5px; margin: 5px 0; }
+        .footer { margin-top: 30px; border-top: 1px solid #000; padding-top: 20px; }
+        .signature { margin: 15px 0; }
+        .signature-line { border-bottom: 1px solid #000; width: 150px; display: inline-block; margin-left: 10px; }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <div class="title">HANMARINE GROUP QUALITY SYSTEM</div>
+        <div class="subtitle">HGF-AC-02 APPOINTMENTS & OFFICIAL ORDER</div>
+        <div class="info">Form ID: HGF-AC-02 | Revision: 01 | Date: ${new Date().toLocaleDateString()}</div>
+      </div>
+
+      <div class="section">
+        <div class="field">
+          <span class="field-label">Order Number:</span>
+          <span class="field-line"></span>
+          <span class="field-label" style="width: 100px; margin-left: 20px;">Date:</span>
+          <span class="field-line"></span>
+        </div>
+        <div class="field">
+          <span class="field-label">To:</span>
+          <span class="field-line"></span>
+          <span class="field-label" style="width: 100px; margin-left: 20px;">Position:</span>
+          <span class="field-line"></span>
+        </div>
+        <div class="field">
+          <span class="field-label">Department:</span>
+          <span class="field-line"></span>
+          <span class="field-label" style="width: 100px; margin-left: 20px;">Vessel:</span>
+          <span class="field-line"></span>
+        </div>
+      </div>
+
+      <div class="section">
+        <strong>ORDER DETAILS:</strong><br>
+        <div class="textarea"></div>
+      </div>
+
+      <div class="section">
+        <strong>EFFECTIVE DATE:</strong>
+        <div class="field">
+          <span class="field-label">Start Date:</span>
+          <span class="field-line"></span>
+          <span class="field-label" style="width: 100px; margin-left: 20px;">End Date:</span>
+          <span class="field-line"></span>
+        </div>
+      </div>
+
+      <div class="footer">
+        <div class="signature">
+          <strong>Issued By:</strong>
+          <span class="signature-line"></span>
+          <strong style="margin-left: 50px;">Date:</strong>
+          <span class="signature-line"></span>
+        </div>
+
+        <div class="signature">
+          <strong>Approved By:</strong>
+          <span class="signature-line"></span>
+          <strong style="margin-left: 50px;">Date:</strong>
+          <span class="signature-line"></span>
+        </div>
+
+        <div class="signature">
+          <strong>Received By:</strong>
+          <span class="signature-line"></span>
+          <strong style="margin-left: 50px;">Date:</strong>
+          <span class="signature-line"></span>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  return {
+    html,
+    filename: `HGF-AC-02_Appointments_Official_Order_${new Date().toISOString().split('T')[0]}.pdf`
+  };
+}
+
+async function generatePettyCashVoucher() {
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>HGF-AC-03 Petty Cash Voucher</title>
+      <style>
+        body { font-family: 'Times New Roman', serif; margin: 40px; line-height: 1.6; font-size: 11px; }
+        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #000; padding-bottom: 20px; }
+        .title { font-size: 16px; font-weight: bold; margin-bottom: 10px; }
+        .subtitle { font-size: 12px; margin-bottom: 5px; }
+        .info { font-size: 10px; color: #666; }
+        .section { margin-bottom: 20px; }
+        .field { margin: 8px 0; }
+        .field-label { font-weight: bold; display: inline-block; width: 120px; }
+        .field-line { border-bottom: 1px solid #000; display: inline-block; width: 150px; }
+        .table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 10px; }
+        .table th, .table td { border: 1px solid #000; padding: 5px; text-align: left; }
+        .table th { background: #f0f0f0; font-weight: bold; }
+        .footer { margin-top: 30px; border-top: 1px solid #000; padding-top: 20px; }
+        .signature { margin: 15px 0; }
+        .signature-line { border-bottom: 1px solid #000; width: 150px; display: inline-block; margin-left: 10px; }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <div class="title">HANMARINE GROUP QUALITY SYSTEM</div>
+        <div class="subtitle">HGF-AC-03 PETTY CASH VOUCHER</div>
+        <div class="info">Form ID: HGF-AC-03 | Revision: 01 | Date: ${new Date().toLocaleDateString()}</div>
+      </div>
+
+      <div class="section">
+        <div class="field">
+          <span class="field-label">Voucher No:</span>
+          <span class="field-line"></span>
+          <span class="field-label" style="width: 80px; margin-left: 20px;">Date:</span>
+          <span class="field-line"></span>
+        </div>
+        <div class="field">
+          <span class="field-label">Payee:</span>
+          <span class="field-line"></span>
+          <span class="field-label" style="width: 80px; margin-left: 20px;">Amount:</span>
+          <span class="field-line"></span>
+        </div>
+        <div class="field">
+          <span class="field-label">Department:</span>
+          <span class="field-line"></span>
+          <span class="field-label" style="width: 80px; margin-left: 20px;">Purpose:</span>
+          <span class="field-line"></span>
+        </div>
+      </div>
+
+      <div class="section">
+        <strong>EXPENSE DETAILS:</strong>
+        <table class="table">
+          <tr>
+            <th style="width: 5%;">No</th>
+            <th style="width: 45%;">Description</th>
+            <th style="width: 15%;">Quantity</th>
+            <th style="width: 15%;">Unit Price</th>
+            <th style="width: 20%;">Total</th>
+          </tr>
+          <tr><td>1</td><td></td><td></td><td></td><td></td></tr>
+          <tr><td>2</td><td></td><td></td><td></td><td></td></tr>
+          <tr><td>3</td><td></td><td></td><td></td><td></td></tr>
+          <tr><td>4</td><td></td><td></td><td></td><td></td></tr>
+          <tr><td>5</td><td></td><td></td><td></td><td></td></tr>
+          <tr><td colspan="4" style="text-align: right; font-weight: bold;">TOTAL AMOUNT:</td><td style="font-weight: bold;"></td></tr>
+        </table>
+      </div>
+
+      <div class="footer">
+        <div class="signature">
+          <strong>Requested By:</strong>
+          <span class="signature-line"></span>
+          <strong style="margin-left: 50px;">Date:</strong>
+          <span class="signature-line"></span>
+        </div>
+
+        <div class="signature">
+          <strong>Approved By:</strong>
+          <span class="signature-line"></span>
+          <strong style="margin-left: 50px;">Date:</strong>
+          <span class="signature-line"></span>
+        </div>
+
+        <div class="signature">
+          <strong>Received By:</strong>
+          <span class="signature-line"></span>
+          <strong style="margin-left: 50px;">Date:</strong>
+          <span class="signature-line"></span>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  return {
+    html,
+    filename: `HGF-AC-03_Petty_Cash_Voucher_${new Date().toISOString().split('T')[0]}.pdf`
+  };
+}
+
+async function generateInternalAuditReport() {
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>HGF-AD-09 Internal Audit Report</title>
+      <style>
+        body { font-family: 'Times New Roman', serif; margin: 40px; line-height: 1.6; font-size: 11px; }
+        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #000; padding-bottom: 20px; }
+        .title { font-size: 16px; font-weight: bold; margin-bottom: 10px; }
+        .subtitle { font-size: 12px; margin-bottom: 5px; }
+        .info { font-size: 10px; color: #666; }
+        .section { margin-bottom: 20px; }
+        .field { margin: 8px 0; }
+        .field-label { font-weight: bold; display: inline-block; width: 150px; }
+        .field-line { border-bottom: 1px solid #000; display: inline-block; width: 200px; }
+        .textarea { border: 1px solid #000; width: 100%; min-height: 60px; padding: 5px; margin: 5px 0; }
+        .table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 10px; }
+        .table th, .table td { border: 1px solid #000; padding: 5px; text-align: left; }
+        .table th { background: #f0f0f0; font-weight: bold; }
+        .footer { margin-top: 30px; border-top: 1px solid #000; padding-top: 20px; }
+        .signature { margin: 15px 0; }
+        .signature-line { border-bottom: 1px solid #000; width: 150px; display: inline-block; margin-left: 10px; }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <div class="title">HANMARINE GROUP QUALITY SYSTEM</div>
+        <div class="subtitle">HGF-AD-09 INTERNAL AUDIT REPORT</div>
+        <div class="info">Form ID: HGF-AD-09 | Revision: 01 | Date: ${new Date().toLocaleDateString()}</div>
+      </div>
+
+      <div class="section">
+        <div class="field">
+          <span class="field-label">Audit Report No:</span>
+          <span class="field-line"></span>
+          <span class="field-label" style="width: 100px; margin-left: 20px;">Date:</span>
+          <span class="field-line"></span>
+        </div>
+        <div class="field">
+          <span class="field-label">Auditee Department:</span>
+          <span class="field-line"></span>
+          <span class="field-label" style="width: 100px; margin-left: 20px;">Location:</span>
+          <span class="field-line"></span>
+        </div>
+        <div class="field">
+          <span class="field-label">Audit Team Leader:</span>
+          <span class="field-line"></span>
+          <span class="field-label" style="width: 100px; margin-left: 20px;">Auditors:</span>
+          <span class="field-line"></span>
+        </div>
+      </div>
+
+      <div class="section">
+        <strong>AUDIT SCOPE:</strong>
+        <div class="textarea"></div>
+      </div>
+
+      <div class="section">
+        <strong>AUDIT FINDINGS:</strong>
+        <table class="table">
+          <tr>
+            <th style="width: 5%;">No</th>
+            <th style="width: 35%;">Process/Activity Audited</th>
+            <th style="width: 20%;">Finding</th>
+            <th style="width: 20%;">Severity</th>
+            <th style="width: 20%;">Evidence</th>
+          </tr>
+          <tr><td>1</td><td></td><td></td><td></td><td></td></tr>
+          <tr><td>2</td><td></td><td></td><td></td><td></td></tr>
+          <tr><td>3</td><td></td><td></td><td></td><td></td></tr>
+          <tr><td>4</td><td></td><td></td><td></td><td></td></tr>
+          <tr><td>5</td><td></td><td></td><td></td><td></td></tr>
+        </table>
+      </div>
+
+      <div class="section">
+        <strong>NON-CONFORMITIES IDENTIFIED:</strong>
+        <div class="textarea"></div>
+      </div>
+
+      <div class="section">
+        <strong>POSITIVE OBSERVATIONS:</strong>
+        <div class="textarea"></div>
+      </div>
+
+      <div class="section">
+        <strong>RECOMMENDATIONS:</strong>
+        <div class="textarea"></div>
+      </div>
+
+      <div class="footer">
+        <div class="signature">
+          <strong>Audit Team Leader:</strong>
+          <span class="signature-line"></span>
+          <strong style="margin-left: 50px;">Date:</strong>
+          <span class="signature-line"></span>
+        </div>
+
+        <div class="signature">
+          <strong>Auditee Representative:</strong>
+          <span class="signature-line"></span>
+          <strong style="margin-left: 50px;">Date:</strong>
+          <span class="signature-line"></span>
+        </div>
+
+        <div class="signature">
+          <strong>Quality Manager:</strong>
+          <span class="signature-line"></span>
+          <strong style="margin-left: 50px;">Date:</strong>
+          <span class="signature-line"></span>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  return {
+    html,
+    filename: `HGF-AD-09_Internal_Audit_Report_${new Date().toISOString().split('T')[0]}.pdf`
+  };
+}
+
+// Placeholder functions for remaining forms
+async function generateStatementOfAccount() {
+  return {
+    html: `<html><body><h1>HGF-AC-05 Statement of Account - Coming Soon</h1><p>Form structure based on HANMARINE template</p></body></html>`,
+    filename: `HGF-AC-05_Statement_of_Account_${new Date().toISOString().split('T')[0]}.pdf`
+  };
+}
+}
+
+async function generateMonthlyCashReceiptDisbursement() {
+  return {
+    html: `<html><body><h1>HGF-AC-06 Monthly Cash Receipt & Disbursement - Coming Soon</h1><p>Form structure based on HANMARINE template</p></body></html>`,
+    filename: `HGF-AC-06_Monthly_Cash_Receipt_Disbursement_${new Date().toISOString().split('T')[0]}.pdf`
+  };
+}
+
+async function generateMonthlyDebitNote() {
+  return {
+    html: `<html><body><h1>HGF-AC-07 Monthly Debit Note - Coming Soon</h1><p>Form structure based on HANMARINE template</p></body></html>`,
+    filename: `HGF-AC-07_Monthly_Debit_Note_${new Date().toISOString().split('T')[0]}.pdf`
+  };
+}
+
+async function generateDepartmentalMeeting() {
+  return {
+    html: `<html><body><h1>HGF-AD-01 Departmental Meeting - Coming Soon</h1><p>Form structure based on HANMARINE template</p></body></html>`,
+    filename: `HGF-AD-01_Departmental_Meeting_${new Date().toISOString().split('T')[0]}.pdf`
+  };
+}
+
+async function generateInternalAuditGuide() {
+  return {
+    html: `<html><body><h1>HGF-AD-07 Internal Audit Guide - Coming Soon</h1><p>Form structure based on HANMARINE template</p></body></html>`,
+    filename: `HGF-AD-07_Internal_Audit_Guide_${new Date().toISOString().split('T')[0]}.pdf`
+  };
+}
+
+async function generateInternalAuditPlan() {
+  return {
+    html: `<html><body><h1>HGF-AD-08 Internal Audit Plan - Coming Soon</h1><p>Form structure based on HANMARINE template</p></body></html>`,
+    filename: `HGF-AD-08_Internal_Audit_Plan_${new Date().toISOString().split('T')[0]}.pdf`
+  };
+}
+
+async function generateCorrectivePreventiveActionRequest() {
+  return {
+    html: `<html><body><h1>HGF-AD-10 Corrective & Preventive Action Request - Coming Soon</h1><p>Form structure based on HANMARINE template</p></body></html>`,
+    filename: `HGF-AD-10_Corrective_Preventive_Action_Request_${new Date().toISOString().split('T')[0]}.pdf`
+  };
+}
+
+async function generatePurchaseOrder() {
+  return {
+    html: `<html><body><h1>HGF-AD-12 Purchase Order - Coming Soon</h1><p>Form structure based on HANMARINE template</p></body></html>`,
+    filename: `HGF-AD-12_Purchase_Order_${new Date().toISOString().split('T')[0]}.pdf`
+  };
+}
+
+async function generateOrientationNewEmployee() {
+  return {
+    html: `<html><body><h1>HGF-AD-14 Orientation for New Employee - Coming Soon</h1><p>Form structure based on HANMARINE template</p></body></html>`,
+    filename: `HGF-AD-14_Orientation_New_Employee_${new Date().toISOString().split('T')[0]}.pdf`
+  };
+}
+
+async function generateDisembarkationApplication() {
+  return {
+    html: `<html><body><h1>HGF-CR-13 Disembarkation Application - Coming Soon</h1><p>Form structure based on HANMARINE template</p></body></html>`,
+    filename: `HGF-CR-13_Disembarkation_Application_${new Date().toISOString().split('T')[0]}.pdf`
+  };
+}
+
+// PRINCIPAL FORMS - Lundqvist Rederierna Functions
+async function generateLundqvistApplication(data: any = null) {
+  const formData = data;
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Application for Lundqvist Rederierna</title>
+      <style>
+        body { font-family: 'Times New Roman', serif; margin: 40px; line-height: 1.6; font-size: 10px; }
+        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #000; padding-bottom: 20px; }
+        .title { font-size: 18px; font-weight: bold; margin-bottom: 10px; }
+        .subtitle { font-size: 14px; margin-bottom: 5px; }
+        .info { font-size: 10px; color: #666; }
+        .section { margin-bottom: 20px; page-break-inside: avoid; }
+        .section-title { font-weight: bold; font-size: 12px; margin-bottom: 10px; text-decoration: underline; }
+        .field { margin: 6px 0; }
+        .field-label { font-weight: bold; display: inline-block; width: 140px; }
+        .field-line { border-bottom: 1px solid #000; display: inline-block; min-width: 180px; }
+        .checkbox-group { margin: 8px 0; }
+        .checkbox { margin-right: 15px; display: inline-block; }
+        .declaration { margin: 20px 0; padding: 15px; border: 1px solid #ccc; page-break-inside: avoid; }
+        .table { border-collapse: collapse; width: 100%; margin: 10px 0; }
+        .table th, .table td { border: 1px solid #000; padding: 4px; text-align: left; }
+        .table th { background: #f0f0f0; font-weight: bold; }
+        .evaluation-table { border-collapse: collapse; width: 100%; margin: 10px 0; }
+        .evaluation-table th, .evaluation-table td { border: 1px solid #000; padding: 3px; text-align: center; font-size: 9px; }
+        .evaluation-table th { background: #f0f0f0; font-weight: bold; }
+        .doc-checklist { column-count: 2; column-gap: 20px; margin: 10px 0; }
+        .doc-item { margin: 2px 0; font-size: 9px; }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <div class="title">HANJOO MARITIME CO., LTD.</div>
+        <div class="subtitle">APPLICATION FOR EMPLOYMENT</div>
+        <div class="info">FOR FOREIGN CREW | Date: ${new Date().toLocaleDateString()}</div>
+      </div>
+
+      <!-- Basic Information -->
+      <div class="section">
+        <div class="section-title">BASIC INFORMATION</div>
+        <div class="field">
+          <span class="field-label">Family Name:</span>
+          <span class="field-line">${formData?.familyName || ''}</span>
+          <span class="field-label" style="width: 80px; margin-left: 20px;">Given Name:</span>
+          <span class="field-line">${formData?.givenName || ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Middle Name:</span>
+          <span class="field-line">${formData?.middleName || ''}</span>
+          <span class="field-label" style="width: 80px; margin-left: 20px;">Birth Date:</span>
+          <span class="field-line">${formData?.birthDate ? new Date(formData.birthDate).toLocaleDateString() : ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Position Applied For:</span>
+          <span class="field-line">${formData?.position || ''}</span>
+          <span class="field-label" style="width: 80px; margin-left: 20px;">P/M:</span>
+          <span class="field-line">${formData?.pm || ''}</span>
+        </div>
+      </div>
+
+      <!-- Personal Information -->
+      <div class="section">
+        <div class="section-title">PERSONAL INFORMATION</div>
+        <div class="field">
+          <span class="field-label">Last School:</span>
+          <span class="field-line">${formData?.lastSchool || ''}</span>
+          <span class="field-label" style="width: 80px; margin-left: 20px;">Course:</span>
+          <span class="field-line">${formData?.course || ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Duration:</span>
+          <span class="field-line">${formData?.duration || ''}</span>
+          <span class="field-label" style="width: 80px; margin-left: 20px;">Height/Weight:</span>
+          <span class="field-line">${formData?.heightWeight || ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Telephone No.:</span>
+          <span class="field-line">${formData?.telephone || ''}</span>
+          <span class="field-label" style="width: 80px; margin-left: 20px;">Civil Status:</span>
+          <span class="field-line">${formData?.civilStatus || ''}</span>
+        </div>
+      </div>
+
+      <!-- Ship Experience -->
+      <div class="section">
+        <div class="section-title">SHIP EXPERIENCE</div>
+        <table class="table">
+          <tr>
+            <th style="width: 5%;">No</th>
+            <th style="width: 20%;">Vessel Name</th>
+            <th style="width: 15%;">Rank/Position</th>
+            <th style="width: 12%;">Sign On</th>
+            <th style="width: 12%;">Sign Off</th>
+            <th style="width: 15%;">Vessel Type</th>
+            <th style="width: 8%;">GRT</th>
+            <th style="width: 13%;">Principal</th>
+          </tr>
+          ${(formData?.shipExperiences || []).map((exp: any, index: number) => `
+            <tr>
+              <td>${index + 1}</td>
+              <td>${exp.vesselName || ''}</td>
+              <td>${exp.rank || ''}</td>
+              <td>${exp.signOn ? new Date(exp.signOn).toLocaleDateString() : ''}</td>
+              <td>${exp.signOff ? new Date(exp.signOff).toLocaleDateString() : ''}</td>
+              <td>${exp.vesselType || ''}</td>
+              <td>${exp.grt || ''}</td>
+              <td>${exp.principal || ''}</td>
+            </tr>
+          `).join('')}
+        </table>
+        ${formData?.shipExperiences?.length > 0 ? `
+        <div style="margin-top: 10px;">
+          <strong>Reasons for Leaving:</strong>
+          <ul style="margin: 5px 0; padding-left: 20px;">
+            ${(formData.shipExperiences || []).map((exp: any, index: number) => 
+              exp.reasonLeaving ? `<li>Vessel ${index + 1}: ${exp.reasonLeaving}</li>` : ''
+            ).filter((item: string) => item).join('')}
+          </ul>
+        </div>
+        ` : ''}
+      </div>
+
+      <!-- Personal Qualification -->
+      <div class="section">
+        <div class="section-title">PERSONAL QUALIFICATION</div>
+        <table class="evaluation-table">
+          <tr>
+            <th style="width: 40%;">Criteria</th>
+            <th style="width: 15%;">A (10)</th>
+            <th style="width: 15%;">B (8)</th>
+            <th style="width: 15%;">C (6)</th>
+            <th style="width: 15%;">D (4)</th>
+          </tr>
+          <tr>
+            <td>Job Thinking (Satisfaction, Planning)</td>
+            <td>${formData?.jobThinking === 'A' ? '☑' : '☐'}</td>
+            <td>${formData?.jobThinking === 'B' ? '☑' : '☐'}</td>
+            <td>${formData?.jobThinking === 'C' ? '☑' : '☐'}</td>
+            <td>${formData?.jobThinking === 'D' ? '☑' : '☐'}</td>
+          </tr>
+          <tr>
+            <td>Adaptation (Responsibility, Patience)</td>
+            <td>${formData?.adaptation === 'A' ? '☑' : '☐'}</td>
+            <td>${formData?.adaptation === 'B' ? '☑' : '☐'}</td>
+            <td>${formData?.adaptation === 'C' ? '☑' : '☐'}</td>
+            <td>${formData?.adaptation === 'D' ? '☑' : '☐'}</td>
+          </tr>
+          <tr>
+            <td>Carrier (Shifting co., Service Length)</td>
+            <td>${formData?.carrier === 'A' ? '☑' : '☐'}</td>
+            <td>${formData?.carrier === 'B' ? '☑' : '☐'}</td>
+            <td>${formData?.carrier === 'C' ? '☑' : '☐'}</td>
+            <td>${formData?.carrier === 'D' ? '☑' : '☐'}</td>
+          </tr>
+          <tr>
+            <td>English (Hearing, Speaking, Reading, Writing)</td>
+            <td>${formData?.english === 'A' ? '☑' : '☐'}</td>
+            <td>${formData?.english === 'B' ? '☑' : '☐'}</td>
+            <td>${formData?.english === 'C' ? '☑' : '☐'}</td>
+            <td>${formData?.english === 'D' ? '☑' : '☐'}</td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- Personal Particulars -->
+      <div class="section">
+        <div class="section-title">PERSONAL PARTICULARS</div>
+        <table class="evaluation-table">
+          <tr>
+            <th style="width: 40%;">Criteria</th>
+            <th style="width: 15%;">A (10)</th>
+            <th style="width: 15%;">B (8)</th>
+            <th style="width: 15%;">C (6)</th>
+            <th style="width: 15%;">D (4)</th>
+          </tr>
+          <tr>
+            <td>Appearance (Posture, Expression)</td>
+            <td>${formData?.appearance === 'A' ? '☑' : '☐'}</td>
+            <td>${formData?.appearance === 'B' ? '☑' : '☐'}</td>
+            <td>${formData?.appearance === 'C' ? '☑' : '☐'}</td>
+            <td>${formData?.appearance === 'D' ? '☑' : '☐'}</td>
+          </tr>
+          <tr>
+            <td>Family Life (Status, Growing Process)</td>
+            <td>${formData?.familyLife === 'A' ? '☑' : '☐'}</td>
+            <td>${formData?.familyLife === 'B' ? '☑' : '☐'}</td>
+            <td>${formData?.familyLife === 'C' ? '☑' : '☐'}</td>
+            <td>${formData?.familyLife === 'D' ? '☑' : '☐'}</td>
+          </tr>
+          <tr>
+            <td>Social Life (Social Activity & Carrier)</td>
+            <td>${formData?.socialLife === 'A' ? '☑' : '☐'}</td>
+            <td>${formData?.socialLife === 'B' ? '☑' : '☐'}</td>
+            <td>${formData?.socialLife === 'C' ? '☑' : '☐'}</td>
+            <td>${formData?.socialLife === 'D' ? '☑' : '☐'}</td>
+          </tr>
+          <tr>
+            <td>Ambition (Positiveness, Confidence)</td>
+            <td>${formData?.ambition === 'A' ? '☑' : '☐'}</td>
+            <td>${formData?.ambition === 'B' ? '☑' : '☐'}</td>
+            <td>${formData?.ambition === 'C' ? '☑' : '☐'}</td>
+            <td>${formData?.ambition === 'D' ? '☑' : '☐'}</td>
+          </tr>
+          <tr>
+            <td>Knowledge (Technical, Skill, Carrier)</td>
+            <td>${formData?.knowledge === 'A' ? '☑' : '☐'}</td>
+            <td>${formData?.knowledge === 'B' ? '☑' : '☐'}</td>
+            <td>${formData?.knowledge === 'C' ? '☑' : '☐'}</td>
+            <td>${formData?.knowledge === 'D' ? '☑' : '☐'}</td>
+          </tr>
+          <tr>
+            <td>Sociality (Courtesy, Self-control)</td>
+            <td>${formData?.sociality === 'A' ? '☑' : '☐'}</td>
+            <td>${formData?.sociality === 'B' ? '☑' : '☐'}</td>
+            <td>${formData?.sociality === 'C' ? '☑' : '☐'}</td>
+            <td>${formData?.sociality === 'D' ? '☑' : '☐'}</td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- Identification of Carrier -->
+      <div class="section">
+        <div class="section-title">IDENTIFICATION OF CARRIER</div>
+        <div class="field">
+          <span class="field-label">Last Company:</span>
+          <span class="field-line">${formData?.lastCompany || ''}</span>
+          <span class="field-label" style="width: 80px; margin-left: 20px;">Last Rank:</span>
+          <span class="field-line">${formData?.lastRank || ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Total Carrier (YY-MM-DD):</span>
+          <span class="field-line">${formData?.totalCarrier || ''}</span>
+          <span class="field-label" style="width: 100px; margin-left: 20px;">Last Carrier (YY-MM-DD):</span>
+          <span class="field-line">${formData?.lastCarrier || ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Own Disembark:</span>
+          <span class="field-line" style="width: 400px;">${formData?.ownDisembark || ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Reward/Punish:</span>
+          <span class="field-line" style="width: 400px;">${formData?.rewardPunish || ''}</span>
+        </div>
+      </div>
+
+      <!-- Recommender -->
+      <div class="section">
+        <div class="section-title">RECOMMENDER</div>
+        <div class="field">
+          <span class="field-label">Section:</span>
+          <span class="field-line">${formData?.recommenderSection || ''}</span>
+          <span class="field-label" style="width: 80px; margin-left: 20px;">Rank/Name:</span>
+          <span class="field-line">${formData?.recommenderRankName || ''}</span>
+        </div>
+      </div>
+
+      <!-- Familiarization of Owner's Manual -->
+      <div class="section">
+        <div class="section-title">FAMILIARIZATION OF OWNER'S MANUAL</div>
+        <div class="field">
+          <span class="field-label">Date of Education:</span>
+          <span class="field-line">${formData?.educationDate ? new Date(formData.educationDate).toLocaleDateString() : ''}</span>
+          <span class="field-label" style="width: 100px; margin-left: 20px;">Kind of Manuals:</span>
+          <span class="field-line">${formData?.manualType || ''}</span>
+        </div>
+      </div>
+
+      <!-- Actual Onboard Time -->
+      <div class="section">
+        <div class="section-title">ACTUAL ONBOARD TIME</div>
+        <div class="field">
+          <span class="field-label">Actual Onboard Time (YY-MM-DD):</span>
+          <span class="field-line">${formData?.actualOnboardTime || ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Actual Onboard Time in Rank (YY-MM-DD):</span>
+          <span class="field-line">${formData?.onboardTimeInRank || ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Actual Onboard Time in Crude Tankers (YY-MM-DD):</span>
+          <span class="field-line">${formData?.onboardTimeCrude || ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Actual Onboard Time in Any Tankers (YY-MM-DD):</span>
+          <span class="field-line">${formData?.onboardTimeAnyTankers || ''}</span>
+        </div>
+      </div>
+
+      <!-- Interview Evaluation -->
+      <div class="section">
+        <div class="section-title">INTERVIEW EVALUATION</div>
+        <div class="field">
+          <span class="field-label">Result (Items 1-3):</span>
+          <span class="field-line">${formData?.result13 || ''}/100 points</span>
+          <span class="field-label" style="width: 80px; margin-left: 20px;">Final Result:</span>
+          <span class="field-line">${formData?.finalResult || ''}/100 points</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Judgement:</span>
+          <span class="field-line">${formData?.judgement || ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Main Interviewer:</span>
+          <span class="field-line">${formData?.mainInterviewerName || ''} (${formData?.mainInterviewerRank || ''})</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Sub Interviewer:</span>
+          <span class="field-line">${formData?.subInterviewerName || ''} (${formData?.subInterviewerRank || ''})</span>
+        </div>
+      </div>
+
+      <!-- Documents Checklist -->
+      <div class="section">
+        <div class="section-title">DOCUMENTS CHECKLIST</div>
+        <div class="doc-checklist">
+          ${formData ? [
+            formData.doc_0 ? '<div class="doc-item">☑ National Seaman Book</div>' : '<div class="doc-item">☐ National Seaman Book</div>',
+            formData.doc_1 ? '<div class="doc-item">☑ National License</div>' : '<div class="doc-item">☐ National License</div>',
+            formData.doc_2 ? '<div class="doc-item">☑ Flag State Seaman Book (I.D Book)</div>' : '<div class="doc-item">☐ Flag State Seaman Book (I.D Book)</div>',
+            formData.doc_3 ? '<div class="doc-item">☑ Flag State License</div>' : '<div class="doc-item">☐ Flag State License</div>',
+            formData.doc_4 ? '<div class="doc-item">☑ Flag State Special Qualification for Tanker Vessel Service</div>' : '<div class="doc-item">☐ Flag State Special Qualification for Tanker Vessel Service</div>',
+            formData.doc_5 ? '<div class="doc-item">☑ National Medical Exam. Certificate</div>' : '<div class="doc-item">☐ National Medical Exam. Certificate</div>',
+            formData.doc_6 ? '<div class="doc-item">☑ Flag State Medical Exam. Certificate</div>' : '<div class="doc-item">☐ Flag State Medical Exam. Certificate</div>',
+            formData.doc_7 ? '<div class="doc-item">☑ Passport</div>' : '<div class="doc-item">☐ Passport</div>',
+            formData.doc_8 ? '<div class="doc-item">☑ Ratings as Able Seafarer Deck</div>' : '<div class="doc-item">☐ Ratings as Able Seafarer Deck</div>',
+            formData.doc_9 ? '<div class="doc-item">☑ Flag State Special Qualification for Ratings (STCW95 Endorsement)</div>' : '<div class="doc-item">☐ Flag State Special Qualification for Ratings (STCW95 Endorsement)</div>',
+            formData.doc_10 ? '<div class="doc-item">☑ National GMDSS-GOC</div>' : '<div class="doc-item">☐ National GMDSS-GOC</div>',
+            formData.doc_11 ? '<div class="doc-item">☑ Flag State GMDSS-GOC</div>' : '<div class="doc-item">☐ Flag State GMDSS-GOC</div>',
+            formData.doc_12 ? '<div class="doc-item">☑ Radar Training Course</div>' : '<div class="doc-item">☐ Radar Training Course</div>',
+            formData.doc_13 ? '<div class="doc-item">☑ ARPA Training Course</div>' : '<div class="doc-item">☐ ARPA Training Course</div>',
+            formData.doc_14 ? '<div class="doc-item">☑ Safety Course, Basic</div>' : '<div class="doc-item">☐ Safety Course, Basic</div>',
+            formData.doc_15 ? '<div class="doc-item">☑ Safety Course, Survival Craft</div>' : '<div class="doc-item">☐ Safety Course, Survival Craft</div>',
+            formData.doc_16 ? '<div class="doc-item">☑ Safety Course, Fire Fighting</div>' : '<div class="doc-item">☐ Safety Course, Fire Fighting</div>',
+            formData.doc_17 ? '<div class="doc-item">☑ Safety Course, First Aid</div>' : '<div class="doc-item">☐ Safety Course, First Aid</div>',
+            formData.doc_18 ? '<div class="doc-item">☑ Safety Course, Rescue Boat</div>' : '<div class="doc-item">☐ Safety Course, Rescue Boat</div>',
+            formData.doc_19 ? '<div class="doc-item">☑ Tanker Course, Familiarization</div>' : '<div class="doc-item">☐ Tanker Course, Familiarization</div>',
+            formData.doc_20 ? '<div class="doc-item">☑ Tanker Course, Advanced Oil</div>' : '<div class="doc-item">☐ Tanker Course, Advanced Oil</div>',
+            formData.doc_21 ? '<div class="doc-item">☑ Tanker Course, Advanced Chemical</div>' : '<div class="doc-item">☐ Tanker Course, Advanced Chemical</div>',
+            formData.doc_22 ? '<div class="doc-item">☑ Vaccination - Y. Fever</div>' : '<div class="doc-item">☐ Vaccination - Y. Fever</div>',
+            formData.doc_23 ? '<div class="doc-item">☑ Vaccination - Cholera</div>' : '<div class="doc-item">☐ Vaccination - Cholera</div>',
+            formData.doc_24 ? '<div class="doc-item">☑ Drug and Alcohol Test</div>' : '<div class="doc-item">☐ Drug and Alcohol Test</div>',
+            formData.doc_25 ? '<div class="doc-item">☑ Schengen Visa</div>' : '<div class="doc-item">☐ Schengen Visa</div>',
+            formData.doc_26 ? '<div class="doc-item">☑ Packed Dangerous Cargo</div>' : '<div class="doc-item">☐ Packed Dangerous Cargo</div>',
+            formData.doc_27 ? '<div class="doc-item">☑ Pollution Prevention Course</div>' : '<div class="doc-item">☐ Pollution Prevention Course</div>',
+            formData.doc_28 ? '<div class="doc-item">☑ Medical Care Course</div>' : '<div class="doc-item">☐ Medical Care Course</div>',
+            formData.doc_29 ? '<div class="doc-item">☑ Senior Officer\'s Refresher Course</div>' : '<div class="doc-item">☐ Senior Officer\'s Refresher Course</div>',
+            formData.doc_30 ? '<div class="doc-item">☑ Ship Handling Simulation</div>' : '<div class="doc-item">☐ Ship Handling Simulation</div>',
+            formData.doc_31 ? '<div class="doc-item">☑ ERM Course</div>' : '<div class="doc-item">☐ ERM Course</div>',
+            formData.doc_32 ? '<div class="doc-item">☑ Bridge Team/Resource Management</div>' : '<div class="doc-item">☐ Bridge Team/Resource Management</div>',
+            formData.doc_33 ? '<div class="doc-item">☑ ECDIS</div>' : '<div class="doc-item">☐ ECDIS</div>',
+            formData.doc_34 ? '<div class="doc-item">☑ SDSD</div>' : '<div class="doc-item">☐ SDSD</div>',
+            formData.doc_35 ? '<div class="doc-item">☑ ISPS / SSO Course</div>' : '<div class="doc-item">☐ ISPS / SSO Course</div>',
+            formData.doc_36 ? '<div class="doc-item">☑ Personal Employment Contract</div>' : '<div class="doc-item">☐ Personal Employment Contract</div>',
+            formData.doc_37 ? '<div class="doc-item">☑ Authentication for Licenses and Certificates</div>' : '<div class="doc-item">☐ Authentication for Licenses and Certificates</div>'
+          ].join('') : 'No documents selected'}
+        </div>
+      </div>
+
+      <!-- Legal Declaration -->
+      <div class="section">
+        <div class="section-title">LEGAL DECLARATION</div>
+        <div class="declaration">
+          <strong>I HEREBY CERTIFY THAT ALL INFORMATIONS WHICH I HAVE PROVIDED HEREIN ARE TRUE AND CORRECT.</strong><br><br>
+          ANY MISREPRESENTATION THEREOF SHALL BE A GROUND FOR MY DISMISSAL IN WHICH CASE THE JOINING AND REPATRIATION COSTS SHALL BE ON ACCOUNT OF THE UNDERSIGNED.<br><br>
+
+          <div class="field">
+            <span class="field-label">Who recommended you to this company?</span>
+            <span class="field-line">${formData?.recommendedBy || ''}</span>
+          </div>
+
+          <div class="field">
+            <span class="field-label">Have you ever been sued in court or before any Administrative body?</span>
+            <span class="field-line">${formData?.suedInCourt === 'yes' ? 'Yes' : 'No'}</span>
+          </div>
+
+          ${formData?.suedInCourt === 'yes' ? `
+          <div class="field">
+            <span class="field-label">If "yes", give particulars:</span>
+            <span class="field-line" style="width: 400px;">${formData?.suedParticulars || ''}</span>
+          </div>
+          ` : ''}
+
+          <div class="field" style="margin-top: 20px;">
+            <span class="field-label">Signature of Applicant:</span>
+            <span class="field-line"></span>
+            <span class="field-label" style="width: 80px; margin-left: 20px;">Date:</span>
+            <span class="field-line">${new Date().toLocaleDateString()}</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="text-align: center; margin-top: 30px; font-size: 8px; color: #666;">
+        HANJOO MARITIME CO., LTD. HJF-2116, 98. 08. 10 ENFOR.
+      </div>
+    </body>
+    </html>`;
+
+  return {
+    html,
+    filename: `Lundqvist_Application_${formData?.familyName || ''}_${formData?.givenName || ''}_${new Date().toISOString().split('T')[0]}.pdf`
+  };
+}
+
+async function generateOwnerSMSSConfirmation(data: any = null) {
+  const formData = data;
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Confirmation for Understanding Owner SMS</title>
+      <style>
+        body { font-family: 'Times New Roman', serif; margin: 40px; line-height: 1.6; font-size: 11px; }
+        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #000; padding-bottom: 20px; }
+        .title { font-size: 16px; font-weight: bold; margin-bottom: 10px; }
+        .subtitle { font-size: 12px; margin-bottom: 5px; }
+        .info { font-size: 10px; color: #666; }
+        .section { margin-bottom: 20px; }
+        .field { margin: 8px 0; }
+        .field-label { font-weight: bold; display: inline-block; width: 150px; }
+        .field-line { border-bottom: 1px solid #000; display: inline-block; width: 200px; }
+        .confirmation { margin: 20px 0; padding: 15px; border: 1px solid #ccc; background: #f9f9f9; }
+        .checkbox { margin: 10px 0; }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <div class="title">LUNDQVIST REDERIERNA</div>
+        <div class="subtitle">CONFIRMATION FOR UNDERSTANDING THE OWNER'S SMS</div>
+        <div class="info">Safety Management System | Date: ${formData?.confirmationDate || new Date().toLocaleDateString()}</div>
+      </div>
+
+      <div class="section">
+        <div class="field">
+          <span class="field-label">Crew Member Name:</span>
+          <span class="field-line">${formData?.fullName || data?.fullName || ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Rank/Position:</span>
+          <span class="field-line">${formData?.position || data?.rank || ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Vessel:</span>
+          <span class="field-line">${data?.lastVessel || ''}</span>
+        </div>
+      </div>
+
+      <div class="confirmation">
+        <strong>I hereby confirm that I have read, understood, and agree to comply with:</strong><br><br>
+
+        1. Lundqvist Rederierna Safety Management System (SMS)<br>
+        2. All safety procedures and emergency response protocols<br>
+        3. Environmental protection requirements<br>
+        4. Company policies and operational procedures<br>
+        5. My responsibilities as outlined in the SMS<br><br>
+
+        <div class="checkbox">
+          ${formData?.understandSMS ? '☑' : '☐'} I have received training on the SMS procedures<br>
+          ${formData?.agreeToComply ? '☑' : '☐'} I understand the reporting requirements for incidents<br>
+          ☐ I am familiar with emergency evacuation procedures<br>
+          ☐ I understand my role in maintaining safety onboard<br>
+        </div>
+      </div>
+
+      <div class="section">
+        <strong>ADDITIONAL COMMENTS:</strong>
+        <div style="border: 1px solid #ccc; padding: 10px; min-height: 60px; margin: 10px 0;"></div>
+      </div>
+
+      <div class="section">
+        <div class="field">
+          <span class="field-label">Signature:</span>
+          <span class="field-line"></span>
+          <span class="field-label" style="width: 80px; margin-left: 20px;">Date:</span>
+          <span class="field-line">${new Date().toLocaleDateString()}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Witnessed By:</span>
+          <span class="field-line"></span>
+          <span class="field-label" style="width: 80px; margin-left: 20px;">Date:</span>
+          <span class="field-line"></span>
+        </div>
+      </div>
+    </body>
+    </html>`;
+
+  return {
+    html,
+    filename: `Lundqvist_SMS_Confirmation_${formData?.fullName ? formData.fullName.replace(/\s+/g, '_') : data?.fullName ? data.fullName.replace(/\s+/g, '_') : 'Blank'}_${new Date().toISOString().split('T')[0]}.pdf`
+  };
+}
+
+async function generateMedicalHistoryChecklist(data: any = null) {
+  const formData = data;
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Medical History Checking List</title>
+      <style>
+        body { font-family: 'Times New Roman', serif; margin: 40px; line-height: 1.6; font-size: 11px; }
+        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #000; padding-bottom: 20px; }
+        .title { font-size: 16px; font-weight: bold; margin-bottom: 10px; }
+        .subtitle { font-size: 12px; margin-bottom: 5px; }
+        .info { font-size: 10px; color: #666; }
+        .section { margin-bottom: 20px; }
+        .field { margin: 8px 0; }
+        .field-label { font-weight: bold; display: inline-block; width: 150px; }
+        .field-line { border-bottom: 1px solid #000; display: inline-block; width: 200px; }
+        .medical-table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 10px; }
+        .medical-table th, .medical-table td { border: 1px solid #000; padding: 6px; text-align: left; }
+        .medical-table th { background: #f0f0f0; font-weight: bold; }
+        .yes-no { text-align: center; width: 60px; }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <div class="title">LUNDQVIST REDERIERNA</div>
+        <div class="subtitle">MEDICAL HISTORY CHECKING LIST</div>
+        <div class="info">Pre-employment Medical Assessment | Date: ${new Date().toLocaleDateString()}</div>
+      </div>
+
+      <div class="section">
+        <div class="field">
+          <span class="field-label">Name:</span>
+          <span class="field-line">${formData?.fullName || data?.fullName || ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Date of Birth:</span>
+          <span class="field-line">${formData?.dateOfBirth || ''}</span>
+          <span class="field-label" style="width: 80px; margin-left: 20px;">Age:</span>
+          <span class="field-line"></span>
+        </div>
+        <div class="field">
+          <span class="field-label">Position Applied:</span>
+          <span class="field-line">${data?.rank || ''}</span>
+        </div>
+      </div>
+
+      <div class="section">
+        <strong>MEDICAL HISTORY:</strong>
+        <table class="medical-table">
+          <tr>
+            <th style="width: 50%;">Condition/Illness</th>
+            <th style="width: 15%;">Yes/No</th>
+            <th style="width: 35%;">Details/Comments</th>
+          </tr>
+          <tr><td>Heart disease or chest pain</td><td class="yes-no"></td><td></td></tr>
+          <tr><td>High blood pressure</td><td class="yes-no"></td><td></td></tr>
+          <tr><td>Diabetes</td><td class="yes-no"></td><td></td></tr>
+          <tr><td>Asthma or breathing problems</td><td class="yes-no"></td><td></td></tr>
+          <tr><td>Epilepsy or seizures</td><td class="yes-no"></td><td></td></tr>
+          <tr><td>Mental health conditions</td><td class="yes-no"></td><td></td></tr>
+          <tr><td>Back or joint problems</td><td class="yes-no"></td><td></td></tr>
+          <tr><td>Eye or vision problems</td><td class="yes-no"></td><td></td></tr>
+          <tr><td>Hearing problems</td><td class="yes-no"></td><td></td></tr>
+          <tr><td>Allergies</td><td class="yes-no"></td><td></td></tr>
+          <tr><td>Surgical operations</td><td class="yes-no"></td><td></td></tr>
+          <tr><td>Current medications</td><td class="yes-no"></td><td></td></tr>
+        </table>
+      </div>
+
+      <div class="section">
+        <strong>FAMILY MEDICAL HISTORY:</strong>
+        <div style="border: 1px solid #ccc; padding: 10px; min-height: 60px; margin: 10px 0;"></div>
+      </div>
+
+      <div class="section">
+        <strong>LIFESTYLE FACTORS:</strong>
+        <div style="margin-left: 20px;">
+          <div class="field">
+            <span class="field-label">Smoking:</span>
+            <span style="margin-left: 10px;">☐ Yes ☐ No</span>
+            <span class="field-label" style="width: 100px; margin-left: 40px;">Alcohol:</span>
+            <span style="margin-left: 10px;">☐ Yes ☐ No</span>
+          </div>
+          <div class="field">
+            <span class="field-label">Exercise:</span>
+            <span style="margin-left: 10px;">☐ Regular ☐ Occasional ☐ None</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <strong>DOCTOR'S ASSESSMENT:</strong>
+        <div style="border: 1px solid #ccc; padding: 10px; min-height: 80px; margin: 10px 0;"></div>
+        <div class="field">
+          <span class="field-label">Fit for Duty:</span>
+          <span style="margin-left: 10px;">☐ Yes ☐ No ☐ Conditional</span>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="field">
+          <span class="field-label">Doctor's Name:</span>
+          <span class="field-line"></span>
+          <span class="field-label" style="width: 80px; margin-left: 20px;">Signature:</span>
+          <span class="field-line"></span>
+        </div>
+        <div class="field">
+          <span class="field-label">Date:</span>
+          <span class="field-line">${new Date().toLocaleDateString()}</span>
+          <span class="field-label" style="width: 80px; margin-left: 20px;">License No:</span>
+          <span class="field-line"></span>
+        </div>
+      </div>
+    </body>
+    </html>`;
+
+  return {
+    html,
+    filename: `Lundqvist_Medical_History_${formData?.fullName ? formData.fullName.replace(/\s+/g, '_') : data?.fullName ? data.fullName.replace(/\s+/g, '_') : 'Blank'}_${new Date().toISOString().split('T')[0]}.pdf`
+  };
+}
+
+async function generateNextOfKinDeclaration(data: any = null) {
+  const formData = data;
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Next of Kin Declaration</title>
+      <style>
+        body { font-family: 'Times New Roman', serif; margin: 40px; line-height: 1.6; font-size: 11px; }
+        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #000; padding-bottom: 20px; }
+        .title { font-size: 16px; font-weight: bold; margin-bottom: 10px; }
+        .subtitle { font-size: 12px; margin-bottom: 5px; }
+        .info { font-size: 10px; color: #666; }
+        .section { margin-bottom: 20px; }
+        .field { margin: 8px 0; }
+        .field-label { font-weight: bold; display: inline-block; width: 150px; }
+        .field-line { border-bottom: 1px solid #000; display: inline-block; width: 200px; }
+        .declaration { margin: 20px 0; padding: 15px; border: 1px solid #ccc; background: #f9f9f9; }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <div class="title">LUNDQVIST REDERIERNA</div>
+        <div class="subtitle">NEXT OF KIN DECLARATION</div>
+        <div class="info">Emergency Contact Information | Date: ${new Date().toLocaleDateString()}</div>
+      </div>
+
+      <div class="section">
+        <div class="field">
+          <span class="field-label">Crew Member Name:</span>
+          <span class="field-line">${formData?.employeeName || data?.fullName || ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Rank/Position:</span>
+          <span class="field-line">${data?.rank || ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Next of Kin Name:</span>
+          <span class="field-line">${formData?.nextOfKinName || ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Relationship:</span>
+          <span class="field-line">${formData?.relationship || ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Contact Number:</span>
+          <span class="field-line">${formData?.contactNumber || ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Address:</span>
+          <span class="field-line" style="width: 350px;">${formData?.address || ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Employee ID:</span>
+          <span class="field-line"></span>
+        </div>
+      </div>
+
+      <div class="section">
+        <strong>PRIMARY NEXT OF KIN:</strong>
+        <div class="field">
+          <span class="field-label">Full Name:</span>
+          <span class="field-line"></span>
+        </div>
+        <div class="field">
+          <span class="field-label">Relationship:</span>
+          <span class="field-line"></span>
+        </div>
+        <div class="field">
+          <span class="field-label">Address:</span>
+          <span class="field-line" style="width: 350px;"></span>
+        </div>
+        <div class="field">
+          <span class="field-label">Phone (Home):</span>
+          <span class="field-line"></span>
+          <span class="field-label" style="width: 80px; margin-left: 20px;">Mobile:</span>
+          <span class="field-line"></span>
+        </div>
+        <div class="field">
+          <span class="field-label">Email:</span>
+          <span class="field-line"></span>
+        </div>
+      </div>
+
+      <div class="section">
+        <strong>SECONDARY NEXT OF KIN:</strong>
+        <div class="field">
+          <span class="field-label">Full Name:</span>
+          <span class="field-line"></span>
+        </div>
+        <div class="field">
+          <span class="field-label">Relationship:</span>
+          <span class="field-line"></span>
+        </div>
+        <div class="field">
+          <span class="field-label">Phone:</span>
+          <span class="field-line"></span>
+          <span class="field-label" style="width: 80px; margin-left: 20px;">Email:</span>
+          <span class="field-line"></span>
+        </div>
+      </div>
+
+      <div class="declaration">
+        <strong>DECLARATION:</strong><br><br>
+        I hereby declare that the above information is accurate and complete. In case of emergency,
+        I authorize Lundqvist Rederierna to contact the above-mentioned persons and to provide them
+        with necessary information regarding my condition and location.<br><br>
+        I understand that it is my responsibility to keep this information up to date.
+      </div>
+
+      <div class="section">
+        <div class="field">
+          <span class="field-label">Signature:</span>
+          <span class="field-line"></span>
+          <span class="field-label" style="width: 80px; margin-left: 20px;">Date:</span>
+          <span class="field-line">${new Date().toLocaleDateString()}</span>
+        </div>
+      </div>
+
+      <div class="section">
+        <strong>EMERGENCY MEDICAL INFORMATION:</strong>
+        <div class="field">
+          <span class="field-label">Blood Type:</span>
+          <span class="field-line"></span>
+          <span class="field-label" style="width: 100px; margin-left: 20px;">Allergies:</span>
+          <span class="field-line"></span>
+        </div>
+        <div class="field">
+          <span class="field-label">Medical Conditions:</span>
+          <span class="field-line" style="width: 350px;"></span>
+        </div>
+        <div class="field">
+          <span class="field-label">Current Medications:</span>
+          <span class="field-line" style="width: 350px;"></span>
+        </div>
+      </div>
+    </body>
+    </html>`;
+
+  return {
+    html,
+    filename: `Lundqvist_Next_of_Kin_${formData?.employeeName ? formData.employeeName.replace(/\s+/g, '_') : data?.fullName ? data.fullName.replace(/\s+/g, '_') : 'Blank'}_${new Date().toISOString().split('T')[0]}.pdf`
+  };
+}
+
+async function generateSeafarerEmploymentContract(data: any = null) {
+  const formData = data;
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Seafarer Employment Contract</title>
+      <style>
+        body { font-family: 'Times New Roman', serif; margin: 40px; line-height: 1.6; font-size: 11px; }
+        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #000; padding-bottom: 20px; }
+        .title { font-size: 16px; font-weight: bold; margin-bottom: 10px; }
+        .subtitle { font-size: 12px; margin-bottom: 5px; }
+        .info { font-size: 10px; color: #666; }
+        .section { margin-bottom: 20px; }
+        .field { margin: 8px 0; }
+        .field-label { font-weight: bold; display: inline-block; width: 150px; }
+        .field-line { border-bottom: 1px solid #000; display: inline-block; width: 200px; }
+        .contract-terms { margin: 20px 0; padding: 15px; border: 1px solid #ccc; background: #f9f9f9; }
+        .signature-section { margin-top: 40px; display: flex; justify-content: space-between; }
+        .signature-box { width: 200px; text-align: center; border-top: 1px solid #000; padding-top: 10px; }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <div class="title">LUNDQVIST REDERIERNA</div>
+        <div class="subtitle">SEAFARER EMPLOYMENT CONTRACT</div>
+        <div class="info">Contract No: ___________ | Date: ${new Date().toLocaleDateString()}</div>
+      </div>
+
+      <div class="section">
+        <strong>PARTIES TO THE CONTRACT:</strong><br><br>
+        <strong>Employer:</strong> Lundqvist Rederierna AB, Finland<br>
+        <strong>Employee:</strong> ${formData?.employeeName || data?.fullName || '___________________________'}<br>
+        <strong>Position:</strong> ${formData?.position || data?.rank || '___________________________'}<br>
+        <strong>Nationality:</strong> ${data?.nationality || '___________________________'}
+      </div>
+
+      <div class="section">
+        <strong>EMPLOYMENT TERMS:</strong>
+        <div class="field">
+          <span class="field-label">Commencement Date:</span>
+          <span class="field-line">${formData?.startDate || ''}</span>
+          <span class="field-label" style="width: 120px; margin-left: 20px;">Contract Duration:</span>
+          <span class="field-line">${formData?.contractDuration ? formData.contractDuration + ' months' : ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Basic Salary:</span>
+          <span class="field-line">${formData?.salary ? 'USD ' + formData.salary.toLocaleString() : ''}</span>
+          <span class="field-label" style="width: 120px; margin-left: 20px;">Currency:</span>
+          <span class="field-line">EUR</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Working Hours:</span>
+          <span class="field-line">As per MLC 2006</span>
+          <span class="field-label" style="width: 120px; margin-left: 20px;">Rest Periods:</span>
+          <span class="field-line">As per MLC 2006</span>
+        </div>
+      </div>
+
+      <div class="contract-terms">
+        <strong>CONTRACTUAL OBLIGATIONS:</strong><br><br>
+
+        <strong>1. EMPLOYEE OBLIGATIONS:</strong><br>
+        • Perform duties diligently and professionally<br>
+        • Comply with all safety and operational procedures<br>
+        • Maintain required certificates and qualifications<br>
+        • Follow company policies and maritime regulations<br>
+        • Report any incidents or safety concerns immediately<br><br>
+
+        <strong>2. EMPLOYER OBLIGATIONS:</strong><br>
+        • Provide safe working conditions<br>
+        • Pay agreed salary and benefits<br>
+        • Provide adequate training and equipment<br>
+        • Ensure compliance with MLC 2006 standards<br>
+        • Provide repatriation when required<br><br>
+
+        <strong>3. TERMINATION:</strong><br>
+        • Either party may terminate with appropriate notice<br>
+        • Immediate termination for serious misconduct<br>
+        • Final settlement of wages and benefits<br><br>
+
+        <strong>4. GOVERNING LAW:</strong><br>
+        • This contract is governed by Finnish law<br>
+        • Disputes shall be resolved through arbitration<br>
+        • MLC 2006 provisions shall apply where relevant
+      </div>
+
+      <div class="section">
+        <strong>SIGNATURES:</strong>
+      </div>
+
+      <div class="signature-section">
+        <div class="signature-box">
+          <div>Employee Signature</div>
+          <div style="margin-top: 40px;">___________________________</div>
+          <div style="margin-top: 5px;">${formData?.employeeName || data?.fullName || 'Name'}</div>
+          <div style="margin-top: 5px;">Date: _______________</div>
+        </div>
+
+        <div class="signature-box">
+          <div>Employer Representative</div>
+          <div style="margin-top: 40px;">___________________________</div>
+          <div style="margin-top: 5px;">Name: _______________________</div>
+          <div style="margin-top: 5px;">Date: _______________</div>
+        </div>
+      </div>
+
+      <div style="margin-top: 30px; font-size: 10px; text-align: center; color: #666;">
+        This contract is made in accordance with MLC 2006 and Finnish employment legislation.
+      </div>
+    </body>
+    </html>`;
+
+  return {
+    html,
+    filename: `Lundqvist_Employment_Contract_${formData?.employeeName ? formData.employeeName.replace(/\s+/g, '_') : data?.fullName ? data.fullName.replace(/\s+/g, '_') : 'Blank'}_${new Date().toISOString().split('T')[0]}.pdf`
+  };
+}
+
+// CR-02: Application for Employment
+async function generateApplicationForEmployment(data: any = null) {
+  const formData = data;
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Application for Employment</title>
+      <style>
+        body { font-family: 'Times New Roman', serif; margin: 40px; line-height: 1.6; font-size: 10px; }
+        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #000; padding-bottom: 20px; }
+        .title { font-size: 18px; font-weight: bold; margin-bottom: 10px; }
+        .subtitle { font-size: 14px; margin-bottom: 5px; }
+        .info { font-size: 10px; color: #666; }
+        .section { margin-bottom: 20px; page-break-inside: avoid; }
+        .section-title { font-weight: bold; font-size: 12px; margin-bottom: 10px; text-decoration: underline; }
+        .field { margin: 6px 0; }
+        .field-label { font-weight: bold; display: inline-block; width: 140px; }
+        .field-line { border-bottom: 1px solid #000; display: inline-block; min-width: 180px; }
+        .declaration { margin: 20px 0; padding: 15px; border: 1px solid #ccc; page-break-inside: avoid; }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <div class="title">HANJOO MARITIME CO., LTD.</div>
+        <div class="subtitle">APPLICATION FOR EMPLOYMENT</div>
+        <div class="info">Date: ${new Date().toLocaleDateString()}</div>
+      </div>
+
+      <!-- Personal Information -->
+      <div class="section">
+        <div class="section-title">PERSONAL INFORMATION</div>
+        <div class="field">
+          <span class="field-label">Full Name:</span>
+          <span class="field-line">${formData?.fullName || ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Date of Birth:</span>
+          <span class="field-line">${formData?.dateOfBirth ? new Date(formData.dateOfBirth).toLocaleDateString() : ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Position Applied For:</span>
+          <span class="field-line">${formData?.position || ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Contact Number:</span>
+          <span class="field-line">${formData?.contactNumber || ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Email Address:</span>
+          <span class="field-line">${formData?.email || ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Address:</span>
+          <span class="field-line" style="width: 400px;">${formData?.address || ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Nationality:</span>
+          <span class="field-line">${formData?.nationality || ''}</span>
+          <span class="field-label" style="width: 80px; margin-left: 20px;">Marital Status:</span>
+          <span class="field-line">${formData?.maritalStatus || ''}</span>
+        </div>
+      </div>
+
+      <!-- Employment Details -->
+      <div class="section">
+        <div class="section-title">EMPLOYMENT DETAILS</div>
+        <div class="field">
+          <span class="field-label">Previous Experience:</span>
+          <span class="field-line" style="width: 400px;">${formData?.experience || ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Expected Salary (USD):</span>
+          <span class="field-line">${formData?.expectedSalary ? '$' + formData.expectedSalary : ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Available Start Date:</span>
+          <span class="field-line">${formData?.availableDate ? new Date(formData.availableDate).toLocaleDateString() : ''}</span>
+        </div>
+      </div>
+
+      <!-- Declaration -->
+      <div class="declaration">
+        <strong>DECLARATION:</strong><br><br>
+        I hereby certify that all information provided in this application is true and correct to the best of my knowledge. I understand that any false statements or omissions may result in disqualification from employment or termination if employed.
+        <br><br>
+        <div style="margin-top: 30px;">
+          <div style="display: inline-block; margin-right: 100px;">
+            <div>Applicant Signature: ___________________________</div>
+            <div style="margin-top: 10px;">Date: _______________</div>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>`;
+
+  return {
+    html,
+    filename: `Application_for_Employment_${formData?.fullName ? formData.fullName.replace(/\s+/g, '_') : data?.fullName ? data.fullName.replace(/\s+/g, '_') : 'Blank'}_${new Date().toISOString().split('T')[0]}.pdf`
+  };
+}
+
+// CR-03: Checklist for Departing Crew
+async function generateDepartingCrewChecklist(data: any = null) {
+  const formData = data;
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Checklist for Departing Crew</title>
+      <style>
+        body { font-family: 'Times New Roman', serif; margin: 40px; line-height: 1.6; font-size: 10px; }
+        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #000; padding-bottom: 20px; }
+        .title { font-size: 18px; font-weight: bold; margin-bottom: 10px; }
+        .subtitle { font-size: 14px; margin-bottom: 5px; }
+        .info { font-size: 10px; color: #666; }
+        .section { margin-bottom: 20px; page-break-inside: avoid; }
+        .section-title { font-weight: bold; font-size: 12px; margin-bottom: 10px; text-decoration: underline; }
+        .field { margin: 6px 0; }
+        .field-label { font-weight: bold; display: inline-block; width: 140px; }
+        .field-line { border-bottom: 1px solid #000; display: inline-block; min-width: 180px; }
+        .checklist { margin: 10px 0; }
+        .checklist-item { margin: 5px 0; display: flex; align-items: center; }
+        .checkbox { width: 20px; height: 20px; border: 1px solid #000; display: inline-block; margin-right: 10px; text-align: center; }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <div class="title">HANJOO MARITIME CO., LTD.</div>
+        <div class="subtitle">CHECKLIST FOR DEPARTING CREW</div>
+        <div class="info">Date: ${new Date().toLocaleDateString()}</div>
+      </div>
+
+      <!-- Crew Information -->
+      <div class="section">
+        <div class="section-title">CREW INFORMATION</div>
+        <div class="field">
+          <span class="field-label">Crew Name:</span>
+          <span class="field-line">${formData?.crewName || ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Position/Rank:</span>
+          <span class="field-line">${formData?.position || ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Vessel Name:</span>
+          <span class="field-line">${formData?.vesselName || ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Departure Date:</span>
+          <span class="field-line">${formData?.departureDate ? new Date(formData.departureDate).toLocaleDateString() : ''}</span>
+        </div>
+      </div>
+
+      <!-- Handover Checklist -->
+      <div class="section">
+        <div class="section-title">HANDOVER CHECKLIST</div>
+        <div class="checklist">
+          <div class="checklist-item">
+            <span class="checkbox">${formData?.checklist_0 ? '☑' : '☐'}</span>
+            <span>Cabin keys returned</span>
+          </div>
+          <div class="checklist-item">
+            <span class="checkbox">${formData?.checklist_1 ? '☑' : '☐'}</span>
+            <span>Company property returned (uniforms, equipment)</span>
+          </div>
+          <div class="checklist-item">
+            <span class="checkbox">${formData?.checklist_2 ? '☑' : '☐'}</span>
+            <span>Personal belongings collected</span>
+          </div>
+          <div class="checklist-item">
+            <span class="checkbox">${formData?.checklist_3 ? '☑' : '☐'}</span>
+            <span>Final wages received</span>
+          </div>
+          <div class="checklist-item">
+            <span class="checkbox">${formData?.checklist_4 ? '☑' : '☐'}</span>
+            <span>Medical records updated</span>
+          </div>
+          <div class="checklist-item">
+            <span class="checkbox">${formData?.checklist_5 ? '☑' : '☐'}</span>
+            <span>Training certificates collected</span>
+          </div>
+          <div class="checklist-item">
+            <span class="checkbox">${formData?.checklist_6 ? '☑' : '☐'}</span>
+            <span>Seafarer book updated</span>
+          </div>
+          <div class="checklist-item">
+            <span class="checkbox">${formData?.checklist_7 ? '☑' : '☐'}</span>
+            <span>Travel documents arranged</span>
+          </div>
+          <div class="checklist-item">
+            <span class="checkbox">${formData?.checklist_8 ? '☑' : '☐'}</span>
+            <span>Final medical check completed</span>
+          </div>
+          <div class="checklist-item">
+            <span class="checkbox">${formData?.checklist_9 ? '☑' : '☐'}</span>
+            <span>Exit interview conducted</span>
+          </div>
+          <div class="checklist-item">
+            <span class="checkbox">${formData?.checklist_10 ? '☑' : '☐'}</span>
+            <span>Reference letter provided</span>
+          </div>
+          <div class="checklist-item">
+            <span class="checkbox">${formData?.checklist_11 ? '☑' : '☐'}</span>
+            <span>Repatriation arrangements confirmed</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Final Comments -->
+      <div class="section">
+        <div class="section-title">FINAL COMMENTS</div>
+        <div style="border: 1px solid #000; padding: 10px; min-height: 60px;">
+          ${formData?.finalComments || ''}
+        </div>
+      </div>
+
+      <!-- Verification -->
+      <div class="section">
+        <div class="section-title">VERIFICATION</div>
+        <div class="field">
+          <span class="field-label">Checked By (Name):</span>
+          <span class="field-line">${formData?.checkedBy || ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Checked By (Position):</span>
+          <span class="field-line">${formData?.checkedByPosition || ''}</span>
+        </div>
+        <div style="margin-top: 30px;">
+          <div style="display: inline-block; margin-right: 100px;">
+            <div>Signature: ___________________________</div>
+            <div style="margin-top: 10px;">Date: _______________</div>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>`;
+
+  return {
+    html,
+    filename: `Departing_Crew_Checklist_${formData?.crewName ? formData.crewName.replace(/\s+/g, '_') : data?.fullName ? data.fullName.replace(/\s+/g, '_') : 'Blank'}_${new Date().toISOString().split('T')[0]}.pdf`
+  };
+}
+
+// CR-08: Crew Evaluation Report
+async function generateCrewEvaluationReport(data: any = null) {
+  const formData = data;
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Crew Evaluation Report</title>
+      <style>
+        body { font-family: 'Times New Roman', serif; margin: 40px; line-height: 1.6; font-size: 10px; }
+        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #000; padding-bottom: 20px; }
+        .title { font-size: 18px; font-weight: bold; margin-bottom: 10px; }
+        .subtitle { font-size: 14px; margin-bottom: 5px; }
+        .info { font-size: 10px; color: #666; }
+        .section { margin-bottom: 20px; page-break-inside: avoid; }
+        .section-title { font-weight: bold; font-size: 12px; margin-bottom: 10px; text-decoration: underline; }
+        .field { margin: 6px 0; }
+        .field-label { font-weight: bold; display: inline-block; width: 140px; }
+        .field-line { border-bottom: 1px solid #000; display: inline-block; min-width: 180px; }
+        .evaluation-table { border-collapse: collapse; width: 100%; margin: 10px 0; }
+        .evaluation-table th, .evaluation-table td { border: 1px solid #000; padding: 4px; text-align: left; }
+        .evaluation-table th { background: #f0f0f0; font-weight: bold; }
+        .rating { text-align: center; }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <div class="title">HANJOO MARITIME CO., LTD.</div>
+        <div class="subtitle">CREW EVALUATION REPORT</div>
+        <div class="info">Date: ${new Date().toLocaleDateString()}</div>
+      </div>
+
+      <!-- Crew Information -->
+      <div class="section">
+        <div class="section-title">CREW INFORMATION</div>
+        <div class="field">
+          <span class="field-label">Crew Name:</span>
+          <span class="field-line">${formData?.crewName || ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Position/Rank:</span>
+          <span class="field-line">${formData?.position || ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Vessel Name:</span>
+          <span class="field-line">${formData?.vesselName || ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Evaluation Period:</span>
+          <span class="field-line">${formData?.evaluationPeriod || ''}</span>
+        </div>
+      </div>
+
+      <!-- Performance Evaluation -->
+      <div class="section">
+        <div class="section-title">PERFORMANCE EVALUATION</div>
+        <table class="evaluation-table">
+          <tr>
+            <th style="width: 40%;">Criteria</th>
+            <th style="width: 15%;">Rating</th>
+            <th style="width: 45%;">Comments</th>
+          </tr>
+          <tr>
+            <td>Technical Skills</td>
+            <td class="rating">${formData?.technicalSkills || ''}</td>
+            <td>${formData?.technicalSkillsComments || ''}</td>
+          </tr>
+          <tr>
+            <td>Work Attitude</td>
+            <td class="rating">${formData?.workAttitude || ''}</td>
+            <td>${formData?.workAttitudeComments || ''}</td>
+          </tr>
+          <tr>
+            <td>Safety Awareness</td>
+            <td class="rating">${formData?.safetyAwareness || ''}</td>
+            <td>${formData?.safetyAwarenessComments || ''}</td>
+          </tr>
+          <tr>
+            <td>Teamwork</td>
+            <td class="rating">${formData?.teamwork || ''}</td>
+            <td>${formData?.teamworkComments || ''}</td>
+          </tr>
+          <tr>
+            <td>Communication</td>
+            <td class="rating">${formData?.communication || ''}</td>
+            <td>${formData?.communicationComments || ''}</td>
+          </tr>
+          <tr>
+            <td>Leadership (if applicable)</td>
+            <td class="rating">${formData?.leadership || ''}</td>
+            <td>${formData?.leadershipComments || ''}</td>
+          </tr>
+          <tr>
+            <td>Reliability</td>
+            <td class="rating">${formData?.reliability || ''}</td>
+            <td>${formData?.reliabilityComments || ''}</td>
+          </tr>
+          <tr>
+            <td>Professionalism</td>
+            <td class="rating">${formData?.professionalism || ''}</td>
+            <td>${formData?.professionalismComments || ''}</td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- Overall Assessment -->
+      <div class="section">
+        <div class="section-title">OVERALL ASSESSMENT</div>
+        <div class="field">
+          <span class="field-label">Overall Rating:</span>
+          <span class="field-line">${formData?.overallRating || ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Strengths:</span>
+          <span class="field-line" style="width: 400px;">${formData?.strengths || ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Areas for Improvement:</span>
+          <span class="field-line" style="width: 400px;">${formData?.improvements || ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Recommendations:</span>
+          <span class="field-line" style="width: 400px;">${formData?.recommendations || ''}</span>
+        </div>
+      </div>
+
+      <!-- Evaluation Details -->
+      <div class="section">
+        <div class="section-title">EVALUATION DETAILS</div>
+        <div class="field">
+          <span class="field-label">Evaluated By (Name):</span>
+          <span class="field-line">${formData?.evaluatedBy || ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Evaluated By (Position):</span>
+          <span class="field-line">${formData?.evaluatedByPosition || ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Evaluation Date:</span>
+          <span class="field-line">${formData?.evaluationDate ? new Date(formData.evaluationDate).toLocaleDateString() : ''}</span>
+        </div>
+      </div>
+    </body>
+    </html>`;
+
+  return {
+    html,
+    filename: `Crew_Evaluation_Report_${formData?.crewName ? formData.crewName.replace(/\s+/g, '_') : data?.fullName ? data.fullName.replace(/\s+/g, '_') : 'Blank'}_${new Date().toISOString().split('T')[0]}.pdf`
+  };
+}
+
+// CR-10: Contract of Employment
+async function generateContractOfEmployment(data: any = null) {
+  const formData = data;
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Contract of Employment</title>
+      <style>
+        body { font-family: 'Times New Roman', serif; margin: 40px; line-height: 1.6; font-size: 10px; }
+        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #000; padding-bottom: 20px; }
+        .title { font-size: 18px; font-weight: bold; margin-bottom: 10px; }
+        .subtitle { font-size: 14px; margin-bottom: 5px; }
+        .info { font-size: 10px; color: #666; }
+        .section { margin-bottom: 20px; page-break-inside: avoid; }
+        .section-title { font-weight: bold; font-size: 12px; margin-bottom: 10px; text-decoration: underline; }
+        .field { margin: 6px 0; }
+        .field-label { font-weight: bold; display: inline-block; width: 140px; }
+        .field-line { border-bottom: 1px solid #000; display: inline-block; min-width: 180px; }
+        .contract-terms { margin: 15px 0; padding: 10px; border: 1px solid #ccc; }
+        .term-item { margin: 5px 0; }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <div class="title">HANJOO MARITIME CO., LTD.</div>
+        <div class="subtitle">CONTRACT OF EMPLOYMENT</div>
+        <div class="info">Date: ${new Date().toLocaleDateString()}</div>
+      </div>
+
+      <!-- Employment Details -->
+      <div class="section">
+        <div class="section-title">EMPLOYMENT DETAILS</div>
+        <div class="field">
+          <span class="field-label">Employee Name:</span>
+          <span class="field-line">${formData?.employeeName || ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Position:</span>
+          <span class="field-line">${formData?.position || ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Monthly Salary (USD):</span>
+          <span class="field-line">${formData?.salary ? '$' + formData.salary : ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Contract Duration:</span>
+          <span class="field-line">${formData?.contractDuration ? formData.contractDuration + ' months' : ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Start Date:</span>
+          <span class="field-line">${formData?.startDate ? new Date(formData.startDate).toLocaleDateString() : ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">End Date:</span>
+          <span class="field-line">${formData?.endDate ? new Date(formData.endDate).toLocaleDateString() : ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Work Location:</span>
+          <span class="field-line">${formData?.workLocation || ''}</span>
+        </div>
+      </div>
+
+      <!-- Contract Terms -->
+      <div class="section">
+        <div class="section-title">CONTRACT TERMS AND CONDITIONS</div>
+        <div class="contract-terms">
+          <div class="term-item">
+            <strong>1. EMPLOYEE OBLIGATIONS:</strong>
+            <br>• Perform duties diligently and professionally
+            <br>• Comply with all safety regulations and company policies
+            <br>• Maintain confidentiality of company information
+            <br>• Report for duty on time and maintain proper conduct
+          </div>
+          <div class="term-item">
+            <strong>2. EMPLOYER OBLIGATIONS:</strong>
+            <br>• Provide safe working conditions
+            <br>• Pay agreed salary and benefits on time
+            <br>• Provide adequate training and equipment
+            <br>• Ensure compliance with maritime regulations
+          </div>
+          <div class="term-item">
+            <strong>3. WORKING HOURS:</strong>
+            <br>• Standard working hours as per vessel requirements
+            <br>• Overtime compensation as per applicable laws
+            <br>• Rest periods in accordance with STCW requirements
+          </div>
+          <div class="term-item">
+            <strong>4. TERMINATION:</strong>
+            <br>• Either party may terminate with appropriate notice
+            <br>• Immediate termination for serious misconduct
+            <br>• Final settlement of wages and benefits
+          </div>
+        </div>
+      </div>
+
+      <!-- Agreement -->
+      <div class="section">
+        <div class="section-title">AGREEMENT</div>
+        <div class="field">
+          <span class="field-label">Employee Signature:</span>
+          <span class="field-line">${formData?.employeeSignature || ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Date:</span>
+          <span class="field-line">${formData?.contractDate ? new Date(formData.contractDate).toLocaleDateString() : ''}</span>
+        </div>
+      </div>
+    </body>
+    </html>`;
+
+  return {
+    html,
+    filename: `Contract_of_Employment_${formData?.employeeName ? formData.employeeName.replace(/\s+/g, '_') : data?.fullName ? data.fullName.replace(/\s+/g, '_') : 'Blank'}_${new Date().toISOString().split('T')[0]}.pdf`
+  };
+}
+
+// AC-01: Crew Wage Payment Record
+async function generateCrewWagePaymentRecord(data: any = null) {
+  const formData = data;
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Crew Wage Payment Record</title>
+      <style>
+        body { font-family: 'Times New Roman', serif; margin: 40px; line-height: 1.6; font-size: 10px; }
+        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #000; padding-bottom: 20px; }
+        .title { font-size: 18px; font-weight: bold; margin-bottom: 10px; }
+        .subtitle { font-size: 14px; margin-bottom: 5px; }
+        .info { font-size: 10px; color: #666; }
+        .section { margin-bottom: 20px; page-break-inside: avoid; }
+        .section-title { font-weight: bold; font-size: 12px; margin-bottom: 10px; text-decoration: underline; }
+        .field { margin: 6px 0; }
+        .field-label { font-weight: bold; display: inline-block; width: 140px; }
+        .field-line { border-bottom: 1px solid #000; display: inline-block; min-width: 180px; }
+        .salary-table { border-collapse: collapse; width: 100%; margin: 10px 0; }
+        .salary-table th, .salary-table td { border: 1px solid #000; padding: 4px; text-align: left; }
+        .salary-table th { background: #f0f0f0; font-weight: bold; }
+        .amount { text-align: right; }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <div class="title">HANJOO MARITIME CO., LTD.</div>
+        <div class="subtitle">CREW WAGE PAYMENT RECORD</div>
+        <div class="info">Date: ${new Date().toLocaleDateString()}</div>
+      </div>
+
+      <!-- Crew Information -->
+      <div class="section">
+        <div class="section-title">CREW INFORMATION</div>
+        <div class="field">
+          <span class="field-label">Crew Name:</span>
+          <span class="field-line">${formData?.crewName || ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Position/Rank:</span>
+          <span class="field-line">${formData?.position || ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Vessel Name:</span>
+          <span class="field-line">${formData?.vesselName || ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Payment Period:</span>
+          <span class="field-line">${formData?.paymentPeriod || ''}</span>
+        </div>
+      </div>
+
+      <!-- Salary Breakdown -->
+      <div class="section">
+        <div class="section-title">SALARY BREAKDOWN</div>
+        <table class="salary-table">
+          <tr>
+            <th style="width: 50%;">Description</th>
+            <th style="width: 25%;">Amount (USD)</th>
+            <th style="width: 25%;">Type</th>
+          </tr>
+          <tr>
+            <td>Basic Salary</td>
+            <td class="amount">${formData?.basicSalary ? '$' + parseFloat(formData.basicSalary).toFixed(2) : ''}</td>
+            <td>Earning</td>
+          </tr>
+          <tr>
+            <td>Overtime</td>
+            <td class="amount">${formData?.overtime ? '$' + parseFloat(formData.overtime).toFixed(2) : ''}</td>
+            <td>Earning</td>
+          </tr>
+          <tr>
+            <td>Allowances</td>
+            <td class="amount">${formData?.allowances ? '$' + parseFloat(formData.allowances).toFixed(2) : ''}</td>
+            <td>Earning</td>
+          </tr>
+          <tr>
+            <td>Deductions</td>
+            <td class="amount">${formData?.deductions ? '$' + parseFloat(formData.deductions).toFixed(2) : ''}</td>
+            <td>Deduction</td>
+          </tr>
+          <tr style="font-weight: bold; background: #f0f0f0;">
+            <td>Net Salary</td>
+            <td class="amount">${formData?.netSalary ? '$' + parseFloat(formData.netSalary).toFixed(2) : ''}</td>
+            <td>Total</td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- Payment Details -->
+      <div class="section">
+        <div class="section-title">PAYMENT DETAILS</div>
+        <div class="field">
+          <span class="field-label">Payment Method:</span>
+          <span class="field-line">${formData?.paymentMethod || ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Payment Date:</span>
+          <span class="field-line">${formData?.paymentDate ? new Date(formData.paymentDate).toLocaleDateString() : ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Bank Details:</span>
+          <span class="field-line" style="width: 400px;">${formData?.bankDetails || ''}</span>
+        </div>
+      </div>
+
+      <!-- Authorization -->
+      <div class="section">
+        <div class="section-title">AUTHORIZATION</div>
+        <div class="field">
+          <span class="field-label">Prepared By:</span>
+          <span class="field-line">${formData?.preparedBy || ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Approved By:</span>
+          <span class="field-line">${formData?.approvedBy || ''}</span>
+        </div>
+      </div>
+    </body>
+    </html>`;
+
+  return {
+    html,
+    filename: `Crew_Wage_Payment_Record_${formData?.crewName ? formData.crewName.replace(/\s+/g, '_') : data?.fullName ? data.fullName.replace(/\s+/g, '_') : 'Blank'}_${new Date().toISOString().split('T')[0]}.pdf`
+  };
+}
+
+// AC-04: Allotment Form
+async function generateAllotmentForm(data: any = null) {
+  const formData = data;
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Allotment Form</title>
+      <style>
+        body { font-family: 'Times New Roman', serif; margin: 40px; line-height: 1.6; font-size: 10px; }
+        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #000; padding-bottom: 20px; }
+        .title { font-size: 18px; font-weight: bold; margin-bottom: 10px; }
+        .subtitle { font-size: 14px; margin-bottom: 5px; }
+        .info { font-size: 10px; color: #666; }
+        .section { margin-bottom: 20px; page-break-inside: avoid; }
+        .section-title { font-weight: bold; font-size: 12px; margin-bottom: 10px; text-decoration: underline; }
+        .field { margin: 6px 0; }
+        .field-label { font-weight: bold; display: inline-block; width: 140px; }
+        .field-line { border-bottom: 1px solid #000; display: inline-block; min-width: 180px; }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <div class="title">HANJOO MARITIME CO., LTD.</div>
+        <div class="subtitle">ALLOTMENT FORM</div>
+        <div class="info">Date: ${new Date().toLocaleDateString()}</div>
+      </div>
+
+      <!-- Crew Information -->
+      <div class="section">
+        <div class="section-title">CREW INFORMATION</div>
+        <div class="field">
+          <span class="field-label">Crew Name:</span>
+          <span class="field-line">${formData?.crewName || ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Position/Rank:</span>
+          <span class="field-line">${formData?.position || ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Vessel Name:</span>
+          <span class="field-line">${formData?.vesselName || ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Allotment Period:</span>
+          <span class="field-line">${formData?.allotmentPeriod || ''}</span>
+        </div>
+      </div>
+
+      <!-- Allotment Details -->
+      <div class="section">
+        <div class="section-title">ALLOTMENT DETAILS</div>
+        <div class="field">
+          <span class="field-label">Allotment Amount (USD):</span>
+          <span class="field-line">${formData?.allotmentAmount ? '$' + parseFloat(formData.allotmentAmount).toFixed(2) : ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Allotment Percentage:</span>
+          <span class="field-line">${formData?.allotmentPercentage ? formData.allotmentPercentage + '%' : ''}</span>
+        </div>
+      </div>
+
+      <!-- Beneficiary Information -->
+      <div class="section">
+        <div class="section-title">BENEFICIARY INFORMATION</div>
+        <div class="field">
+          <span class="field-label">Beneficiary Name:</span>
+          <span class="field-line">${formData?.beneficiaryName || ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Relationship:</span>
+          <span class="field-line">${formData?.relationship || ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Beneficiary Address:</span>
+          <span class="field-line" style="width: 400px;">${formData?.beneficiaryAddress || ''}</span>
+        </div>
+      </div>
+
+      <!-- Bank Transfer Details -->
+      <div class="section">
+        <div class="section-title">BANK TRANSFER DETAILS</div>
+        <div class="field">
+          <span class="field-label">Bank Name:</span>
+          <span class="field-line">${formData?.bankName || ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Account Number:</span>
+          <span class="field-line">${formData?.accountNumber || ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">SWIFT/BIC Code:</span>
+          <span class="field-line">${formData?.swiftCode || ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Bank Address:</span>
+          <span class="field-line" style="width: 400px;">${formData?.bankAddress || ''}</span>
+        </div>
+      </div>
+
+      <!-- Authorization -->
+      <div class="section">
+        <div class="section-title">AUTHORIZATION</div>
+        <div class="field">
+          <span class="field-label">Crew Signature:</span>
+          <span class="field-line">${formData?.crewSignature || ''}</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Date:</span>
+          <span class="field-line">${formData?.allotmentDate ? new Date(formData.allotmentDate).toLocaleDateString() : ''}</span>
+        </div>
+      </div>
+    </body>
+    </html>`;
+
+  return {
+    html,
+    filename: `Allotment_Form_${formData?.crewName ? formData.crewName.replace(/\s+/g, '_') : data?.fullName ? data.fullName.replace(/\s+/g, '_') : 'Blank'}_${new Date().toISOString().split('T')[0]}.pdf`
+  };
+}

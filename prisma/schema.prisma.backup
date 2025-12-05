@@ -1,0 +1,1308 @@
+// ==========================
+// schema.prisma
+// ==========================
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ==========================
+// ENUMS
+// ==========================
+
+enum Role {
+  DIRECTOR
+  CDMO
+  OPERATIONAL
+  ACCOUNTING
+  HR
+  CREW_PORTAL
+}
+
+enum DataSensitivity {
+  RED     // Highly Sensitive
+  AMBER   // Sensitive
+  GREEN   // Internal/Normal
+}
+
+enum CrewStatus {
+  STANDBY
+  ONBOARD
+  OFF_SIGNED
+  BLOCKED
+}
+
+enum ContractStatus {
+  DRAFT
+  ACTIVE
+  COMPLETED
+  TERMINATED
+  CANCELLED
+}
+
+enum DisciplinaryAction {
+  WARNING
+  REPRIMAND
+  SUSPENSION
+  DISMISSAL
+  FINE
+}
+
+enum InsuranceType {
+  PANDI_CLUB
+  HEALTH_INSURANCE
+  ACCIDENT_INSURANCE
+  LIFE_INSURANCE
+}
+
+enum WageComponent {
+  BASIC_WAGE
+  FIXED_OVERTIME
+  MONTHLY_WAGE
+  LEAVE_PAY
+  SPECIAL_ALLOWANCE
+  BONUS
+}
+
+enum DocumentCategory {
+  PERSONAL
+  CERTIFICATE
+  MEDICAL
+  VISA
+  CONTRACT
+  TRAINING
+  DISPATCH
+  FINANCIAL
+  OTHER
+}
+
+enum DocumentTypeCode {
+  PASSPORT
+  SEAMAN_BOOK
+  STCW_BST
+  STCW_AFF
+  STCW_MEFA
+  STCW_SCRB
+  COP_TANKER
+  KOSMA
+  MEDICAL_RESULT
+  VISA
+  PKL_CONTRACT
+  SEA
+  TRAINING_NOK
+  TRAINING_SAFETY_DECL
+  TRAINING_MEDICAL_HISTORY
+  TRAINING_GENERAL_EDU
+  TRAINING_RECORD
+  TRAINING_SCHEDULE
+  OWNER_SMS_CONFIRM
+}
+
+enum VisaStatus {
+  DRAFT
+  SUBMITTED
+  PROCESSING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum PKLStatus {
+  DRAFT
+  PENDING_DIRECTOR_APPROVAL
+  APPROVED_BY_DIRECTOR
+  SUBMITTED_TO_SYAHBANDAR
+  APPROVED_SYAHBANDAR
+  REJECTED
+}
+
+enum DisciplinaryStatus {
+  OPEN
+  INVESTIGATING
+  CLOSED
+  APPEALED
+}
+
+enum DisciplinaryPenalty {
+  WARNING
+  REPRIMAND
+  SUSPENSION
+  DISMISSAL
+  FINE
+  MASTER_DISCRETION
+}
+
+enum DispatchStatus {
+  PLANNING
+  READY_FOR_DEPARTURE
+  AT_AIRPORT
+  CHECKED_IN
+  BOARDED
+  COMPLETED
+  CANCELLED
+}
+
+enum FlightLegType {
+  OUTBOUND
+  RETURN
+}
+
+enum PaymentStatus {
+  DRAFT
+  PENDING
+  PAID
+  PARTIALLY_PAID
+  CANCELLED
+}
+
+enum ExpenseType {
+  OFFICE
+  CREW_EXCHANGE
+  MEDICAL
+  HOTEL
+  TRANSPORT
+  VISA
+  TICKET
+  AGENT_FEE
+  OTHER
+}
+
+enum SalaryType {
+  MONTHLY
+  CONTRACT_BASED
+}
+
+// ==========================
+// AUTH / USER
+// ==========================
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  role      Role
+  password  String   // kalau pakai credentials; kalau pakai NextAuth JWT bisa diabaikan
+  isActive  Boolean  @default(true)
+
+  // relations
+  documentReceivings DocumentReceiving[]
+  transportLogs      TransportLog[]
+  activityLogs       ActivityLog[]
+  officeExpenses     OfficeExpense[]
+  interviews         Interview[]
+  requestedReplacements CrewReplacement[] @relation("requestedBy")
+  approvedReplacements  CrewReplacement[] @relation("approvedBy")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ==========================
+// CREW & DOCUMENTS
+// ==========================
+
+model Crew {
+  id            String        @id @default(cuid())
+  fullName      String
+  rank          String
+  nationality   String?       // nationality of the seafarer
+  lastVessel    String?
+  phone         String?
+  email         String?
+  workClothesSize  String?    // size pakaian kerja
+  waistSize        String?    // ukuran pinggang
+  shoeSize         String?    // ex: "40/255"
+  lastSignOffDate  DateTime?  // tgl turun terakhir
+  status        CrewStatus    @default(STANDBY)
+
+  // relationships
+  documents           CrewDocument[]
+  documentReceiving   DocumentReceiving[]
+  medicalChecks       MedicalCheck[]
+  visaApplications    VisaApplication[]
+  pklContracts        PKLContract[]
+  trainingAssignments TrainingAssignment[]
+  dispatches          Dispatch[]
+  salaries            CrewSalary[]
+  leavePays           LeavePay[]
+  exchangeExpenses    ExchangeExpense[]
+  transportLogs       TransportLog[]
+  auditFiles          AuditFile[]
+  applications        Application[]
+  assignments         Assignment[]
+  currentReplacements  CrewReplacement[] @relation("currentCrew")
+  replacementFor      CrewReplacement[]  @relation("replacementCrew")
+  contracts           EmploymentContract[]
+  disciplinaryRecords DisciplinaryRecord[]
+  insuranceRecords    InsuranceRecord[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model DocumentType {
+  id          String           @id @default(cuid())
+  code        DocumentTypeCode
+  name        String
+  description String?
+  category    DocumentCategory
+
+  // documents   CrewDocument[] // Removed relation as CrewDocument now uses docType string instead of typeId
+}
+
+model CrewDocument {
+  id           String           @id @default(cuid())
+  crewId       String
+  docType      String           // Type of document (passport, visa, certificate, etc.)
+  docNumber    String           // Document number
+  issueDate    DateTime?
+  expiryDate   DateTime?
+  remarks      String?
+  fileUrl      String?          // file S3 / MinIO / local
+  isActive     Boolean          @default(true)
+  sensitivity  DataSensitivity  @default(AMBER) // RED for passport/medical, AMBER for certificates
+
+  crew         Crew             @relation(fields: [crewId], references: [id])
+
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+}
+
+// Form serah terima dokumen (tanda tangan crew + penerima)
+model DocumentReceiving {
+  id                 String   @id @default(cuid())
+  crewId             String
+  receivedByUserId   String   // CDMO user
+  receivedAt         DateTime @default(now())
+  note               String?
+
+  // snapshot fields for trace
+  lastVessel         String?
+  workClothesSize    String?
+  waistSize          String?
+  shoeSize           String?
+  signOffDate        DateTime?
+
+  crew               Crew     @relation(fields: [crewId], references: [id])
+  receivedBy         User     @relation(fields: [receivedByUserId], references: [id])
+
+  createdAt          DateTime @default(now())
+}
+
+// ==========================
+// MEDICAL & VISA
+// ==========================
+
+model MedicalCheck {
+  id            String      @id @default(cuid())
+  crewId        String
+  referralDocUrl String?    // surat pengantar
+  clinicName    String?
+  checkDate     DateTime?
+  resultDocUrl  String?
+  isFit         Boolean?
+
+  crew          Crew        @relation(fields: [crewId], references: [id])
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model VisaApplication {
+  id           String      @id @default(cuid())
+  crewId       String
+  country      String
+  visaType     String
+  status       VisaStatus  @default(DRAFT)
+  submittedAt  DateTime?
+  approvedAt   DateTime?
+  rejectedAt   DateTime?
+  notes        String?
+  visaFileUrl  String?
+
+  crew         Crew        @relation(fields: [crewId], references: [id])
+
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+}
+
+// ==========================
+// PKL / CONTRACT / SEA
+// ==========================
+
+model PKLContract {
+  id               String      @id @default(cuid())
+  crewId           String
+  vesselId         String
+  flag             String      // ex: "KOREA", "FINLAND"
+  ownerName        String      // ex: "INTERGIS", "LUNDQVIST"
+  contractType     String      // "KOREA_PKL" / "TANKER_PKL_SEA" dsb
+  startDate        DateTime?
+  endDate          DateTime?
+  salaryCurrency   String?     // ex: USD
+  salaryAmount     Float?
+  salaryType       SalaryType? // MONTHLY / CONTRACT_BASED
+  status           PKLStatus   @default(DRAFT)
+
+  pklFileUrl       String?     // PKL final
+  seaFileUrl       String?     // SEA final (optional, tergantung flag)
+
+  submittedToSyahbandarAt DateTime?
+  approvedSyahbandarAt     DateTime?
+
+  crew             Crew        @relation(fields: [crewId], references: [id])
+  vessel           Vessel      @relation(fields: [vesselId], references: [id])
+  dispatches       Dispatch[]
+  crewSalaries     CrewSalary[]
+  leavePays        LeavePay[]
+  exchangeExpenses ExchangeExpense[]
+  auditFiles       AuditFile[]
+
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+}
+
+// ==========================
+// TRAINING (INTERNAL OWNER FORMS)
+// ==========================
+
+enum TrainingType {
+  KOREA_NOK
+  KOREA_SAFETY_DECL
+  KOREA_MEDICAL_HISTORY
+  KOREA_GENERAL_EDU
+  KOREA_RECORD
+  KOREA_SCHEDULE
+  TANKER_NOK
+  TANKER_OWNER_SMS_CONFIRM
+  TANKER_MEDICAL_HISTORY
+}
+
+model TrainingTemplate {
+  id          String        @id @default(cuid())
+  type        TrainingType
+  name        String
+  description String?
+  // optional: template path, etc.
+  templateFileUrl String?
+
+  assignments TrainingAssignment[]
+}
+
+model TrainingAssignment {
+  id             String          @id @default(cuid())
+  crewId         String
+  templateId     String
+  signedByCrew   Boolean         @default(false)
+  signedByDirector Boolean       @default(false)
+  signedDocUrl   String?         // PDF final
+
+  crew           Crew            @relation(fields: [crewId], references: [id])
+  template       TrainingTemplate @relation(fields: [templateId], references: [id])
+
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
+
+// ==========================
+// DISPATCH, FLIGHT, LETTER GUARANTEE
+// ==========================
+
+model Dispatch {
+  id              String        @id @default(cuid())
+  crewId          String
+  pklContractId   String
+  status          DispatchStatus @default(PLANNING)
+
+  // flight info
+  primaryFlightId String?
+  flights         Flight[]
+  letterGuarantee LetterGuarantee?
+
+  // docs for crew departure
+  ticketFileUrl   String?
+  joinInstructionUrl String?
+  dispatchChecklistUrl String?
+
+  crew            Crew          @relation(fields: [crewId], references: [id])
+  pklContract     PKLContract   @relation(fields: [pklContractId], references: [id])
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+model Flight {
+  id          String        @id @default(cuid())
+  dispatchId  String
+  legType     FlightLegType @default(OUTBOUND)
+  airline     String
+  flightNo    String
+  departAirport String
+  arriveAirport String
+  departTime  DateTime
+  arriveTime  DateTime
+
+  dispatch    Dispatch      @relation(fields: [dispatchId], references: [id])
+}
+
+model LetterGuarantee {
+  id               String   @id @default(cuid())
+  dispatchId       String   @unique
+  letterNumber     String?
+  date             DateTime
+  airlineName      String
+  immigrationFrom  String   // ex: "Soekarno Hatta Immigration"
+  immigrationTo    String?  // ex: "Incheon Immigration"
+  handlingAgent    String?
+  handlingAgentContact String?
+  fileUrl          String?  // PDF LG
+
+  dispatch         Dispatch @relation(fields: [dispatchId], references: [id])
+}
+
+// ==========================
+// OPERATIONAL LOGS
+// ==========================
+
+model TransportLog {
+  id          String     @id @default(cuid())
+  userId      String     // operational staff
+  crewId      String?
+  date        DateTime   @default(now())
+  purpose     String     // ex: "Antar crew ke CGK"
+  fromLocation String?
+  toLocation   String?
+  notes       String?
+  cost        Float?     // kalau mau di-link ke accounting, bisa di-sync
+
+  user        User       @relation(fields: [userId], references: [id])
+  crew        Crew?      @relation(fields: [crewId], references: [id])
+
+  createdAt   DateTime   @default(now())
+}
+
+model ActivityLog {
+  id          String   @id @default(cuid())
+  userId      String
+  title       String
+  description String?
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id])
+}
+
+// ==========================
+// ACCOUNTING / FINANCE
+// ==========================
+
+model OfficeExpense {
+  id          String        @id @default(cuid())
+  type        ExpenseType
+  description String
+  amount      Float
+  currency    String        @default("IDR")
+  date        DateTime      @default(now())
+  receiptUrl  String?
+  createdById String
+
+  createdBy   User          @relation(fields: [createdById], references: [id])
+  createdAt   DateTime      @default(now())
+}
+
+model CrewSalary {
+  id           String       @id @default(cuid())
+  crewId       String
+  pklContractId String?
+  periodFrom   DateTime?
+  periodTo     DateTime?
+  amount       Float
+  currency     String       @default("USD")
+  status       PaymentStatus @default(PENDING)
+
+  crew         Crew         @relation(fields: [crewId], references: [id])
+  pklContract  PKLContract? @relation(fields: [pklContractId], references: [id])
+
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
+model LeavePay {
+  id           String       @id @default(cuid())
+  crewId       String
+  pklContractId String?
+  amount       Float
+  currency     String       @default("USD")
+  status       PaymentStatus @default(PENDING)
+
+  crew         Crew         @relation(fields: [crewId], references: [id])
+  pklContract  PKLContract? @relation(fields: [pklContractId], references: [id])
+
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
+model ExchangeExpense {
+  id           String       @id @default(cuid())
+  crewId       String?
+  pklContractId String?
+  type         ExpenseType  @default(CREW_EXCHANGE)
+  description  String
+  amount       Float
+  currency     String       @default("USD")
+  date         DateTime     @default(now())
+  receiptUrl   String?
+
+  crew         Crew?        @relation(fields: [crewId], references: [id])
+  pklContract  PKLContract? @relation(fields: [pklContractId], references: [id])
+
+  createdAt    DateTime     @default(now())
+}
+
+model Invoice {
+  id           String        @id @default(cuid())
+  contractorName String
+  invoiceNumber  String
+  date         DateTime      @default(now())
+  dueDate      DateTime?
+  amount       Float
+  currency     String        @default("USD")
+  status       PaymentStatus @default(PENDING)
+  notes        String?
+
+  // optional: link ke crew exchange
+  createdAt    DateTime      @default(now())
+}
+
+model StatementOfAccount {
+  id           String      @id @default(cuid())
+  contractorName String
+  periodFrom   DateTime
+  periodTo     DateTime
+  fileUrl      String?     // SOA PDF
+
+  createdAt    DateTime    @default(now())
+}
+
+model PettyCash {
+  id           String      @id @default(cuid())
+  balance      Float       @default(0)
+  currency     String      @default("IDR")
+  lastUpdated  DateTime    @default(now())
+}
+
+// ==========================
+// ARCHIVE
+// ==========================
+
+model AuditFile {
+  id           String           @id @default(cuid())
+  category     DocumentCategory
+  crewId       String?
+  pklContractId String?
+  fileUrl      String
+  description  String?
+
+  crew         Crew?            @relation(fields: [crewId], references: [id])
+  pklContract  PKLContract?     @relation(fields: [pklContractId], references: [id])
+
+  createdAt    DateTime         @default(now())
+}
+
+// ==========================
+// PREPARE JOINING CHECKLIST
+// ==========================
+
+enum VesselType {
+  GENERAL_CARGO
+  TANKER
+  BULK_CARRIER
+  CONTAINER
+  PASSENGER
+}
+
+model PrepareJoining {
+  id            String     @id @default(cuid())
+  replacementId String     @unique
+  vesselType    VesselType
+
+  // Required documents checklist
+  visaRequired  Boolean    @default(false)
+  flagCertificate Boolean  @default(true)
+  medicalCheck  Boolean    @default(true)
+  cocCertificate Boolean   @default(true)
+  copCertificate Boolean   @default(true)
+  bstCertificate Boolean   @default(true)
+  gocCertificate Boolean   @default(true)
+  koreaLicense  Boolean    @default(false)
+  kmlCertificate Boolean   @default(false)
+
+  // Completion status
+  visaCompleted     Boolean @default(false)
+  flagCompleted     Boolean @default(false)
+  medicalCompleted  Boolean @default(false)
+  cocCompleted      Boolean @default(false)
+  copCompleted      Boolean @default(false)
+  bstCompleted      Boolean @default(false)
+  gocCompleted      Boolean @default(false)
+  koreaCompleted    Boolean @default(false)
+  kmlCompleted      Boolean @default(false)
+  ticketReady       Boolean @default(false)
+
+  replacement    CrewReplacement @relation(fields: [replacementId], references: [id])
+
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+enum ReplacementStatus {
+  REQUESTED
+  APPROVED
+  REJECTED
+  COMPLETED
+  CANCELLED
+}
+
+model CrewReplacement {
+  id            String             @id @default(cuid())
+  assignmentId  String
+  crewId        String             // current crew member
+  replacementCrewId String?        // replacement crew member
+  reason        String
+  status        ReplacementStatus  @default(REQUESTED)
+  requestedBy   String             // user who requested
+  approvedBy    String?            // user who approved
+  approvedAt    DateTime?
+  notes         String?
+
+  assignment    Assignment         @relation(fields: [assignmentId], references: [id])
+  crew          Crew               @relation(fields: [crewId], references: [id], name: "currentCrew")
+  replacementCrew Crew?            @relation(fields: [replacementCrewId], references: [id], name: "replacementCrew")
+  requestedByUser User             @relation(fields: [requestedBy], references: [id], name: "requestedBy")
+  approvedByUser User?             @relation(fields: [approvedBy], references: [id], name: "approvedBy")
+  prepareJoining PrepareJoining?
+
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+}
+
+model Employee {
+  id          String   @id @default(cuid())
+  fullName    String
+  position    String
+  department  String
+  email       String?  @unique
+  phone       String?
+  hireDate    DateTime?
+  status      String   @default("ACTIVE")
+
+  orientations Orientation[]
+  attendances  Attendance[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  HALF_DAY
+  ON_LEAVE
+}
+
+model Attendance {
+  id          String            @id @default(cuid())
+  employeeId  String
+  date        DateTime
+  checkIn     DateTime?
+  checkOut    DateTime?
+  status      AttendanceStatus  @default(PRESENT)
+  notes       String?
+
+  employee    Employee          @relation(fields: [employeeId], references: [id])
+
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+}
+
+model Vessel {
+  id          String   @id @default(cuid())
+  name        String
+  imoNumber   String?  // International Maritime Organization number
+  flag        String   // ex: "INDONESIA", "PANAMA"
+  type        String   // ex: "TANKER", "BULK CARRIER"
+  dwt         Float?   // Deadweight tonnage
+  gt          Float?   // Gross tonnage
+  principalId String?  // Reference to Principal
+  status      String   @default("ACTIVE") // ACTIVE, INACTIVE, UNDER_REPAIR
+
+  principal   Principal? @relation(fields: [principalId], references: [id])
+  assignments Assignment[]
+  pklContracts PKLContract[]
+  contracts   EmploymentContract[]
+  insuranceRecords InsuranceRecord[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Principal {
+  id                 String   @id @default(cuid())
+  name               String
+  country            String
+  contactPerson      String?
+  email              String?
+  phone              String?
+  address            String?
+  taxId              String?
+  registrationNumber String?
+  agreementDate      DateTime?
+  agreementExpiry    DateTime?
+  status             String   @default("ACTIVE")
+
+  assignments Assignment[]
+  vessels     Vessel[]
+  contracts  EmploymentContract[]
+  agencyFees AgencyFee[]
+  insuranceRecords InsuranceRecord[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ==========================
+// ASSIGNMENTS
+// ==========================
+
+enum AssignmentStatus {
+  PLANNED
+  ASSIGNED
+  ONBOARD
+  COMPLETED
+  CANCELLED
+}
+
+model Assignment {
+  id            String            @id @default(cuid())
+  crewId        String
+  vesselId      String
+  principalId   String
+  assignedRank  String
+  startDate     DateTime?
+  endDate       DateTime?
+  status        AssignmentStatus  @default(PLANNED)
+  notes         String?
+
+  crew          Crew              @relation(fields: [crewId], references: [id])
+  vessel        Vessel            @relation(fields: [vesselId], references: [id])
+  principal     Principal         @relation(fields: [principalId], references: [id])
+  replacements  CrewReplacement[]
+
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+}
+
+enum ApplicationStatus {
+  PENDING
+  UNDER_REVIEW
+  INTERVIEW_SCHEDULED
+  INTERVIEWED
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+}
+
+model Application {
+  id         String             @id @default(cuid())
+  crewId     String             // applicant (seafarer)
+  appliedRank String?
+  appliedOn  DateTime           @default(now())
+  status     ApplicationStatus  @default(PENDING)
+  notes      String?
+
+  crew       Crew               @relation(fields: [crewId], references: [id])
+  interview  Interview?
+
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+}
+
+model Interview {
+  id            String      @id @default(cuid())
+  applicationId String      @unique
+  scheduledAt   DateTime?
+  conductedAt   DateTime?
+  interviewerId String?     // user who conducted interview
+  result        String?     // PASS/FAIL/PENDING
+  notes         String?
+  score         Int?        // 1-10 scale
+
+  application   Application @relation(fields: [applicationId], references: [id])
+  interviewer   User?       @relation(fields: [interviewerId], references: [id])
+
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+// Employee Orientation Model
+model Orientation {
+  id             String   @id @default(cuid())
+  employeeId     String
+  orientationDate DateTime
+  topics         String   // Topics covered in orientation
+  trainer        String   // Name of the trainer/conductor
+  completed      Boolean  @default(false)
+  status         String   @default("scheduled") // scheduled, completed, cancelled
+  notes          String?
+  conductedBy    String?  // User ID who conducted the orientation
+
+  employee       Employee @relation(fields: [employeeId], references: [id])
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+// Recruitment Model
+model Recruitment {
+  id            String   @id @default(cuid())
+  candidateName String   // Name of the candidate
+  position      String   // Position being recruited for
+  appliedDate   DateTime @default(now()) // When they applied
+  interviewDate DateTime? // Interview date
+  interviewer   String?  // Interviewer name
+  result        String?  // Interview result
+  status        String   @default("APPLIED") // APPLIED, INTERVIEWED, ACCEPTED, REJECTED
+  notes         String?  // Additional notes
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// ==========================
+// EMPLOYMENT CONTRACTS
+// ==========================
+
+model EmploymentContract {
+  id                String         @id @default(cuid())
+  contractNumber    String         @unique
+  crewId            String
+  vesselId          String?
+  principalId       String?
+  rank              String
+  startDate         DateTime
+  endDate           DateTime
+  status            ContractStatus @default(DRAFT)
+  basicWage         Float
+  fixedOvertime     Float
+  monthlyWage       Float
+  leavePay          Float
+  specialAllowance  Float?
+  totalMonthly      Float
+  onboardAllowance  Float?
+  homeAllotment     Float
+  currency          String         @default("USD")
+  contractTerms     String?        // JSON string of contract terms
+  signedDate        DateTime?
+  signedByCrew      Boolean        @default(false)
+  signedByAgent     Boolean        @default(false)
+
+  crew              Crew           @relation(fields: [crewId], references: [id])
+  vessel            Vessel?        @relation(fields: [vesselId], references: [id])
+  principal         Principal?     @relation(fields: [principalId], references: [id])
+  wageComponents    WageComponentDetail[]
+  disciplinaryRecords DisciplinaryRecord[]
+
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+}
+
+model WageComponentDetail {
+  id                String       @id @default(cuid())
+  contractId        String
+  component         WageComponent
+  amount            Float
+  currency          String       @default("USD")
+  description       String?
+
+  contract          EmploymentContract @relation(fields: [contractId], references: [id])
+
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+}
+
+// ==========================
+// WAGE SCALES & STANDARDS
+// ==========================
+
+model WageScale {
+  id                String       @id @default(cuid())
+  vesselType        String       // OIL_TANKER, GENERAL_CARGO, etc.
+  rank              String
+  basicWage         Float
+  fixedOvertime     Float
+  monthlyWage       Float
+  specialAllowance  Float?
+  leavePay          Float
+  totalMonthly      Float
+  currency          String       @default("USD")
+  effectiveDate     DateTime
+  expiryDate        DateTime?
+  isActive          Boolean      @default(true)
+
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+}
+
+// ==========================
+// DISCIPLINARY MANAGEMENT
+// ==========================
+
+model DisciplinaryRecord {
+  id                String           @id @default(cuid())
+  contractId        String
+  crewId            String
+  incidentDate      DateTime
+  reportedBy        String
+  violation         String
+  description       String
+  action            DisciplinaryAction
+  penalty           String?
+  fineAmount        Float?
+  suspensionDays    Int?
+  warningLevel      String?          // FIRST, SECOND, FINAL
+  appealStatus      String?          // PENDING, APPROVED, REJECTED
+  appealNotes       String?
+  status            String           @default("ACTIVE") // ACTIVE, APPEALED, RESOLVED
+
+  contract          EmploymentContract @relation(fields: [contractId], references: [id])
+  crew              Crew              @relation(fields: [crewId], references: [id])
+
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+}
+
+// ==========================
+// AGENCY FEES & COMMISSIONS
+// ==========================
+
+model AgencyFee {
+  id                String       @id @default(cuid())
+  principalId       String
+  feeType           String       // MONTHLY_CREW_FEE, RECRUITMENT_FEE, etc.
+  amount            Float
+  currency          String       @default("USD")
+  frequency         String       // MONTHLY, PER_CREW, ONE_TIME
+  description       String
+  effectiveDate     DateTime
+  expiryDate        DateTime?
+  isActive          Boolean      @default(true)
+
+  principal         Principal    @relation(fields: [principalId], references: [id])
+
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+}
+
+// ==========================
+// INSURANCE MANAGEMENT
+// ==========================
+
+model InsuranceRecord {
+  id                String        @id @default(cuid())
+  crewId            String?
+  vesselId          String?
+  principalId       String?
+  insuranceType     InsuranceType
+  provider          String        // P&I Club name, Insurance company
+  policyNumber      String
+  coverageAmount    Float?
+  currency          String        @default("USD")
+  startDate         DateTime
+  expiryDate        DateTime
+  premiumAmount     Float?
+  premiumCurrency   String        @default("USD")
+  status            String        @default("ACTIVE") // ACTIVE, EXPIRED, CANCELLED
+  coverageDetails   String?       // JSON string of coverage details
+
+  crew              Crew?         @relation(fields: [crewId], references: [id])
+  vessel            Vessel?       @relation(fields: [vesselId], references: [id])
+  principal         Principal?    @relation(fields: [principalId], references: [id])
+
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+}
+
+// ==========================
+// AGENCY AGREEMENT & BUSINESS MODELS
+// ==========================
+
+model AgencyAgreement {
+  id                String   @id @default(cuid())
+  principalName     String
+  principalAddress  String?
+  agentName         String   @default("PT HANMARINE GLOBAL INDONESIA")
+  agentAddress      String?
+  effectiveDate     DateTime
+  expiryDate        DateTime
+  agreementNumber   String?
+  cbaReference      String?
+  pniClub           String?
+  notes             String?
+  terminationConditionsSummary String?
+  fileUrl           String?  // Uploaded PDF original
+  sensitivity       DataSensitivity @default(GREEN)
+
+  // Relations
+  vessels           AgencyAgreementVessel[]
+  wageScales        WageScaleHeader[]
+  disciplinaryCases DisciplinaryCase[]
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model AgencyAgreementVessel {
+  id                String   @id @default(cuid())
+  agencyAgreementId String
+  vesselId          String
+
+  agencyAgreement   AgencyAgreement @relation(fields: [agencyAgreementId], references: [id], onDelete: Cascade)
+  vessel            Vessel          @relation(fields: [vesselId], references: [id], onDelete: Cascade)
+
+  @@unique([agencyAgreementId, vesselId])
+}
+
+model Vessel {
+  id          String   @id @default(cuid())
+  name        String
+  flag        String
+  imoNumber   String?
+  type        String   // Tanker, General Cargo, etc.
+  gt          Int?
+  ownerName   String?
+  principalName String?
+  sensitivity DataSensitivity @default(GREEN)
+
+  // Relations
+  agencyAgreements AgencyAgreementVessel[]
+  assignments      Assignment[]
+  contracts        EmploymentContract[]
+  insurance        Insurance[]
+  disciplinaryCases DisciplinaryCase[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model WageScaleHeader {
+  id            String   @id @default(cuid())
+  name          String   // e.g. "Hanjoo Tanker 2025"
+  vesselGroup   String   // e.g. "Alfa Group", "DK Iway Group"
+  effectiveFrom DateTime
+  effectiveTo   DateTime?
+  cbaReference  String?
+  currency      String   @default("USD")
+  agencyAgreementId String?
+
+  agencyAgreement AgencyAgreement? @relation(fields: [agencyAgreementId], references: [id])
+  wageScaleItems  WageScaleItem[]
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model WageScaleItem {
+  id                String  @id @default(cuid())
+  headerId          String
+  rank              String
+  bw                Float   // Basic Wage
+  fot               Float   // Fixed Overtime
+  mw                Float   // Monthly Wage
+  saOrLeaveSubOrSpecialAllowance Float? // Special Allowance
+  lp                Float   // Leave Pay
+  mttl              Float   // Monthly Total
+
+  header            WageScaleHeader @relation(fields: [headerId], references: [id], onDelete: Cascade)
+  contracts         EmploymentContract[]
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model DisciplineRule {
+  id          String   @id @default(cuid())
+  code        String   // e.g. "1a", "2b"
+  category    String   // Smuggling, Desertion, etc.
+  description String   // offense text
+  maxPenalty  DisciplinaryPenalty
+  reference   String?  // e.g. "Annex 3 #1(a)"
+
+  cases       DisciplinaryCase[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model DisciplinaryCase {
+  id                String   @id @default(cuid())
+  crewId            String
+  vesselId          String?
+  date              DateTime
+  offenseCode       String?  // FK to DisciplineRule.code
+  description       String
+  actionTaken       String?
+  masterReportUrl   String?
+  status            DisciplinaryStatus @default(OPEN)
+  sensitivity       DataSensitivity @default(AMBER)
+  agencyAgreementId String?
+
+  crew              Crew              @relation(fields: [crewId], references: [id])
+  vessel            Vessel?           @relation(fields: [vesselId], references: [id])
+  agencyAgreement   AgencyAgreement? @relation(fields: [agencyAgreementId], references: [id])
+  rule              DisciplineRule?   @relation(fields: [offenseCode], references: [code])
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model NationalHoliday {
+  id          String   @id @default(cuid())
+  date        DateTime @unique
+  name        String
+  isPaid      Boolean  @default(true)
+  description String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ==========================
+// UPDATED CONTRACT MODEL
+// ==========================
+
+model EmploymentContract {
+  id                    String   @id @default(cuid())
+  contractNumber        String   @unique
+  crewId                String
+  vesselId              String?
+  principalId           String?
+  rank                  String
+  startDate             DateTime
+  endDate               DateTime
+  status                ContractStatus @default(DRAFT)
+  wageScaleItemId       String?
+
+  // Financial fields
+  basicWage             Float?
+  fixedOvertime         Float?
+  monthlyWage           Float?
+  leavePay              Float?
+  specialAllowance      Float?
+  totalMonthly          Float?
+  onboardAllowance      Float?
+  homeAllotment         Float?
+  currency              String   @default("USD")
+
+  // SEA/PKL specific fields
+  cbaName               String?
+  applicableFlagLaw     String?
+  standardWorkingHours  Int?
+  guaranteedOvertimeHours Int?
+  leaveDaysPerMonth     Float   @default(7)
+  homeAllotmentRuleDescription String?
+  repatriationRightsSummary String?
+  disciplineReference   String?
+  seaFileUrl            String? // Final generated PDF
+  sensitivity           DataSensitivity @default(RED)
+
+  // Relations
+  crew                  Crew              @relation(fields: [crewId], references: [id])
+  vessel                Vessel?           @relation(fields: [vesselId], references: [id])
+  principal             Principal?        @relation(fields: [principalId], references: [id])
+  wageScaleItem         WageScaleItem?    @relation(fields: [wageScaleItemId], references: [id])
+  agencyFees            AgencyFee[]
+  pklContracts          PKLContract[]
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+// ==========================
+// ACCOUNTING ENHANCEMENTS
+// ==========================
+
+model AgencyFeeConfig {
+  id                        String  @id @default(cuid())
+  principalId               String?
+  principalName             String
+  onboardFeePerCrewPerMonth Float   @default(80) // USD 80 per crew per month
+  recruitingFeePerCrewPerDeparture Float @default(100) // USD 100 per departure
+
+  principal                 Principal? @relation(fields: [principalId], references: [id])
+
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+}
+
+model AgencyFee {
+  id            String   @id @default(cuid())
+  principalId   String?
+  contractId    String?
+  feeType       String   // "ONBOARD" or "RECRUITING"
+  amount        Float
+  currency      String   @default("USD")
+  percentage    Float?
+  description   String?
+  dueDate       DateTime
+  paidDate      DateTime?
+  status        String   @default("PENDING")
+
+  principal     Principal?        @relation(fields: [principalId], references: [id])
+  contract      EmploymentContract? @relation(fields: [contractId], references: [id])
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model LeavePay {
+  id            String   @id @default(cuid())
+  contractId    String
+  crewId        String
+  monthsOnBoard Float
+  leaveDays     Float    // monthsOnBoard * 7
+  amount        Float
+  currency      String   @default("USD")
+  status        String   @default("PENDING") // PENDING, PAID, CANCELLED
+  paidDate      DateTime?
+
+  contract      EmploymentContract @relation(fields: [contractId], references: [id])
+  crew          Crew               @relation(fields: [crewId], references: [id])
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// ==========================
+// NATIONAL HOLIDAYS
+// ==========================
+
+model NationalHoliday {
+  id                String       @id @default(cuid())
+  country           String       @default("INDONESIA")
+  holidayName       String
+  holidayDate       DateTime
+  isRecurring       Boolean      @default(true) // For annual holidays
+  description       String?
+  paidLeave         Boolean      @default(true)
+
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+}
+
+// ==========================
+// RELATION UPDATES
+// ==========================
+
+// Note: Crew, Principal, and Vessel models have been updated with new relations above

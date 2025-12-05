@@ -1,0 +1,58 @@
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { id } = await params;
+    const body = await request.json();
+
+    // Update prepare joining checklist
+    const prepareJoining = await prisma.prepareJoining.update({
+      where: { id: id },
+      data: {
+        ...body,
+        updatedAt: new Date()
+      }
+    });
+
+    // Check if all required documents are completed
+    const allRequiredComplete = (
+      prepareJoining.ticketReady &&
+      prepareJoining.hotelBooked &&
+      prepareJoining.transportReady
+    );
+
+    // Update overall status
+    const overallStatus = allRequiredComplete ? 'READY_TO_JOIN' : 'NOT_READY';
+
+    // If ready to join, update status
+    if (overallStatus === 'READY_TO_JOIN') {
+      await prisma.prepareJoining.update({
+        where: { id: id },
+        data: {
+          status: 'READY_TO_JOIN',
+          updatedAt: new Date()
+        }
+      });
+    }
+
+    return NextResponse.json({
+      ...prepareJoining,
+      overallStatus,
+      allRequiredComplete
+    });
+  } catch (error) {
+    console.error("Error updating prepare joining:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}

@@ -22,5 +22,315 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-feature-settings: "rlig" 1, "calt" 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-display: swap;
+}
+
+/* Ensure all text elements inherit the proper font */
+* {
+  font-family: inherit;
+}
+
+/* Font loading optimization */
+@font-face {
+  font-family: 'Geist Fallback';
+  src: local('Arial'), local('Helvetica'), local('sans-serif');
+  font-display: swap;
+}
+
+/* Ensure text is visible while fonts load */
+html {
+  font-display: swap;
+}
+
+/* Loading state for fonts */
+.font-loading {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Force font inheritance for all elements */
+*,
+*::before,
+*::after {
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+/* Ensure buttons and form elements use proper fonts */
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+/* Ensure headings use proper fonts */
+h1, h2, h3, h4, h5, h6 {
+  font-family: inherit;
+  font-weight: inherit;
+}
+
+/* Specific font weights for better readability */
+.font-light {
+  font-weight: 300;
+}
+
+.font-normal {
+  font-weight: 400;
+}
+
+.font-medium {
+  font-weight: 500;
+}
+
+.font-semibold {
+  font-weight: 600;
+}
+
+.font-bold {
+  font-weight: 700;
+}
+
+.font-extrabold {
+  font-weight: 800;
+}
+
+/* Monospace font for code and technical content */
+.font-mono {
+  font-family: var(--font-geist-mono), "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
+}
+
+/* Improve text visibility */
+.text-xs {
+  font-size: 0.75rem !important;
+  line-height: 1rem !important;
+}
+
+.text-sm {
+  font-size: 0.875rem !important;
+  line-height: 1.25rem !important;
+}
+
+.text-base {
+  font-size: 1rem !important;
+  line-height: 1.5rem !important;
+}
+
+.text-lg {
+  font-size: 1.125rem !important;
+  line-height: 1.75rem !important;
+}
+
+.text-xl {
+  font-size: 1.25rem !important;
+  line-height: 1.75rem !important;
+}
+
+.text-2xl {
+  font-size: 1.5rem !important;
+  line-height: 2rem !important;
+}
+
+.text-3xl {
+  font-size: 1.875rem !important;
+  line-height: 2.25rem !important;
+}
+
+.text-4xl {
+  font-size: 2.25rem !important;
+  line-height: 2.5rem !important;
+}
+
+/* Ensure better contrast for text */
+.text-gray-900 {
+  color: #111827 !important;
+}
+
+.text-gray-800 {
+  color: #1f2937 !important;
+}
+
+.text-gray-700 {
+  color: #374151 !important;
+}
+
+.text-gray-600 {
+  color: #4b5563 !important;
+}
+
+.text-gray-500 {
+  color: #6b7280 !important;
+}
+
+/* Font visibility improvements */
+* {
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+  text-rendering: optimizeLegibility !important;
+}
+
+/* Ensure all text has proper font weight */
+.font-medium {
+  font-weight: 500 !important;
+}
+
+.font-semibold {
+  font-weight: 600 !important;
+}
+
+.font-bold {
+  font-weight: 700 !important;
+}
+
+/* COMPREHENSIVE FORM TEXT VISIBILITY FIX */
+/* This ensures all form elements have dark text on white backgrounds */
+
+/* Base form elements */
+input,
+textarea,
+select,
+button[type="submit"],
+button[type="button"],
+button[type="reset"] {
+  color: #111827 !important; /* Dark gray text */
+  background-color: #ffffff !important; /* White background */
+  border-color: #d1d5db !important; /* Light gray border */
+}
+
+/* Focus states */
+input:focus,
+textarea:focus,
+select:focus {
+  color: #111827 !important;
+  background-color: #ffffff !important;
+  border-color: #3b82f6 !important; /* Blue border on focus */
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+}
+
+/* Placeholder text */
+input::placeholder,
+textarea::placeholder,
+select::placeholder {
+  color: #9ca3af !important; /* Medium gray placeholder */
+}
+
+/* Labels */
+label,
+legend {
+  color: #374151 !important; /* Dark gray labels */
+}
+
+/* Form groups and fieldsets */
+fieldset,
+.form-group,
+.form-field {
+  color: #111827 !important;
+}
+
+/* Override any Tailwind classes that might set white text */
+input.text-white,
+input.text-gray-50,
+input.text-gray-100,
+textarea.text-white,
+textarea.text-gray-50,
+textarea.text-gray-100,
+select.text-white,
+select.text-gray-50,
+select.text-gray-100 {
+  color: #111827 !important;
+}
+
+/* Ensure all form containers have proper text color */
+form,
+.form-container,
+.form-wrapper {
+  color: #111827 !important;
+}
+
+/* Specific input types */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="date"],
+input[type="datetime-local"],
+input[type="month"],
+input[type="week"],
+input[type="time"],
+input[type="tel"],
+input[type="url"],
+input[type="search"],
+input[type="file"] {
+  color: #111827 !important;
+  background-color: #ffffff !important;
+}
+
+/* Select dropdown options */
+select option {
+  color: #111827 !important;
+  background-color: #ffffff !important;
+}
+
+/* Ensure readonly and disabled inputs are still visible */
+input:read-only,
+input:disabled,
+textarea:read-only,
+textarea:disabled,
+select:disabled {
+  color: #6b7280 !important; /* Slightly lighter but still visible */
+  background-color: #f9fafb !important; /* Light gray background for disabled */
+}
+
+/* Override any CSS that might set white color */
+*[style*="color: white"],
+*[style*="color: #fff"],
+*[style*="color: #ffffff"],
+*[style*="color: rgb(255, 255, 255)"],
+*[style*="color: rgba(255, 255, 255"] {
+  color: #111827 !important;
+}
+
+/* Ensure buttons that should be white text stay white */
+button.bg-blue-500,
+button.bg-blue-600,
+button.bg-green-500,
+button.bg-green-600,
+button.bg-red-500,
+button.bg-red-600,
+button.bg-gray-500,
+button.bg-gray-600,
+button.bg-indigo-500,
+button.bg-indigo-600,
+button.bg-purple-500,
+button.bg-purple-600,
+button.bg-pink-500,
+button.bg-pink-600,
+button.bg-yellow-500,
+button.bg-yellow-600,
+button.bg-orange-500,
+button.bg-orange-600,
+button.bg-teal-500,
+button.bg-teal-600,
+button.bg-cyan-500,
+button.bg-cyan-600,
+button.bg-lime-500,
+button.bg-lime-600,
+button.bg-emerald-500,
+button.bg-emerald-600,
+button.bg-violet-500,
+button.bg-violet-600,
+button.bg-fuchsia-500,
+button.bg-fuchsia-600,
+button.bg-rose-500,
+button.bg-rose-600 {
+  color: white !important;
+}
+
+/* Special handling for gradient buttons */
+button[class*="bg-gradient"] {
+  color: white !important;
 }

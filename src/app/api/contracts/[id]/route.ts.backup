@@ -1,0 +1,197 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { checkPermission, contractsGuard, PermissionLevel } from "@/lib/permission-middleware";
+
+interface RouteParams {
+  params: Promise<{
+    id: string;
+  }>;
+}
+
+export async function GET(request: NextRequest, { params }: RouteParams) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Check contracts permission
+    if (!contractsGuard(session)) {
+      return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 });
+    }
+
+    const { id } = await params;
+    const contract = await prisma.employmentContract.findUnique({
+      where: {
+        id: id,
+      },
+      include: {
+        crew: {
+          select: {
+            id: true,
+            fullName: true,
+            nationality: true,
+            dateOfBirth: true,
+            passportNumber: true,
+            address: true
+          },
+        },
+        vessel: {
+          select: {
+            id: true,
+            name: true,
+            flag: true,
+            imoNumber: true
+          },
+        },
+        principal: {
+          select: {
+            id: true,
+            name: true,
+            address: true
+          },
+        },
+        wageScaleItems: {
+          include: {
+            wageScaleHeader: {
+          select: {
+            name: true,
+            principalId: true
+          }
+        }
+      },
+    });
+
+    if (!contract) {
+      return NextResponse.json(
+        { error: 'Contract not found' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(contract);
+  } catch (error) {
+    console.error('Error fetching contract:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch contract' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(request: NextRequest, { params }: RouteParams) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Check contracts permission for editing
+    if (!checkPermission(session, 'contracts', PermissionLevel.EDIT_ACCESS)) {
+      return NextResponse.json({ error: "Insufficient permissions to update contracts" }, { status: 403 });
+    }
+
+    const { id } = await params;
+    const body = await request.json();
+
+    const contract = await prisma.employmentContract.update({
+      where: {
+        id: id,
+      },
+      data: {
+        contractNumber: body.contractNumber,
+        contractKind: body.contractKind || 'SEA',
+        crewId: body.crewId,
+        vesselId: body.vesselId || null,
+        principalId: body.principalId || null,
+        rank: body.rank,
+        contractStart: new Date(body.startDate),
+        contractEnd: new Date(body.endDate),
+        status: body.status,
+        basicWage: parseFloat(body.basicWage),
+        fixedOvertime: parseFloat(body.fixedOvertime),
+        monthlyWage: parseFloat(body.monthlyWage),
+        leavePay: parseFloat(body.leavePay),
+        specialAllowance: body.specialAllowance ? parseFloat(body.specialAllowance) : null,
+        totalMonthly: parseFloat(body.totalMonthly),
+        onboardAllowance: body.onboardAllowance ? parseFloat(body.onboardAllowance) : null,
+        homeAllotment: parseFloat(body.homeAllotment),
+        currency: body.currency || 'USD',
+      },
+      include: {
+        crew: {
+          select: {
+            id: true,
+            fullName: true,
+            nationality: true,
+            dateOfBirth: true,
+            passportNumber: true,
+            address: true
+          },
+        },
+        vessel: {
+          select: {
+            id: true,
+            name: true,
+            flag: true,
+            imoNumber: true
+          },
+        },
+        principal: {
+          select: {
+            id: true,
+            name: true,
+            address: true
+          },
+        },
+        wageScaleItems: {
+          include: {
+            wageScaleHeader: {
+          select: {
+            name: true,
+            principalId: true
+          }
+        }
+      },
+    });
+
+    return NextResponse.json(contract);
+  } catch (error) {
+    console.error('Error updating contract:', error);
+    return NextResponse.json(
+      { error: 'Failed to update contract' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: NextRequest, { params }: RouteParams) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Check contracts permission for full access (delete operation)
+    if (!checkPermission(session, 'contracts', PermissionLevel.FULL_ACCESS)) {
+      return NextResponse.json({ error: "Insufficient permissions to delete contracts" }, { status: 403 });
+    }
+
+    const { id } = await params;
+    await prisma.employmentContract.delete({
+      where: {
+        id: id,
+      },
+    });
+
+    return NextResponse.json({ message: 'Contract deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting contract:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete contract' },
+      { status: 500 }
+    );
+  }
+}

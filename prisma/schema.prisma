@@ -1,0 +1,1461 @@
+// ==========================
+// HANMARINE INTEGRATED MANAGEMENT SYSTEM (HIMS) v2
+// PRISMA SCHEMA - SINGLE SOURCE OF TRUTH
+// Version 2.0 - November 2025
+// ==========================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ==========================
+// ENUMS
+// ==========================
+
+enum Role {
+  DIRECTOR
+  CDMO
+  OPERATIONAL
+  ACCOUNTING
+  HR
+  CREW_PORTAL
+}
+
+enum DataSensitivity {
+  RED     // Highly Sensitive (passport, medical, full SEA, salary breakdown)
+  AMBER   // Sensitive (personal data, disciplinary cases, certificates)
+  GREEN   // Internal/Normal (public vessel info, procedures)
+}
+
+enum CrewStatus {
+  STANDBY
+  ONBOARD
+  OFF_SIGNED
+  BLOCKED
+}
+
+enum ContractStatus {
+  DRAFT
+  ACTIVE
+  COMPLETED
+  TERMINATED
+  CANCELLED
+}
+
+enum ContractKind {
+  SEA         // Seafarer Employment Agreement (carried onboard, MLC compliant)
+  OFFICE_PKL  // PKL used for Hubla / office documentation
+}
+
+enum SeaType {
+  KOREA
+  BAHAMAS_PANAMA
+  TANKER_LUNDQVIST
+  OTHER
+}
+
+enum DisciplinaryAction {
+  WARNING
+  REPRIMAND
+  SUSPENSION
+  DISMISSAL
+  FINE
+}
+
+enum InsuranceType {
+  PANDI_CLUB
+  HEALTH_INSURANCE
+  ACCIDENT_INSURANCE
+  LIFE_INSURANCE
+}
+
+enum WageComponent {
+  BASIC_WAGE
+  FIXED_OVERTIME
+  MONTHLY_WAGE
+  LEAVE_PAY
+  SPECIAL_ALLOWANCE
+  BONUS
+}
+
+enum DocumentCategory {
+  PERSONAL
+  CERTIFICATE
+  MEDICAL
+  VISA
+  CONTRACT
+  TRAINING
+  DISPATCH
+  FINANCIAL
+  OTHER
+}
+
+enum DocumentTypeCode {
+  PASSPORT
+  SEAMAN_BOOK
+  STCW_BST
+  STCW_AFF
+  STCW_MEFA
+  STCW_SCRB
+  COP_TANKER
+  KOSMA
+  MEDICAL_RESULT
+  VISA
+  SCHENGEN_VISA_NL
+  DEPHUB_CERTIFICATE
+  PKL_CONTRACT
+  SEA
+  TRAINING_NOK
+  TRAINING_SAFETY_DECL
+  TRAINING_MEDICAL_HISTORY
+  TRAINING_GENERAL_EDU
+  TRAINING_RECORD
+  TRAINING_SCHEDULE
+  RETURN
+}
+
+enum PaymentStatus {
+  DRAFT
+  PENDING
+  PAID
+  PARTIALLY_PAID
+  CANCELLED
+}
+
+enum ExpenseType {
+  OFFICE
+  CREW_EXCHANGE
+  MEDICAL
+  HOTEL
+  TRANSPORT
+  VISA
+  TICKET
+  AGENT_FEE
+  OTHER
+}
+
+enum ApplicationStatus {
+  RECEIVED        // Baru masuk, belum di-review
+  REVIEWING       // Sedang di-review HR
+  INTERVIEW       // Dijadwalkan interview
+  PASSED          // Lulus interview
+  OFFERED         // Ditawarkan posisi
+  ACCEPTED        // Diterima oleh seafarer
+  REJECTED        // Ditolak
+  CANCELLED       // Dibatalkan
+}
+
+enum InterviewStatus {
+  SCHEDULED       // Sudah dijadwalkan
+  CONDUCTED       // Sudah dilaksanakan
+  PASSED          // Lulus
+  FAILED          // Tidak lulus
+  CANCELLED       // Dibatalkan
+}
+
+enum PrepareJoiningStatus {
+  PENDING         // Belum mulai
+  DOCUMENTS       // Sedang siapkan dokumen
+  MEDICAL         // Medical check-up
+  TRAINING        // Training/orientation
+  TRAVEL          // Atur travel (tiket, hotel, transport)
+  READY           // Siap berangkat
+  DISPATCHED      // Sudah dikirim
+  CANCELLED       // Dibatalkan
+}
+
+// ==========================
+// AUTH / USER
+// ==========================
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  name          String
+  role          Role
+  isSystemAdmin Boolean  @default(false) // System admin override
+  isActive      Boolean  @default(true)
+  password      String   // Hashed password
+
+  // Audit relations
+  documentReceivings DocumentReceiving[]
+  transportLogs      TransportLog[]
+  activityLogs       ActivityLog[]
+  officeExpenses     OfficeExpense[]
+  interviews         Interview[]
+  requestedReplacements CrewReplacement[] @relation("requestedBy")
+  approvedReplacements  CrewReplacement[] @relation("approvedBy")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ==========================
+// CREW MANAGEMENT
+// ==========================
+
+model Crew {
+  id                String        @id @default(cuid())
+  fullName          String
+  dateOfBirth       DateTime?
+  placeOfBirth      String?
+  nationality       String?
+  passportNumber    String?
+  passportExpiry    DateTime?
+  seamanBookNumber  String?
+  seamanBookExpiry  DateTime?
+  rank              String
+  status            CrewStatus    @default(STANDBY)
+  phone             String?
+  email             String?
+  address           String?
+  emergencyContact  String?
+  bloodType         String?
+  sensitivity       DataSensitivity @default(AMBER)
+
+  // Relations
+  documents         CrewDocument[]
+  medicalChecks     MedicalCheck[]
+  visaApplications  VisaApplication[]
+  dispatches        Dispatch[]
+  salaries          CrewSalary[]
+  leavePays         LeavePay[]
+  replacements      CrewReplacement[] @relation("crewReplacement")
+  replacementFor    CrewReplacement[] @relation("replacementCrew")
+  assignments       Assignment[]
+  applications      Application[]
+  interviews        Interview[]
+  orientations      Orientation[]
+  recruitments      Recruitment[]
+  attendances       Attendance[]
+  disciplinaryCases DisciplinaryRecord[]
+  insuranceRecords  InsuranceRecord[]
+  contracts         EmploymentContract[]
+  prepareJoinings   PrepareJoining[]
+  exchangeExpenses  ExchangeExpense[]
+  documentReceivings DocumentReceiving[]
+  transportLogs     TransportLog[]
+  externalCompliances ExternalCompliance[]
+  
+  // HGQS Relations
+  communicationLogs CommunicationLog[]
+  signOffs          CrewSignOff[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model DocumentType {
+  id          String   @id @default(cuid())
+  code        DocumentTypeCode @unique
+  name        String
+  category    DocumentCategory
+  description String?
+  isRequired  Boolean  @default(false)
+  validityMonths Int?  // How many months valid
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CrewDocument {
+  id           String           @id @default(cuid())
+  crewId       String
+  docType      String           // Document type code
+  docNumber    String           // Document number
+  issueDate    DateTime?
+  expiryDate   DateTime?
+  remarks      String?
+  fileUrl      String?          // File storage URL
+  isActive     Boolean          @default(true)
+  sensitivity  DataSensitivity  @default(AMBER)
+
+  crew         Crew             @relation(fields: [crewId], references: [id])
+
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+}
+
+// ==========================
+// MEDICAL & VISA
+// ==========================
+
+model MedicalCheck {
+  id              String   @id @default(cuid())
+  crewId          String
+  checkDate       DateTime
+  expiryDate      DateTime
+  clinicName      String
+  doctorName      String?
+  result          String   // PASS/FAIL/PENDING
+  remarks         String?
+  fileUrl         String?
+  sensitivity     DataSensitivity @default(RED)
+
+  crew            Crew     @relation(fields: [crewId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model VisaApplication {
+  id              String   @id @default(cuid())
+  crewId          String
+  country         String
+  visaType        String
+  applicationDate DateTime
+  issueDate       DateTime?
+  expiryDate      DateTime?
+  status          String   @default("PENDING") // PENDING/APPROVED/REJECTED
+  remarks         String?
+  fileUrl         String?
+  sensitivity     DataSensitivity @default(AMBER)
+
+  crew            Crew     @relation(fields: [crewId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ==========================
+// CONTRACTS & EMPLOYMENT
+// ==========================
+
+model EmploymentContract {
+  id                    String         @id @default(cuid())
+  contractNumber        String         @unique
+  crewId                String
+  vesselId              String?
+  principalId           String?
+  rank                  String
+  basicWage             Float
+  currency              String         @default("USD")
+  contractStart         DateTime
+  contractEnd           DateTime
+  status                ContractStatus @default(DRAFT)
+  contractKind          ContractKind   @default(SEA)
+  seaType               SeaType?
+  maritimeLaw           String?
+  cbaReference          String?
+  wageScaleHeaderId     String?
+  guaranteedOTHours     Int?
+  overtimeRate          String?
+  onboardAllowance      Float?
+  homeAllotment         Float?
+  specialAllowance      Float?
+  templateVersion       String?
+  signDate              DateTime?
+  remarks               String?
+  fileUrl               String?
+  sensitivity           DataSensitivity @default(AMBER)
+
+  crew                  Crew           @relation(fields: [crewId], references: [id])
+  vessel                Vessel?        @relation(fields: [vesselId], references: [id])
+  principal             Principal?     @relation(fields: [principalId], references: [id])
+  wageScaleHeader       WageScaleHeader? @relation(fields: [wageScaleHeaderId], references: [id])
+  salaries              CrewSalary[]
+  leavePays             LeavePay[]
+  agencyFees            AgencyFee[]
+  wageScaleItems        WageScaleItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ==========================
+// WAGE SCALES
+// ==========================
+
+model WageScaleHeader {
+  id          String   @id @default(cuid())
+  name        String
+  principalId String?
+  rank        String
+  isActive    Boolean  @default(true)
+
+  principal   Principal?     @relation(fields: [principalId], references: [id])
+  items       WageScaleItem[]
+  contracts   EmploymentContract[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model WageScaleItem {
+  id                String         @id @default(cuid())
+  wageScaleHeaderId String
+  contractId        String?
+  component         WageComponent
+  amount            Float
+  currency          String         @default("USD")
+  frequency         String         @default("MONTHLY") // MONTHLY, CONTRACT
+  isActive          Boolean        @default(true)
+
+  wageScaleHeader   WageScaleHeader @relation(fields: [wageScaleHeaderId], references: [id])
+  contract          EmploymentContract? @relation(fields: [contractId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ==========================
+// VESSEL & PRINCIPAL MANAGEMENT
+// ==========================
+
+model Vessel {
+  id          String   @id @default(cuid())
+  name        String
+  imoNumber   String?  // International Maritime Organization number
+  flag        String   // ex: "INDONESIA", "PANAMA"
+  type        String   // ex: "TANKER", "BULK CARRIER"
+  dwt         Float?   // Deadweight tonnage
+  gt          Float?   // Gross tonnage
+  principalId String?  // Reference to Principal
+  status      String   @default("ACTIVE") // ACTIVE, INACTIVE, UNDER_REPAIR
+  sensitivity DataSensitivity @default(GREEN)
+
+  principal         Principal?         @relation(fields: [principalId], references: [id])
+  assignments       Assignment[]
+  contracts         EmploymentContract[]
+  insuranceRecords  InsuranceRecord[]
+  agencyAgreements  AgencyAgreementVessel[]
+  prepareJoinings   PrepareJoining[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Principal {
+  id                 String   @id @default(cuid())
+  name               String
+  country            String
+  contactPerson      String?
+  email              String?
+  phone              String?
+  address            String?
+  taxId              String?
+  registrationNumber String?
+  agreementDate      DateTime?
+  agreementExpiry    DateTime?
+  status             String   @default("ACTIVE")
+  sensitivity        DataSensitivity @default(GREEN)
+
+  vessels            Vessel[]
+  contracts          EmploymentContract[]
+  agencyAgreements   AgencyAgreement[]
+  wageScales         WageScaleHeader[]
+  agencyFees         AgencyFee[]
+  assignments        Assignment[]
+  insuranceRecords   InsuranceRecord[]
+  applications       Application[]
+  prepareJoinings    PrepareJoining[]
+  formTemplates      PrincipalFormTemplate[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ==========================
+// OPERATIONAL MODULES
+// ==========================
+
+model Assignment {
+  id          String   @id @default(cuid())
+  crewId      String
+  vesselId    String
+  principalId String?
+  rank        String
+  startDate   DateTime
+  endDate     DateTime?
+  status      String   @default("ACTIVE")
+  remarks     String?
+
+  crew        Crew      @relation(fields: [crewId], references: [id])
+  vessel      Vessel    @relation(fields: [vesselId], references: [id])
+  principal   Principal? @relation(fields: [principalId], references: [id])
+  
+  // HGQS Relations
+  signOffs    CrewSignOff[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Application {
+  id              String            @id @default(cuid())
+  crewId          String
+  position        String            // Target rank/position
+  vesselType      String?           // Vessel type preference
+  principalId     String?           // Target principal
+  applicationDate DateTime          @default(now())
+  status          ApplicationStatus @default(RECEIVED)
+  reviewedBy      String?           // User ID who reviewed
+  reviewedAt      DateTime?
+  remarks         String?
+  attachments     String?           // JSON array of file paths
+
+  crew            Crew              @relation(fields: [crewId], references: [id])
+  principal       Principal?        @relation(fields: [principalId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Interview {
+  id              String          @id @default(cuid())
+  crewId          String
+  applicationId   String?         // Link to application
+  interviewerId   String          // User ID
+  scheduledDate   DateTime
+  conductedDate   DateTime?
+  status          InterviewStatus @default(SCHEDULED)
+  score           Int?            // Interview score (0-100)
+  technicalScore  Int?            // Technical assessment
+  attitudeScore   Int?            // Attitude/behavior
+  englishScore    Int?            // English proficiency
+  remarks         String?
+  recommendation  String?         // Recommend to hire or not
+  attachments     String?         // JSON array of interview notes/files
+
+  crew            Crew            @relation(fields: [crewId], references: [id])
+  interviewer     User            @relation(fields: [interviewerId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Orientation {
+  id            String   @id @default(cuid())
+  crewId        String
+  startDate     DateTime
+  endDate       DateTime?
+  status        String   @default("IN_PROGRESS")
+  remarks       String?
+
+  crew          Crew     @relation(fields: [crewId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Recruitment {
+  id            String   @id @default(cuid())
+  crewId        String
+  recruiterId   String   // User ID
+  recruitmentDate DateTime
+  status        String   @default("IN_PROGRESS")
+  remarks       String?
+
+  crew          Crew     @relation(fields: [crewId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PrepareJoining {
+  id                    String               @id @default(cuid())
+  crewId                String
+  vesselId              String?
+  principalId           String?
+  assignmentId          String?              // Link to assignment
+  status                PrepareJoiningStatus @default(PENDING)
+  
+  // Document checklist
+  passportValid         Boolean              @default(false)
+  seamanBookValid       Boolean              @default(false)
+  certificatesValid     Boolean              @default(false)
+  medicalValid          Boolean              @default(false)
+  visaValid             Boolean              @default(false)
+  
+  // Medical
+  medicalCheckDate      DateTime?
+  medicalExpiry         DateTime?
+  medicalRemarks        String?
+  
+  // Training/Orientation
+  orientationDate       DateTime?
+  orientationCompleted  Boolean              @default(false)
+  trainingRemarks       String?
+  
+  // Travel arrangements
+  departureDate         DateTime?
+  departurePort         String?
+  arrivalPort           String?
+  flightNumber          String?
+  ticketBooked          Boolean              @default(false)
+  ticketBookedDate      DateTime?
+  hotelBooked           Boolean              @default(false)
+  hotelName             String?
+  transportArranged     Boolean              @default(false)
+  transportDetails      String?
+  
+  // Additional
+  remarks               String?
+  attachments           String?              // JSON array of file paths
+
+  crew                  Crew                 @relation(fields: [crewId], references: [id])
+  vessel                Vessel?              @relation(fields: [vesselId], references: [id])
+  principal             Principal?           @relation(fields: [principalId], references: [id])
+  forms                 PrepareJoiningForm[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Principal Form Templates (per owner)
+model PrincipalFormTemplate {
+  id                String   @id @default(cuid())
+  principalId       String
+  formName          String   // e.g., "Medical History Checking List"
+  formCategory      String   // MEDICAL, TRAINING, DECLARATION, SAFETY
+  templatePath      String   // Path to template file in form_reference/
+  isRequired        Boolean  @default(true)
+  displayOrder      Int      @default(0)
+  description       String?
+  
+  principal         Principal @relation(fields: [principalId], references: [id])
+  formSubmissions   PrepareJoiningForm[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Form Submission & Approval
+model PrepareJoiningForm {
+  id                    String                  @id @default(cuid())
+  prepareJoiningId      String
+  templateId            String
+  formData              Json                    // Auto-filled data from crew
+  status                FormApprovalStatus      @default(DRAFT)
+  submittedBy           String?                 // User ID who submitted
+  submittedAt           DateTime?
+  reviewedBy            String?                 // User ID who reviewed
+  reviewedAt            DateTime?
+  approvedBy            String?                 // User ID who approved
+  approvedAt            DateTime?
+  rejectionReason       String?
+  finalPdfPath          String?                 // Path to generated PDF after approval
+  version               Int                     @default(1)
+  
+  prepareJoining        PrepareJoining          @relation(fields: [prepareJoiningId], references: [id], onDelete: Cascade)
+  template              PrincipalFormTemplate   @relation(fields: [templateId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum FormApprovalStatus {
+  DRAFT           // Auto-filled, not yet submitted
+  SUBMITTED       // Submitted for review
+  UNDER_REVIEW    // Being reviewed by CDMO/Director
+  CHANGES_REQUESTED // Need edits
+  APPROVED        // Approved, ready to download
+  REJECTED        // Rejected
+}
+
+model Dispatch {
+  id            String   @id @default(cuid())
+  crewId        String
+  vesselId      String?
+  dispatchDate  DateTime
+  port          String
+  flightNumber  String?
+  status        String   @default("COMPLETED")
+  remarks       String?
+
+  crew          Crew     @relation(fields: [crewId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ==========================
+// ACCOUNTING MODULES
+// ==========================
+
+model CrewSalary {
+  id          String   @id @default(cuid())
+  crewId      String
+  contractId  String?
+  month       Int
+  year        Int
+  basicWage   Float
+  overtime    Float   @default(0)
+  allowances  Float   @default(0)
+  deductions  Float   @default(0)
+  totalAmount Float
+  currency    String  @default("USD")
+  status      PaymentStatus @default(DRAFT)
+  paidDate    DateTime?
+  remarks     String?
+
+  crew        Crew     @relation(fields: [crewId], references: [id])
+  contract    EmploymentContract? @relation(fields: [contractId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model LeavePay {
+  id          String   @id @default(cuid())
+  crewId      String
+  contractId  String?
+  leaveType   String   // ANNUAL, SICK, EMERGENCY
+  startDate   DateTime
+  endDate     DateTime
+  days        Int
+  amount      Float
+  currency    String   @default("USD")
+  status      PaymentStatus @default(DRAFT)
+  paidDate    DateTime?
+  remarks     String?
+
+  crew        Crew     @relation(fields: [crewId], references: [id])
+  contract    EmploymentContract? @relation(fields: [contractId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AgencyFee {
+  id            String   @id @default(cuid())
+  principalId   String?
+  contractId    String?
+  feeType       String   // "ONBOARD" or "RECRUITING"
+  amount        Float
+  currency      String   @default("USD")
+  percentage    Float?
+  description   String?
+  dueDate       DateTime
+  paidDate      DateTime?
+  status        String   @default("PENDING")
+  remarks       String?
+
+  principal     Principal? @relation(fields: [principalId], references: [id])
+  contract      EmploymentContract? @relation(fields: [contractId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model OfficeExpense {
+  id          String      @id @default(cuid())
+  userId      String      // Who created this expense
+  expenseType ExpenseType
+  amount      Float
+  currency    String      @default("USD")
+  description String
+  expenseDate DateTime
+  receiptUrl  String?
+  status      PaymentStatus @default(DRAFT)
+  approvedBy  String?     // User ID
+  approvedAt  DateTime?
+
+  user        User        @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ExchangeExpense {
+  id            String   @id @default(cuid())
+  crewId        String
+  amount        Float
+  currency      String   @default("USD")
+  exchangeRate  Float
+  idrAmount     Float
+  expenseDate   DateTime
+  description   String
+  status        PaymentStatus @default(DRAFT)
+
+  crew          Crew     @relation(fields: [crewId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ==========================
+// INSURANCE
+// ==========================
+
+model InsuranceRecord {
+  id                String        @id @default(cuid())
+  crewId            String?
+  vesselId          String?
+  principalId       String?
+  insuranceType     InsuranceType
+  provider          String        // P&I Club name, Insurance company
+  policyNumber      String
+  coverageAmount    Float?
+  currency          String        @default("USD")
+  startDate         DateTime
+  expiryDate        DateTime
+  premiumAmount     Float?
+  premiumCurrency   String        @default("USD")
+  status            String        @default("ACTIVE")
+  coverageDetails   String?
+
+  crew              Crew?         @relation(fields: [crewId], references: [id])
+  vessel            Vessel?       @relation(fields: [vesselId], references: [id])
+  principal         Principal?    @relation(fields: [principalId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ==========================
+// AGENCY AGREEMENT & BUSINESS MODELS
+// ==========================
+
+model AgencyAgreement {
+  id                String   @id @default(cuid())
+  principalId       String
+  principalName     String
+  principalAddress  String?
+  agentName         String   @default("PT HANMARINE GLOBAL INDONESIA")
+  agentAddress      String?
+  effectiveDate     DateTime
+  expiryDate        DateTime
+  agreementNumber   String?
+  cbaReference      String?
+  pniClub           String?
+  notes             String?
+  terminationConditions String?
+  fileUrl           String?
+  status            String   @default("ACTIVE")
+
+  principal         Principal @relation(fields: [principalId], references: [id])
+  vessels           AgencyAgreementVessel[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AgencyAgreementVessel {
+  id                String   @id @default(cuid())
+  agencyAgreementId String
+  vesselId          String
+
+  agencyAgreement   AgencyAgreement @relation(fields: [agencyAgreementId], references: [id])
+  vessel            Vessel          @relation(fields: [vesselId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ==========================
+// DISCIPLINARY MANAGEMENT
+// ==========================
+
+model DisciplinaryRecord {
+  id              String   @id @default(cuid())
+  crewId          String
+  vesselId        String?
+  incidentDate    DateTime
+  reportedBy      String   // User ID
+  description     String
+  action          DisciplinaryAction
+  severity        String   // MINOR, MAJOR, CRITICAL
+  status          String   @default("OPEN")
+  resolution      String?
+  resolvedBy      String?  // User ID
+  resolvedAt      DateTime?
+
+  crew            Crew     @relation(fields: [crewId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ==========================
+// HR MODULES
+// ==========================
+
+model Employee {
+  id          String   @id @default(cuid())
+  fullName    String
+  position    String
+  department  String
+  email       String?
+  phone       String?
+  hireDate    DateTime
+  status      String   @default("ACTIVE")
+
+  attendances Attendance[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Attendance {
+  id         String   @id @default(cuid())
+  crewId     String?
+  employeeId String?
+  date       DateTime
+  checkIn    DateTime?
+  checkOut   DateTime?
+  status     String   @default("PRESENT") // PRESENT, ABSENT, LATE
+
+  crew       Crew?     @relation(fields: [crewId], references: [id])
+  employee   Employee? @relation(fields: [employeeId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CrewReplacement {
+  id            String   @id @default(cuid())
+  crewId        String
+  replacementCrewId String?
+  reason        String
+  requestedBy   String   // User ID
+  approvedBy    String?  // User ID
+  approvedAt    DateTime?
+  status        String   @default("PENDING")
+  remarks       String?
+
+  crew              Crew  @relation("crewReplacement", fields: [crewId], references: [id])
+  replacementCrew   Crew? @relation("replacementCrew", fields: [replacementCrewId], references: [id])
+  requester          User @relation("requestedBy", fields: [requestedBy], references: [id])
+  approver           User? @relation("approvedBy", fields: [approvedBy], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ==========================
+// NATIONAL HOLIDAYS
+// ==========================
+
+model NationalHoliday {
+  id                String       @id @default(cuid())
+  country           String       @default("INDONESIA")
+  holidayName       String
+  holidayDate       DateTime
+  isRecurring       Boolean      @default(true)
+  description       String?
+  paidLeave         Boolean      @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ==========================
+// AUDIT & LOGGING
+// ==========================
+
+model DocumentReceiving {
+  id          String   @id @default(cuid())
+  crewId      String
+  documentId  String
+  receivedBy  String   // User ID
+  receivedAt  DateTime
+  remarks     String?
+
+  crew        Crew     @relation(fields: [crewId], references: [id])
+  user        User     @relation(fields: [receivedBy], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model TransportLog {
+  id            String   @id @default(cuid())
+  crewId        String
+  transportType String   // AIRPORT_TRANSFER, HOTEL_TRANSFER
+  pickupDate    DateTime
+  pickupTime    String?
+  pickupLocation String
+  dropLocation  String?
+  driverName    String?
+  vehicleNumber String?
+  status        String   @default("COMPLETED")
+  loggedBy      String   // User ID
+
+  crew          Crew     @relation(fields: [crewId], references: [id])
+  user          User     @relation(fields: [loggedBy], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ActivityLog {
+  id          String   @id @default(cuid())
+  userId      String
+  action      String
+  entityType  String
+  entityId    String
+  details     String?
+  ipAddress   String?
+
+  user        User     @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ==========================
+// FINANCIAL DOCUMENTS
+// ==========================
+
+model Invoice {
+  id          String   @id @default(cuid())
+  invoiceNumber String @unique
+  clientId    String
+  amount      Float
+  currency    String   @default("USD")
+  issueDate   DateTime
+  dueDate     DateTime
+  status      PaymentStatus @default(DRAFT)
+  paidDate    DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model StatementOfAccount {
+  id          String   @id @default(cuid())
+  soaNumber   String   @unique
+  clientId    String
+  period      String
+  amount      Float
+  currency    String   @default("USD")
+  issueDate   DateTime
+  status      PaymentStatus @default(DRAFT)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PettyCash {
+  id          String   @id @default(cuid())
+  amount      Float
+  currency    String   @default("USD")
+  description String
+  expenseDate DateTime
+  approvedBy  String?
+  status      PaymentStatus @default(DRAFT)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AuditFile {
+  id          String   @id @default(cuid())
+  fileName    String
+  fileType    String
+  fileUrl     String
+  uploadedBy  String
+  auditPeriod String
+  status      String   @default("ACTIVE")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ==========================
+// EXTERNAL COMPLIANCE SYSTEMS
+// ==========================
+
+model ExternalCompliance {
+  id              String   @id @default(cuid())
+  crewId          String
+  systemType      ComplianceSystemType
+  certificateId   String?  // External system certificate ID
+  issueDate       DateTime?
+  expiryDate      DateTime?
+  status          ComplianceStatus @default(PENDING)
+  verificationUrl String?  // URL to verify certificate
+  notes           String?
+
+  crew            Crew     @relation(fields: [crewId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum ComplianceSystemType {
+  DEPHUB_CERTIFICATE     // Indonesian Dephub Seafarer Certificate (online verification)
+  SCHENGEN_VISA_NL       // Netherlands Schengen Visa (travel document tracking)
+}
+
+enum ComplianceStatus {
+  PENDING
+  VERIFIED
+  EXPIRED
+  REJECTED
+}
+
+// ==========================
+// HGQS QUALITY MANAGEMENT SYSTEM
+// ==========================
+
+// Company Vision & Mission (Annex A)
+model CompanyVisionMission {
+  id          String   @id @default(cuid())
+  vision      String   @db.Text
+  mission     String   @db.Text
+  coreValues  String[] // Array of core values
+  objectives  String   @db.Text
+  isActive    Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Communication Management (Annex C)
+model CommunicationLog {
+  id              String   @id @default(cuid())
+  type            CommunicationType
+  crewId          String?
+  subject         String
+  description     String   @db.Text
+  reporter        String   // User who reported
+  handledBy       String?  // User who handled
+  status          CommunicationStatus @default(PENDING)
+  priority        PriorityLevel @default(MEDIUM)
+  resolution      String?  @db.Text
+  resolutionDate  DateTime?
+  attachments     String[] // File URLs
+
+  crew            Crew?    @relation(fields: [crewId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum CommunicationType {
+  MEDIA_INTERVIEW
+  COMPLAINT             // MLC Reg 5.1.5
+  APPRAISAL_REPORT
+  CREW_DISPUTE
+  CREW_SICK
+  CREW_DEATH
+  EMERGENCY
+  GENERAL_INQUIRY
+}
+
+enum CommunicationStatus {
+  PENDING
+  IN_PROGRESS
+  RESOLVED
+  ESCALATED
+  CLOSED
+}
+
+enum PriorityLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+// Crew Sign-off Management (Annex D)
+model CrewSignOff {
+  id                  String   @id @default(cuid())
+  crewId              String
+  assignmentId        String?
+  signOffDate         DateTime
+  arrivalDate         DateTime?
+  passportReceived    Boolean  @default(false)
+  seamanBookReceived  Boolean  @default(false)
+  debriefingCompleted Boolean  @default(false)
+  debriefingNotes     String?  @db.Text
+  finalWageAmount     Float?
+  wageCalculatedDate  DateTime?
+  wagePaidDate        DateTime?
+  documentWithdrawn   Boolean  @default(false)
+  interviewedBy       String?
+  status              SignOffStatus @default(PENDING)
+
+  crew                Crew     @relation(fields: [crewId], references: [id])
+  assignment          Assignment? @relation(fields: [assignmentId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum SignOffStatus {
+  PENDING
+  DOCUMENTS_RECEIVED
+  DEBRIEFING_DONE
+  WAGES_CALCULATED
+  WAGES_PAID
+  COMPLETED
+}
+
+// HR Recruitment (Annex E)
+model ManpowerRequisition {
+  id              String   @id @default(cuid())
+  formNumber      String   @unique // HCF-AD-25
+  department      String
+  position        String
+  numberOfVacancy Int
+  reason          String   @db.Text
+  jobDescription  String   @db.Text
+  qualifications  String   @db.Text
+  requestedBy     String
+  approvedBy      String?
+  status          RequisitionStatus @default(PENDING)
+  approvalDate    DateTime?
+  recruitmentPlan String?  @db.Text
+  budget          Float?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum RequisitionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  IN_PROGRESS
+  COMPLETED
+}
+
+model PerformanceAppraisal {
+  id                String   @id @default(cuid())
+  formNumber        String   @unique // HCF-AD-06
+  employeeId        String   // Can be shore staff or crew
+  employeeName      String
+  position          String
+  department        String
+  appraisalPeriod   String   // e.g., "Q1 2024", "2024"
+  evaluatorId       String
+  evaluatorName     String
+  
+  // Performance Metrics (1-5 scale)
+  qualityOfWork     Int      // 1-5
+  productivity      Int      // 1-5
+  jobKnowledge      Int      // 1-5
+  reliability       Int      // 1-5
+  initiative        Int      // 1-5
+  teamwork          Int      // 1-5
+  communication     Int      // 1-5
+  
+  overallScore      Float
+  strengths         String   @db.Text
+  areasForImprovement String @db.Text
+  trainingNeeds     String?  @db.Text
+  goals             String?  @db.Text
+  recommendation    AppraisalRecommendation
+  comments          String?  @db.Text
+  
+  employeeSignature String?
+  employeeDate      DateTime?
+  evaluatorSignature String?
+  evaluatorDate     DateTime?
+  hrApproval        String?
+  hrApprovalDate    DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum AppraisalRecommendation {
+  EXCELLENT_PROMOTE
+  GOOD_MAINTAIN
+  SATISFACTORY_DEVELOP
+  NEEDS_IMPROVEMENT
+  UNSATISFACTORY_ACTION
+}
+
+model PurchaseOrder {
+  id              String   @id @default(cuid())
+  formNumber      String   @unique // HCF-AD-15
+  poNumber        String   @unique
+  department      String
+  requestedBy     String
+  supplierId      String?
+  supplierName    String
+  items           Json     // Array of items: [{name, qty, unit, price}]
+  totalAmount     Float
+  purpose         String   @db.Text
+  requestDate     DateTime @default(now())
+  approvedBy      String?
+  approvalDate    DateTime?
+  status          PurchaseOrderStatus @default(DRAFT)
+  paymentStatus   PaymentStatus @default(DRAFT)
+  deliveryDate    DateTime?
+  receivedBy      String?
+  receivedDate    DateTime?
+  notes           String?  @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum PurchaseOrderStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  ORDERED
+  RECEIVED
+  CANCELLED
+}
+
+// Internal Audit (Procedure 9)
+model InternalAudit {
+  id              String   @id @default(cuid())
+  formNumber      String   @unique // HCF-AD-08
+  auditNumber     String   @unique
+  auditType       AuditType
+  department      String
+  auditors        String[] // Array of auditor names
+  auditDate       DateTime
+  scheduledDate   DateTime
+  checklist       Json     // Audit checklist items
+  findings        Json[]   // Array of findings
+  summary         String   @db.Text
+  status          AuditStatus @default(SCHEDULED)
+  
+  // Corrective Actions
+  correctiveActions String[] // Array of CAPA IDs
+  followUpDate      DateTime?
+  closureDate       DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum AuditType {
+  INTERNAL_QMS
+  EXTERNAL_CERTIFICATION
+  SURVEILLANCE
+  SPECIAL
+}
+
+enum AuditStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  FOLLOW_UP_REQUIRED
+  CLOSED
+}
+
+// Corrective & Preventive Action (Procedure 10)
+model CorrectiveAction {
+  id              String   @id @default(cuid())
+  formNumber      String   @unique // HCF-AD-10/11/15
+  capaNumber      String   @unique
+  type            CAPAType
+  source          String   // e.g., "Internal Audit", "Customer Complaint"
+  department      String
+  nonconformity   String   @db.Text
+  rootCause       String?  @db.Text
+  correctiveAction String  @db.Text
+  preventiveAction String? @db.Text
+  responsiblePerson String
+  targetDate      DateTime
+  implementationDate DateTime?
+  verificationMethod String? @db.Text
+  verifiedBy      String?
+  verificationDate DateTime?
+  effectiveness   EffectivenessRating?
+  status          CAPAStatus @default(OPEN)
+  qmrApproval     String?
+  approvalDate    DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum CAPAType {
+  CORRECTIVE
+  PREVENTIVE
+  IMPROVEMENT
+}
+
+enum CAPAStatus {
+  OPEN
+  IN_PROGRESS
+  PENDING_VERIFICATION
+  VERIFIED_EFFECTIVE
+  VERIFIED_INEFFECTIVE
+  CLOSED
+}
+
+enum EffectivenessRating {
+  EFFECTIVE
+  PARTIALLY_EFFECTIVE
+  INEFFECTIVE
+}
+
+// Management Review (Section 5.6)
+model ManagementReview {
+  id              String   @id @default(cuid())
+  formNumber      String   @unique // HCF-AD-02
+  meetingNumber   String   @unique
+  meetingDate     DateTime
+  attendees       String[] // Array of attendee names
+  chairman        String
+  
+  // Review Inputs
+  auditResults    String   @db.Text
+  customerFeedback String? @db.Text
+  processPerformance String @db.Text
+  qualityObjectives String @db.Text
+  nonconformities  String  @db.Text
+  capaStatus      String   @db.Text
+  previousActions String?  @db.Text
+  risksOpportunities String @db.Text
+  
+  // Review Outputs
+  decisions       String   @db.Text
+  actionItems     Json[]   // Array of action items
+  resourceNeeds   String?  @db.Text
+  improvements    String?  @db.Text
+  
+  minutes         String   @db.Text
+  nextReviewDate  DateTime?
+  status          ReviewStatus @default(SCHEDULED)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum ReviewStatus {
+  SCHEDULED
+  COMPLETED
+  FOLLOW_UP_PENDING
+  CLOSED
+}
+
+// QMR Dashboard Tracking
+model QMRTask {
+  id              String   @id @default(cuid())
+  taskType        QMRTaskType
+  title           String
+  description     String   @db.Text
+  priority        PriorityLevel @default(MEDIUM)
+  assignedTo      String   // QMR user ID
+  dueDate         DateTime
+  status          TaskStatus @default(PENDING)
+  relatedEntity   String?  // ID of related audit/CAPA/review
+  completionDate  DateTime?
+  notes           String?  @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum QMRTaskType {
+  AUDIT_PREPARATION
+  AUDIT_FOLLOW_UP
+  CAPA_VERIFICATION
+  DOCUMENT_APPROVAL
+  RISK_EVALUATION
+  MANAGEMENT_REVIEW
+  GENERAL_TASK
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  OVERDUE
+}

@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>HIMS Form Management Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1200px;
+      margin: 50px auto;
+      padding: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    .container {
+      background: white;
+      color: #333;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    }
+    h1 {
+      color: #667eea;
+      border-bottom: 3px solid #764ba2;
+      padding-bottom: 10px;
+    }
+    .test-section {
+      margin: 30px 0;
+      padding: 20px;
+      background: #f5f5f5;
+      border-radius: 10px;
+      border-left: 5px solid #667eea;
+    }
+    .test-button {
+      display: inline-block;
+      padding: 12px 24px;
+      margin: 10px 5px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: bold;
+      transition: transform 0.2s;
+    }
+    .test-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+    .status {
+      display: inline-block;
+      padding: 5px 15px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: bold;
+      margin-left: 10px;
+    }
+    .status.ready { background: #10b981; color: white; }
+    .status.pending { background: #f59e0b; color: white; }
+    .status.complete { background: #06b6d4; color: white; }
+    pre {
+      background: #1e293b;
+      color: #10b981;
+      padding: 15px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-size: 13px;
+    }
+    .endpoint {
+      font-family: 'Courier New', monospace;
+      background: #e0e7ff;
+      padding: 5px 10px;
+      border-radius: 5px;
+      color: #4338ca;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎯 HIMS Form Management System - Testing Guide</h1>
+    
+    <div class="test-section">
+      <h2>📊 System Status</h2>
+      <p>Dev Server: <span class="status ready">✅ RUNNING</span></p>
+      <p>Option 1 - Form Management UI: <span class="status complete">✅ COMPLETE</span></p>
+      <p>Option 2 - Testing Phase: <span class="status pending">🧪 IN PROGRESS</span></p>
+      <p>Option 3 - Seeding: <span class="status ready">⏳ READY</span></p>
+    </div>
+
+    <div class="test-section">
+      <h2>🚀 Quick Access Links</h2>
+      
+      <h3>Main Pages:</h3>
+      <a href="http://localhost:3000/dashboard" target="_blank" class="test-button">📊 Dashboard</a>
+      <a href="http://localhost:3000/crewing/prepare-joining" target="_blank" class="test-button">📋 Prepare Joining</a>
+      <a href="http://localhost:3000/crewing/forms" target="_blank" class="test-button">📄 Form Management (NEW)</a>
+      <a href="http://localhost:3000/crewing/workflow" target="_blank" class="test-button">🔄 Workflow</a>
+      
+      <h3>API Endpoints:</h3>
+      <a href="http://localhost:3000/api/form-templates" target="_blank" class="test-button">🔗 Form Templates API</a>
+      <a href="http://localhost:3000/api/form-submissions" target="_blank" class="test-button">🔗 Form Submissions API</a>
+      <a href="http://localhost:3000/api/prepare-joining" target="_blank" class="test-button">🔗 Prepare Joining API</a>
+    </div>
+
+    <div class="test-section">
+      <h2>🎯 Option 1: Form Management UI - COMPLETE ✅</h2>
+      
+      <h3>Features Implemented:</h3>
+      <ul>
+        <li>✅ Form Management Page (<span class="endpoint">/crewing/forms</span>)</li>
+        <li>✅ Two Tabs: Form Submissions | Form Templates</li>
+        <li>✅ Stats Cards: Pending Review, Approved, Changes Requested, Draft</li>
+        <li>✅ Individual Form Review Page (<span class="endpoint">/crewing/forms/[id]</span>)</li>
+        <li>✅ Edit/Submit/Approve/Reject workflow</li>
+        <li>✅ Status badges with colors</li>
+        <li>✅ Category badges (MEDICAL, TRAINING, DECLARATION, SAFETY)</li>
+        <li>✅ Approval timeline tracking</li>
+      </ul>
+
+      <h3>Test Now:</h3>
+      <a href="http://localhost:3000/crewing/forms" target="_blank" class="test-button">🔍 Open Form Management Page</a>
+    </div>
+
+    <div class="test-section">
+      <h2>📄 Letter Guarantee Generator - COMPLETE ✅</h2>
+      
+      <h3>Features:</h3>
+      <ul>
+        <li>✅ Auto-fill company, principal, vessel, crew data</li>
+        <li>✅ Editable fields: recipients, agent details</li>
+        <li>✅ Professional HTML format</li>
+        <li>✅ Button added to Prepare Joining page</li>
+        <li>✅ Purpose: Airline check-in, immigration, local agent</li>
+      </ul>
+
+      <h3>API Endpoint:</h3>
+      <p><span class="endpoint">GET /api/forms/letter-guarantee/[prepareJoiningId]</span></p>
+
+      <h3>Test Now:</h3>
+      <a href="http://localhost:3000/crewing/prepare-joining" target="_blank" class="test-button">🔍 Open Prepare Joining (Look for purple-pink button)</a>
+    </div>
+
+    <div class="test-section">
+      <h2>🌱 Option 3: Seed Form Templates - READY TO RUN</h2>
+      
+      <h3>Seeding Endpoint:</h3>
+      <p><span class="endpoint">POST /api/admin/seed-form-templates</span></p>
+      
+      <h3>Will Create:</h3>
+      <ul>
+        <li>✅ INTEGRIS CO.,LTD (5 templates)</li>
+        <li>✅ LUNDQVIST REDERIERNA (4 templates)</li>
+        <li>✅ Total 9 form templates</li>
+      </ul>
+
+      <h3>Run via Command Line:</h3>
+      <pre>curl -X POST http://localhost:3000/api/admin/seed-form-templates</pre>
+
+      <p><strong>⚠️ Note:</strong> Must be logged in as DIRECTOR (admin@hims.com)</p>
+      
+      <h3>Run Seeding:</h3>
+      <button onclick="runSeeding()" class="test-button">▶️ Run Seeding Now</button>
+      <div id="seeding-result"></div>
+    </div>
+
+    <div class="test-section">
+      <h2>📝 Manual Testing Checklist</h2>
+      
+      <h3>1️⃣ Login First:</h3>
+      <p><a href="http://localhost:3000/auth/signin" target="_blank" class="test-button">🔑 Login Page</a></p>
+      <p>Email: <span class="endpoint">admin@hims.com</span></p>
+      <p>Password: <span class="endpoint">admin123</span></p>
+
+      <h3>2️⃣ Test Prepare Joining:</h3>
+      <ul>
+        <li>Go to Prepare Joining page</li>
+        <li>Look for purple-pink "Generate Letter Guarantee" button</li>
+        <li>Click it, should open Letter in new tab</li>
+        <li>Verify crew data is auto-filled</li>
+      </ul>
+
+      <h3>3️⃣ Test Form Management:</h3>
+      <ul>
+        <li>Go to Form Management page</li>
+        <li>Check two tabs: Form Submissions | Form Templates</li>
+        <li>If seeded, should see INTEGRIS and LUNDQVIST templates</li>
+        <li>Check category badges and display order</li>
+      </ul>
+
+      <h3>4️⃣ Test Form Review (once forms exist):</h3>
+      <ul>
+        <li>Click "Review Form" button</li>
+        <li>Verify crew information displays</li>
+        <li>Test Edit mode</li>
+        <li>Test Submit for Review</li>
+        <li>Test Approve/Reject (as CDMO/Director)</li>
+      </ul>
+    </div>
+
+    <div class="test-section">
+      <h2>🐛 Known Issues & Status</h2>
+      
+      <h3>✅ Working:</h3>
+      <ul>
+        <li>✅ All API endpoints created</li>
+        <li>✅ All UI pages created</li>
+        <li>✅ Letter Guarantee generator</li>
+        <li>✅ Approval workflow</li>
+        <li>✅ Permission system</li>
+      </ul>
+
+      <h3>⚠️ Needs Testing:</h3>
+      <ul>
+        <li>🧪 Form data auto-fill for non-Letter Guarantee forms</li>
+        <li>🧪 PDF generation (currently TODO)</li>
+        <li>🧪 Form template display after seeding</li>
+        <li>🧪 Complete approval workflow end-to-end</li>
+      </ul>
+
+      <h3>📌 TODO (Enhancement):</h3>
+      <ul>
+        <li>📝 PDF generation library (puppeteer/html-pdf)</li>
+        <li>📝 Email notifications on status changes</li>
+        <li>📝 Form template upload UI</li>
+        <li>📝 Bulk approve functionality</li>
+      </ul>
+    </div>
+
+    <div class="test-section">
+      <h2>🎉 Quick Summary</h2>
+      
+      <p><strong>Yang Sudah Dibuat (Option 1 - COMPLETE):</strong></p>
+      <ul>
+        <li>✅ 8 new API endpoints (form submissions, approve, reject, request changes)</li>
+        <li>✅ Form Management page dengan tabs</li>
+        <li>✅ Individual Form Review page</li>
+        <li>✅ Letter Guarantee generator</li>
+        <li>✅ Button di Prepare Joining page</li>
+        <li>✅ Approval workflow tracking</li>
+        <li>✅ Status & category badges</li>
+      </ul>
+
+      <p><strong>Yang Perlu Kamu Test Sekarang (Option 2):</strong></p>
+      <ol>
+        <li>Login dulu ke sistem</li>
+        <li>Buka Prepare Joining, cari tombol "Generate Letter Guarantee"</li>
+        <li>Buka Form Management page, lihat tampilan UI</li>
+        <li>Jalankan seeding untuk populate templates</li>
+        <li>Kasih feedback: UI OK? Fitur kurang? Bug?</li>
+      </ol>
+
+      <p><strong>Setelah Testing (Option 3):</strong></p>
+      <ul>
+        <li>Run seeding endpoint untuk create templates</li>
+        <li>Test complete workflow dari create → submit → approve</li>
+        <li>Identify missing features atau improvements</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    async function runSeeding() {
+      const resultDiv = document.getElementById('seeding-result');
+      resultDiv.innerHTML = '<p style="color: #f59e0b;">⏳ Running seeding... Please wait...</p>';
+      
+      try {
+        const response = await fetch('http://localhost:3000/api/admin/seed-form-templates', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include' // Include cookies for authentication
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+          resultDiv.innerHTML = `
+            <div style="background: #d1fae5; color: #065f46; padding: 15px; border-radius: 8px; margin-top: 15px;">
+              <h4>✅ Seeding Successful!</h4>
+              <pre style="background: #f0fdf4; color: #065f46;">${JSON.stringify(data, null, 2)}</pre>
+              <p><a href="http://localhost:3000/crewing/forms" target="_blank" class="test-button">View Form Templates Now</a></p>
+            </div>
+          `;
+        } else {
+          resultDiv.innerHTML = `
+            <div style="background: #fee2e2; color: #991b1b; padding: 15px; border-radius: 8px; margin-top: 15px;">
+              <h4>❌ Seeding Failed</h4>
+              <p><strong>Error:</strong> ${data.error || 'Unknown error'}</p>
+              <p><strong>Note:</strong> You must be logged in as DIRECTOR role (admin@hims.com)</p>
+              <p><a href="http://localhost:3000/auth/signin" target="_blank" class="test-button">Login First</a></p>
+            </div>
+          `;
+        }
+      } catch (error) {
+        resultDiv.innerHTML = `
+          <div style="background: #fee2e2; color: #991b1b; padding: 15px; border-radius: 8px; margin-top: 15px;">
+            <h4>❌ Network Error</h4>
+            <p>${error.message}</p>
+            <p>Make sure you're logged in and the dev server is running.</p>
+          </div>
+        `;
+      }
+    }
+  </script>
+</body>
+</html>
