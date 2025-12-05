@@ -20,7 +20,7 @@ export default function Home() {
   return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="text-center">
-        <h1 className="text-2xl font-bold">Loading...</h1>
+        <h1 className="text-2xl font-extrabold">Loading...</h1>
       </div>
     </div>
   );

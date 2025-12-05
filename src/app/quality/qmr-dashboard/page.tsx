@@ -53,7 +53,7 @@ export default function QMRDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-4xl font-bold text-gray-900 mb-2">QMR Dashboard</h1>
-              <p className="text-gray-600">Quality Management Representative - {session?.user?.name}</p>
+              <p className="text-gray-700">Quality Management Representative - {session?.user?.name}</p>
               <p className="text-sm text-gray-500 mt-1">ISO 9001:2015 & MLC 2006 Quality Management System</p>
             </div>
             <div className="text-right">
@@ -68,7 +68,7 @@ export default function QMRDashboard() {
         <div className="grid md:grid-cols-4 gap-6 mb-8">
           {statCards.map((card) => (
             <Link key={card.title} href={card.link}>
-              <div className={`bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow p-6 border-l-4 border-${card.color}-500 cursor-pointer`}>
+              <div className={`bg-white rounded-xl shadow-lg hover:shadow-2xl transition-shadow p-6 border-l-4 border-${card.color}-500 cursor-pointer`}>
                 <div className="flex justify-between items-start mb-4">
                   <div className="text-4xl">{card.icon}</div>
                   <div className={`text-3xl font-bold text-${card.color}-600`}>{card.value}</div>
@@ -83,7 +83,7 @@ export default function QMRDashboard() {
         <div className="grid md:grid-cols-2 gap-6 mb-8">
           {/* Pending Tasks */}
           <div className="bg-white rounded-xl shadow-lg p-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+            <h2 className="text-2xl font-extrabold text-gray-900 mb-6 flex items-center">
               <span className="mr-2">📌</span>
               My Tasks
             </h2>
@@ -94,7 +94,7 @@ export default function QMRDashboard() {
             ) : tasks.length === 0 ? (
               <div className="text-center py-8">
                 <div className="text-5xl mb-3">✅</div>
-                <p className="text-gray-600">All caught up!</p>
+                <p className="text-gray-700">All caught up!</p>
               </div>
             ) : (
               <div className="space-y-3 max-h-96 overflow-y-auto">
@@ -102,7 +102,7 @@ export default function QMRDashboard() {
                   <div key={task.id} className="border rounded-lg p-4 hover:border-blue-400 transition-colors">
                     <div className="flex justify-between items-start mb-2">
                       <h4 className="font-semibold text-gray-900">{task.title}</h4>
-                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                      <span className={`px-4 py-2 text-xs font-semibold rounded-full ${
                         task.priority === "CRITICAL" ? "bg-red-100 text-red-800" :
                         task.priority === "HIGH" ? "bg-orange-100 text-orange-800" :
                         "bg-blue-100 text-blue-800"
@@ -110,10 +110,10 @@ export default function QMRDashboard() {
                         {task.priority}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-600 mb-2">{task.description}</p>
-                    <div className="flex justify-between items-center text-xs text-gray-500">
+                    <p className="text-sm text-gray-800 mb-2">{task.description}</p>
+                    <div className="flex justify-between items-center text-sm text-gray-700">
                       <span>Due: {new Date(task.dueDate).toLocaleDateString()}</span>
-                      <span className="px-2 py-1 bg-gray-100 rounded">{task.taskType.replace(/_/g, " ")}</span>
+                      <span className="px-4 py-2 bg-gray-100 rounded">{task.taskType.replace(/_/g, " ")}</span>
                     </div>
                   </div>
                 ))}
@@ -123,13 +123,13 @@ export default function QMRDashboard() {
 
           {/* Quick Actions */}
           <div className="bg-white rounded-xl shadow-lg p-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+            <h2 className="text-2xl font-extrabold text-gray-900 mb-6 flex items-center">
               <span className="mr-2">⚡</span>
               Quick Actions
             </h2>
             <div className="grid grid-cols-2 gap-4">
               <Link href="/quality/audits/new">
-                <div className="p-4 border-2 border-blue-200 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-all cursor-pointer text-center">
+                <div className="p-4 border-2 border-blue-200 rounded-lg hover:border-blue-400 hover:bg-blue-100 transition-all cursor-pointer text-center">
                   <div className="text-3xl mb-2">📋</div>
                   <div className="text-sm font-semibold text-gray-800">Schedule Audit</div>
                 </div>
@@ -169,8 +169,8 @@ export default function QMRDashboard() {
         </div>
 
         {/* QMR Responsibilities */}
-        <div className="bg-gradient-to-r from-blue-900 via-purple-900 to-blue-900 rounded-xl shadow-xl p-8 text-white">
-          <h2 className="text-2xl font-bold mb-6">QMR Core Responsibilities</h2>
+        <div className="bg-gradient-to-r from-blue-900 via-purple-900 to-blue-900 rounded-xl shadow-2xl p-8 text-white">
+          <h2 className="text-3xl font-bold text-gray-900 mb-6">QMR Core Responsibilities</h2>
           <div className="grid md:grid-cols-3 gap-6">
             <div>
               <h3 className="font-semibold mb-3 flex items-center">

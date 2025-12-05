@@ -183,15 +183,15 @@ export default function ChecklistDetailPage() {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-6">
         <div className="max-w-4xl mx-auto">
           <div className="text-center py-12">
-            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="mx-auto h-12 w-12 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
             </svg>
             <h3 className="mt-2 text-sm font-medium text-gray-900">Checklist item not found</h3>
-            <p className="mt-1 text-sm text-gray-600">The checklist entry you&apos;re looking for doesn&apos;t exist.</p>
+            <p className="mt-1 text-sm text-gray-700">The checklist entry you&apos;re looking for doesn&apos;t exist.</p>
             <div className="mt-6">
               <Link
                 href="/crewing/checklist"
-                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+                className="inline-flex items-center px-4 py-2 border border-transparent shadow-md text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700"
               >
                 Back to Checklist
               </Link>
@@ -211,7 +211,7 @@ export default function ChecklistDetailPage() {
             <div className="flex items-center space-x-4">
               <Link
                 href="/crewing/checklist"
-                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-xl"
+                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
               >
                 ← Back to Checklist
               </Link>
@@ -245,7 +245,7 @@ export default function ChecklistDetailPage() {
           <div className="bg-white rounded-xl shadow-lg p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
-                <span className={`inline-flex px-3 py-1 text-sm font-semibold rounded-full ${
+                <span className={`inline-flex px-3 py-2 text-sm font-semibold rounded-full ${
                   checklistItem.status === 'ON' ? 'bg-green-100 text-green-800' :
                   checklistItem.status === 'OFF' ? 'bg-blue-100 text-blue-800' :
                   'bg-orange-100 text-orange-800'
@@ -254,10 +254,10 @@ export default function ChecklistDetailPage() {
                    checklistItem.status === 'OFF' ? 'Sign-Off' :
                    'Contract Expiring'}
                 </span>
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-gray-800">
                   {checklistItem.month} {checklistItem.year}
                 </span>
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-gray-800">
                   Updated: {new Date(checklistItem.updatedAt).toLocaleDateString()}
                 </span>
               </div>
@@ -273,29 +273,29 @@ export default function ChecklistDetailPage() {
 
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Seafarer Name</label>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">Seafarer Name</label>
                 <div className="text-lg font-medium text-gray-900">{checklistItem.seafarerName}</div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Rank</label>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">Rank</label>
                 <div className="text-sm text-gray-900">{checklistItem.rank}</div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Vessel</label>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">Vessel</label>
                 <div className="text-sm text-gray-900">{checklistItem.vessel}</div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Sign-On Date</label>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">Sign-On Date</label>
                 <div className="text-sm text-gray-900">
                   {checklistItem.signOnDate ? new Date(checklistItem.signOnDate).toLocaleDateString() : 'N/A'}
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Sign-Off Date</label>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">Sign-Off Date</label>
                 <div className="text-sm text-gray-900">
                   {checklistItem.signOffDate ? new Date(checklistItem.signOffDate).toLocaleDateString() : 'N/A'}
                 </div>
@@ -309,8 +309,8 @@ export default function ChecklistDetailPage() {
 
             <div className="space-y-6">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-700">Documents Complete</span>
-                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                <span className="text-sm font-semibold text-gray-900">Documents Complete</span>
+                <span className={`inline-flex px-4 py-2 text-xs font-semibold rounded-full ${
                   checklistItem.documentsComplete ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                 }`}>
                   {checklistItem.documentsComplete ? 'Complete' : 'Pending'}
@@ -318,8 +318,8 @@ export default function ChecklistDetailPage() {
               </div>
 
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-700">Medical Check</span>
-                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                <span className="text-sm font-semibold text-gray-900">Medical Check</span>
+                <span className={`inline-flex px-4 py-2 text-xs font-semibold rounded-full ${
                   checklistItem.medicalCheck ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                 }`}>
                   {checklistItem.medicalCheck ? 'Pass' : 'Fail'}
@@ -327,8 +327,8 @@ export default function ChecklistDetailPage() {
               </div>
 
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-700">Training Complete</span>
-                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                <span className="text-sm font-semibold text-gray-900">Training Complete</span>
+                <span className={`inline-flex px-4 py-2 text-xs font-semibold rounded-full ${
                   checklistItem.trainingComplete ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                 }`}>
                   {checklistItem.trainingComplete ? 'Complete' : 'Pending'}
@@ -336,23 +336,23 @@ export default function ChecklistDetailPage() {
               </div>
 
               {/* External Compliance Checks */}
-              <div className="pt-4 border-t border-gray-200">
-                <h4 className="text-sm font-medium text-gray-700 mb-3">External Compliance</h4>
+              <div className="pt-4 border-t border-gray-300">
+                <h4 className="text-sm font-semibold text-gray-900 mb-3">External Compliance</h4>
                 <div className="space-y-2">
                   {checklistItem.externalCompliance && checklistItem.externalCompliance.length > 0 ? (
                     checklistItem.externalCompliance.map((compliance) => (
                       <div key={compliance.id} className="flex items-center justify-between">
-                        <span className="text-xs text-gray-600">
+                        <span className="text-xs text-gray-700">
                           {compliance.systemType === 'KOSMA_CERTIFICATE' ? 'KOSMA Certificate' :
                            compliance.systemType === 'DEPHUB_CERTIFICATE' ? 'Dephub Certificate' :
                            'Schengen Visa NL'}
                         </span>
                         <div className="flex items-center space-x-2">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          <span className={`inline-flex px-4 py-2 text-xs font-semibold rounded-full ${
                             compliance.status === 'VERIFIED' ? 'bg-green-100 text-green-800' :
                             compliance.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
                             compliance.status === 'FAILED' ? 'bg-red-100 text-red-800' :
-                            'bg-gray-100 text-gray-600'
+                            'bg-gray-100 text-gray-700'
                           }`}>
                             {compliance.status}
                           </span>
@@ -370,17 +370,17 @@ export default function ChecklistDetailPage() {
                       </div>
                     ))
                   ) : (
-                    <div className="text-xs text-gray-500 italic">
+                    <div className="text-sm text-gray-700 italic">
                       No external compliance records found
                     </div>
                   )}
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-gray-200">
+              <div className="pt-4 border-t border-gray-300">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-700">Overall Status</span>
-                  <span className={`inline-flex px-3 py-1 text-sm font-semibold rounded-full ${
+                  <span className="text-sm font-semibold text-gray-900">Overall Status</span>
+                  <span className={`inline-flex px-3 py-2 text-sm font-semibold rounded-full ${
                     checklistItem.documentsComplete && checklistItem.medicalCheck && checklistItem.trainingComplete &&
                     (!checklistItem.externalCompliance || checklistItem.externalCompliance.every(c => c.status === 'VERIFIED'))
                       ? 'bg-green-100 text-green-800'
@@ -402,17 +402,17 @@ export default function ChecklistDetailPage() {
         {checklistItem.replacements && checklistItem.replacements.length > 0 && (
           <div className="mt-8 bg-white rounded-xl shadow-lg p-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-6">Crew Replacement Candidates</h2>
-            <div className="space-y-4">
+            <div className="space-y-6">
               {checklistItem.replacements.map((replacement) => (
-                <div key={replacement.id} className="border border-gray-200 rounded-lg p-4">
+                <div key={replacement.id} className="border border-gray-300 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center space-x-3">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                      <span className={`inline-flex px-4 py-2 text-xs font-semibold rounded-full ${
                         replacement.candidateType === 'EX_CREW' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
                       }`}>
                         {replacement.candidateType === 'EX_CREW' ? 'Ex-Crew' : 'New Applicant'}
                       </span>
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                      <span className={`inline-flex px-4 py-2 text-xs font-semibold rounded-full ${
                         replacement.status === 'APPROVED' ? 'bg-green-100 text-green-800' :
                         replacement.status === 'PROPOSED' ? 'bg-yellow-100 text-yellow-800' :
                         replacement.status === 'REJECTED' ? 'bg-red-100 text-red-800' :
@@ -421,14 +421,14 @@ export default function ChecklistDetailPage() {
                         {replacement.status}
                       </span>
                     </div>
-                    <div className="text-sm text-gray-600">
+                    <div className="text-sm text-gray-800">
                       Replacement Date: {new Date(replacement.replacementDate).toLocaleDateString()}
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
                     <div>
-                      <label className="block text-sm font-medium text-gray-600">Candidate Name</label>
+                      <label className="block text-sm font-semibold text-gray-900">Candidate Name</label>
                       <div className="text-sm font-medium text-gray-900">
                         {replacement.candidateType === 'EX_CREW'
                           ? replacement.seafarer?.fullName
@@ -437,7 +437,7 @@ export default function ChecklistDetailPage() {
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-600">Reason</label>
+                      <label className="block text-sm font-semibold text-gray-900">Reason</label>
                       <div className="text-sm text-gray-900">{replacement.reason}</div>
                     </div>
                   </div>
@@ -446,16 +446,16 @@ export default function ChecklistDetailPage() {
                     <div className="mt-4 p-4 bg-green-50 rounded-lg border border-green-200">
                       <h4 className="font-medium text-green-900 mb-2">Prepare Joining Checklist</h4>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
-                        <div className={`p-2 rounded ${replacement.prepareJoining.visaStatus === 'APPROVED' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>
+                        <div className={`p-2 rounded ${replacement.prepareJoining.visaStatus === 'APPROVED' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700'}`}>
                           Visa: {replacement.prepareJoining.visaStatus || 'Pending'}
                         </div>
-                        <div className={`p-2 rounded ${replacement.prepareJoining.flagCertStatus === 'APPROVED' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>
+                        <div className={`p-2 rounded ${replacement.prepareJoining.flagCertStatus === 'APPROVED' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700'}`}>
                           Flag Cert: {replacement.prepareJoining.flagCertStatus || 'Pending'}
                         </div>
-                        <div className={`p-2 rounded ${replacement.prepareJoining.medicalStatus === 'PASSED' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>
+                        <div className={`p-2 rounded ${replacement.prepareJoining.medicalStatus === 'PASSED' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700'}`}>
                           Medical: {replacement.prepareJoining.medicalStatus || 'Pending'}
                         </div>
-                        <div className={`p-2 rounded ${replacement.prepareJoining.ticketReady ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>
+                        <div className={`p-2 rounded ${replacement.prepareJoining.ticketReady ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700'}`}>
                           Ticket: {replacement.prepareJoining.ticketReady ? 'Ready' : 'Pending'}
                         </div>
                       </div>
@@ -470,7 +470,7 @@ export default function ChecklistDetailPage() {
                   )}
 
                   {replacement.notes && (
-                    <div className="mt-3 text-sm text-gray-600 bg-gray-50 p-2 rounded">
+                    <div className="mt-3 text-sm text-gray-700 bg-gray-100 p-2 rounded">
                       {replacement.notes}
                     </div>
                   )}
@@ -484,7 +484,7 @@ export default function ChecklistDetailPage() {
         {checklistItem.notes && (
           <div className="mt-8 bg-white rounded-xl shadow-lg p-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Notes</h2>
-            <div className="text-sm text-gray-900 bg-gray-50 p-4 rounded-lg">
+            <div className="text-sm text-gray-900 bg-gray-100 p-4 rounded-lg">
               {checklistItem.notes}
             </div>
           </div>
@@ -494,7 +494,7 @@ export default function ChecklistDetailPage() {
         <div className="mt-8 flex justify-end space-x-4">
           <button
             onClick={() => router.push(`/crewing/assignments/${checklistItem.id}`)}
-            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            className="inline-flex items-center px-4 py-2 border border-gray-400 rounded-lg text-sm font-semibold text-gray-900 bg-white hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
           >
             Edit Assignment
           </button>

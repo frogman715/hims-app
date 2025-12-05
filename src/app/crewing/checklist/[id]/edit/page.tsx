@@ -121,7 +121,7 @@ export default function EditChecklistPage() {
             <div className="flex items-center space-x-4">
               <Link
                 href={`/crewing/checklist/${params.id}`}
-                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-xl"
+                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
               >
                 ← Back to Details
               </Link>
@@ -142,14 +142,14 @@ export default function EditChecklistPage() {
             </div>
 
             <div>
-              <label htmlFor="month" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="month" className="block text-sm font-semibold text-gray-900 mb-2">
                 Month *
               </label>
               <select
                 id="month"
                 value={formData.month || ''}
                 onChange={(e) => handleInputChange('month', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
                 required
               >
                 <option value="">Select Month</option>
@@ -160,14 +160,14 @@ export default function EditChecklistPage() {
             </div>
 
             <div>
-              <label htmlFor="year" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="year" className="block text-sm font-semibold text-gray-900 mb-2">
                 Year *
               </label>
               <select
                 id="year"
                 value={formData.year || ''}
                 onChange={(e) => handleInputChange('year', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
                 required
               >
                 <option value="">Select Year</option>
@@ -183,7 +183,7 @@ export default function EditChecklistPage() {
             </div>
 
             <div>
-              <label htmlFor="seafarerName" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="seafarerName" className="block text-sm font-semibold text-gray-900 mb-2">
                 Seafarer Name *
               </label>
               <input
@@ -191,13 +191,13 @@ export default function EditChecklistPage() {
                 id="seafarerName"
                 value={formData.seafarerName || ''}
                 onChange={(e) => handleInputChange('seafarerName', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
                 required
               />
             </div>
 
             <div>
-              <label htmlFor="vessel" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="vessel" className="block text-sm font-semibold text-gray-900 mb-2">
                 Vessel *
               </label>
               <input
@@ -205,7 +205,7 @@ export default function EditChecklistPage() {
                 id="vessel"
                 value={formData.vessel || ''}
                 onChange={(e) => handleInputChange('vessel', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
                 required
               />
             </div>
@@ -216,14 +216,14 @@ export default function EditChecklistPage() {
             </div>
 
             <div>
-              <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="status" className="block text-sm font-semibold text-gray-900 mb-2">
                 Status *
               </label>
               <select
                 id="status"
                 value={formData.status || 'ON'}
                 onChange={(e) => handleInputChange('status', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
                 required
               >
                 <option value="ON">Sign-On</option>
@@ -234,7 +234,7 @@ export default function EditChecklistPage() {
             <div></div> {/* Empty space for alignment */}
 
             <div>
-              <label htmlFor="signOnDate" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="signOnDate" className="block text-sm font-semibold text-gray-900 mb-2">
                 Sign-On Date
               </label>
               <input
@@ -242,12 +242,12 @@ export default function EditChecklistPage() {
                 id="signOnDate"
                 value={formData.signOnDate || ''}
                 onChange={(e) => handleInputChange('signOnDate', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
               />
             </div>
 
             <div>
-              <label htmlFor="signOffDate" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="signOffDate" className="block text-sm font-semibold text-gray-900 mb-2">
                 Sign-Off Date
               </label>
               <input
@@ -255,7 +255,7 @@ export default function EditChecklistPage() {
                 id="signOffDate"
                 value={formData.signOffDate || ''}
                 onChange={(e) => handleInputChange('signOffDate', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
               />
             </div>
 
@@ -271,7 +271,7 @@ export default function EditChecklistPage() {
                   type="checkbox"
                   checked={formData.documentsComplete || false}
                   onChange={(e) => handleInputChange('documentsComplete', e.target.checked)}
-                  className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                  className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-400 rounded"
                 />
                 <label htmlFor="documentsComplete" className="ml-2 block text-sm text-gray-900">
                   Documents Complete
@@ -284,7 +284,7 @@ export default function EditChecklistPage() {
                   type="checkbox"
                   checked={formData.medicalCheck || false}
                   onChange={(e) => handleInputChange('medicalCheck', e.target.checked)}
-                  className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                  className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-400 rounded"
                 />
                 <label htmlFor="medicalCheck" className="ml-2 block text-sm text-gray-900">
                   Medical Check Passed
@@ -297,7 +297,7 @@ export default function EditChecklistPage() {
                   type="checkbox"
                   checked={formData.trainingComplete || false}
                   onChange={(e) => handleInputChange('trainingComplete', e.target.checked)}
-                  className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                  className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-400 rounded"
                 />
                 <label htmlFor="trainingComplete" className="ml-2 block text-sm text-gray-900">
                   Training Complete
@@ -307,7 +307,7 @@ export default function EditChecklistPage() {
 
             {/* Notes */}
             <div className="lg:col-span-2">
-              <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="notes" className="block text-sm font-semibold text-gray-900 mb-2">
                 Additional Notes
               </label>
               <textarea
@@ -315,7 +315,7 @@ export default function EditChecklistPage() {
                 rows={4}
                 value={formData.notes || ''}
                 onChange={(e) => handleInputChange('notes', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
                 placeholder="Any additional information or special requirements..."
               />
             </div>
@@ -325,14 +325,14 @@ export default function EditChecklistPage() {
           <div className="mt-8 flex justify-end space-x-4">
             <Link
               href={`/crewing/checklist/${params.id}`}
-              className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-xl"
+              className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
             >
               Cancel
             </Link>
             <button
               type="submit"
               disabled={saving}
-              className="inline-flex items-center px-6 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center px-6 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed disabled:cursor-not-allowed"
             >
               {saving ? (
                 <>

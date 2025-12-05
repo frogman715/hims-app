@@ -89,7 +89,7 @@ export default function ContractDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
+      <div className="min-h-screen bg-gray-100 p-6">
         <div className="max-w-4xl mx-auto">
           <div className="animate-pulse">
             <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
@@ -105,12 +105,12 @@ export default function ContractDetailPage() {
 
   if (error || !contract) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
+      <div className="min-h-screen bg-gray-100 p-6">
         <div className="max-w-4xl mx-auto">
           <div className="bg-white rounded-lg shadow p-6">
             <div className="text-center">
-              <h1 className="text-2xl font-bold text-gray-900 mb-4">Error</h1>
-              <p className="text-gray-600 mb-6">{error || 'Contract not found'}</p>
+              <h1 className="text-2xl font-extrabold text-gray-900 mb-4">Error</h1>
+              <p className="text-gray-700 mb-6">{error || 'Contract not found'}</p>
               <Link
                 href="/contracts"
                 className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
@@ -125,13 +125,13 @@ export default function ContractDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-100 p-6">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Contract Details</h1>
-            <p className="text-gray-600 mt-1">Contract #{contract.contractNumber}</p>
+            <p className="text-gray-700 mt-1">Contract #{contract.contractNumber}</p>
           </div>
           <div className="flex space-x-3">
             <button
@@ -160,19 +160,19 @@ export default function ContractDetailPage() {
 
         {/* Contract Information */}
         <div className="bg-white rounded-lg shadow mb-6">
-          <div className="px-6 py-4 border-b border-gray-200">
+          <div className="px-6 py-4 border-b border-gray-300">
             <h2 className="text-xl font-semibold text-gray-900">Contract Information</h2>
           </div>
           <div className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Contract Number</label>
+                <label className="block text-sm font-semibold text-gray-900">Contract Number</label>
                 <p className="mt-1 text-sm text-gray-900">{contract.contractNumber}</p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Contract Type</label>
+                <label className="block text-sm font-semibold text-gray-900">Contract Type</label>
                 <p className="mt-1 text-sm text-gray-900">
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                  <span className={`inline-flex items-center px-4.5 py-0.5 rounded-full text-xs font-medium ${
                     contract.contractKind === 'SEA'
                       ? 'bg-blue-100 text-blue-800'
                       : 'bg-green-100 text-green-800'
@@ -183,9 +183,9 @@ export default function ContractDetailPage() {
               </div>
               {contract.contractKind === 'SEA' && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">SEA Type</label>
+                  <label className="block text-sm font-semibold text-gray-900">SEA Type</label>
                   <p className="mt-1 text-sm text-gray-900">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    <span className={`inline-flex items-center px-4.5 py-0.5 rounded-full text-xs font-medium ${
                       contract.seaType === 'KOREA' ? 'bg-red-100 text-red-800' :
                       contract.seaType === 'BAHAMAS_PANAMA' ? 'bg-yellow-100 text-yellow-800' :
                       contract.seaType === 'TANKER_LUNDQVIST' ? 'bg-purple-100 text-purple-800' :
@@ -200,13 +200,13 @@ export default function ContractDetailPage() {
                 </div>
               )}
               <div>
-                <label className="block text-sm font-medium text-gray-700">Rank</label>
+                <label className="block text-sm font-semibold text-gray-900">Rank</label>
                 <p className="mt-1 text-sm text-gray-900">{contract.rank}</p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Status</label>
+                <label className="block text-sm font-semibold text-gray-900">Status</label>
                 <p className="mt-1 text-sm text-gray-900">
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                  <span className={`inline-flex items-center px-4.5 py-0.5 rounded-full text-xs font-medium ${
                     contract.status === 'ACTIVE' ? 'bg-green-100 text-green-800' :
                     contract.status === 'COMPLETED' ? 'bg-blue-100 text-blue-800' :
                     contract.status === 'TERMINATED' ? 'bg-red-100 text-red-800' :
@@ -217,11 +217,11 @@ export default function ContractDetailPage() {
                 </p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Start Date</label>
+                <label className="block text-sm font-semibold text-gray-900">Start Date</label>
                 <p className="mt-1 text-sm text-gray-900">{new Date(contract.contractStart).toLocaleDateString()}</p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">End Date</label>
+                <label className="block text-sm font-semibold text-gray-900">End Date</label>
                 <p className="mt-1 text-sm text-gray-900">{new Date(contract.contractEnd).toLocaleDateString()}</p>
               </div>
             </div>
@@ -230,29 +230,29 @@ export default function ContractDetailPage() {
 
         {/* Crew Information */}
         <div className="bg-white rounded-lg shadow mb-6">
-          <div className="px-6 py-4 border-b border-gray-200">
+          <div className="px-6 py-4 border-b border-gray-300">
             <h2 className="text-xl font-semibold text-gray-900">Crew Member Information</h2>
           </div>
           <div className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Full Name</label>
+                <label className="block text-sm font-semibold text-gray-900">Full Name</label>
                 <p className="mt-1 text-sm text-gray-900">{contract.crew.firstName} {contract.crew.lastName}</p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Nationality</label>
+                <label className="block text-sm font-semibold text-gray-900">Nationality</label>
                 <p className="mt-1 text-sm text-gray-900">{contract.crew.nationality}</p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Date of Birth</label>
+                <label className="block text-sm font-semibold text-gray-900">Date of Birth</label>
                 <p className="mt-1 text-sm text-gray-900">{new Date(contract.crew.dateOfBirth).toLocaleDateString()}</p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Passport Number</label>
+                <label className="block text-sm font-semibold text-gray-900">Passport Number</label>
                 <p className="mt-1 text-sm text-gray-900">{contract.crew.passportNumber}</p>
               </div>
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700">Address</label>
+                <label className="block text-sm font-semibold text-gray-900">Address</label>
                 <p className="mt-1 text-sm text-gray-900">{contract.crew.address}</p>
               </div>
             </div>
@@ -262,21 +262,21 @@ export default function ContractDetailPage() {
         {/* Vessel Information */}
         {contract.vessel && (
           <div className="bg-white rounded-lg shadow mb-6">
-            <div className="px-6 py-4 border-b border-gray-200">
+            <div className="px-6 py-4 border-b border-gray-300">
               <h2 className="text-xl font-semibold text-gray-900">Vessel Information</h2>
             </div>
             <div className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Vessel Name</label>
+                  <label className="block text-sm font-semibold text-gray-900">Vessel Name</label>
                   <p className="mt-1 text-sm text-gray-900">{contract.vessel.name}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Flag</label>
+                  <label className="block text-sm font-semibold text-gray-900">Flag</label>
                   <p className="mt-1 text-sm text-gray-900">{contract.vessel.flag}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">IMO Number</label>
+                  <label className="block text-sm font-semibold text-gray-900">IMO Number</label>
                   <p className="mt-1 text-sm text-gray-900">{contract.vessel.imoNumber}</p>
                 </div>
               </div>
@@ -287,17 +287,17 @@ export default function ContractDetailPage() {
         {/* Principal Information */}
         {contract.principal && (
           <div className="bg-white rounded-lg shadow mb-6">
-            <div className="px-6 py-4 border-b border-gray-200">
+            <div className="px-6 py-4 border-b border-gray-300">
               <h2 className="text-xl font-semibold text-gray-900">Principal Information</h2>
             </div>
             <div className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Company Name</label>
+                  <label className="block text-sm font-semibold text-gray-900">Company Name</label>
                   <p className="mt-1 text-sm text-gray-900">{contract.principal.name}</p>
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700">Address</label>
+                  <label className="block text-sm font-semibold text-gray-900">Address</label>
                   <p className="mt-1 text-sm text-gray-900">{contract.principal.address}</p>
                 </div>
               </div>
@@ -308,44 +308,44 @@ export default function ContractDetailPage() {
         {/* CBA Information - SEA Contracts Only */}
         {contract.contractKind === 'SEA' && (
           <div className="bg-white rounded-lg shadow mb-6">
-            <div className="px-6 py-4 border-b border-gray-200">
+            <div className="px-6 py-4 border-b border-gray-300">
               <h2 className="text-xl font-semibold text-gray-900">Contract & CBA</h2>
             </div>
             <div className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {contract.maritimeLaw && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Maritime Law</label>
+                    <label className="block text-sm font-semibold text-gray-900">Maritime Law</label>
                     <p className="mt-1 text-sm text-gray-900">{contract.maritimeLaw}</p>
                   </div>
                 )}
                 {contract.cbaReference && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">CBA Reference</label>
+                    <label className="block text-sm font-semibold text-gray-900">CBA Reference</label>
                     <p className="mt-1 text-sm text-gray-900">{contract.cbaReference}</p>
                   </div>
                 )}
                 {contract.guaranteedOTHours && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Guaranteed OT Hours</label>
+                    <label className="block text-sm font-semibold text-gray-900">Guaranteed OT Hours</label>
                     <p className="mt-1 text-sm text-gray-900">{contract.guaranteedOTHours}</p>
                   </div>
                 )}
                 {contract.overtimeRate && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Overtime Rate</label>
+                    <label className="block text-sm font-semibold text-gray-900">Overtime Rate</label>
                     <p className="mt-1 text-sm text-gray-900">{contract.overtimeRate}</p>
                   </div>
                 )}
                 {contract.templateVersion && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Template Version</label>
+                    <label className="block text-sm font-semibold text-gray-900">Template Version</label>
                     <p className="mt-1 text-sm text-gray-900">{contract.templateVersion}</p>
                   </div>
                 )}
                 {contract.wageScaleHeader && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Wage Scale</label>
+                    <label className="block text-sm font-semibold text-gray-900">Wage Scale</label>
                     <p className="mt-1 text-sm text-gray-900">{contract.wageScaleHeader.name}</p>
                   </div>
                 )}
@@ -356,14 +356,14 @@ export default function ContractDetailPage() {
 
         {/* Wage & Allowances */}
         <div className="bg-white rounded-lg shadow mb-6">
-          <div className="px-6 py-4 border-b border-gray-200">
+          <div className="px-6 py-4 border-b border-gray-300">
             <h2 className="text-xl font-semibold text-gray-900">Wage & Allowances</h2>
           </div>
           <div className="p-6">
             <div className="mb-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Monthly Wage Breakdown</h3>
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
+                <table className="min-w-full divide-y divide-gray-300">
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Component</th>
@@ -376,7 +376,7 @@ export default function ContractDetailPage() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{contract.basicWage.toLocaleString()}</td>
                     </tr>
                     {/* Wage scale items would be displayed here when API includes them */}
-                    <tr className="border-t-2 border-gray-300">
+                    <tr className="border-t-2 border-gray-400">
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">Total Monthly Wage</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 text-right">
                         {contract.basicWage.toLocaleString()}
@@ -391,19 +391,19 @@ export default function ContractDetailPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {contract.onboardAllowance && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Onboard Allowance</label>
+                    <label className="block text-sm font-semibold text-gray-900">Onboard Allowance</label>
                     <p className="mt-1 text-sm text-gray-900">{contract.currency} {contract.onboardAllowance.toLocaleString()}</p>
                   </div>
                 )}
                 {contract.homeAllotment && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Home Allotment</label>
+                    <label className="block text-sm font-semibold text-gray-900">Home Allotment</label>
                     <p className="mt-1 text-sm text-gray-900">{contract.currency} {contract.homeAllotment.toLocaleString()}</p>
                   </div>
                 )}
                 {contract.specialAllowance && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Special Allowance</label>
+                    <label className="block text-sm font-semibold text-gray-900">Special Allowance</label>
                     <p className="mt-1 text-sm text-gray-900">{contract.currency} {contract.specialAllowance.toLocaleString()}</p>
                   </div>
                 )}
@@ -415,12 +415,12 @@ export default function ContractDetailPage() {
         {/* Wage Scale Information */}
         {contract.wageScaleHeader && (
           <div className="bg-white rounded-lg shadow mb-6">
-            <div className="px-6 py-4 border-b border-gray-200">
+            <div className="px-6 py-4 border-b border-gray-300">
               <h2 className="text-xl font-semibold text-gray-900">Wage Scale</h2>
             </div>
             <div className="p-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Wage Scale Name</label>
+                <label className="block text-sm font-semibold text-gray-900">Wage Scale Name</label>
                 <p className="mt-1 text-sm text-gray-900">{contract.wageScaleHeader.name}</p>
               </div>
             </div>

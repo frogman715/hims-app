@@ -101,14 +101,14 @@ function InterviewsContent() {
 
     const item = config[status] || { color: "bg-gray-100 text-gray-800", text: status };
     return (
-      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${item.color}`}>
+      <span className={`px-3 py-2 rounded-full text-xs font-semibold ${item.color}`}>
         {item.text}
       </span>
     );
   };
 
   const getScoreColor = (score: number | null) => {
-    if (!score) return "text-gray-400";
+    if (!score) return "text-gray-700";
     if (score >= 80) return "text-green-600";
     if (score >= 60) return "text-yellow-600";
     return "text-red-600";
@@ -124,14 +124,14 @@ function InterviewsContent() {
               <h1 className="text-4xl font-bold text-gray-900 mb-2">
                 Seafarer Interviews
               </h1>
-              <p className="text-gray-600">
+              <p className="text-gray-700">
                 Schedule dan hasil interview untuk crew candidates
               </p>
             </div>
             <div className="flex gap-3">
               <Link
                 href="/crewing/workflow"
-                className="px-6 py-3 bg-white border-2 border-gray-200 rounded-xl text-gray-700 font-semibold hover:border-indigo-500 hover:text-indigo-600 transition-all duration-200 shadow-sm hover:shadow-md"
+                className="px-6 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-700 font-semibold hover:border-indigo-500 hover:text-indigo-600 transition-all duration-200 shadow-md hover:shadow-md"
               >
                 ← Workflow
               </Link>
@@ -155,7 +155,7 @@ function InterviewsContent() {
                   className={`px-4 py-2 rounded-xl font-semibold whitespace-nowrap transition-all duration-200 ${
                     isActive
                       ? "bg-indigo-500 text-white shadow-lg"
-                      : "bg-white text-gray-700 border-2 border-gray-200 hover:border-indigo-500"
+                      : "bg-white text-gray-700 border-2 border-gray-300 hover:border-indigo-500"
                   }`}
                 >
                   {option.icon} {option.label}
@@ -169,10 +169,10 @@ function InterviewsContent() {
         {interviews.length === 0 ? (
           <div className="bg-white rounded-2xl shadow-lg p-12 text-center border-2 border-gray-100">
             <div className="text-6xl mb-4">🎤</div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">
+            <h3 className="text-xl font-extrabold text-gray-900 mb-2">
               Tidak ada interview
             </h3>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-700 mb-6">
               Belum ada interview yang dijadwalkan
             </p>
             <Link
@@ -198,10 +198,10 @@ function InterviewsContent() {
                           {interview.application.crew.fullName.charAt(0)}
                         </div>
                         <div>
-                          <h3 className="text-2xl font-bold text-gray-900">
+                          <h3 className="text-2xl font-extrabold text-gray-900">
                             {interview.application.crew.fullName}
                           </h3>
-                          <p className="text-gray-600">
+                          <p className="text-gray-700">
                             {interview.application.crew.rank} • {interview.application.position}
                           </p>
                         </div>
@@ -209,13 +209,13 @@ function InterviewsContent() {
 
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div>
-                          <div className="text-xs text-gray-500 mb-1">Principal</div>
+                          <div className="text-sm text-gray-700 mb-1">Principal</div>
                           <div className="font-semibold text-gray-900">
                             {interview.application.principal?.name || "N/A"}
                           </div>
                         </div>
                         <div>
-                          <div className="text-xs text-gray-500 mb-1">Scheduled</div>
+                          <div className="text-sm text-gray-700 mb-1">Scheduled</div>
                           <div className="font-semibold text-gray-900">
                             {interview.scheduledDate
                               ? new Date(interview.scheduledDate).toLocaleDateString("id-ID", {
@@ -227,11 +227,11 @@ function InterviewsContent() {
                           </div>
                         </div>
                         <div>
-                          <div className="text-xs text-gray-500 mb-1">Status</div>
+                          <div className="text-sm text-gray-700 mb-1">Status</div>
                           {getStatusBadge(interview.status)}
                         </div>
                         <div>
-                          <div className="text-xs text-gray-500 mb-1">Interviewer</div>
+                          <div className="text-sm text-gray-700 mb-1">Interviewer</div>
                           <div className="font-semibold text-gray-900">
                             {interview.interviewerName || "TBD"}
                           </div>
@@ -255,20 +255,20 @@ function InterviewsContent() {
                       Interview Scores
                     </h4>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                      <div className="bg-blue-50 rounded-xl p-4 text-center">
-                        <div className="text-sm text-gray-600 mb-2">Technical</div>
+                      <div className="bg-blue-100 rounded-xl p-4 text-center">
+                        <div className="text-sm text-gray-800 mb-2">Technical</div>
                         <div className={`text-3xl font-bold ${getScoreColor(interview.technicalScore)}`}>
                           {interview.technicalScore || "-"}/100
                         </div>
                       </div>
                       <div className="bg-green-50 rounded-xl p-4 text-center">
-                        <div className="text-sm text-gray-600 mb-2">Attitude</div>
+                        <div className="text-sm text-gray-800 mb-2">Attitude</div>
                         <div className={`text-3xl font-bold ${getScoreColor(interview.attitudeScore)}`}>
                           {interview.attitudeScore || "-"}/100
                         </div>
                       </div>
                       <div className="bg-purple-50 rounded-xl p-4 text-center">
-                        <div className="text-sm text-gray-600 mb-2">English</div>
+                        <div className="text-sm text-gray-800 mb-2">English</div>
                         <div className={`text-3xl font-bold ${getScoreColor(interview.englishScore)}`}>
                           {interview.englishScore || "-"}/100
                         </div>
@@ -276,7 +276,7 @@ function InterviewsContent() {
                     </div>
 
                     {interview.recommendation && (
-                      <div className="bg-gray-50 rounded-xl p-4">
+                      <div className="bg-gray-100 rounded-xl p-4">
                         <div className="text-sm font-semibold text-gray-700 mb-2">
                           Recommendation
                         </div>

@@ -123,25 +123,25 @@ export default function Documents() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-lg shadow-xl border-b border-white/20">
+      <header className="bg-white backdrop-blur-lg shadow-2xl border-b border-white/20">
         <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">
                 Document Management
               </h1>
-              <p className="text-lg text-gray-600 mt-2 font-medium">Track seafarer documents and expiry dates</p>
+              <p className="text-lg text-gray-700 mt-2 font-medium">Track seafarer documents and expiry dates</p>
             </div>
             <div className="flex items-center space-x-4">
               <Link
                 href="/crewing/documents/new"
-                className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-xl"
+                className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
               >
                 + Add New Document
               </Link>
               <Link
                 href="/crewing"
-                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-xl"
+                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
               >
                 ← Back to Crewing
               </Link>
@@ -153,7 +153,7 @@ export default function Documents() {
       <main className="max-w-7xl mx-auto py-8 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           {/* Filter Buttons */}
-          <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 p-6 mb-6">
+          <div className="bg-white backdrop-blur-md rounded-2xl shadow-lg border border-white p-6 mb-6">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold text-gray-900">Document Status Filter</h2>
               <div className="flex space-x-2">
@@ -199,14 +199,14 @@ export default function Documents() {
           </div>
 
           {/* Documents Table */}
-          <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200">
+          <div className="bg-white backdrop-blur-md rounded-2xl shadow-lg border border-white overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-300">
               <h2 className="text-xl font-semibold text-gray-900">
                 {filter === 'all' ? 'All Documents' : filter === 'expiring' ? 'Documents Expiring Soon' : 'Expired Documents'}
               </h2>
             </div>
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
+              <table className="min-w-full divide-y divide-gray-300">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -234,24 +234,24 @@ export default function Documents() {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {filteredDocuments.map((document) => (
-                    <tr key={document.id} className="hover:bg-gray-50">
+                    <tr key={document.id} className="hover:bg-gray-100">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">{document.crew.fullName}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {document.docType}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {document.docNumber}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {document.issueDate ? new Date(document.issueDate).toLocaleDateString() : 'N/A'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {document.expiryDate ? new Date(document.expiryDate).toLocaleDateString() : 'N/A'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(document.expiryDate)}`}>
+                        <span className={`inline-flex px-4 py-2 text-xs font-semibold rounded-full ${getStatusColor(document.expiryDate)}`}>
                           {getStatusText(document.expiryDate)}
                         </span>
                       </td>

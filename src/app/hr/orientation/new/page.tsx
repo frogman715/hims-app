@@ -98,7 +98,7 @@ export default function NewOrientationPage() {
             </div>
             <Link
               href="/hr/orientation"
-              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+              className="inline-flex items-center px-4 py-2 border border-gray-400 rounded-lg text-sm font-semibold text-gray-900 bg-white hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
             >
               ← Back to Orientation
             </Link>
@@ -119,7 +119,7 @@ export default function NewOrientationPage() {
                 required
                 value={formData.employeeId}
                 onChange={handleInputChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors text-gray-900"
+                className="w-full px-4 py-3 border border-gray-400 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors text-gray-900"
                 disabled={loading}
               >
                 <option value="">Select an employee...</option>
@@ -129,7 +129,7 @@ export default function NewOrientationPage() {
                   </option>
                 ))}
               </select>
-              {loading && <p className="mt-2 text-sm text-gray-600">Loading employees...</p>}
+              {loading && <p className="mt-2 text-sm text-gray-700">Loading employees...</p>}
             </div>
 
             {/* Orientation Date */}
@@ -144,7 +144,7 @@ export default function NewOrientationPage() {
                 required
                 value={formData.orientationDate}
                 onChange={handleInputChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors text-gray-900"
+                className="w-full px-4 py-3 border border-gray-400 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors text-gray-900"
               />
             </div>
 
@@ -161,7 +161,7 @@ export default function NewOrientationPage() {
                 value={formData.topics}
                 onChange={handleInputChange}
                 placeholder="List the topics that will be covered in the orientation..."
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors resize-none text-gray-900"
+                className="w-full px-4 py-3 border border-gray-400 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors resize-none text-gray-900"
               />
             </div>
 
@@ -178,7 +178,7 @@ export default function NewOrientationPage() {
                 value={formData.trainer}
                 onChange={handleInputChange}
                 placeholder="Name of the person conducting the orientation"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors text-gray-900"
+                className="w-full px-4 py-3 border border-gray-400 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors text-gray-900"
               />
             </div>
 
@@ -190,7 +190,7 @@ export default function NewOrientationPage() {
                 type="checkbox"
                 checked={formData.completed}
                 onChange={handleInputChange}
-                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-400 rounded"
               />
               <label htmlFor="completed" className="ml-2 block text-sm text-gray-900">
                 Mark as completed (if orientation has already been conducted)
@@ -209,7 +209,7 @@ export default function NewOrientationPage() {
                 value={formData.notes}
                 onChange={handleInputChange}
                 placeholder="Any additional notes about this orientation session..."
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors resize-none text-gray-900"
+                className="w-full px-4 py-3 border border-gray-400 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors resize-none text-gray-900"
               />
             </div>
 
@@ -217,14 +217,14 @@ export default function NewOrientationPage() {
             <div className="flex justify-end space-x-4 pt-6">
               <Link
                 href="/hr/orientation"
-                className="px-6 py-3 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+                className="px-6 py-3 border border-gray-400 rounded-lg text-sm font-semibold text-gray-900 bg-white hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
               >
                 Cancel
               </Link>
               <button
                 type="submit"
                 disabled={submitting}
-                className="px-6 py-3 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="px-6 py-3 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed disabled:cursor-not-allowed transition-colors"
               >
                 {submitting ? 'Scheduling...' : 'Schedule Orientation'}
               </button>

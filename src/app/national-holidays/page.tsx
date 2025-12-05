@@ -145,7 +145,7 @@ export default function NationalHolidaysPage() {
           <div className="flex items-center gap-4">
             <button
               onClick={() => router.push('/dashboard')}
-              className="flex items-center gap-2 bg-gray-500 hover:bg-gray-600 text-white font-semibold px-4 py-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+              className="flex items-center gap-2 bg-gray-500 hover:bg-gray-600 text-white font-semibold px-4 py-2 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -154,12 +154,12 @@ export default function NationalHolidaysPage() {
             </button>
             <div>
               <h1 className="text-3xl font-bold text-gray-900">National Holidays Management</h1>
-              <p className="mt-2 text-gray-600">Manage national holidays for payroll and scheduling</p>
+              <p className="mt-2 text-gray-700">Manage national holidays for payroll and scheduling</p>
             </div>
           </div>
           <button
             onClick={() => setShowForm(!showForm)}
-            className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+            className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105"
           >
             {showForm ? 'Cancel' : '+ Add National Holiday'}
           </button>
@@ -168,10 +168,10 @@ export default function NationalHolidaysPage() {
 
       {/* Add/Edit Form */}
       {showForm && (
-        <div className="bg-gradient-to-r from-white/90 to-purple-50/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200/50 p-8 mb-8">
+        <div className="bg-gradient-to-r from-white to-purple-50 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-300 p-8 mb-8">
           <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">{editingHoliday ? 'Edit National Holiday' : 'Add New National Holiday'}</h2>
-            <p className="text-gray-600">Add holidays for payroll calculations and crew scheduling</p>
+            <h2 className="text-2xl font-extrabold text-gray-900 mb-2">{editingHoliday ? 'Edit National Holiday' : 'Add New National Holiday'}</h2>
+            <p className="text-gray-700">Add holidays for payroll calculations and crew scheduling</p>
           </div>
           <form onSubmit={handleSubmit} className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -184,7 +184,7 @@ export default function NationalHolidaysPage() {
                   value={formData.country}
                   onChange={handleInputChange}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 text-gray-900"
                 >
                   <option value="">Select Country</option>
                   <option value="SWEDEN">Sweden</option>
@@ -216,7 +216,7 @@ export default function NationalHolidaysPage() {
                   value={formData.holidayName}
                   onChange={handleInputChange}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 text-gray-900"
                   placeholder="e.g., Christmas Day, New Year's Day"
                 />
               </div>
@@ -230,7 +230,7 @@ export default function NationalHolidaysPage() {
                   value={formData.holidayDate}
                   onChange={handleInputChange}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 text-gray-900"
                 />
               </div>
               <div>
@@ -244,7 +244,7 @@ export default function NationalHolidaysPage() {
                   onChange={handleInputChange}
                   min="2000"
                   max="2100"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 text-gray-900"
                   placeholder="2024"
                 />
               </div>
@@ -255,11 +255,11 @@ export default function NationalHolidaysPage() {
                     name="isRecurring"
                     checked={formData.isRecurring}
                     onChange={handleInputChange}
-                    className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
+                    className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-400 rounded"
                   />
                   <span className="ml-2 text-sm font-semibold text-gray-700">Recurring Holiday (Annual)</span>
                 </label>
-                <p className="text-xs text-gray-500 mt-1">Check if this holiday occurs every year on the same date</p>
+                <p className="text-sm text-gray-700 mt-1">Check if this holiday occurs every year on the same date</p>
               </div>
               <div className="md:col-span-2">
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -270,23 +270,23 @@ export default function NationalHolidaysPage() {
                   value={formData.description}
                   onChange={handleInputChange}
                   rows={3}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 text-gray-900"
                   placeholder="Additional information about the holiday"
                 />
               </div>
             </div>
 
-            <div className="flex gap-4 pt-6 border-t border-gray-200">
+            <div className="flex gap-4 pt-6 border-t border-gray-300">
               <button
                 type="submit"
-                className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-semibold px-8 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-semibold px-8 py-3 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105"
               >
                 {editingHoliday ? 'Update Holiday' : 'Save National Holiday'}
               </button>
               <button
                 type="button"
                 onClick={handleCancel}
-                className="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-semibold px-8 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                className="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-semibold px-8 py-3 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105"
               >
                 Cancel
               </button>
@@ -296,42 +296,42 @@ export default function NationalHolidaysPage() {
       )}
 
       {/* National Holidays List */}
-      <div className="bg-gradient-to-r from-white/90 to-gray-50/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200/50 overflow-hidden">
-        <div className="px-8 py-6 border-b border-gray-200">
-          <h2 className="text-xl font-bold text-gray-900">National Holidays</h2>
+      <div className="bg-gradient-to-r from-white to-gray-50 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-300 overflow-hidden">
+        <div className="px-8 py-6 border-b border-gray-300">
+          <h2 className="text-xl font-extrabold text-gray-900">National Holidays</h2>
         </div>
 
         {isLoading ? (
           <div className="p-8 text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading national holidays...</p>
+            <p className="mt-4 text-gray-700">Loading national holidays...</p>
           </div>
         ) : holidays.length === 0 ? (
           <div className="p-8 text-center">
-            <p className="text-gray-600">No national holidays found. Add your first holiday above.</p>
+            <p className="text-gray-700">No national holidays found. Add your first holiday above.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-8 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Country</th>
-                  <th className="px-8 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Holiday Name</th>
-                  <th className="px-8 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Date</th>
-                  <th className="px-8 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Type</th>
-                  <th className="px-8 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                  <th className="px-8 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Country</th>
+                  <th className="px-8 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Holiday Name</th>
+                  <th className="px-8 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Date</th>
+                  <th className="px-8 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Type</th>
+                  <th className="px-8 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {holidays.map((holiday) => (
-                  <tr key={holiday.id} className="hover:bg-gray-50">
+                  <tr key={holiday.id} className="hover:bg-gray-100">
                     <td className="px-8 py-4 whitespace-nowrap">
                       <div className="text-sm font-semibold text-gray-900">{holiday.country}</div>
                     </td>
                     <td className="px-8 py-4">
                       <div className="text-sm font-semibold text-gray-900">{holiday.holidayName}</div>
                       {holiday.description && (
-                        <div className="text-xs text-gray-500 mt-1">{holiday.description}</div>
+                        <div className="text-sm text-gray-700 mt-1">{holiday.description}</div>
                       )}
                     </td>
                     <td className="px-8 py-4 whitespace-nowrap">
@@ -339,11 +339,11 @@ export default function NationalHolidaysPage() {
                         {new Date(holiday.holidayDate).toLocaleDateString()}
                       </div>
                       {holiday.year && (
-                        <div className="text-xs text-gray-500">Year: {holiday.year}</div>
+                        <div className="text-sm text-gray-700">Year: {holiday.year}</div>
                       )}
                     </td>
                     <td className="px-8 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                      <span className={`inline-flex items-center px-3 py-2 rounded-full text-xs font-medium ${
                         holiday.isRecurring ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
                       }`}>
                         {holiday.isRecurring ? 'Recurring' : 'One-time'}

@@ -186,7 +186,7 @@ export default function NewCrewMemberPage() {
             <div className="flex items-center space-x-4">
               <Link
                 href="/crewing/crew-list"
-                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-xl"
+                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
               >
                 ← Back to Crew List
               </Link>
@@ -203,12 +203,12 @@ export default function NewCrewMemberPage() {
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* Basic Information */}
             <div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-6 pb-2 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-900 mb-6 pb-2 border-b border-gray-300">
                 Basic Information
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="seafarerName" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="seafarerName" className="block text-sm font-semibold text-gray-900 mb-2">
                     Full Name *
                   </label>
                   <input
@@ -219,12 +219,12 @@ export default function NewCrewMemberPage() {
                     value={formData.seafarerName}
                     onChange={handleChange}
                     placeholder="Enter full name"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                    className="w-full px-4 py-3 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="rank" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="rank" className="block text-sm font-semibold text-gray-900 mb-2">
                     Rank/Position *
                   </label>
                   <select
@@ -233,7 +233,7 @@ export default function NewCrewMemberPage() {
                     required
                     value={formData.rank}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                    className="w-full px-4 py-3 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
                   >
                     <option value="">Select rank</option>
                     {rankOptions.map(rank => (
@@ -243,7 +243,7 @@ export default function NewCrewMemberPage() {
                 </div>
 
                 <div>
-                  <label htmlFor="nationality" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="nationality" className="block text-sm font-semibold text-gray-900 mb-2">
                     Nationality
                   </label>
                   <select
@@ -251,7 +251,7 @@ export default function NewCrewMemberPage() {
                     name="nationality"
                     value={formData.nationality}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                    className="w-full px-4 py-3 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
                   >
                     <option value="">Select nationality</option>
                     {nationalityOptions.map(nationality => (
@@ -261,7 +261,7 @@ export default function NewCrewMemberPage() {
                 </div>
 
                 <div>
-                  <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="dateOfBirth" className="block text-sm font-semibold text-gray-900 mb-2">
                     Date of Birth
                   </label>
                   <input
@@ -270,12 +270,12 @@ export default function NewCrewMemberPage() {
                     name="dateOfBirth"
                     value={formData.dateOfBirth}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                    className="w-full px-4 py-3 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="experience" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="experience" className="block text-sm font-semibold text-gray-900 mb-2">
                     Experience
                   </label>
                   <input
@@ -285,12 +285,12 @@ export default function NewCrewMemberPage() {
                     value={formData.experience}
                     onChange={handleChange}
                     placeholder="e.g., 5 years, 10+ years"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                    className="w-full px-4 py-3 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="status" className="block text-sm font-semibold text-gray-900 mb-2">
                     Status
                   </label>
                   <select
@@ -298,7 +298,7 @@ export default function NewCrewMemberPage() {
                     name="status"
                     value={formData.status}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                    className="w-full px-4 py-3 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
                   >
                     <option value="ONBOARD">Onboard</option>
                     <option value="DEPARTED">Departed</option>
@@ -310,12 +310,12 @@ export default function NewCrewMemberPage() {
 
             {/* Assignment Information */}
             <div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-6 pb-2 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-900 mb-6 pb-2 border-b border-gray-300">
                 Assignment Information
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="vesselId" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="vesselId" className="block text-sm font-semibold text-gray-900 mb-2">
                     Vessel *
                   </label>
                   <select
@@ -324,7 +324,7 @@ export default function NewCrewMemberPage() {
                     required
                     value={formData.vesselId}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                    className="w-full px-4 py-3 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
                   >
                     <option value="">Select vessel</option>
                     {vessels.map(vessel => (
@@ -334,7 +334,7 @@ export default function NewCrewMemberPage() {
                 </div>
 
                 <div>
-                  <label htmlFor="contractDuration" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="contractDuration" className="block text-sm font-semibold text-gray-900 mb-2">
                     Contract Duration
                   </label>
                   <input
@@ -344,12 +344,12 @@ export default function NewCrewMemberPage() {
                     value={formData.contractDuration}
                     onChange={handleChange}
                     placeholder="e.g., 6 months, 1 year"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                    className="w-full px-4 py-3 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="signOnDate" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="signOnDate" className="block text-sm font-semibold text-gray-900 mb-2">
                     Sign-On Date *
                   </label>
                   <input
@@ -359,12 +359,12 @@ export default function NewCrewMemberPage() {
                     required
                     value={formData.signOnDate}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                    className="w-full px-4 py-3 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="signOffDate" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="signOffDate" className="block text-sm font-semibold text-gray-900 mb-2">
                     Sign-Off Date
                   </label>
                   <input
@@ -373,7 +373,7 @@ export default function NewCrewMemberPage() {
                     name="signOffDate"
                     value={formData.signOffDate}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                    className="w-full px-4 py-3 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
                   />
                 </div>
               </div>
@@ -381,12 +381,12 @@ export default function NewCrewMemberPage() {
 
             {/* Emergency & Medical Information */}
             <div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-6 pb-2 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-900 mb-6 pb-2 border-b border-gray-300">
                 Emergency & Medical Information
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="md:col-span-2">
-                  <label htmlFor="emergencyContact" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="emergencyContact" className="block text-sm font-semibold text-gray-900 mb-2">
                     Emergency Contact
                   </label>
                   <input
@@ -396,12 +396,12 @@ export default function NewCrewMemberPage() {
                     value={formData.emergencyContact}
                     onChange={handleChange}
                     placeholder="Name and contact information"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                    className="w-full px-4 py-3 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
                   />
                 </div>
 
                 <div className="md:col-span-2">
-                  <label htmlFor="medicalInfo" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="medicalInfo" className="block text-sm font-semibold text-gray-900 mb-2">
                     Medical Information
                   </label>
                   <textarea
@@ -411,14 +411,14 @@ export default function NewCrewMemberPage() {
                     value={formData.medicalInfo}
                     onChange={handleChange}
                     placeholder="Allergies, medications, medical conditions, etc."
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                    className="w-full px-4 py-3 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
                   />
                 </div>
               </div>
             </div>
 
             {/* Form Actions */}
-            <div className="flex items-center justify-end space-x-4 pt-6 border-t border-gray-200">
+            <div className="flex items-center justify-end space-x-4 pt-6 border-t border-gray-300">
               <Link
                 href="/crewing/crew-list"
                 className="bg-gray-500 hover:bg-gray-600 text-white px-8 py-3 rounded-lg font-medium transition-colors shadow-lg"
@@ -428,7 +428,7 @@ export default function NewCrewMemberPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-8 py-3 rounded-lg font-medium transition-colors shadow-lg flex items-center"
+                className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:cursor-not-allowed text-white px-8 py-3 rounded-lg font-medium transition-colors shadow-lg flex items-center"
               >
                 {loading ? (
                   <>

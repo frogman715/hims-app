@@ -88,15 +88,15 @@ export default function ReplacementDetailPage() {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-6">
         <div className="max-w-4xl mx-auto">
           <div className="text-center py-12">
-            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="mx-auto h-12 w-12 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.29-.88-5.875-2.29m6.875-6.71l-3 3m0 0l3 3m-3-3h7.5" />
             </svg>
             <h3 className="mt-2 text-sm font-medium text-gray-900">Replacement not found</h3>
-            <p className="mt-1 text-sm text-gray-600">The replacement plan you&apos;re looking for doesn&apos;t exist.</p>
+            <p className="mt-1 text-sm text-gray-700">The replacement plan you&apos;re looking for doesn&apos;t exist.</p>
             <div className="mt-6">
               <Link
                 href="/crewing/replacements"
-                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+                className="inline-flex items-center px-4 py-2 border border-transparent shadow-md text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700"
               >
                 Back to Replacements
               </Link>
@@ -116,7 +116,7 @@ export default function ReplacementDetailPage() {
             <div className="flex items-center space-x-4">
               <Link
                 href="/crewing/replacements"
-                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-xl"
+                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
               >
                 ← Back to Replacements
               </Link>
@@ -144,13 +144,13 @@ export default function ReplacementDetailPage() {
           <div className="bg-white rounded-xl shadow-lg p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
-                <span className={`inline-flex px-3 py-1 text-sm font-semibold rounded-full ${getStatusColor(replacement.status)}`}>
+                <span className={`inline-flex px-3 py-2 text-sm font-semibold rounded-full ${getStatusColor(replacement.status)}`}>
                   {replacement.status.replace('_', ' ')}
                 </span>
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-gray-800">
                   Created: {new Date(replacement.createdAt).toLocaleDateString()}
                 </span>
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-gray-800">
                   Updated: {new Date(replacement.updatedAt).toLocaleDateString()}
                 </span>
               </div>
@@ -166,31 +166,31 @@ export default function ReplacementDetailPage() {
 
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Seafarer</label>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">Seafarer</label>
                 <div className="text-lg font-medium text-gray-900">{replacement.seafarerName}</div>
-                <div className="text-sm text-gray-600">{replacement.rank}</div>
+                <div className="text-sm text-gray-800">{replacement.rank}</div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Current Vessel</label>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">Current Vessel</label>
                   <div className="text-sm text-gray-900">{replacement.currentVessel}</div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Replacement Vessel</label>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">Replacement Vessel</label>
                   <div className="text-sm text-gray-900">{replacement.replacementVessel}</div>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Planned Sign-Off</label>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">Planned Sign-Off</label>
                   <div className="text-sm text-gray-900">
                     {new Date(replacement.plannedSignOff).toLocaleDateString()}
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Planned Sign-On</label>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">Planned Sign-On</label>
                   <div className="text-sm text-gray-900">
                     {new Date(replacement.plannedSignOn).toLocaleDateString()}
                   </div>
@@ -198,14 +198,14 @@ export default function ReplacementDetailPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Reason</label>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">Reason</label>
                 <div className="text-sm text-gray-900">{replacement.reason}</div>
               </div>
 
               {replacement.notes && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Notes</label>
-                  <div className="text-sm text-gray-900 bg-gray-50 p-3 rounded-lg">
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">Notes</label>
+                  <div className="text-sm text-gray-900 bg-gray-100 p-3 rounded-lg">
                     {replacement.notes}
                   </div>
                 </div>
@@ -217,14 +217,14 @@ export default function ReplacementDetailPage() {
           <div className="bg-white rounded-xl shadow-lg p-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-6">Timeline</h2>
 
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div className="flex items-start space-x-3">
                 <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
                   <span className="text-sm font-medium text-blue-600">1</span>
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-medium text-gray-900">Plan Created</p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-gray-800">
                     {new Date(replacement.createdAt).toLocaleDateString()} at {new Date(replacement.createdAt).toLocaleTimeString()}
                   </p>
                 </div>
@@ -236,7 +236,7 @@ export default function ReplacementDetailPage() {
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-medium text-gray-900">Sign-Off Date</p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-gray-800">
                     {new Date(replacement.plannedSignOff).toLocaleDateString()}
                   </p>
                 </div>
@@ -248,7 +248,7 @@ export default function ReplacementDetailPage() {
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-medium text-gray-900">Sign-On Date</p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-gray-800">
                     {new Date(replacement.plannedSignOn).toLocaleDateString()}
                   </p>
                 </div>
@@ -263,7 +263,7 @@ export default function ReplacementDetailPage() {
                   </div>
                   <div className="flex-1">
                     <p className="text-sm font-medium text-gray-900">Completed</p>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-gray-800">
                       Replacement successfully completed
                     </p>
                   </div>
@@ -277,7 +277,7 @@ export default function ReplacementDetailPage() {
         <div className="mt-8 flex justify-end space-x-4">
           <button
             onClick={() => router.push(`/crewing/replacements/${replacement.id}/edit`)}
-            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            className="inline-flex items-center px-4 py-2 border border-gray-400 rounded-lg text-sm font-semibold text-gray-900 bg-white hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
           >
             Edit Plan
           </button>

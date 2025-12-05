@@ -88,25 +88,25 @@ export default function Allotments() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-lg shadow-xl border-b border-white/20">
+      <header className="bg-white backdrop-blur-lg shadow-2xl border-b border-white/20">
         <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
                 Salary Allotments
               </h1>
-              <p className="text-lg text-gray-600 mt-2 font-medium">Manage seafarer salary allotments and bank details</p>
+              <p className="text-lg text-gray-700 mt-2 font-medium">Manage seafarer salary allotments and bank details</p>
             </div>
             <div className="flex items-center space-x-4">
               <Link
                 href="/accounting"
-                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-xl"
+                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
               >
                 ← Back to Accounting
               </Link>
               <button
                 onClick={() => setShowForm(true)}
-                className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-xl"
+                className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
               >
                 + Add Allotment
               </button>
@@ -118,12 +118,12 @@ export default function Allotments() {
       <main className="max-w-7xl mx-auto py-8 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           {/* Allotments Table */}
-          <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200">
+          <div className="bg-white backdrop-blur-md rounded-2xl shadow-lg border border-white overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-300">
               <h2 className="text-xl font-semibold text-gray-900">Salary Allotments</h2>
             </div>
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
+              <table className="min-w-full divide-y divide-gray-300">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -139,7 +139,7 @@ export default function Allotments() {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {allotments.map((allotment) => (
-                    <tr key={allotment.id} className="hover:bg-gray-50">
+                    <tr key={allotment.id} className="hover:bg-gray-100">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">{allotment.seafarer.name}</div>
                         <div className="text-sm text-gray-500">{allotment.seafarer.rank}</div>
@@ -163,10 +163,10 @@ export default function Allotments() {
       {showForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4">
-            <h3 className="text-xl font-bold text-gray-900 mb-6">Add Salary Allotment</h3>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <h3 className="text-xl font-extrabold text-gray-900 mb-6">Add Salary Allotment</h3>
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
                   Seafarer ID
                 </label>
                 <input
@@ -174,11 +174,11 @@ export default function Allotments() {
                   required
                   value={formData.seafarerId}
                   onChange={(e) => setFormData({ ...formData, seafarerId: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
                   Amount
                 </label>
                 <input
@@ -187,11 +187,11 @@ export default function Allotments() {
                   required
                   value={formData.amount}
                   onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
                   Bank Details
                 </label>
                 <textarea
@@ -199,7 +199,7 @@ export default function Allotments() {
                   onChange={(e) => setFormData({ ...formData, bankDetails: e.target.value })}
                   placeholder="Bank name, account number, etc."
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent"
                 />
               </div>
               <div className="flex space-x-3 pt-4">

@@ -111,7 +111,7 @@ export default function EditReplacementPage() {
             <div className="flex items-center space-x-4">
               <Link
                 href={`/crewing/replacements/${params.id}`}
-                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-xl"
+                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
               >
                 ← Back to Details
               </Link>
@@ -132,7 +132,7 @@ export default function EditReplacementPage() {
             </div>
 
             <div>
-              <label htmlFor="seafarerName" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="seafarerName" className="block text-sm font-semibold text-gray-900 mb-2">
                 Seafarer Name *
               </label>
               <input
@@ -140,20 +140,20 @@ export default function EditReplacementPage() {
                 id="seafarerName"
                 value={formData.seafarerName || ''}
                 onChange={(e) => handleInputChange('seafarerName', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
                 required
               />
             </div>
 
             <div>
-              <label htmlFor="rank" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="rank" className="block text-sm font-semibold text-gray-900 mb-2">
                 Rank/Position *
               </label>
               <select
                 id="rank"
                 value={formData.rank || ''}
                 onChange={(e) => handleInputChange('rank', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
                 required
               >
                 <option value="">Select Rank</option>
@@ -179,7 +179,7 @@ export default function EditReplacementPage() {
             </div>
 
             <div>
-              <label htmlFor="currentVessel" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="currentVessel" className="block text-sm font-semibold text-gray-900 mb-2">
                 Current Vessel *
               </label>
               <input
@@ -187,13 +187,13 @@ export default function EditReplacementPage() {
                 id="currentVessel"
                 value={formData.currentVessel || ''}
                 onChange={(e) => handleInputChange('currentVessel', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
                 required
               />
             </div>
 
             <div>
-              <label htmlFor="replacementVessel" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="replacementVessel" className="block text-sm font-semibold text-gray-900 mb-2">
                 Replacement Vessel *
               </label>
               <input
@@ -201,7 +201,7 @@ export default function EditReplacementPage() {
                 id="replacementVessel"
                 value={formData.replacementVessel || ''}
                 onChange={(e) => handleInputChange('replacementVessel', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
                 required
               />
             </div>
@@ -212,7 +212,7 @@ export default function EditReplacementPage() {
             </div>
 
             <div>
-              <label htmlFor="plannedSignOff" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="plannedSignOff" className="block text-sm font-semibold text-gray-900 mb-2">
                 Planned Sign-Off Date *
               </label>
               <input
@@ -220,13 +220,13 @@ export default function EditReplacementPage() {
                 id="plannedSignOff"
                 value={formData.plannedSignOff || ''}
                 onChange={(e) => handleInputChange('plannedSignOff', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
                 required
               />
             </div>
 
             <div>
-              <label htmlFor="plannedSignOn" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="plannedSignOn" className="block text-sm font-semibold text-gray-900 mb-2">
                 Planned Sign-On Date *
               </label>
               <input
@@ -234,7 +234,7 @@ export default function EditReplacementPage() {
                 id="plannedSignOn"
                 value={formData.plannedSignOn || ''}
                 onChange={(e) => handleInputChange('plannedSignOn', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
                 required
               />
             </div>
@@ -245,14 +245,14 @@ export default function EditReplacementPage() {
             </div>
 
             <div>
-              <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="status" className="block text-sm font-semibold text-gray-900 mb-2">
                 Status *
               </label>
               <select
                 id="status"
                 value={formData.status || 'PLANNED'}
                 onChange={(e) => handleInputChange('status', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
                 required
               >
                 <option value="PLANNED">Planned</option>
@@ -263,7 +263,7 @@ export default function EditReplacementPage() {
             </div>
 
             <div>
-              <label htmlFor="reason" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="reason" className="block text-sm font-semibold text-gray-900 mb-2">
                 Reason *
               </label>
               <input
@@ -271,14 +271,14 @@ export default function EditReplacementPage() {
                 id="reason"
                 value={formData.reason || ''}
                 onChange={(e) => handleInputChange('reason', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
                 placeholder="e.g., Scheduled rotation, Medical leave, etc."
                 required
               />
             </div>
 
             <div className="lg:col-span-2">
-              <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="notes" className="block text-sm font-semibold text-gray-900 mb-2">
                 Additional Notes
               </label>
               <textarea
@@ -286,7 +286,7 @@ export default function EditReplacementPage() {
                 rows={4}
                 value={formData.notes || ''}
                 onChange={(e) => handleInputChange('notes', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
                 placeholder="Any additional information or special requirements..."
               />
             </div>
@@ -296,14 +296,14 @@ export default function EditReplacementPage() {
           <div className="mt-8 flex justify-end space-x-4">
             <Link
               href={`/crewing/replacements/${params.id}`}
-              className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-xl"
+              className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
             >
               Cancel
             </Link>
             <button
               type="submit"
               disabled={saving}
-              className="inline-flex items-center px-6 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center px-6 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed disabled:cursor-not-allowed"
             >
               {saving ? (
                 <>

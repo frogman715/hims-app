@@ -403,48 +403,48 @@ export default function HGQSFormsPage() {
               <h4 className="font-medium text-gray-800 mb-3">Basic Information</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Family Name</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Family Name</label>
                   <input
                     type="text"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.familyName || ''}
                     onChange={(e) => updateFormData('familyName', e.target.value)}
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Given Name</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Given Name</label>
                   <input
                     type="text"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.givenName || ''}
                     onChange={(e) => updateFormData('givenName', e.target.value)}
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Middle Name</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Middle Name</label>
                   <input
                     type="text"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.middleName || ''}
                     onChange={(e) => updateFormData('middleName', e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Birth Date</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Birth Date</label>
                   <input
                     type="date"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.birthDate || ''}
                     onChange={(e) => updateFormData('birthDate', e.target.value)}
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Position Applied For</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Position Applied For</label>
                   <select
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.position || ''}
                     onChange={(e) => updateFormData('position', e.target.value)}
                     required
@@ -470,9 +470,9 @@ export default function HGQSFormsPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">P/M (Permanent/Manning)</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">P/M (Permanent/Manning)</label>
                   <select
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.pm || ''}
                     onChange={(e) => updateFormData('pm', e.target.value)}
                   >
@@ -489,56 +489,56 @@ export default function HGQSFormsPage() {
               <h4 className="font-medium text-gray-800 mb-3">Personal Information</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Last School</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Last School</label>
                   <input
                     type="text"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.lastSchool || ''}
                     onChange={(e) => updateFormData('lastSchool', e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Course</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Course</label>
                   <input
                     type="text"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.course || ''}
                     onChange={(e) => updateFormData('course', e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Duration</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Duration</label>
                   <input
                     type="text"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.duration || ''}
                     onChange={(e) => updateFormData('duration', e.target.value)}
                     placeholder="e.g., 4 years"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Height/Weight</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Height/Weight</label>
                   <input
                     type="text"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.heightWeight || ''}
                     onChange={(e) => updateFormData('heightWeight', e.target.value)}
                     placeholder="e.g., 175cm/70kg"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Telephone No.</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Telephone No.</label>
                   <input
                     type="tel"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.telephone || ''}
                     onChange={(e) => updateFormData('telephone', e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Civil Status</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Civil Status</label>
                   <select
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.civilStatus || ''}
                     onChange={(e) => updateFormData('civilStatus', e.target.value)}
                   >
@@ -557,7 +557,7 @@ export default function HGQSFormsPage() {
               <h4 className="font-medium text-gray-800 mb-3">Ship Experience</h4>
               <div className="space-y-3">
                 {(formData.shipExperiences as unknown[] || []).map((experience: unknown, index: number) => (
-                  <div key={index} className="border rounded-md p-4 bg-gray-50">
+                  <div key={index} className="border rounded-lg p-4 bg-gray-50">
                     <div className="flex justify-between items-center mb-3">
                       <h5 className="font-medium text-sm text-gray-700">Experience {index + 1}</h5>
                       <button
@@ -574,10 +574,10 @@ export default function HGQSFormsPage() {
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                       <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">Vessel Name</label>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Vessel Name</label>
                         <input
                           type="text"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                          className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                           value={experience.vesselName || ''}
                           onChange={(e) => {
                             const experiences = formData.shipExperiences || [];
@@ -587,10 +587,10 @@ export default function HGQSFormsPage() {
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">Rank/Position</label>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Rank/Position</label>
                         <input
                           type="text"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                          className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                           value={experience.rank || ''}
                           onChange={(e) => {
                             const experiences = formData.shipExperiences || [];
@@ -600,10 +600,10 @@ export default function HGQSFormsPage() {
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">Sign On Date</label>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Sign On Date</label>
                         <input
                           type="date"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                          className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                           value={experience.signOn || ''}
                           onChange={(e) => {
                             const experiences = formData.shipExperiences || [];
@@ -613,10 +613,10 @@ export default function HGQSFormsPage() {
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">Sign Off Date</label>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Sign Off Date</label>
                         <input
                           type="date"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                          className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                           value={experience.signOff || ''}
                           onChange={(e) => {
                             const experiences = formData.shipExperiences || [];
@@ -628,9 +628,9 @@ export default function HGQSFormsPage() {
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
                       <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">Vessel Type</label>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Vessel Type</label>
                         <select
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                          className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                           value={experience.vesselType || ''}
                           onChange={(e) => {
                             const experiences = formData.shipExperiences || [];
@@ -658,10 +658,10 @@ export default function HGQSFormsPage() {
                         </select>
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">GRT</label>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">GRT</label>
                         <input
                           type="number"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                          className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                           value={experience.grt || ''}
                           onChange={(e) => {
                             const experiences = formData.shipExperiences || [];
@@ -671,10 +671,10 @@ export default function HGQSFormsPage() {
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">Principal/Agency</label>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Principal/Agency</label>
                         <input
                           type="text"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                          className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                           value={experience.principal || ''}
                           onChange={(e) => {
                             const experiences = formData.shipExperiences || [];
@@ -685,10 +685,10 @@ export default function HGQSFormsPage() {
                       </div>
                     </div>
                     <div className="mt-3">
-                      <label className="block text-xs font-medium text-gray-600 mb-1">Reason for Leaving</label>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">Reason for Leaving</label>
                       <input
                         type="text"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                         value={experience.reasonLeaving || ''}
                         onChange={(e) => {
                           const experiences = formData.shipExperiences || [];
@@ -716,7 +716,7 @@ export default function HGQSFormsPage() {
                     });
                     updateFormData('shipExperiences', [...experiences]);
                   }}
-                  className="w-full py-2 px-4 border border-dashed border-gray-300 rounded-md text-gray-600 hover:bg-gray-50 hover:border-gray-400 transition-colors"
+                  className="w-full py-2 px-4 border border-dashed border-gray-400 rounded-lg text-gray-700 hover:bg-gray-100 hover:border-gray-400 transition-colors"
                 >
                   + Add Ship Experience
                 </button>
@@ -728,9 +728,9 @@ export default function HGQSFormsPage() {
               <h4 className="font-medium text-gray-800 mb-3">Personal Qualification</h4>
               <div className="space-y-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Job Thinking (Satisfaction, Planning)</label>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">Job Thinking (Satisfaction, Planning)</label>
                   <select
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.jobThinking || ''}
                     onChange={(e) => updateFormData('jobThinking', e.target.value)}
                   >
@@ -743,9 +743,9 @@ export default function HGQSFormsPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Adaptation (Responsibility, Patience)</label>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">Adaptation (Responsibility, Patience)</label>
                   <select
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.adaptation || ''}
                     onChange={(e) => updateFormData('adaptation', e.target.value)}
                   >
@@ -758,9 +758,9 @@ export default function HGQSFormsPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Carrier (Shifting co., Service Length)</label>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">Carrier (Shifting co., Service Length)</label>
                   <select
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.carrier || ''}
                     onChange={(e) => updateFormData('carrier', e.target.value)}
                   >
@@ -773,9 +773,9 @@ export default function HGQSFormsPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">English (Hearing, Speaking, Reading, Writing)</label>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">English (Hearing, Speaking, Reading, Writing)</label>
                   <select
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.english || ''}
                     onChange={(e) => updateFormData('english', e.target.value)}
                   >
@@ -795,9 +795,9 @@ export default function HGQSFormsPage() {
               <h4 className="font-medium text-gray-800 mb-3">Personal Particulars</h4>
               <div className="space-y-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Appearance (Posture, Expression)</label>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">Appearance (Posture, Expression)</label>
                   <select
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.appearance || ''}
                     onChange={(e) => updateFormData('appearance', e.target.value)}
                   >
@@ -810,9 +810,9 @@ export default function HGQSFormsPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Family Life (Status, Growing Process)</label>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">Family Life (Status, Growing Process)</label>
                   <select
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.familyLife || ''}
                     onChange={(e) => updateFormData('familyLife', e.target.value)}
                   >
@@ -825,9 +825,9 @@ export default function HGQSFormsPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Social Life (Social Activity & Carrier)</label>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">Social Life (Social Activity & Carrier)</label>
                   <select
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.socialLife || ''}
                     onChange={(e) => updateFormData('socialLife', e.target.value)}
                   >
@@ -840,9 +840,9 @@ export default function HGQSFormsPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Ambition (Positiveness, Confidence)</label>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">Ambition (Positiveness, Confidence)</label>
                   <select
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.ambition || ''}
                     onChange={(e) => updateFormData('ambition', e.target.value)}
                   >
@@ -855,9 +855,9 @@ export default function HGQSFormsPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Knowledge (Technical, Skill, Carrier)</label>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">Knowledge (Technical, Skill, Carrier)</label>
                   <select
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.knowledge || ''}
                     onChange={(e) => updateFormData('knowledge', e.target.value)}
                   >
@@ -870,9 +870,9 @@ export default function HGQSFormsPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Sociality (Courtesy, Self-control)</label>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">Sociality (Courtesy, Self-control)</label>
                   <select
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.sociality || ''}
                     onChange={(e) => updateFormData('sociality', e.target.value)}
                   >
@@ -892,38 +892,38 @@ export default function HGQSFormsPage() {
               <h4 className="font-medium text-gray-800 mb-3">Identification of Carrier</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Last Company</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Last Company</label>
                   <input
                     type="text"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.lastCompany || ''}
                     onChange={(e) => updateFormData('lastCompany', e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Last Rank</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Last Rank</label>
                   <input
                     type="text"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.lastRank || ''}
                     onChange={(e) => updateFormData('lastRank', e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Total Carrier (YY-MM-DD)</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Total Carrier (YY-MM-DD)</label>
                   <input
                     type="text"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.totalCarrier || ''}
                     onChange={(e) => updateFormData('totalCarrier', e.target.value)}
                     placeholder="e.g., 05-06-15"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Last Carrier (YY-MM-DD)</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Last Carrier (YY-MM-DD)</label>
                   <input
                     type="text"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.lastCarrier || ''}
                     onChange={(e) => updateFormData('lastCarrier', e.target.value)}
                     placeholder="e.g., 02-03-10"
@@ -931,20 +931,20 @@ export default function HGQSFormsPage() {
                 </div>
               </div>
               <div className="mt-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Own Disembark</label>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">Own Disembark</label>
                 <textarea
                   rows={2}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.ownDisembark || ''}
                   onChange={(e) => updateFormData('ownDisembark', e.target.value)}
                   placeholder="Reason for leaving last employment"
                 />
               </div>
               <div className="mt-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Reward/Punish</label>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">Reward/Punish</label>
                 <textarea
                   rows={2}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.rewardPunish || ''}
                   onChange={(e) => updateFormData('rewardPunish', e.target.value)}
                   placeholder="Any rewards or disciplinary actions"
@@ -957,19 +957,19 @@ export default function HGQSFormsPage() {
               <h4 className="font-medium text-gray-800 mb-3">Recommender</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Section</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Section</label>
                   <input
                     type="text"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.recommenderSection || ''}
                     onChange={(e) => updateFormData('recommenderSection', e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Rank/Name</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Rank/Name</label>
                   <input
                     type="text"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.recommenderRankName || ''}
                     onChange={(e) => updateFormData('recommenderRankName', e.target.value)}
                   />
@@ -982,18 +982,18 @@ export default function HGQSFormsPage() {
               <h4 className="font-medium text-gray-800 mb-3">Familiarization of Owner&apos;s Manual</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Date of Education</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Date of Education</label>
                   <input
                     type="date"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.educationDate || ''}
                     onChange={(e) => updateFormData('educationDate', e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Kind of Manuals</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Kind of Manuals</label>
                   <select
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.manualType || ''}
                     onChange={(e) => updateFormData('manualType', e.target.value)}
                   >
@@ -1011,40 +1011,40 @@ export default function HGQSFormsPage() {
               <h4 className="font-medium text-gray-800 mb-3">Actual Onboard Time</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Actual Onboard Time (YY-MM-DD)</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Actual Onboard Time (YY-MM-DD)</label>
                   <input
                     type="text"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.actualOnboardTime || ''}
                     onChange={(e) => updateFormData('actualOnboardTime', e.target.value)}
                     placeholder="e.g., 08-11-25"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Actual Onboard Time in Rank (YY-MM-DD)</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Actual Onboard Time in Rank (YY-MM-DD)</label>
                   <input
                     type="text"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.onboardTimeInRank || ''}
                     onChange={(e) => updateFormData('onboardTimeInRank', e.target.value)}
                     placeholder="e.g., 03-08-15"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Actual Onboard Time in Crude Tankers (YY-MM-DD)</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Actual Onboard Time in Crude Tankers (YY-MM-DD)</label>
                   <input
                     type="text"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.onboardTimeCrude || ''}
                     onChange={(e) => updateFormData('onboardTimeCrude', e.target.value)}
                     placeholder="e.g., 05-02-10"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Actual Onboard Time in Any Tankers (YY-MM-DD)</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Actual Onboard Time in Any Tankers (YY-MM-DD)</label>
                   <input
                     type="text"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.onboardTimeAnyTankers || ''}
                     onChange={(e) => updateFormData('onboardTimeAnyTankers', e.target.value)}
                     placeholder="e.g., 06-05-20"
@@ -1115,33 +1115,33 @@ export default function HGQSFormsPage() {
               <h4 className="font-medium text-gray-800 mb-3">Interview Evaluation</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Result (Items 1-3)</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Result (Items 1-3)</label>
                   <input
                     type="number"
                     min="0"
                     max="100"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.result13 || ''}
                     onChange={(e) => updateFormData('result13', e.target.value)}
                     placeholder="Points out of 100"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Final Result</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Final Result</label>
                   <input
                     type="number"
                     min="0"
                     max="100"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.finalResult || ''}
                     onChange={(e) => updateFormData('finalResult', e.target.value)}
                     placeholder="Points out of 100"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Judgement</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Judgement</label>
                   <select
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.judgement || ''}
                     onChange={(e) => updateFormData('judgement', e.target.value)}
                   >
@@ -1152,40 +1152,40 @@ export default function HGQSFormsPage() {
                 </div>
               </div>
               <div className="mt-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Interviewer Information</label>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">Interviewer Information</label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs text-gray-600 mb-1">Main Interviewer Name</label>
+                    <label className="block text-xs text-gray-700 mb-1">Main Interviewer Name</label>
                     <input
                       type="text"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                       value={formData.mainInterviewerName || ''}
                       onChange={(e) => updateFormData('mainInterviewerName', e.target.value)}
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-600 mb-1">Main Interviewer Rank</label>
+                    <label className="block text-xs text-gray-700 mb-1">Main Interviewer Rank</label>
                     <input
                       type="text"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                       value={formData.mainInterviewerRank || ''}
                       onChange={(e) => updateFormData('mainInterviewerRank', e.target.value)}
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-600 mb-1">Sub Interviewer Name</label>
+                    <label className="block text-xs text-gray-700 mb-1">Sub Interviewer Name</label>
                     <input
                       type="text"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                       value={formData.subInterviewerName || ''}
                       onChange={(e) => updateFormData('subInterviewerName', e.target.value)}
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-600 mb-1">Sub Interviewer Rank</label>
+                    <label className="block text-xs text-gray-700 mb-1">Sub Interviewer Rank</label>
                     <input
                       type="text"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                       value={formData.subInterviewerRank || ''}
                       onChange={(e) => updateFormData('subInterviewerRank', e.target.value)}
                     />
@@ -1213,18 +1213,18 @@ export default function HGQSFormsPage() {
                   </label>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Who recommended you to this company?</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Who recommended you to this company?</label>
                   <input
                     type="text"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.recommendedBy || ''}
                     onChange={(e) => updateFormData('recommendedBy', e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Have you ever been sued in court or before any Administrative body?</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Have you ever been sued in court or before any Administrative body?</label>
                   <select
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.suedInCourt || ''}
                     onChange={(e) => updateFormData('suedInCourt', e.target.value)}
                   >
@@ -1235,10 +1235,10 @@ export default function HGQSFormsPage() {
                 </div>
                 {formData.suedInCourt === 'yes' && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">If &quot;yes&quot;, give particulars</label>
+                    <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">If &quot;yes&quot;, give particulars</label>
                     <textarea
                       rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       value={formData.suedParticulars || ''}
                       onChange={(e) => updateFormData('suedParticulars', e.target.value)}
                     />
@@ -1254,20 +1254,20 @@ export default function HGQSFormsPage() {
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Full Name</label>
                 <input
                   type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.fullName || ''}
                   onChange={(e) => updateFormData('fullName', e.target.value)}
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Position</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Position</label>
                 <input
                   type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.position || ''}
                   onChange={(e) => updateFormData('position', e.target.value)}
                   required
@@ -1275,10 +1275,10 @@ export default function HGQSFormsPage() {
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Date of Confirmation</label>
+              <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Date of Confirmation</label>
               <input
                 type="date"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 value={formData.confirmationDate || ''}
                 onChange={(e) => updateFormData('confirmationDate', e.target.value)}
                 required
@@ -1316,20 +1316,20 @@ export default function HGQSFormsPage() {
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Full Name</label>
                 <input
                   type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.fullName || ''}
                   onChange={(e) => updateFormData('fullName', e.target.value)}
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Date of Birth</label>
                 <input
                   type="date"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.dateOfBirth || ''}
                   onChange={(e) => updateFormData('dateOfBirth', e.target.value)}
                   required
@@ -1362,7 +1362,7 @@ export default function HGQSFormsPage() {
                     <input
                       type="text"
                       placeholder="Please specify"
-                      className="ml-6 mt-1 w-full px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      className="ml-6 mt-1 w-full px-3 py-2 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                       value={formData[`condition_${index}_details`] || ''}
                       onChange={(e) => updateFormData(`condition_${index}_details`, e.target.value)}
                     />
@@ -1378,19 +1378,19 @@ export default function HGQSFormsPage() {
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Employee Full Name</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Employee Full Name</label>
                 <input
                   type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.employeeName || ''}
                   onChange={(e) => updateFormData('employeeName', e.target.value)}
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Relationship</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Relationship</label>
                 <select
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.relationship || ''}
                   onChange={(e) => updateFormData('relationship', e.target.value)}
                   required
@@ -1406,20 +1406,20 @@ export default function HGQSFormsPage() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Next of Kin Full Name</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Next of Kin Full Name</label>
                 <input
                   type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.nextOfKinName || ''}
                   onChange={(e) => updateFormData('nextOfKinName', e.target.value)}
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Contact Number</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Contact Number</label>
                 <input
                   type="tel"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.contactNumber || ''}
                   onChange={(e) => updateFormData('contactNumber', e.target.value)}
                   required
@@ -1427,10 +1427,10 @@ export default function HGQSFormsPage() {
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+              <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Address</label>
               <textarea
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 value={formData.address || ''}
                 onChange={(e) => updateFormData('address', e.target.value)}
                 required
@@ -1444,40 +1444,40 @@ export default function HGQSFormsPage() {
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Employee Full Name</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Employee Full Name</label>
                 <input
                   type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.employeeName || ''}
                   onChange={(e) => updateFormData('employeeName', e.target.value)}
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Position</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Position</label>
                 <input
                   type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.position || ''}
                   onChange={(e) => updateFormData('position', e.target.value)}
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Monthly Salary (USD)</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Monthly Salary (USD)</label>
                 <input
                   type="number"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.salary || ''}
                   onChange={(e) => updateFormData('salary', e.target.value)}
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Contract Duration (months)</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Contract Duration (months)</label>
                 <input
                   type="number"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.contractDuration || ''}
                   onChange={(e) => updateFormData('contractDuration', e.target.value)}
                   required
@@ -1486,20 +1486,20 @@ export default function HGQSFormsPage() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Start Date</label>
                 <input
                   type="date"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.startDate || ''}
                   onChange={(e) => updateFormData('startDate', e.target.value)}
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">End Date</label>
                 <input
                   type="date"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.endDate || ''}
                   onChange={(e) => updateFormData('endDate', e.target.value)}
                   required
@@ -1526,29 +1526,29 @@ export default function HGQSFormsPage() {
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Full Name</label>
                 <input
                   type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.fullName || ''}
                   onChange={(e) => updateFormData('fullName', e.target.value)}
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Date of Birth</label>
                 <input
                   type="date"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.dateOfBirth || ''}
                   onChange={(e) => updateFormData('dateOfBirth', e.target.value)}
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Position Applied For</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Position Applied For</label>
                 <select
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.position || ''}
                   onChange={(e) => updateFormData('position', e.target.value)}
                   required
@@ -1574,10 +1574,10 @@ export default function HGQSFormsPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Contact Number</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Contact Number</label>
                 <input
                   type="tel"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.contactNumber || ''}
                   onChange={(e) => updateFormData('contactNumber', e.target.value)}
                   required
@@ -1585,20 +1585,20 @@ export default function HGQSFormsPage() {
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+              <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Email Address</label>
               <input
                 type="email"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 value={formData.email || ''}
                 onChange={(e) => updateFormData('email', e.target.value)}
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+              <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Address</label>
               <textarea
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 value={formData.address || ''}
                 onChange={(e) => updateFormData('address', e.target.value)}
                 placeholder="Complete address"
@@ -1606,18 +1606,18 @@ export default function HGQSFormsPage() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nationality</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Nationality</label>
                 <input
                   type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.nationality || ''}
                   onChange={(e) => updateFormData('nationality', e.target.value)}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Marital Status</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Marital Status</label>
                 <select
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.maritalStatus || ''}
                   onChange={(e) => updateFormData('maritalStatus', e.target.value)}
                 >
@@ -1630,10 +1630,10 @@ export default function HGQSFormsPage() {
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Previous Experience</label>
+              <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Previous Experience</label>
               <textarea
                 rows={4}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 value={formData.experience || ''}
                 onChange={(e) => updateFormData('experience', e.target.value)}
                 placeholder="Describe your previous maritime experience..."
@@ -1641,19 +1641,19 @@ export default function HGQSFormsPage() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Expected Salary (USD)</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Expected Salary (USD)</label>
                 <input
                   type="number"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.expectedSalary || ''}
                   onChange={(e) => updateFormData('expectedSalary', e.target.value)}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Available Start Date</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Available Start Date</label>
                 <input
                   type="date"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.availableDate || ''}
                   onChange={(e) => updateFormData('availableDate', e.target.value)}
                 />
@@ -1679,40 +1679,40 @@ export default function HGQSFormsPage() {
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Crew Name</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Crew Name</label>
                 <input
                   type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.crewName || ''}
                   onChange={(e) => updateFormData('crewName', e.target.value)}
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Position/Rank</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Position/Rank</label>
                 <input
                   type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.position || ''}
                   onChange={(e) => updateFormData('position', e.target.value)}
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Vessel Name</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Vessel Name</label>
                 <input
                   type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.vesselName || ''}
                   onChange={(e) => updateFormData('vesselName', e.target.value)}
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Departure Date</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Departure Date</label>
                 <input
                   type="date"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.departureDate || ''}
                   onChange={(e) => updateFormData('departureDate', e.target.value)}
                   required
@@ -1754,7 +1754,7 @@ export default function HGQSFormsPage() {
               <h4 className="font-medium text-gray-800 mb-3">Final Comments</h4>
               <textarea
                 rows={4}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 value={formData.finalComments || ''}
                 onChange={(e) => updateFormData('finalComments', e.target.value)}
                 placeholder="Any final comments or feedback..."
@@ -1763,19 +1763,19 @@ export default function HGQSFormsPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Checked By (Name)</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Checked By (Name)</label>
                 <input
                   type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.checkedBy || ''}
                   onChange={(e) => updateFormData('checkedBy', e.target.value)}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Checked By (Position)</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Checked By (Position)</label>
                 <input
                   type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.checkedByPosition || ''}
                   onChange={(e) => updateFormData('checkedByPosition', e.target.value)}
                 />
@@ -1789,40 +1789,40 @@ export default function HGQSFormsPage() {
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Crew Name</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Crew Name</label>
                 <input
                   type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.crewName || ''}
                   onChange={(e) => updateFormData('crewName', e.target.value)}
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Position/Rank</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Position/Rank</label>
                 <input
                   type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.position || ''}
                   onChange={(e) => updateFormData('position', e.target.value)}
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Vessel Name</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Vessel Name</label>
                 <input
                   type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.vesselName || ''}
                   onChange={(e) => updateFormData('vesselName', e.target.value)}
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Evaluation Period</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Evaluation Period</label>
                 <input
                   type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.evaluationPeriod || ''}
                   onChange={(e) => updateFormData('evaluationPeriod', e.target.value)}
                   placeholder="e.g., Jan 2025 - Mar 2025"
@@ -1832,7 +1832,7 @@ export default function HGQSFormsPage() {
 
             <div className="border-t pt-4">
               <h4 className="font-medium text-gray-800 mb-3">Performance Evaluation</h4>
-              <div className="space-y-4">
+              <div className="space-y-6">
                 {[
                   { label: 'Technical Skills', key: 'technicalSkills' },
                   { label: 'Work Attitude', key: 'workAttitude' },
@@ -1845,9 +1845,9 @@ export default function HGQSFormsPage() {
                 ].map((item) => (
                   <div key={item.key} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">{item.label}</label>
+                      <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">{item.label}</label>
                       <select
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         value={formData[item.key] || ''}
                         onChange={(e) => updateFormData(item.key, e.target.value)}
                       >
@@ -1860,10 +1860,10 @@ export default function HGQSFormsPage() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Comments</label>
+                      <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Comments</label>
                       <input
                         type="text"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         value={formData[`${item.key}Comments`] || ''}
                         onChange={(e) => updateFormData(`${item.key}Comments`, e.target.value)}
                         placeholder="Additional comments..."
@@ -1878,9 +1878,9 @@ export default function HGQSFormsPage() {
               <h4 className="font-medium text-gray-800 mb-3">Overall Assessment</h4>
               <div className="space-y-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Overall Rating</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Overall Rating</label>
                   <select
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.overallRating || ''}
                     onChange={(e) => updateFormData('overallRating', e.target.value)}
                   >
@@ -1893,30 +1893,30 @@ export default function HGQSFormsPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Strengths</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Strengths</label>
                   <textarea
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.strengths || ''}
                     onChange={(e) => updateFormData('strengths', e.target.value)}
                     placeholder="Key strengths and positive aspects..."
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Areas for Improvement</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Areas for Improvement</label>
                   <textarea
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.improvements || ''}
                     onChange={(e) => updateFormData('improvements', e.target.value)}
                     placeholder="Areas that need development..."
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Recommendations</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Recommendations</label>
                   <textarea
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.recommendations || ''}
                     onChange={(e) => updateFormData('recommendations', e.target.value)}
                     placeholder="Recommendations for future assignments..."
@@ -1927,28 +1927,28 @@ export default function HGQSFormsPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Evaluated By (Name)</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Evaluated By (Name)</label>
                 <input
                   type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.evaluatedBy || ''}
                   onChange={(e) => updateFormData('evaluatedBy', e.target.value)}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Evaluated By (Position)</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Evaluated By (Position)</label>
                 <input
                   type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.evaluatedByPosition || ''}
                   onChange={(e) => updateFormData('evaluatedByPosition', e.target.value)}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Evaluation Date</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Evaluation Date</label>
                 <input
                   type="date"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.evaluationDate || ''}
                   onChange={(e) => updateFormData('evaluationDate', e.target.value)}
                 />
@@ -1962,40 +1962,40 @@ export default function HGQSFormsPage() {
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Employee Full Name</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Employee Full Name</label>
                 <input
                   type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.employeeName || ''}
                   onChange={(e) => updateFormData('employeeName', e.target.value)}
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Position</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Position</label>
                 <input
                   type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.position || ''}
                   onChange={(e) => updateFormData('position', e.target.value)}
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Monthly Salary (USD)</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Monthly Salary (USD)</label>
                 <input
                   type="number"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.salary || ''}
                   onChange={(e) => updateFormData('salary', e.target.value)}
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Contract Duration (months)</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Contract Duration (months)</label>
                 <input
                   type="number"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.contractDuration || ''}
                   onChange={(e) => updateFormData('contractDuration', e.target.value)}
                   required
@@ -2004,20 +2004,20 @@ export default function HGQSFormsPage() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Start Date</label>
                 <input
                   type="date"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.startDate || ''}
                   onChange={(e) => updateFormData('startDate', e.target.value)}
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">End Date</label>
                 <input
                   type="date"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.endDate || ''}
                   onChange={(e) => updateFormData('endDate', e.target.value)}
                   required
@@ -2025,10 +2025,10 @@ export default function HGQSFormsPage() {
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Work Location/Vessel</label>
+              <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Work Location/Vessel</label>
               <input
                 type="text"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 value={formData.workLocation || ''}
                 onChange={(e) => updateFormData('workLocation', e.target.value)}
               />
@@ -2074,20 +2074,20 @@ export default function HGQSFormsPage() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Employee Signature</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Employee Signature</label>
                 <input
                   type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.employeeSignature || ''}
                   onChange={(e) => updateFormData('employeeSignature', e.target.value)}
                   placeholder="Type full name as signature"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Date</label>
                 <input
                   type="date"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.contractDate || ''}
                   onChange={(e) => updateFormData('contractDate', e.target.value)}
                 />
@@ -2101,40 +2101,40 @@ export default function HGQSFormsPage() {
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Crew Name</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Crew Name</label>
                 <input
                   type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.crewName || ''}
                   onChange={(e) => updateFormData('crewName', e.target.value)}
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Position/Rank</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Position/Rank</label>
                 <input
                   type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.position || ''}
                   onChange={(e) => updateFormData('position', e.target.value)}
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Vessel Name</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Vessel Name</label>
                 <input
                   type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.vesselName || ''}
                   onChange={(e) => updateFormData('vesselName', e.target.value)}
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Payment Period</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Payment Period</label>
                 <input
                   type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.paymentPeriod || ''}
                   onChange={(e) => updateFormData('paymentPeriod', e.target.value)}
                   placeholder="e.g., January 2025"
@@ -2146,51 +2146,51 @@ export default function HGQSFormsPage() {
               <h4 className="font-medium text-gray-800 mb-3">Salary Breakdown</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Basic Salary (USD)</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Basic Salary (USD)</label>
                   <input
                     type="number"
                     step="0.01"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.basicSalary || ''}
                     onChange={(e) => updateFormData('basicSalary', e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Overtime (USD)</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Overtime (USD)</label>
                   <input
                     type="number"
                     step="0.01"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.overtime || ''}
                     onChange={(e) => updateFormData('overtime', e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Allowances (USD)</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Allowances (USD)</label>
                   <input
                     type="number"
                     step="0.01"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.allowances || ''}
                     onChange={(e) => updateFormData('allowances', e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Deductions (USD)</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Deductions (USD)</label>
                   <input
                     type="number"
                     step="0.01"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.deductions || ''}
                     onChange={(e) => updateFormData('deductions', e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Net Salary (USD)</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Net Salary (USD)</label>
                   <input
                     type="number"
                     step="0.01"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.netSalary || ''}
                     onChange={(e) => updateFormData('netSalary', e.target.value)}
                   />
@@ -2202,9 +2202,9 @@ export default function HGQSFormsPage() {
               <h4 className="font-medium text-gray-800 mb-3">Payment Details</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Payment Method</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Payment Method</label>
                   <select
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.paymentMethod || ''}
                     onChange={(e) => updateFormData('paymentMethod', e.target.value)}
                   >
@@ -2215,20 +2215,20 @@ export default function HGQSFormsPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Payment Date</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Payment Date</label>
                   <input
                     type="date"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.paymentDate || ''}
                     onChange={(e) => updateFormData('paymentDate', e.target.value)}
                   />
                 </div>
               </div>
               <div className="mt-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Bank Account Details (if applicable)</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Bank Account Details (if applicable)</label>
                 <textarea
                   rows={2}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.bankDetails || ''}
                   onChange={(e) => updateFormData('bankDetails', e.target.value)}
                   placeholder="Bank name, account number, etc."
@@ -2238,19 +2238,19 @@ export default function HGQSFormsPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Prepared By</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Prepared By</label>
                 <input
                   type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.preparedBy || ''}
                   onChange={(e) => updateFormData('preparedBy', e.target.value)}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Approved By</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Approved By</label>
                 <input
                   type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.approvedBy || ''}
                   onChange={(e) => updateFormData('approvedBy', e.target.value)}
                 />
@@ -2264,40 +2264,40 @@ export default function HGQSFormsPage() {
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Crew Name</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Crew Name</label>
                 <input
                   type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.crewName || ''}
                   onChange={(e) => updateFormData('crewName', e.target.value)}
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Position/Rank</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Position/Rank</label>
                 <input
                   type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.position || ''}
                   onChange={(e) => updateFormData('position', e.target.value)}
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Vessel Name</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Vessel Name</label>
                 <input
                   type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.vesselName || ''}
                   onChange={(e) => updateFormData('vesselName', e.target.value)}
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Allotment Period</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Allotment Period</label>
                 <input
                   type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.allotmentPeriod || ''}
                   onChange={(e) => updateFormData('allotmentPeriod', e.target.value)}
                   placeholder="e.g., Monthly"
@@ -2309,23 +2309,23 @@ export default function HGQSFormsPage() {
               <h4 className="font-medium text-gray-800 mb-3">Allotment Details</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Allotment Amount (USD)</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Allotment Amount (USD)</label>
                   <input
                     type="number"
                     step="0.01"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.allotmentAmount || ''}
                     onChange={(e) => updateFormData('allotmentAmount', e.target.value)}
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Allotment Percentage (%)</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Allotment Percentage (%)</label>
                   <input
                     type="number"
                     step="0.01"
                     max="100"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.allotmentPercentage || ''}
                     onChange={(e) => updateFormData('allotmentPercentage', e.target.value)}
                   />
@@ -2337,19 +2337,19 @@ export default function HGQSFormsPage() {
               <h4 className="font-medium text-gray-800 mb-3">Beneficiary Information</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Beneficiary Name</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Beneficiary Name</label>
                   <input
                     type="text"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.beneficiaryName || ''}
                     onChange={(e) => updateFormData('beneficiaryName', e.target.value)}
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Relationship</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Relationship</label>
                   <select
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.relationship || ''}
                     onChange={(e) => updateFormData('relationship', e.target.value)}
                   >
@@ -2363,10 +2363,10 @@ export default function HGQSFormsPage() {
                 </div>
               </div>
               <div className="mt-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Beneficiary Address</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Beneficiary Address</label>
                 <textarea
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.beneficiaryAddress || ''}
                   onChange={(e) => updateFormData('beneficiaryAddress', e.target.value)}
                 />
@@ -2377,37 +2377,37 @@ export default function HGQSFormsPage() {
               <h4 className="font-medium text-gray-800 mb-3">Bank Transfer Details</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Bank Name</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Bank Name</label>
                   <input
                     type="text"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.bankName || ''}
                     onChange={(e) => updateFormData('bankName', e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Account Number</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Account Number</label>
                   <input
                     type="text"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.accountNumber || ''}
                     onChange={(e) => updateFormData('accountNumber', e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">SWIFT/BIC Code</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">SWIFT/BIC Code</label>
                   <input
                     type="text"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.swiftCode || ''}
                     onChange={(e) => updateFormData('swiftCode', e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Bank Address</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Bank Address</label>
                   <input
                     type="text"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={formData.bankAddress || ''}
                     onChange={(e) => updateFormData('bankAddress', e.target.value)}
                   />
@@ -2417,20 +2417,20 @@ export default function HGQSFormsPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Crew Signature</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Crew Signature</label>
                 <input
                   type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.crewSignature || ''}
                   onChange={(e) => updateFormData('crewSignature', e.target.value)}
                   placeholder="Type full name as signature"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">Date</label>
                 <input
                   type="date"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={formData.allotmentDate || ''}
                   onChange={(e) => updateFormData('allotmentDate', e.target.value)}
                 />
@@ -2443,7 +2443,7 @@ export default function HGQSFormsPage() {
         return (
           <div className="text-center py-8">
             <p className="text-gray-500">Online form for this document is not yet available.</p>
-            <p className="text-sm text-gray-400 mt-2">Please use the Download PDF option.</p>
+            <p className="text-sm text-gray-700 mt-2">Please use the Download PDF option.</p>
           </div>
         );
     }
@@ -2467,7 +2467,7 @@ export default function HGQSFormsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       {/* Header */}
-      <div className="bg-white/70 backdrop-blur-sm border-b border-slate-200">
+      <div className="bg-white backdrop-blur-md border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center space-x-4">
@@ -2485,10 +2485,10 @@ export default function HGQSFormsPage() {
               </div>
             </div>
             <div className="flex items-center space-x-2">
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+              <span className="inline-flex items-center px-3 py-2 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
                 ISO 9001:2015
               </span>
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+              <span className="inline-flex items-center px-3 py-2 rounded-full text-sm font-medium bg-green-100 text-green-800">
                 MLC 2006
               </span>
             </div>
@@ -2501,8 +2501,8 @@ export default function HGQSFormsPage() {
         <div className="px-4 py-6 sm:px-0">
 
           {/* HGQS Overview */}
-          <div className="bg-white/70 backdrop-blur-sm rounded-xl shadow-lg border border-gray-100 p-6 mb-8">
-            <h2 className="text-2xl font-bold text-slate-800 mb-4">HGQS Quality Management System Forms</h2>
+          <div className="bg-white backdrop-blur-md rounded-xl shadow-lg border border-gray-100 p-6 mb-8">
+            <h2 className="text-2xl font-extrabold text-slate-800 mb-4">HGQS Quality Management System Forms</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <div className="text-center">
                 <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -2540,7 +2540,7 @@ export default function HGQSFormsPage() {
           </div>
 
           {/* Category Filter */}
-          <div className="bg-white/70 backdrop-blur-sm rounded-xl shadow-lg border border-gray-100 p-6 mb-6">
+          <div className="bg-white backdrop-blur-md rounded-xl shadow-lg border border-gray-100 p-6 mb-6">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-slate-800">Filter by Category</h3>
               <div className="flex space-x-2">
@@ -2570,7 +2570,7 @@ export default function HGQSFormsPage() {
           {/* Forms Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredForms.map((form) => (
-              <div key={form.id} className="bg-white/70 backdrop-blur-sm rounded-xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-shadow">
+              <div key={form.id} className="bg-white backdrop-blur-md rounded-xl shadow-lg border border-gray-100 p-6 hover:shadow-2xl transition-shadow">
                 <div className="flex items-start justify-between mb-4">
                   <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
                     form.category === 'AC' ? 'bg-blue-100' :
@@ -2578,7 +2578,7 @@ export default function HGQSFormsPage() {
                     form.category === 'CR' ? 'bg-orange-100' :
                     'bg-purple-100'
                   }`}>
-                    <span className={`text-xl font-bold ${
+                    <span className={`text-xl font-extrabold ${
                       form.category === 'AC' ? 'text-blue-600' :
                       form.category === 'AD' ? 'text-green-600' :
                       form.category === 'CR' ? 'text-orange-600' :
@@ -2587,7 +2587,7 @@ export default function HGQSFormsPage() {
                       {form.category === 'PRINCIPAL' ? '🏢' : form.category}
                     </span>
                   </div>
-                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                  <span className={`inline-flex items-center px-4 py-2 rounded-full text-xs font-medium ${
                     form.category === 'AC' ? 'bg-blue-100 text-blue-800' :
                     form.category === 'AD' ? 'bg-green-100 text-green-800' :
                     form.category === 'CR' ? 'bg-orange-100 text-orange-800' :
@@ -2600,7 +2600,7 @@ export default function HGQSFormsPage() {
                 <h3 className="text-lg font-semibold text-slate-800 mb-2">{form.name}</h3>
                 {form.principal && (
                   <div className="mb-2">
-                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                    <span className="inline-flex items-center px-4 py-2 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
                       {form.principal.replace('_', ' ').toUpperCase()}
                     </span>
                   </div>
@@ -2670,7 +2670,7 @@ export default function HGQSFormsPage() {
               {crews.length === 0 ? (
                 <div className="text-center py-8">
                   <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-gray-400 text-2xl">👥</span>
+                    <span className="text-gray-700 text-2xl">👥</span>
                   </div>
                   <p className="text-slate-600">No crew members found</p>
                   <p className="text-sm text-slate-500 mt-1">Please add crew members first</p>
@@ -2681,14 +2681,14 @@ export default function HGQSFormsPage() {
                     <button
                       key={crew.id}
                       onClick={() => handleCrewSelect(crew)}
-                      className="w-full p-4 border border-gray-200 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-colors text-left"
+                      className="w-full p-4 border border-gray-300 rounded-lg hover:bg-blue-100 hover:border-blue-300 transition-colors text-left"
                     >
                       <div className="flex items-center justify-between">
                         <div>
                           <div className="font-medium text-slate-800">{crew.fullName}</div>
                           <div className="text-sm text-slate-600">{crew.rank}</div>
                         </div>
-                        <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        <div className={`px-4 py-2 rounded-full text-xs font-medium ${
                           crew.status === 'ONBOARD' ? 'bg-green-100 text-green-800' :
                           crew.status === 'STANDBY' ? 'bg-yellow-100 text-yellow-800' :
                           'bg-gray-100 text-gray-800'
@@ -2702,7 +2702,7 @@ export default function HGQSFormsPage() {
               )}
         </div>
 
-        <div className="mt-6 pt-4 border-t border-gray-200 bg-gray-50 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4">
+        <div className="mt-6 pt-4 border-t border-gray-300 bg-gray-100 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4">
           <button
             onClick={() => {
               if (selectedForm) {
@@ -2726,9 +2726,9 @@ export default function HGQSFormsPage() {
         subtitle="Fill out the form below and download as PDF"
         size="xl"
       >
-        <form onSubmit={handleFormSubmit} className="space-y-4">
+        <form onSubmit={handleFormSubmit} className="space-y-6">
           {renderFormFields(currentFormId)}
-          <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
+          <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6 pt-4 border-t border-gray-300">
             <button
               type="button"
               onClick={closeOnlineForm}

@@ -129,7 +129,7 @@ export default function MonthlyChecklistPage() {
             <div className="flex items-center space-x-4">
               <Link
                 href="/crewing"
-                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-xl"
+                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
               >
                 ← Back to Crewing
               </Link>
@@ -143,7 +143,7 @@ export default function MonthlyChecklistPage() {
                   >
                     ← View Crew List
                   </Link>
-                  <span className="text-gray-400">|</span>
+                  <span className="text-gray-700">|</span>
                   <Link
                     href="/crewing/replacements"
                     className="text-sm text-indigo-600 hover:text-indigo-800 font-medium"
@@ -159,7 +159,7 @@ export default function MonthlyChecklistPage() {
                 <select
                   value={selectedMonth}
                   onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="px-3 py-2 border border-gray-400 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 >
                   {months.map((month, index) => (
                     <option key={index + 1} value={index + 1}>{month}</option>
@@ -168,7 +168,7 @@ export default function MonthlyChecklistPage() {
                 <select
                   value={selectedYear}
                   onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="px-3 py-2 border border-gray-400 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 >
                   {years.map(year => (
                     <option key={year} value={year}>{year}</option>
@@ -196,8 +196,8 @@ export default function MonthlyChecklistPage() {
                 <span className="text-2xl">📈</span>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Sign-On</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-sm font-medium text-gray-700">Sign-On</p>
+                <p className="text-2xl font-extrabold text-gray-900">
                   {checklistItems.filter(item => item.status === 'ON').length}
                 </p>
               </div>
@@ -210,8 +210,8 @@ export default function MonthlyChecklistPage() {
                 <span className="text-2xl">📉</span>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Sign-Off</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-sm font-medium text-gray-700">Sign-Off</p>
+                <p className="text-2xl font-extrabold text-gray-900">
                   {checklistItems.filter(item => item.status === 'OFF').length}
                 </p>
               </div>
@@ -224,8 +224,8 @@ export default function MonthlyChecklistPage() {
                 <span className="text-2xl">⏰</span>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Contract Expiring</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-sm font-medium text-gray-700">Contract Expiring</p>
+                <p className="text-2xl font-extrabold text-gray-900">
                   {checklistItems.filter(item => item.status === 'CONTRACT_EXPIRING').length}
                 </p>
               </div>
@@ -238,8 +238,8 @@ export default function MonthlyChecklistPage() {
                 <span className="text-2xl">⚠️</span>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Pending Docs</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-sm font-medium text-gray-700">Pending Docs</p>
+                <p className="text-2xl font-extrabold text-gray-900">
                   {checklistItems.filter(item => !item.documentsComplete).length}
                 </p>
               </div>
@@ -252,8 +252,8 @@ export default function MonthlyChecklistPage() {
                 <span className="text-2xl">✅</span>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Fully Compliant</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-sm font-medium text-gray-700">Fully Compliant</p>
+                <p className="text-2xl font-extrabold text-gray-900">
                   {checklistItems.filter(item =>
                     item.documentsComplete && item.medicalCheck && item.trainingComplete
                   ).length}
@@ -265,7 +265,7 @@ export default function MonthlyChecklistPage() {
 
         {/* Checklist Table */}
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200">
+          <div className="px-6 py-4 border-b border-gray-300">
             <h2 className="text-xl font-semibold text-gray-900">
               {months[selectedMonth - 1]} {selectedYear} - ON/OFF Signers
             </h2>
@@ -273,15 +273,15 @@ export default function MonthlyChecklistPage() {
 
           {checklistItems.length === 0 ? (
             <div className="text-center py-12">
-              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="mx-auto h-12 w-12 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
               </svg>
               <h3 className="mt-2 text-sm font-medium text-gray-900">No checklist entries</h3>
-              <p className="mt-1 text-sm text-gray-600">No ON/OFF signers recorded for this month.</p>
+              <p className="mt-1 text-sm text-gray-700">No ON/OFF signers recorded for this month.</p>
               <div className="mt-6">
                 <Link
                   href="/crewing/checklist/new"
-                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-md text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                 >
                   <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -292,7 +292,7 @@ export default function MonthlyChecklistPage() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
+              <table className="min-w-full divide-y divide-gray-300">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -326,20 +326,20 @@ export default function MonthlyChecklistPage() {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {checklistItems.map((item) => (
-                    <tr key={item.id} className="hover:bg-gray-50">
+                    <tr key={item.id} className="hover:bg-gray-100">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">
                           {item.seafarerName}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {item.rank}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {item.vessel}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        <span className={`inline-flex px-4 py-2 text-xs font-semibold rounded-full ${
                           item.status === 'ON'
                             ? 'bg-green-100 text-green-800'
                             : item.status === 'OFF'
@@ -350,26 +350,26 @@ export default function MonthlyChecklistPage() {
                            item.status === 'OFF' ? 'Sign-Off' : 'Contract Expiring'}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {item.signOnDate ? new Date(item.signOnDate).toLocaleDateString() :
                          item.signOffDate ? new Date(item.signOffDate).toLocaleDateString() : '-'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        <span className={`inline-flex px-4 py-2 text-xs font-semibold rounded-full ${
                           item.documentsComplete ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                         }`}>
                           {item.documentsComplete ? 'Complete' : 'Pending'}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        <span className={`inline-flex px-4 py-2 text-xs font-semibold rounded-full ${
                           item.medicalCheck ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                         }`}>
                           {item.medicalCheck ? 'Pass' : 'Fail'}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        <span className={`inline-flex px-4 py-2 text-xs font-semibold rounded-full ${
                           item.trainingComplete ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                         }`}>
                           {item.trainingComplete ? 'Complete' : 'Pending'}
@@ -398,7 +398,7 @@ export default function MonthlyChecklistPage() {
         </div>
 
         {/* Information Section */}
-        <div className="mt-8 bg-blue-50 rounded-xl p-6 border border-blue-200">
+        <div className="mt-8 bg-blue-100 rounded-xl p-6 border border-blue-200">
           <div className="flex items-start space-x-4">
             <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
               <span className="text-2xl">ℹ️</span>

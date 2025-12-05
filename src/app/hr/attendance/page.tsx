@@ -80,7 +80,7 @@ export default function AttendancePage() {
             <div className="flex items-center space-x-4">
               <Link
                 href="/hr"
-                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-xl"
+                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
               >
                 ← Back to HR
               </Link>
@@ -101,15 +101,15 @@ export default function AttendancePage() {
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
           {attendances.length === 0 ? (
             <div className="text-center py-12">
-              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="mx-auto h-12 w-12 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
               </svg>
               <h3 className="mt-2 text-sm font-medium text-gray-900">No attendance records</h3>
-              <p className="mt-1 text-sm text-gray-600">Get started by recording your first attendance entry.</p>
+              <p className="mt-1 text-sm text-gray-700">Get started by recording your first attendance entry.</p>
               <div className="mt-6">
                 <Link
                   href="/hr/attendance/new"
-                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-md text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                 >
                   <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -120,7 +120,7 @@ export default function AttendancePage() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
+              <table className="min-w-full divide-y divide-gray-300">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -145,30 +145,30 @@ export default function AttendancePage() {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {attendances.map((attendance) => (
-                    <tr key={attendance.id} className="hover:bg-gray-50">
+                    <tr key={attendance.id} className="hover:bg-gray-100">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div>
                             <div className="text-sm font-medium text-gray-900">
                               {attendance.employee.fullName}
                             </div>
-                            <div className="text-sm text-gray-600">
+                            <div className="text-sm text-gray-800">
                               {attendance.employee.position} • {attendance.employee.department}
                             </div>
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {new Date(attendance.date).toLocaleDateString()}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {attendance.checkIn ? new Date(attendance.checkIn).toLocaleTimeString() : '-'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {attendance.checkOut ? new Date(attendance.checkOut).toLocaleTimeString() : '-'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        <span className={`inline-flex px-4 py-2 text-xs font-semibold rounded-full ${
                           attendance.status === 'present'
                             ? 'bg-green-100 text-green-800'
                             : attendance.status === 'absent'

@@ -78,20 +78,20 @@ export default function FormsReferencePage() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-100 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <nav className="flex mb-4" aria-label="Breadcrumb">
           <ol className="inline-flex items-center space-x-1">
-            <li><Link href="/dashboard" className="text-gray-700 hover:text-blue-600">Dashboard</Link></li>
-            <li><Link href="/quality" className="text-gray-700 hover:text-blue-600 ml-1">Quality</Link></li>
+            <li><Link href="/dashboard" className="text-gray-700 hover:text-blue-700">Dashboard</Link></li>
+            <li><Link href="/quality" className="text-gray-700 hover:text-blue-700 ml-1">Quality</Link></li>
             <li><span className="ml-1 text-gray-500">Forms Reference</span></li>
           </ol>
         </nav>
 
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">HGQS Forms Library</h1>
-          <p className="text-gray-600 mt-1">ISO 9001:2015 Quality Management System Forms</p>
+          <p className="text-gray-700 mt-1">ISO 9001:2015 Quality Management System Forms</p>
         </div>
 
         {/* Search & Filter */}
@@ -103,7 +103,7 @@ export default function FormsReferencePage() {
                 placeholder="🔍 Search forms by code or title..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-4 py-3 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-blue-500"
               />
             </div>
             <div className="flex gap-2">
@@ -132,12 +132,12 @@ export default function FormsReferencePage() {
                 className={`p-6 rounded-xl text-left transition-all ${
                   categoryFilter === cat.code
                     ? `bg-${cat.color}-600 text-white shadow-lg`
-                    : "bg-white border-2 border-gray-200 hover:border-gray-300"
+                    : "bg-white border-2 border-gray-300 hover:border-gray-400"
                 }`}
               >
                 <div className="text-4xl mb-3">{cat.icon}</div>
-                <h3 className="text-xl font-bold mb-2">{cat.name}</h3>
-                <p className={`text-sm ${categoryFilter === cat.code ? `text-${cat.color}-100` : "text-gray-600"}`}>
+                <h3 className="text-xl font-extrabold mb-2">{cat.name}</h3>
+                <p className={`text-sm ${categoryFilter === cat.code ? `text-${cat.color}-100` : "text-gray-700"}`}>
                   {count} forms available
                 </p>
               </button>
@@ -147,7 +147,7 @@ export default function FormsReferencePage() {
 
         {/* Forms Grid */}
         <div className="bg-white rounded-xl shadow-lg p-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">
+          <h2 className="text-2xl font-extrabold text-gray-900 mb-6">
             {categoryFilter === "ALL" ? "All Forms" : `${formCategories.find(c => c.code === categoryFilter)?.name} Forms`}
             <span className="text-gray-500 text-lg ml-2">({filteredForms.length})</span>
           </h2>
@@ -156,7 +156,7 @@ export default function FormsReferencePage() {
             <div className="text-center py-12">
               <div className="text-6xl mb-4">🔍</div>
               <h3 className="text-xl font-semibold text-gray-800 mb-2">No forms found</h3>
-              <p className="text-gray-600">Try adjusting your search or filter criteria</p>
+              <p className="text-gray-700">Try adjusting your search or filter criteria</p>
             </div>
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -165,16 +165,16 @@ export default function FormsReferencePage() {
                 return (
                   <div
                     key={form.code}
-                    className="border-2 border-gray-200 rounded-lg p-4 hover:border-blue-400 hover:shadow-md transition-all"
+                    className="border-2 border-gray-300 rounded-lg p-4 hover:border-blue-400 hover:shadow-md transition-all"
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div className="text-3xl">{category?.icon}</div>
-                      <span className={`px-2 py-1 text-xs font-semibold rounded bg-${category?.color}-100 text-${category?.color}-800`}>
+                      <span className={`px-4 py-2 text-xs font-semibold rounded bg-${category?.color}-100 text-${category?.color}-800`}>
                         {form.category}
                       </span>
                     </div>
                     <h3 className="font-bold text-gray-900 mb-1">{form.code}</h3>
-                    <p className="text-sm text-gray-600 mb-4">{form.title}</p>
+                    <p className="text-sm text-gray-800 mb-4">{form.title}</p>
                     <a
                       href={`/form_reference/${form.category}/${form.file}`}
                       download
@@ -193,8 +193,8 @@ export default function FormsReferencePage() {
         </div>
 
         {/* Footer Info */}
-        <div className="mt-12 bg-gradient-to-r from-blue-900 to-cyan-900 rounded-xl shadow-xl p-8 text-white">
-          <h2 className="text-2xl font-bold mb-4">Form Usage Guidelines</h2>
+        <div className="mt-12 bg-gradient-to-r from-blue-900 to-cyan-900 rounded-xl shadow-2xl p-8 text-white">
+          <h2 className="text-2xl font-extrabold mb-4">Form Usage Guidelines</h2>
           <div className="grid md:grid-cols-2 gap-6 text-sm">
             <div>
               <h3 className="font-semibold mb-2">📋 Administration Forms (AD)</h3>

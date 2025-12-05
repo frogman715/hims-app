@@ -29,26 +29,26 @@ export default async function AccountingPage() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="bg-white p-6 rounded-xl border">
           <h3 className="text-sm font-medium text-gray-500">Office Expenses</h3>
-          <p className="text-2xl font-bold">IDR {totalExpenses.toLocaleString()}</p>
-          <p className="text-xs text-gray-500">This month</p>
+          <p className="text-2xl font-extrabold">IDR {totalExpenses.toLocaleString()}</p>
+          <p className="text-sm text-gray-700">This month</p>
         </div>
 
         <div className="bg-white p-6 rounded-xl border">
           <h3 className="text-sm font-medium text-gray-500">Crew Salaries</h3>
-          <p className="text-2xl font-bold">-</p>
-          <p className="text-xs text-gray-500">Pending payment</p>
+          <p className="text-2xl font-extrabold">-</p>
+          <p className="text-sm text-gray-700">Pending payment</p>
         </div>
 
         <div className="bg-white p-6 rounded-xl border">
           <h3 className="text-sm font-medium text-gray-500">Exchange Expenses</h3>
-          <p className="text-2xl font-bold">-</p>
-          <p className="text-xs text-gray-500">This month</p>
+          <p className="text-2xl font-extrabold">-</p>
+          <p className="text-sm text-gray-700">This month</p>
         </div>
 
         <div className="bg-white p-6 rounded-xl border">
           <h3 className="text-sm font-medium text-gray-500">Invoices</h3>
-          <p className="text-2xl font-bold">-</p>
-          <p className="text-xs text-gray-500">Outstanding</p>
+          <p className="text-2xl font-extrabold">-</p>
+          <p className="text-sm text-gray-700">Outstanding</p>
         </div>
       </div>
 
@@ -56,7 +56,7 @@ export default async function AccountingPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Link
           href="/accounting/office-expense"
-          className="bg-white p-4 rounded-xl border hover:shadow-sm transition-shadow"
+          className="bg-white p-4 rounded-xl border hover:shadow-md transition-shadow"
         >
           <h3 className="font-medium">Office Expenses</h3>
           <p className="text-sm text-gray-500">Input & track office costs</p>
@@ -64,7 +64,7 @@ export default async function AccountingPage() {
 
         <Link
           href="/accounting/salary"
-          className="bg-white p-4 rounded-xl border hover:shadow-sm transition-shadow"
+          className="bg-white p-4 rounded-xl border hover:shadow-md transition-shadow"
         >
           <h3 className="font-medium">Crew Salaries</h3>
           <p className="text-sm text-gray-500">Manage crew payments</p>
@@ -72,7 +72,7 @@ export default async function AccountingPage() {
 
         <Link
           href="/accounting/leave-pay"
-          className="bg-white p-4 rounded-xl border hover:shadow-sm transition-shadow"
+          className="bg-white p-4 rounded-xl border hover:shadow-md transition-shadow"
         >
           <h3 className="font-medium">Leave Pay</h3>
           <p className="text-sm text-gray-500">Off-signing payments</p>
@@ -80,7 +80,7 @@ export default async function AccountingPage() {
 
         <Link
           href="/accounting/exchange"
-          className="bg-white p-4 rounded-xl border hover:shadow-sm transition-shadow"
+          className="bg-white p-4 rounded-xl border hover:shadow-md transition-shadow"
         >
           <h3 className="font-medium">Exchange Expenses</h3>
           <p className="text-sm text-gray-500">Crew change costs</p>
@@ -111,7 +111,7 @@ export default async function AccountingPage() {
                     {new Date(expense.date).toLocaleDateString()}
                   </td>
                   <td className="px-4 py-2">
-                    <span className="text-xs px-2 py-1 rounded border">
+                    <span className="text-xs px-4 py-2 rounded border">
                       {expense.type}
                     </span>
                   </td>

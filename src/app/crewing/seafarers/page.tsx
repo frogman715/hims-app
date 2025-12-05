@@ -71,14 +71,14 @@ export default function Seafarers() {
               Back to Crewing
             </button>
           </div>
-          <p className="text-sm text-gray-600">Manage seafarer profiles and information (CR-01)</p>
+          <p className="text-sm text-gray-800">Manage seafarer profiles and information (CR-01)</p>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Seafarer List</h2>
+            <h2 className="text-2xl font-extrabold text-gray-900">Seafarer List</h2>
             <button
               onClick={() => router.push("/crewing/seafarers/new")}
               className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
@@ -87,7 +87,7 @@ export default function Seafarers() {
             </button>
           </div>
 
-          <div className="bg-white shadow overflow-hidden sm:rounded-md">
+          <div className="bg-white shadow overflow-hidden sm:rounded-lg">
             <ul className="divide-y divide-gray-200">
               {seafarers.map((seafarer) => (
                 <li key={seafarer.id}>
@@ -96,7 +96,7 @@ export default function Seafarers() {
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10">
                           <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
-                            <span className="text-sm font-medium text-gray-700">
+                            <span className="text-sm font-semibold text-gray-900">
                               {seafarer.fullName.charAt(0).toUpperCase()}
                             </span>
                           </div>
@@ -127,7 +127,7 @@ export default function Seafarers() {
                             <div className="font-medium">
                               {seafarer.assignments[0].rank} on {seafarer.assignments[0].vessel.name}
                             </div>
-                            <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            <div className={`inline-flex items-center px-4.5 py-0.5 rounded-full text-xs font-medium ${
                               seafarer.assignments[0].status === 'ONBOARD'
                                 ? 'bg-green-100 text-green-800'
                                 : seafarer.assignments[0].status === 'PLANNED'
@@ -165,7 +165,7 @@ export default function Seafarers() {
                           </button>
                           <button
                             onClick={() => router.push(`/crewing/seafarers/${seafarer.id}/biodata`)}
-                            className="text-gray-600 hover:text-gray-900"
+                            className="text-gray-700 hover:text-gray-900"
                           >
                             View Details
                           </button>

@@ -44,7 +44,7 @@ export default function SiuppakReportsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
+    <div className="min-h-screen bg-gray-100 p-8">
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -57,13 +57,13 @@ export default function SiuppakReportsPage() {
             </Link>
           </div>
           <h1 className="text-3xl font-bold text-gray-900">Laporan SIUPPAK</h1>
-          <p className="text-gray-600 mt-2">
+          <p className="text-gray-700 mt-2">
             Laporan Kegiatan Perekrutan dan Penempatan Awak Kapal untuk Audit Perhubungan
           </p>
         </div>
 
         {/* Info Banner */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
+        <div className="bg-blue-100 border border-blue-200 rounded-lg p-4 mb-8">
           <div className="flex items-start gap-3">
             <svg className="w-6 h-6 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -79,12 +79,12 @@ export default function SiuppakReportsPage() {
         </div>
 
         {/* Report Generator */}
-        <div className="bg-white rounded-lg shadow border border-gray-200 p-8">
+        <div className="bg-white rounded-lg shadow border border-gray-300 p-8">
           <h2 className="text-xl font-semibold text-gray-900 mb-6">Generate Laporan</h2>
 
           {/* Report Type Selection */}
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-3">
+            <label className="block text-sm font-semibold text-gray-900 mb-3">
               Jenis Laporan <span className="text-red-500">*</span>
             </label>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -92,39 +92,39 @@ export default function SiuppakReportsPage() {
                 onClick={() => setReportType('bulanan')}
                 className={`p-4 rounded-lg border-2 transition-all ${
                   reportType === 'bulanan'
-                    ? 'border-blue-500 bg-blue-50 text-blue-700'
-                    : 'border-gray-200 hover:border-gray-300'
+                    ? 'border-blue-500 bg-blue-100 text-blue-700'
+                    : 'border-gray-300 hover:border-gray-400'
                 }`}
               >
                 <div className="text-2xl mb-2">📅</div>
                 <div className="font-semibold">Bulanan</div>
-                <div className="text-xs text-gray-500 mt-1">Laporan per bulan</div>
+                <div className="text-sm text-gray-700 mt-1">Laporan per bulan</div>
               </button>
 
               <button
                 onClick={() => setReportType('semester')}
                 className={`p-4 rounded-lg border-2 transition-all ${
                   reportType === 'semester'
-                    ? 'border-blue-500 bg-blue-50 text-blue-700'
-                    : 'border-gray-200 hover:border-gray-300'
+                    ? 'border-blue-500 bg-blue-100 text-blue-700'
+                    : 'border-gray-300 hover:border-gray-400'
                 }`}
               >
                 <div className="text-2xl mb-2">📊</div>
                 <div className="font-semibold">Semester</div>
-                <div className="text-xs text-gray-500 mt-1">Laporan 6 bulan</div>
+                <div className="text-sm text-gray-700 mt-1">Laporan 6 bulan</div>
               </button>
 
               <button
                 onClick={() => setReportType('tahunan')}
                 className={`p-4 rounded-lg border-2 transition-all ${
                   reportType === 'tahunan'
-                    ? 'border-blue-500 bg-blue-50 text-blue-700'
-                    : 'border-gray-200 hover:border-gray-300'
+                    ? 'border-blue-500 bg-blue-100 text-blue-700'
+                    : 'border-gray-300 hover:border-gray-400'
                 }`}
               >
                 <div className="text-2xl mb-2">📈</div>
                 <div className="font-semibold">Tahunan</div>
-                <div className="text-xs text-gray-500 mt-1">Laporan per tahun</div>
+                <div className="text-sm text-gray-700 mt-1">Laporan per tahun</div>
               </button>
             </div>
           </div>
@@ -132,13 +132,13 @@ export default function SiuppakReportsPage() {
           {/* Period Selection */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-900 mb-2">
                 Tahun <span className="text-red-500">*</span>
               </label>
               <select
                 value={year}
                 onChange={(e) => setYear(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-4 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-blue-500"
               >
                 {[2025, 2024, 2023, 2022].map((y) => (
                   <option key={y} value={y}>{y}</option>
@@ -148,14 +148,14 @@ export default function SiuppakReportsPage() {
 
             {reportType !== 'tahunan' && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-900 mb-2">
                   {reportType === 'bulanan' ? 'Bulan' : 'Semester'} <span className="text-red-500">*</span>
                 </label>
                 {reportType === 'bulanan' ? (
                   <select
                     value={period}
                     onChange={(e) => setPeriod(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-blue-500"
                   >
                     <option value="">Pilih Bulan</option>
                     <option value="01">Januari</option>
@@ -175,7 +175,7 @@ export default function SiuppakReportsPage() {
                   <select
                     value={period}
                     onChange={(e) => setPeriod(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-blue-500"
                   >
                     <option value="">Pilih Semester</option>
                     <option value="1">Semester 1 (Januari - Juni)</option>
@@ -214,13 +214,13 @@ export default function SiuppakReportsPage() {
         </div>
 
         {/* Report Structure Info */}
-        <div className="mt-8 bg-white rounded-lg shadow border border-gray-200 p-6">
+        <div className="mt-8 bg-white rounded-lg shadow border border-gray-300 p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Struktur Laporan</h3>
           
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div>
               <h4 className="font-medium text-gray-800 mb-2">Sheet 1: Laporan {reportType.charAt(0).toUpperCase() + reportType.slice(1)}</h4>
-              <div className="text-sm text-gray-600 space-y-1">
+              <div className="text-sm text-gray-800 space-y-1">
                 <p><strong>40 Kolom Data:</strong></p>
                 <ul className="list-disc list-inside ml-4 space-y-1">
                   <li>Info Perusahaan: Nama, SIUKAK 281.40/2023, Penanggung Jawab, Alamat, Kontak</li>
@@ -235,7 +235,7 @@ export default function SiuppakReportsPage() {
             {reportType === 'tahunan' && (
               <div>
                 <h4 className="font-medium text-gray-800 mb-2">Sheet 2: Data Principal & CBA</h4>
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-gray-800">
                   <p>Daftar pemilik kapal/operator dengan nomor CBA dan masa berlaku perjanjian</p>
                 </div>
               </div>
@@ -244,7 +244,7 @@ export default function SiuppakReportsPage() {
             {reportType === 'tahunan' && (
               <div>
                 <h4 className="font-medium text-gray-800 mb-2">Sheet 3: Statistik Bulanan</h4>
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-gray-800">
                   <p>Breakdown per bulan: A* (diberangkatkan), B* (dipulangkan), DN/LN, Gender</p>
                 </div>
               </div>
@@ -255,10 +255,10 @@ export default function SiuppakReportsPage() {
         {/* Reference File Info */}
         <div className="mt-6 bg-gray-100 rounded-lg p-4">
           <div className="flex items-start gap-3">
-            <svg className="w-5 h-5 text-gray-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-gray-700 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-gray-800">
               <strong>Format Reference:</strong> LAPORAN SEMESTER KEGIATAN PEREKRUTAN DAN PENEMPATAN AWAK KAPAL-DEPERLA.xlsx
               <br />
               <span className="text-xs">Generated report follows official Perhubungan format for SIUPPAK audit compliance</span>

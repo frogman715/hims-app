@@ -123,7 +123,7 @@ function CrewReplacementsForm() {
             <div className="flex items-center space-x-4">
               <Link
                 href="/crewing"
-                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-xl"
+                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
               >
                 ← Back to Crewing
               </Link>
@@ -150,26 +150,26 @@ function CrewReplacementsForm() {
             <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-l-4 border-orange-400 p-6 rounded-xl shadow-lg">
               <div className="flex items-center mb-4">
                 <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl flex items-center justify-center mr-4 shadow-lg">
-                  <span className="text-white text-xl font-bold">⚠️</span>
+                  <span className="text-white text-xl font-extrabold">⚠️</span>
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900">Contract Expiry Action Required</h2>
+                  <h2 className="text-xl font-extrabold text-gray-900">Contract Expiry Action Required</h2>
                   <p className="text-gray-700">Choose how to handle the contract expiry for {seafarerInfo.seafarerName}</p>
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl p-4 mb-4 shadow-sm">
+              <div className="bg-white rounded-xl p-4 mb-4 shadow-md">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                   <div>
-                    <span className="font-medium text-gray-600">Seafarer:</span>
+                    <span className="font-medium text-gray-700">Seafarer:</span>
                     <span className="ml-2 text-gray-900">{seafarerInfo.seafarerName}</span>
                   </div>
                   <div>
-                    <span className="font-medium text-gray-600">Vessel:</span>
+                    <span className="font-medium text-gray-700">Vessel:</span>
                     <span className="ml-2 text-gray-900">{seafarerInfo.vesselName}</span>
                   </div>
                   <div>
-                    <span className="font-medium text-gray-600">Contract Expires:</span>
+                    <span className="font-medium text-gray-700">Contract Expires:</span>
                     <span className="ml-2 text-gray-900">{new Date(seafarerInfo.contractExpiry).toLocaleDateString()}</span>
                   </div>
                 </div>
@@ -179,7 +179,7 @@ function CrewReplacementsForm() {
                 {/* Extend Existing Contract */}
                 <Link
                   href={`/crewing/assignments/${seafarerInfo.assignmentId}`}
-                  className="group bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 p-6 flex items-center justify-center"
+                  className="group bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 p-6 flex items-center justify-center"
                 >
                   <div className="text-center">
                     <div className="text-3xl mb-2 group-hover:animate-bounce">🔄</div>
@@ -191,7 +191,7 @@ function CrewReplacementsForm() {
                 {/* Add New Replacement */}
                 <Link
                   href={`/crewing/replacements/new?replaceSeafarerId=${seafarerInfo.seafarerId}&assignmentId=${seafarerInfo.assignmentId}`}
-                  className="group bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 p-6 flex items-center justify-center"
+                  className="group bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 p-6 flex items-center justify-center"
                 >
                   <div className="text-center">
                     <div className="text-3xl mb-2 group-hover:animate-bounce">👤</div>
@@ -208,15 +208,15 @@ function CrewReplacementsForm() {
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
           {replacements.length === 0 ? (
             <div className="text-center py-12">
-              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="mx-auto h-12 w-12 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
               </svg>
               <h3 className="mt-2 text-sm font-medium text-gray-900">No replacement plans</h3>
-              <p className="mt-1 text-sm text-gray-600">Get started by planning your first crew replacement.</p>
+              <p className="mt-1 text-sm text-gray-700">Get started by planning your first crew replacement.</p>
               <div className="mt-6">
                 <Link
                   href="/crewing/replacements/new"
-                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-md text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                 >
                   <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -227,7 +227,7 @@ function CrewReplacementsForm() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
+              <table className="min-w-full divide-y divide-gray-300">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -252,7 +252,7 @@ function CrewReplacementsForm() {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {replacements.map((replacement) => (
-                    <tr key={replacement.id} className="hover:bg-gray-50">
+                    <tr key={replacement.id} className="hover:bg-gray-100">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div>
@@ -262,17 +262,17 @@ function CrewReplacementsForm() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {replacement.currentVessel}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {new Date(replacement.replacementDate).toLocaleDateString()}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {replacement.reason}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        <span className={`inline-flex px-4 py-2 text-xs font-semibold rounded-full ${
                           replacement.status === 'PLANNED'
                             ? 'bg-blue-100 text-blue-800'
                             : replacement.status === 'URGENT'

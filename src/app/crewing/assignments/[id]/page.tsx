@@ -114,7 +114,7 @@ export default function EditAssignmentPage() {
   if (fetchLoading) {
     return (
       <div className="max-w-2xl mx-auto p-6">
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white rounded-lg shadow-lg border border-gray-300 p-8">
           <div className="text-center">Loading...</div>
         </div>
       </div>
@@ -127,8 +127,8 @@ export default function EditAssignmentPage() {
 
   return (
     <div className="max-w-2xl mx-auto p-6">
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h1 className="text-2xl font-bold mb-6">Edit Assignment</h1>
+      <div className="bg-white rounded-lg shadow-lg border border-gray-300 p-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-6">Edit Assignment</h1>
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
           <div className="flex">
             <div className="flex-shrink-0">
@@ -146,15 +146,15 @@ export default function EditAssignmentPage() {
             </div>
           </div>
         </div>
-        <div className="text-gray-600 mb-4">
+        <div className="text-gray-700 mb-4">
           <p><strong>Seafarer:</strong> {assignment.seafarer.fullName}</p>
           <p><strong>Vessel:</strong> {assignment.vessel.name}</p>
           <p><strong>Principal:</strong> {assignment.principal.name}</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label htmlFor="rank" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="rank" className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
               Rank
             </label>
             <input
@@ -164,12 +164,12 @@ export default function EditAssignmentPage() {
               value={formData.rank}
               onChange={handleChange}
               placeholder="e.g., Captain, Chief Engineer, etc."
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
 
           <div>
-            <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="status" className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
               Status
             </label>
             <select
@@ -177,7 +177,7 @@ export default function EditAssignmentPage() {
               name="status"
               value={formData.status}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="PLANNED">Planned</option>
               <option value="ONBOARD">Onboard</option>
@@ -186,7 +186,7 @@ export default function EditAssignmentPage() {
           </div>
 
           <div>
-            <label htmlFor="signOnDate" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="signOnDate" className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
               Sign On Date
             </label>
             <input
@@ -195,12 +195,12 @@ export default function EditAssignmentPage() {
               name="signOnDate"
               value={formData.signOnDate}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
 
           <div>
-            <label htmlFor="signOffPlan" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="signOffPlan" className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
               Planned Sign Off Date
             </label>
             <input
@@ -209,7 +209,7 @@ export default function EditAssignmentPage() {
               name="signOffPlan"
               value={formData.signOffPlan}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
             <div className="mt-2 flex gap-2">
               <button
@@ -222,7 +222,7 @@ export default function EditAssignmentPage() {
                     signOffPlan: currentDate.toISOString().split('T')[0]
                   }));
                 }}
-                className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2 py-1 rounded"
+                className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded"
               >
                 +1 Month
               </button>
@@ -236,7 +236,7 @@ export default function EditAssignmentPage() {
                     signOffPlan: currentDate.toISOString().split('T')[0]
                   }));
                 }}
-                className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2 py-1 rounded"
+                className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded"
               >
                 +2 Months
               </button>
@@ -250,7 +250,7 @@ export default function EditAssignmentPage() {
                     signOffPlan: currentDate.toISOString().split('T')[0]
                   }));
                 }}
-                className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2 py-1 rounded"
+                className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded"
               >
                 +3 Months
               </button>
@@ -258,7 +258,7 @@ export default function EditAssignmentPage() {
           </div>
 
           <div>
-            <label htmlFor="signOffDate" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="signOffDate" className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
               Actual Sign Off Date
             </label>
             <input
@@ -267,7 +267,7 @@ export default function EditAssignmentPage() {
               name="signOffDate"
               value={formData.signOffDate}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
 
@@ -275,14 +275,14 @@ export default function EditAssignmentPage() {
             <button
               type="submit"
               disabled={loading}
-              className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
+              className="bg-blue-600 text-white font-semibold px-8 py-3 rounded-lg shadow-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Updating...' : 'Update Assignment'}
             </button>
             <button
               type="button"
               onClick={() => router.back()}
-              className="bg-gray-500 text-white px-6 py-2 rounded-md hover:bg-gray-600"
+              className="bg-gray-600 text-white font-semibold px-8 py-3 rounded-lg shadow-md hover:bg-gray-600"
             >
               Cancel
             </button>

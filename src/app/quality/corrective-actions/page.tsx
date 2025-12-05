@@ -100,25 +100,25 @@ export default function CorrectiveActions() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-lg shadow-xl border-b border-white/20">
+      <header className="bg-white backdrop-blur-lg shadow-2xl border-b border-white/20">
         <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-4xl font-bold bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">
                 Corrective Actions
               </h1>
-              <p className="text-lg text-gray-600 mt-2 font-medium">Track and resolve non-conformities</p>
+              <p className="text-lg text-gray-700 mt-2 font-medium">Track and resolve non-conformities</p>
             </div>
             <div className="flex items-center space-x-4">
               <Link
                 href="/quality"
-                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-xl"
+                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
               >
                 ← Back to Quality
               </Link>
               <button
                 onClick={() => setShowForm(true)}
-                className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-xl"
+                className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
               >
                 + Add Action
               </button>
@@ -130,12 +130,12 @@ export default function CorrectiveActions() {
       <main className="max-w-7xl mx-auto py-8 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           {/* Corrective Actions Table */}
-          <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200">
+          <div className="bg-white backdrop-blur-md rounded-2xl shadow-lg border border-white overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-300">
               <h2 className="text-xl font-semibold text-gray-900">Corrective Actions</h2>
             </div>
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
+              <table className="min-w-full divide-y divide-gray-300">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -157,7 +157,7 @@ export default function CorrectiveActions() {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {actions.map((action) => (
-                    <tr key={action.id} className="hover:bg-gray-50">
+                    <tr key={action.id} className="hover:bg-gray-100">
                       <td className="px-6 py-4">
                         <div className="text-sm font-medium text-gray-900">{action.description}</div>
                         {action.rootCause && (
@@ -165,18 +165,18 @@ export default function CorrectiveActions() {
                             Root Cause: {action.rootCause}
                           </div>
                         )}
-                        <div className="text-sm text-gray-600 mt-1">
+                        <div className="text-sm text-gray-800 mt-1">
                           Action: {action.action}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {action.pic}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {new Date(action.dueDate).toLocaleDateString()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        <span className={`inline-flex px-4 py-2 text-xs font-semibold rounded-full ${
                           action.status === 'COMPLETED'
                             ? 'bg-green-100 text-green-800'
                             : action.status === 'IN_PROGRESS'
@@ -188,7 +188,7 @@ export default function CorrectiveActions() {
                           {action.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {action.auditFinding ? action.auditFinding.audit.title : 'General'}
                       </td>
                     </tr>
@@ -204,22 +204,22 @@ export default function CorrectiveActions() {
       {showForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl p-8 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <h3 className="text-xl font-bold text-gray-900 mb-6">Add Corrective Action</h3>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <h3 className="text-xl font-extrabold text-gray-900 mb-6">Add Corrective Action</h3>
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
                   Audit Finding ID (Optional)
                 </label>
                 <input
                   type="number"
                   value={formData.findingId}
                   onChange={(e) => setFormData({ ...formData, findingId: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                   placeholder="Leave empty for general corrective action"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
                   Description
                 </label>
                 <textarea
@@ -227,24 +227,24 @@ export default function CorrectiveActions() {
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                   placeholder="Describe the non-conformity or issue"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
                   Root Cause
                 </label>
                 <textarea
                   value={formData.rootCause}
                   onChange={(e) => setFormData({ ...formData, rootCause: e.target.value })}
                   rows={2}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                   placeholder="Identify the root cause of the issue"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
                   Corrective Action
                 </label>
                 <textarea
@@ -252,12 +252,12 @@ export default function CorrectiveActions() {
                   value={formData.action}
                   onChange={(e) => setFormData({ ...formData, action: e.target.value })}
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                   placeholder="Describe the corrective action to be taken"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
                   Person In Charge (PIC)
                 </label>
                 <input
@@ -265,12 +265,12 @@ export default function CorrectiveActions() {
                   required
                   value={formData.pic}
                   onChange={(e) => setFormData({ ...formData, pic: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                   placeholder="Name of person responsible"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
                   Due Date
                 </label>
                 <input
@@ -278,7 +278,7 @@ export default function CorrectiveActions() {
                   required
                   value={formData.dueDate}
                   onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                 />
               </div>
               <div className="flex space-x-3 pt-4">

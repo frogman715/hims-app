@@ -172,7 +172,7 @@ export default function AgencyFeesPage() {
           <div className="flex items-center gap-4">
             <button
               onClick={() => router.push('/dashboard')}
-              className="flex items-center gap-2 bg-gray-500 hover:bg-gray-600 text-white font-semibold px-4 py-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+              className="flex items-center gap-2 bg-gray-500 hover:bg-gray-600 text-white font-semibold px-4 py-2 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -181,12 +181,12 @@ export default function AgencyFeesPage() {
             </button>
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Agency Fees Management</h1>
-              <p className="mt-2 text-gray-600">Track and manage agency commissions and fees</p>
+              <p className="mt-2 text-gray-700">Track and manage agency commissions and fees</p>
             </div>
           </div>
           <button
             onClick={() => setShowForm(!showForm)}
-            className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+            className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105"
           >
             {showForm ? 'Cancel' : '+ Add Agency Fee'}
           </button>
@@ -195,10 +195,10 @@ export default function AgencyFeesPage() {
 
       {/* Add/Edit Form */}
       {showForm && (
-        <div className="bg-gradient-to-r from-white/90 to-green-50/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200/50 p-8 mb-8">
+        <div className="bg-gradient-to-r from-white to-green-50 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-300 p-8 mb-8">
           <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">{editingFee ? 'Edit Agency Fee' : 'Add New Agency Fee'}</h2>
-            <p className="text-gray-600">Record agency commissions and service fees</p>
+            <h2 className="text-2xl font-extrabold text-gray-900 mb-2">{editingFee ? 'Edit Agency Fee' : 'Add New Agency Fee'}</h2>
+            <p className="text-gray-700">Record agency commissions and service fees</p>
           </div>
           <form onSubmit={handleSubmit} className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -212,7 +212,7 @@ export default function AgencyFeesPage() {
                   value={formData.principalId}
                   onChange={handleInputChange}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 text-gray-900"
                   placeholder="Principal company ID"
                 />
               </div>
@@ -226,7 +226,7 @@ export default function AgencyFeesPage() {
                   value={formData.contractId}
                   onChange={handleInputChange}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 text-gray-900"
                   placeholder="Employment contract ID"
                 />
               </div>
@@ -239,7 +239,7 @@ export default function AgencyFeesPage() {
                   value={formData.feeType}
                   onChange={handleInputChange}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 text-gray-900"
                 >
                   <option value="COMMISSION">Commission</option>
                   <option value="SERVICE_FEE">Service Fee</option>
@@ -259,7 +259,7 @@ export default function AgencyFeesPage() {
                   onChange={handleInputChange}
                   required
                   step="0.01"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 text-gray-900"
                   placeholder="0.00"
                 />
               </div>
@@ -272,7 +272,7 @@ export default function AgencyFeesPage() {
                   value={formData.currency}
                   onChange={handleInputChange}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 text-gray-900"
                 >
                   <option value="USD">USD</option>
                   <option value="EUR">EUR</option>
@@ -294,7 +294,7 @@ export default function AgencyFeesPage() {
                   step="0.01"
                   min="0"
                   max="100"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 text-gray-900"
                   placeholder="0.00"
                 />
               </div>
@@ -308,7 +308,7 @@ export default function AgencyFeesPage() {
                   value={formData.dueDate}
                   onChange={handleInputChange}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 text-gray-900"
                 />
               </div>
               <div>
@@ -320,7 +320,7 @@ export default function AgencyFeesPage() {
                   name="paidDate"
                   value={formData.paidDate}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 text-gray-900"
                 />
               </div>
               <div className="md:col-span-2">
@@ -333,23 +333,23 @@ export default function AgencyFeesPage() {
                   onChange={handleInputChange}
                   required
                   rows={3}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 text-gray-900"
                   placeholder="Description of the fee and its purpose"
                 />
               </div>
             </div>
 
-            <div className="flex gap-4 pt-6 border-t border-gray-200">
+            <div className="flex gap-4 pt-6 border-t border-gray-300">
               <button
                 type="submit"
-                className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold px-8 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold px-8 py-3 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105"
               >
                 {editingFee ? 'Update Fee' : 'Save Agency Fee'}
               </button>
               <button
                 type="button"
                 onClick={handleCancel}
-                className="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-semibold px-8 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                className="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-semibold px-8 py-3 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105"
               >
                 Cancel
               </button>
@@ -359,44 +359,44 @@ export default function AgencyFeesPage() {
       )}
 
       {/* Agency Fees List */}
-      <div className="bg-gradient-to-r from-white/90 to-gray-50/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200/50 overflow-hidden">
-        <div className="px-8 py-6 border-b border-gray-200">
-          <h2 className="text-xl font-bold text-gray-900">Agency Fees</h2>
+      <div className="bg-gradient-to-r from-white to-gray-50 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-300 overflow-hidden">
+        <div className="px-8 py-6 border-b border-gray-300">
+          <h2 className="text-xl font-extrabold text-gray-900">Agency Fees</h2>
         </div>
 
         {isLoading ? (
           <div className="p-8 text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading agency fees...</p>
+            <p className="mt-4 text-gray-700">Loading agency fees...</p>
           </div>
         ) : fees.length === 0 ? (
           <div className="p-8 text-center">
-            <p className="text-gray-600">No agency fees found. Add your first fee record above.</p>
+            <p className="text-gray-700">No agency fees found. Add your first fee record above.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-8 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Principal</th>
-                  <th className="px-8 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Type</th>
-                  <th className="px-8 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Amount</th>
-                  <th className="px-8 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Due Date</th>
-                  <th className="px-8 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
-                  <th className="px-8 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                  <th className="px-8 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Principal</th>
+                  <th className="px-8 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Type</th>
+                  <th className="px-8 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Amount</th>
+                  <th className="px-8 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Due Date</th>
+                  <th className="px-8 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</th>
+                  <th className="px-8 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {fees.map((fee) => (
-                  <tr key={fee.id} className="hover:bg-gray-50">
+                  <tr key={fee.id} className="hover:bg-gray-100">
                     <td className="px-8 py-4">
                       <div className="text-sm font-semibold text-gray-900">{fee.principal?.companyName}</div>
-                      <div className="text-xs text-gray-500">Contract: {fee.contract?.contractNumber}</div>
+                      <div className="text-sm text-gray-700">Contract: {fee.contract?.contractNumber}</div>
                     </td>
                     <td className="px-8 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">{fee.feeType}</div>
                       {fee.percentage && (
-                        <div className="text-xs text-gray-500">{fee.percentage}%</div>
+                        <div className="text-sm text-gray-700">{fee.percentage}%</div>
                       )}
                     </td>
                     <td className="px-8 py-4 whitespace-nowrap">
@@ -405,7 +405,7 @@ export default function AgencyFeesPage() {
                       </div>
                     </td>
                     <td className="px-8 py-4 whitespace-nowrap">
-                      <div className="text-xs text-gray-500">
+                      <div className="text-sm text-gray-700">
                         {new Date(fee.dueDate).toLocaleDateString()}
                       </div>
                       {fee.paidDate && (
@@ -415,7 +415,7 @@ export default function AgencyFeesPage() {
                       )}
                     </td>
                     <td className="px-8 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                      <span className={`inline-flex items-center px-3 py-2 rounded-full text-xs font-medium ${
                         fee.status === 'PAID' ? 'bg-green-100 text-green-800' :
                         fee.status === 'OVERDUE' ? 'bg-red-100 text-red-800' :
                         fee.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :

@@ -94,25 +94,25 @@ export default function Disciplinary() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-lg shadow-xl border-b border-white/20">
+      <header className="bg-white backdrop-blur-lg shadow-2xl border-b border-white/20">
         <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-4xl font-bold bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent">
                 Disciplinary Actions
               </h1>
-              <p className="text-lg text-gray-600 mt-2 font-medium">Record and track employee disciplinary measures</p>
+              <p className="text-lg text-gray-700 mt-2 font-medium">Record and track employee disciplinary measures</p>
             </div>
             <div className="flex items-center space-x-4">
               <Link
                 href="/hr"
-                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-xl"
+                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
               >
                 ← Back to HR
               </Link>
               <button
                 onClick={() => setShowForm(true)}
-                className="bg-gradient-to-r from-red-500 to-pink-600 hover:from-pink-600 hover:to-red-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-xl"
+                className="bg-gradient-to-r from-red-500 to-pink-600 hover:from-pink-600 hover:to-red-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
               >
                 + Add Disciplinary Action
               </button>
@@ -124,12 +124,12 @@ export default function Disciplinary() {
       <main className="max-w-7xl mx-auto py-8 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           {/* Disciplinary Actions Table */}
-          <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200">
+          <div className="bg-white backdrop-blur-md rounded-2xl shadow-lg border border-white overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-300">
               <h2 className="text-xl font-semibold text-gray-900">Disciplinary Records</h2>
             </div>
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
+              <table className="min-w-full divide-y divide-gray-300">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -151,13 +151,13 @@ export default function Disciplinary() {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {disciplinaryActions.map((action) => (
-                    <tr key={action.id} className="hover:bg-gray-50">
+                    <tr key={action.id} className="hover:bg-gray-100">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">{action.employee.fullName}</div>
                         <div className="text-sm text-gray-500">{action.employee.position}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                        <span className="inline-flex px-4 py-2 text-xs font-semibold rounded-full bg-red-100 text-red-800">
                           {action.code}
                         </span>
                       </td>
@@ -171,7 +171,7 @@ export default function Disciplinary() {
                           {action.correctiveAction}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {new Date(action.date).toLocaleDateString()}
                       </td>
                     </tr>
@@ -187,10 +187,10 @@ export default function Disciplinary() {
       {showForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <h3 className="text-xl font-bold text-gray-900 mb-6">Add Disciplinary Action</h3>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <h3 className="text-xl font-extrabold text-gray-900 mb-6">Add Disciplinary Action</h3>
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
                   Employee ID *
                 </label>
                 <input
@@ -198,12 +198,12 @@ export default function Disciplinary() {
                   required
                   value={formData.employeeId}
                   onChange={(e) => setFormData({ ...formData, employeeId: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                   placeholder="Enter employee ID"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
                   Disciplinary Code *
                 </label>
                 <input
@@ -211,12 +211,12 @@ export default function Disciplinary() {
                   required
                   value={formData.code}
                   onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                   placeholder="e.g., AD-01, AD-02"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
                   Description *
                 </label>
                 <textarea
@@ -224,12 +224,12 @@ export default function Disciplinary() {
                   required
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                   placeholder="Describe the disciplinary incident..."
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
                   Corrective Action *
                 </label>
                 <textarea
@@ -237,19 +237,19 @@ export default function Disciplinary() {
                   required
                   value={formData.correctiveAction}
                   onChange={(e) => setFormData({ ...formData, correctiveAction: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                   placeholder="Specify the corrective measures to be taken..."
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
                   Date
                 </label>
                 <input
                   type="date"
                   value={formData.date}
                   onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                 />
               </div>
               <div className="flex space-x-3 pt-4">

@@ -37,17 +37,17 @@ export default function SignIn() {
           <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">
             HANMARINE HIMS
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className="mt-2 text-center text-sm text-gray-700">
             Maritime Crew Management System
           </p>
-          <p className="mt-1 text-center text-xs text-gray-500">
+          <p className="mt-1 text-center text-sm text-gray-700">
             MLC 2006 | STCW 2010 | ISM Code Compliant
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="email" className="block text-sm font-semibold text-gray-900 mb-2">
                 Email Address
               </label>
               <input
@@ -56,14 +56,14 @@ export default function SignIn() {
                 type="email"
                 autoComplete="email"
                 required
-                className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                className="appearance-none block w-full px-4 py-3 border border-gray-400 rounded-lg placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200"
                 placeholder="admin@hanmarine.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="password" className="block text-sm font-semibold text-gray-900 mb-2">
                 Password
               </label>
               <input
@@ -73,7 +73,7 @@ export default function SignIn() {
                 autoComplete="current-password"
                 required
                 minLength={6}
-                className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                className="appearance-none block w-full px-4 py-3 border border-gray-400 rounded-lg placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200"
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -103,10 +103,10 @@ export default function SignIn() {
           </div>
         </form>
         <div className="text-center">
-          <p className="text-xs text-gray-500">
+          <p className="text-sm text-gray-700">
             Protected by enterprise-grade security
           </p>
-          <p className="text-xs text-gray-400 mt-1">
+          <p className="text-xs text-gray-700 mt-1">
             © {new Date().getFullYear()} PT. Hanmarine Indonesia. All rights reserved.
           </p>
         </div>

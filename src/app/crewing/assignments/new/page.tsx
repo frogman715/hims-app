@@ -116,12 +116,12 @@ export default function NewAssignmentPage() {
 
   return (
     <div className="max-w-2xl mx-auto p-6">
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h1 className="text-2xl font-bold mb-6">Add New Assignment</h1>
+      <div className="bg-white rounded-lg shadow-lg border border-gray-300 p-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-6">Add New Assignment</h1>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label htmlFor="seafarerId" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="seafarerId" className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
               Seafarer *
             </label>
             <select
@@ -130,7 +130,7 @@ export default function NewAssignmentPage() {
               required
               value={formData.seafarerId}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="">Select a seafarer</option>
               {seafarers.map(seafarer => (
@@ -142,7 +142,7 @@ export default function NewAssignmentPage() {
           </div>
 
           <div>
-            <label htmlFor="principalId" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="principalId" className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
               Principal *
             </label>
             <select
@@ -151,7 +151,7 @@ export default function NewAssignmentPage() {
               required
               value={formData.principalId}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="">Select a principal</option>
               {principals.map(principal => (
@@ -163,7 +163,7 @@ export default function NewAssignmentPage() {
           </div>
 
           <div>
-            <label htmlFor="vesselId" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="vesselId" className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
               Vessel *
             </label>
             <select
@@ -172,7 +172,7 @@ export default function NewAssignmentPage() {
               required
               value={formData.vesselId}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="">Select a vessel</option>
               {vessels.map(vessel => (
@@ -184,7 +184,7 @@ export default function NewAssignmentPage() {
           </div>
 
           <div>
-            <label htmlFor="rank" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="rank" className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
               Rank
             </label>
             <input
@@ -194,12 +194,12 @@ export default function NewAssignmentPage() {
               value={formData.rank}
               onChange={handleChange}
               placeholder="e.g., Captain, Chief Engineer, etc."
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
 
           <div>
-            <label htmlFor="signOnDate" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="signOnDate" className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
               Sign On Date
             </label>
             <input
@@ -208,12 +208,12 @@ export default function NewAssignmentPage() {
               name="signOnDate"
               value={formData.signOnDate}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
 
           <div>
-            <label htmlFor="signOffPlan" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="signOffPlan" className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
               Planned Sign Off Date
             </label>
             <input
@@ -222,7 +222,7 @@ export default function NewAssignmentPage() {
               name="signOffPlan"
               value={formData.signOffPlan}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
 
@@ -230,14 +230,14 @@ export default function NewAssignmentPage() {
             <button
               type="submit"
               disabled={loading}
-              className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
+              className="bg-blue-600 text-white font-semibold px-8 py-3 rounded-lg shadow-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Creating...' : 'Create Assignment'}
             </button>
             <button
               type="button"
               onClick={() => router.back()}
-              className="bg-gray-500 text-white px-6 py-2 rounded-md hover:bg-gray-600"
+              className="bg-gray-600 text-white font-semibold px-8 py-3 rounded-lg shadow-md hover:bg-gray-600"
             >
               Cancel
             </button>

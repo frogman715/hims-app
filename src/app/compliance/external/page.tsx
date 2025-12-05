@@ -83,12 +83,12 @@ export default function ExternalCompliancePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-100 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900">External Compliance Systems</h1>
-          <p className="text-gray-600 mt-2">
+          <p className="text-gray-700 mt-2">
             Manage KOSMA, Dephub, and Schengen Visa compliance records
           </p>
         </div>
@@ -101,7 +101,7 @@ export default function ExternalCompliancePage() {
         {/* Filters */}
         <div className="bg-white rounded-lg shadow mb-6 p-4">
           <div className="flex items-center gap-4">
-            <span className="text-sm font-medium text-gray-700">Filter by System:</span>
+            <span className="text-sm font-semibold text-gray-900">Filter by System:</span>
             <div className="flex gap-2">
               {(['ALL', 'KOSMA', 'DEPHUB', 'SCHENGEN'] as const).map((f) => (
                 <button
@@ -123,7 +123,7 @@ export default function ExternalCompliancePage() {
         {/* Records Table */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
+            <table className="min-w-full divide-y divide-gray-300">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -163,7 +163,7 @@ export default function ExternalCompliancePage() {
                   compliances.map((compliance) => {
                     const systemType = getSystemTypeLabel(compliance.systemType);
                     return (
-                      <tr key={compliance.id} className="hover:bg-gray-50">
+                      <tr key={compliance.id} className="hover:bg-gray-100">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div>
                             <div className="text-sm font-medium text-gray-900">
@@ -174,22 +174,22 @@ export default function ExternalCompliancePage() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span
-                            className={`px-2 py-1 text-xs font-medium rounded-full ${systemType.color}`}
+                            className={`px-4 py-2 text-xs font-medium rounded-full ${systemType.color}`}
                           >
                             {systemType.label}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                           {compliance.certificateId || '-'}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                           {compliance.expiryDate
                             ? new Date(compliance.expiryDate).toLocaleDateString()
                             : '-'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span
-                            className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusBadge(
+                            className={`px-4 py-2 text-xs font-medium rounded-full ${getStatusBadge(
                               compliance.status
                             )}`}
                           >
@@ -207,7 +207,7 @@ export default function ExternalCompliancePage() {
                               Verify →
                             </a>
                           )}
-                          <button className="text-gray-600 hover:text-gray-900">
+                          <button className="text-gray-700 hover:text-gray-900">
                             Edit
                           </button>
                         </td>

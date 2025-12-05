@@ -111,25 +111,25 @@ export default function Employees() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-lg shadow-xl border-b border-white/20">
+      <header className="bg-white backdrop-blur-lg shadow-2xl border-b border-white/20">
         <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-4xl font-bold bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">
                 Employee Management
               </h1>
-              <p className="text-lg text-gray-600 mt-2 font-medium">Manage shore staff profiles and information</p>
+              <p className="text-lg text-gray-700 mt-2 font-medium">Manage shore staff profiles and information</p>
             </div>
             <div className="flex items-center space-x-4">
               <Link
                 href="/hr"
-                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-xl"
+                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
               >
                 ← Back to HR
               </Link>
               <button
                 onClick={() => setShowForm(true)}
-                className="bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-cyan-600 hover:to-teal-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-xl"
+                className="bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-cyan-600 hover:to-teal-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
               >
                 + Add Employee
               </button>
@@ -143,7 +143,7 @@ export default function Employees() {
           {/* Employees Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {employees.map((employee) => (
-              <div key={employee.id} className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 overflow-hidden hover:shadow-xl transition-all duration-300">
+              <div key={employee.id} className="bg-white backdrop-blur-md rounded-2xl shadow-lg border border-white overflow-hidden hover:shadow-2xl transition-all duration-300">
                 <div className="p-6">
                   <div className="flex items-center mb-4">
                     <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-xl flex items-center justify-center mr-4">
@@ -153,39 +153,39 @@ export default function Employees() {
                     </div>
                     <div>
                       <h3 className="text-lg font-bold text-gray-900">{employee.fullName}</h3>
-                      <p className="text-sm text-gray-600">{employee.position || 'No position'}</p>
+                      <p className="text-sm text-gray-800">{employee.position || 'No position'}</p>
                     </div>
                   </div>
 
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-600">Department:</span>
+                      <span className="text-sm font-medium text-gray-700">Department:</span>
                       <span className="text-sm text-gray-900">{employee.department || 'N/A'}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-600">Hire Date:</span>
+                      <span className="text-sm font-medium text-gray-700">Hire Date:</span>
                       <span className="text-sm text-gray-900">
                         {employee.hireDate ? new Date(employee.hireDate).toLocaleDateString() : 'N/A'}
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-600">Pending Leaves:</span>
+                      <span className="text-sm font-medium text-gray-700">Pending Leaves:</span>
                       <span className="text-sm text-gray-900">{employee.leaves.length}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-600">Recent Attendance:</span>
+                      <span className="text-sm font-medium text-gray-700">Recent Attendance:</span>
                       <span className="text-sm text-gray-900">{employee.attendances.length} records</span>
                     </div>
                   </div>
 
-                  <div className="mt-4 pt-4 border-t border-gray-200">
+                  <div className="mt-4 pt-4 border-t border-gray-300">
                     <div className="flex space-x-2">
                       <div className="flex-1 text-center">
-                        <div className="text-xs text-gray-500">Orientations</div>
+                        <div className="text-sm text-gray-700">Orientations</div>
                         <div className="text-lg font-bold text-teal-600">{employee.orientations.length}</div>
                       </div>
                       <div className="flex-1 text-center">
-                        <div className="text-xs text-gray-500">Disciplinary</div>
+                        <div className="text-sm text-gray-700">Disciplinary</div>
                         <div className="text-lg font-bold text-red-600">{employee.disciplinaryActions.length}</div>
                       </div>
                     </div>
@@ -201,10 +201,10 @@ export default function Employees() {
       {showForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4">
-            <h3 className="text-xl font-bold text-gray-900 mb-6">Add New Employee</h3>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <h3 className="text-xl font-extrabold text-gray-900 mb-6">Add New Employee</h3>
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
                   Full Name *
                 </label>
                 <input
@@ -212,30 +212,30 @@ export default function Employees() {
                   required
                   value={formData.fullName}
                   onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                   placeholder="Enter full name"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
                   Position
                 </label>
                 <input
                   type="text"
                   value={formData.position}
                   onChange={(e) => setFormData({ ...formData, position: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                   placeholder="e.g., Crewing Manager"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
                   Department
                 </label>
                 <select
                   value={formData.department}
                   onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 >
                   <option value="">Select Department</option>
                   <option value="Crewing">Crewing</option>
@@ -246,14 +246,14 @@ export default function Employees() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
                   Hire Date
                 </label>
                 <input
                   type="date"
                   value={formData.hireDate}
                   onChange={(e) => setFormData({ ...formData, hireDate: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 />
               </div>
               <div className="flex space-x-3 pt-4">

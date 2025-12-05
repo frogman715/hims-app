@@ -186,7 +186,7 @@ export default function CrewListPage() {
             <div className="flex items-center space-x-4">
               <Link
                 href="/crewing"
-                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-xl"
+                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
               >
                 ← Back to Crewing
               </Link>
@@ -217,8 +217,8 @@ export default function CrewListPage() {
                 <span className="text-2xl">🚢</span>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Vessels</p>
-                <p className="text-2xl font-bold text-gray-900">{vesselCrews.length}</p>
+                <p className="text-sm font-medium text-gray-700">Total Vessels</p>
+                <p className="text-2xl font-extrabold text-gray-900">{vesselCrews.length}</p>
               </div>
             </div>
           </div>
@@ -229,8 +229,8 @@ export default function CrewListPage() {
                 <span className="text-2xl">👥</span>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Active Crew</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-sm font-medium text-gray-700">Active Crew</p>
+                <p className="text-2xl font-extrabold text-gray-900">
                   {vesselCrews.reduce((sum, vessel) => sum + vessel.activeCrew, 0)}
                 </p>
               </div>
@@ -243,8 +243,8 @@ export default function CrewListPage() {
                 <span className="text-2xl">📤</span>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Departed This Month</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-sm font-medium text-gray-700">Departed This Month</p>
+                <p className="text-2xl font-extrabold text-gray-900">
                   {vesselCrews.reduce((sum, vessel) =>
                     sum + vessel.crewMembers.filter(member => member.status === 'DEPARTED').length, 0
                   )}
@@ -259,8 +259,8 @@ export default function CrewListPage() {
                 <span className="text-2xl">⏰</span>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Avg. Contract</p>
-                <p className="text-2xl font-bold text-gray-900">6.2m</p>
+                <p className="text-sm font-medium text-gray-700">Avg. Contract</p>
+                <p className="text-2xl font-extrabold text-gray-900">6.2m</p>
               </div>
             </div>
           </div>
@@ -274,11 +274,11 @@ export default function CrewListPage() {
               <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
-                    <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                    <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
                       <span className="text-white text-lg font-bold">🚢</span>
                     </div>
                     <div>
-                      <h2 className="text-xl font-bold text-white">{vessel.vesselName}</h2>
+                      <h2 className="text-xl font-extrabold text-white">{vessel.vesselName}</h2>
                       <p className="text-indigo-100">
                         {vessel.activeCrew} active crew • {vessel.totalCrew} total capacity
                       </p>
@@ -287,13 +287,13 @@ export default function CrewListPage() {
                   <div className="flex items-center space-x-2">
                     <button
                       onClick={() => setSelectedVessel(selectedVessel === vessel.vesselId ? null : vessel.vesselId)}
-                      className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                      className="bg-white hover:bg-white text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                     >
                       {selectedVessel === vessel.vesselId ? 'Hide Details' : 'Show Details'}
                     </button>
                     <Link
                       href={`/crewing/crew-list/vessel/${vessel.vesselId}`}
-                      className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                      className="bg-white hover:bg-white text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                     >
                       View Full List
                     </Link>
@@ -304,7 +304,7 @@ export default function CrewListPage() {
               {/* Crew Table */}
               {selectedVessel === vessel.vesselId && (
                 <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
+                  <table className="min-w-full divide-y divide-gray-300">
                     <thead className="bg-gray-50">
                       <tr>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -329,7 +329,7 @@ export default function CrewListPage() {
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                       {vessel.crewMembers.map((member) => (
-                        <tr key={member.id} className="hover:bg-gray-50">
+                        <tr key={member.id} className="hover:bg-gray-100">
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
                               <div className="flex-shrink-0 h-10 w-10">
@@ -346,17 +346,17 @@ export default function CrewListPage() {
                               </div>
                             </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                             {member.rank}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                             {new Date(member.signOnDate).toLocaleDateString()}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                             {member.signOffDate ? new Date(member.signOffDate).toLocaleDateString() : '-'}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(member.status)}`}>
+                            <span className={`inline-flex px-4 py-2 text-xs font-semibold rounded-full ${getStatusColor(member.status)}`}>
                               {getStatusText(member.status)}
                             </span>
                           </td>
@@ -386,10 +386,10 @@ export default function CrewListPage() {
                 <div className="px-6 py-4 bg-gray-50">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
-                      <div className="text-sm text-gray-600">
+                      <div className="text-sm text-gray-800">
                         <span className="font-medium">{vessel.activeCrew}</span> active crew members
                       </div>
-                      <div className="text-sm text-gray-600">
+                      <div className="text-sm text-gray-800">
                         <span className="font-medium text-red-600">
                           {vessel.crewMembers.filter(m => m.status === 'DEPARTED').length}
                         </span> departed this month
@@ -411,15 +411,15 @@ export default function CrewListPage() {
         {/* Empty State */}
         {vesselCrews.length === 0 && (
           <div className="text-center py-12">
-            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="mx-auto h-12 w-12 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
             </svg>
             <h3 className="mt-2 text-sm font-medium text-gray-900">No crew data available</h3>
-            <p className="mt-1 text-sm text-gray-600">Crew lists will be automatically populated when assignments are made.</p>
+            <p className="mt-1 text-sm text-gray-700">Crew lists will be automatically populated when assignments are made.</p>
             <div className="mt-6">
               <Link
                 href="/crewing/assignments/new"
-                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+                className="inline-flex items-center px-4 py-2 border border-transparent shadow-md text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700"
               >
                 Create Assignment
               </Link>

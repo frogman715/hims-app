@@ -326,7 +326,7 @@ export default function CrewDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
+      <div className="min-h-screen bg-gray-100 p-6">
         <div className="max-w-7xl mx-auto">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mt-20"></div>
         </div>
@@ -336,10 +336,10 @@ export default function CrewDetailPage() {
 
   if (!crew) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
+      <div className="min-h-screen bg-gray-100 p-6">
         <div className="max-w-7xl mx-auto">
           <div className="bg-white rounded-lg shadow p-6 text-center">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">Crew Member Not Found</h1>
+            <h1 className="text-2xl font-extrabold text-gray-900 mb-4">Crew Member Not Found</h1>
             <Link href="/crewing/crew-list" className="text-blue-600 hover:text-blue-800">
               Back to Crew List
             </Link>
@@ -354,13 +354,13 @@ export default function CrewDetailPage() {
   const expiryWarning = getContractExpiryWarning();
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-100 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">{crew.fullName}</h1>
-            <p className="text-gray-600 mt-1">{crew.rank} • {crew.status}</p>
+            <p className="text-gray-700 mt-1">{crew.rank} • {crew.status}</p>
           </div>
           <div className="flex space-x-3">
             <Link
@@ -386,7 +386,7 @@ export default function CrewDetailPage() {
             {latestSEA ? (
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                  <span className={`inline-flex items-center px-4.5 py-0.5 rounded-full text-xs font-medium ${
                     latestSEA.seaType === 'KOREA' ? 'bg-red-100 text-red-800' :
                     latestSEA.seaType === 'BAHAMAS_PANAMA' ? 'bg-yellow-100 text-yellow-800' :
                     latestSEA.seaType === 'TANKER_LUNDQVIST' ? 'bg-purple-100 text-purple-800' :
@@ -397,7 +397,7 @@ export default function CrewDetailPage() {
                      latestSEA.seaType === 'TANKER_LUNDQVIST' ? 'Tanker' :
                      latestSEA.seaType || 'SEA'}
                   </span>
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                  <span className={`inline-flex items-center px-4.5 py-0.5 rounded-full text-xs font-medium ${
                     latestSEA.status === 'ACTIVE' ? 'bg-green-100 text-green-800' :
                     latestSEA.status === 'COMPLETED' ? 'bg-blue-100 text-blue-800' :
                     'bg-yellow-100 text-yellow-800'
@@ -405,13 +405,13 @@ export default function CrewDetailPage() {
                     {latestSEA.status}
                   </span>
                 </div>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-800">
                   <strong>Vessel:</strong> {latestSEA.vessel?.name || 'Not assigned'}
                 </p>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-800">
                   <strong>Principal:</strong> {latestSEA.principal?.name || 'Not assigned'}
                 </p>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-800">
                   <strong>Period:</strong> {new Date(latestSEA.contractStart).toLocaleDateString()} - {new Date(latestSEA.contractEnd).toLocaleDateString()}
                 </p>
               </div>
@@ -425,14 +425,14 @@ export default function CrewDetailPage() {
             <h3 className="text-lg font-semibold text-gray-900 mb-3">Latest Office PKL</h3>
             {latestPKL ? (
               <div className="space-y-2">
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                <span className={`inline-flex items-center px-4.5 py-0.5 rounded-full text-xs font-medium ${
                   latestPKL.status === 'ACTIVE' ? 'bg-green-100 text-green-800' :
                   latestPKL.status === 'COMPLETED' ? 'bg-blue-100 text-blue-800' :
                   'bg-yellow-100 text-yellow-800'
                 }`}>
                   {latestPKL.status}
                 </span>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-800">
                   <strong>Period:</strong> {new Date(latestPKL.contractStart).toLocaleDateString()} - {new Date(latestPKL.contractEnd).toLocaleDateString()}
                 </p>
               </div>
@@ -447,14 +447,14 @@ export default function CrewDetailPage() {
             {expiryWarning ? (
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                  <span className="inline-flex items-center px-4.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
                     Expiring Soon
                   </span>
                 </div>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-800">
                   <strong>Contract:</strong> {expiryWarning.contractNumber}
                 </p>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-800">
                   <strong>Expires:</strong> {new Date(expiryWarning.contractEnd).toLocaleDateString()}
                 </p>
               </div>
@@ -466,7 +466,7 @@ export default function CrewDetailPage() {
 
         {/* Tabs */}
         <div className="bg-white rounded-lg shadow mb-6">
-          <div className="border-b border-gray-200">
+          <div className="border-b border-gray-300">
             <nav className="flex">
               <button
                 onClick={() => setActiveTab('overview')}
@@ -508,19 +508,19 @@ export default function CrewDetailPage() {
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Personal Information</h3>
                   <div className="space-y-3">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Full Name</label>
+                      <label className="block text-sm font-semibold text-gray-900">Full Name</label>
                       <p className="mt-1 text-sm text-gray-900">{crew.fullName}</p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Date of Birth</label>
+                      <label className="block text-sm font-semibold text-gray-900">Date of Birth</label>
                       <p className="mt-1 text-sm text-gray-900">{crew.dateOfBirth ? new Date(crew.dateOfBirth).toLocaleDateString() : 'Not provided'}</p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Nationality</label>
+                      <label className="block text-sm font-semibold text-gray-900">Nationality</label>
                       <p className="mt-1 text-sm text-gray-900">{crew.nationality || 'Not provided'}</p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Blood Type</label>
+                      <label className="block text-sm font-semibold text-gray-900">Blood Type</label>
                       <p className="mt-1 text-sm text-gray-900">{crew.bloodType || 'Not provided'}</p>
                     </div>
                   </div>
@@ -529,19 +529,19 @@ export default function CrewDetailPage() {
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Contact Information</h3>
                   <div className="space-y-3">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Phone</label>
+                      <label className="block text-sm font-semibold text-gray-900">Phone</label>
                       <p className="mt-1 text-sm text-gray-900">{crew.phone || 'Not provided'}</p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Email</label>
+                      <label className="block text-sm font-semibold text-gray-900">Email</label>
                       <p className="mt-1 text-sm text-gray-900">{crew.email || 'Not provided'}</p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Emergency Contact</label>
+                      <label className="block text-sm font-semibold text-gray-900">Emergency Contact</label>
                       <p className="mt-1 text-sm text-gray-900">{crew.emergencyContact || 'Not provided'}</p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Address</label>
+                      <label className="block text-sm font-semibold text-gray-900">Address</label>
                       <p className="mt-1 text-sm text-gray-900">{crew.address || 'Not provided'}</p>
                     </div>
                   </div>
@@ -576,7 +576,7 @@ export default function CrewDetailPage() {
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
+                    <table className="min-w-full divide-y divide-gray-300">
                       <thead className="bg-gray-50">
                         <tr>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contract #</th>
@@ -591,12 +591,12 @@ export default function CrewDetailPage() {
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
                         {contracts.map((contract) => (
-                          <tr key={contract.id} className="hover:bg-gray-50">
+                          <tr key={contract.id} className="hover:bg-gray-100">
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div className="text-sm font-semibold text-gray-900">{contract.contractNumber}</div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                              <span className={`inline-flex items-center px-3 py-2 rounded-full text-xs font-medium ${
                                 contract.contractKind === 'SEA'
                                   ? 'bg-blue-100 text-blue-800'
                                   : 'bg-green-100 text-green-800'
@@ -606,7 +606,7 @@ export default function CrewDetailPage() {
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               {contract.contractKind === 'SEA' ? (
-                                <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                                <span className={`inline-flex items-center px-3 py-2 rounded-full text-xs font-medium ${
                                   contract.seaType === 'KOREA' ? 'bg-red-100 text-red-800' :
                                   contract.seaType === 'BAHAMAS_PANAMA' ? 'bg-yellow-100 text-yellow-800' :
                                   contract.seaType === 'TANKER_LUNDQVIST' ? 'bg-purple-100 text-purple-800' :
@@ -618,22 +618,22 @@ export default function CrewDetailPage() {
                                    contract.seaType || '-'}
                                 </span>
                               ) : (
-                                <span className="text-gray-400">-</span>
+                                <span className="text-gray-700">-</span>
                               )}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm text-gray-600">{contract.vessel?.name || '-'}</div>
+                              <div className="text-sm text-gray-800">{contract.vessel?.name || '-'}</div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm text-gray-600">{contract.principal?.name || '-'}</div>
+                              <div className="text-sm text-gray-800">{contract.principal?.name || '-'}</div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-xs text-gray-500">
+                              <div className="text-sm text-gray-700">
                                 {new Date(contract.contractStart).toLocaleDateString()} - {new Date(contract.contractEnd).toLocaleDateString()}
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                              <span className={`inline-flex items-center px-3 py-2 rounded-full text-xs font-medium ${
                                 contract.status === 'ACTIVE' ? 'bg-green-100 text-green-800' :
                                 contract.status === 'COMPLETED' ? 'bg-blue-100 text-blue-800' :
                                 contract.status === 'TERMINATED' ? 'bg-red-100 text-red-800' :
@@ -675,9 +675,9 @@ export default function CrewDetailPage() {
                   {(session?.user?.roles?.includes('DIRECTOR') ||
                     session?.user?.roles?.includes('CDMO') ||
                     session?.user?.roles?.includes('ACCOUNTING')) && (
-                    <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <div className="bg-gray-100 rounded-lg p-4 border border-gray-300">
                       <h4 className="font-medium text-gray-900 mb-2">HGF-CR-02 Application for Employment</h4>
-                      <p className="text-sm text-gray-600 mb-3">Generate the official employment application form with auto-filled crew data.</p>
+                      <p className="text-sm text-gray-800 mb-3">Generate the official employment application form with auto-filled crew data.</p>
                       <button
                         onClick={handleGenerateCR02}
                         className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm font-medium"
@@ -691,9 +691,9 @@ export default function CrewDetailPage() {
                   {(session?.user?.roles?.includes('DIRECTOR') ||
                     session?.user?.roles?.includes('CDMO') ||
                     session?.user?.roles?.includes('ACCOUNTING')) && (
-                    <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <div className="bg-gray-100 rounded-lg p-4 border border-gray-300">
                       <h4 className="font-medium text-gray-900 mb-2">HGF-CR-09 Interview List</h4>
-                      <p className="text-sm text-gray-600 mb-3">Generate the crew interview checklist with personal and professional details.</p>
+                      <p className="text-sm text-gray-800 mb-3">Generate the crew interview checklist with personal and professional details.</p>
                       <button
                         onClick={handleGenerateCR09}
                         className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm font-medium"
@@ -707,9 +707,9 @@ export default function CrewDetailPage() {
                   {(session?.user?.roles?.includes('DIRECTOR') ||
                     session?.user?.roles?.includes('CDMO') ||
                     session?.user?.roles?.includes('ACCOUNTING')) && (
-                    <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <div className="bg-gray-100 rounded-lg p-4 border border-gray-300">
                       <h4 className="font-medium text-gray-900 mb-2">HGF-CR-01 Document Check List</h4>
-                      <p className="text-sm text-gray-600 mb-3">Generate the document verification checklist for crew compliance.</p>
+                      <p className="text-sm text-gray-800 mb-3">Generate the document verification checklist for crew compliance.</p>
                       <button
                         onClick={handleGenerateCR01}
                         className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm font-medium"
@@ -723,9 +723,9 @@ export default function CrewDetailPage() {
                   {(session?.user?.roles?.includes('DIRECTOR') ||
                     session?.user?.roles?.includes('CDMO') ||
                     session?.user?.roles?.includes('ACCOUNTING')) && (
-                    <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <div className="bg-gray-100 rounded-lg p-4 border border-gray-300">
                       <h4 className="font-medium text-gray-900 mb-2">HGF-CR-07 Crew Vacation Plan</h4>
-                      <p className="text-sm text-gray-600 mb-3">Generate the crew vacation planning document with contract details.</p>
+                      <p className="text-sm text-gray-800 mb-3">Generate the crew vacation planning document with contract details.</p>
                       <button
                         onClick={handleGenerateCR07}
                         className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm font-medium"
@@ -739,9 +739,9 @@ export default function CrewDetailPage() {
                   {(session?.user?.roles?.includes('DIRECTOR') ||
                     session?.user?.roles?.includes('CDMO') ||
                     session?.user?.roles?.includes('ACCOUNTING')) && (
-                    <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <div className="bg-gray-100 rounded-lg p-4 border border-gray-300">
                       <h4 className="font-medium text-gray-900 mb-2">HGF-CR-08 Crew Evaluation Report</h4>
-                      <p className="text-sm text-gray-600 mb-3">Generate the crew performance evaluation report with attendance metrics.</p>
+                      <p className="text-sm text-gray-800 mb-3">Generate the crew performance evaluation report with attendance metrics.</p>
                       <button
                         onClick={handleGenerateCR08}
                         className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm font-medium"
@@ -755,9 +755,9 @@ export default function CrewDetailPage() {
                   {(session?.user?.roles?.includes('DIRECTOR') ||
                     session?.user?.roles?.includes('CDMO') ||
                     session?.user?.roles?.includes('ACCOUNTING')) && (
-                    <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <div className="bg-gray-100 rounded-lg p-4 border border-gray-300">
                       <h4 className="font-medium text-gray-900 mb-2">HGF-CR-15 Result of Medical Advice</h4>
-                      <p className="text-sm text-gray-600 mb-3">Generate the medical examination result and advice document.</p>
+                      <p className="text-sm text-gray-800 mb-3">Generate the medical examination result and advice document.</p>
                       <button
                         onClick={handleGenerateCR15}
                         className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm font-medium"
@@ -771,9 +771,9 @@ export default function CrewDetailPage() {
                   {(session?.user?.roles?.includes('DIRECTOR') ||
                     session?.user?.roles?.includes('CDMO') ||
                     session?.user?.roles?.includes('ACCOUNTING')) && (
-                    <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <div className="bg-gray-100 rounded-lg p-4 border border-gray-300">
                       <h4 className="font-medium text-gray-900 mb-2">HGF-CR-16 Medical Treatment Request</h4>
-                      <p className="text-sm text-gray-600 mb-3">Generate the medical treatment request and assessment form.</p>
+                      <p className="text-sm text-gray-800 mb-3">Generate the medical treatment request and assessment form.</p>
                       <button
                         onClick={handleGenerateCR16}
                         className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm font-medium"

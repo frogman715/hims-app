@@ -78,7 +78,7 @@ export default function DeleteAttendancePage() {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading attendance record...</p>
+          <p className="mt-4 text-gray-700">Loading attendance record...</p>
         </div>
       </div>
     );
@@ -88,10 +88,10 @@ export default function DeleteAttendancePage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="text-2xl text-gray-600">Attendance record not found</div>
+          <div className="text-2xl text-gray-700">Attendance record not found</div>
           <Link
             href="/hr/attendance"
-            className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+            className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700"
           >
             Back to Attendance
           </Link>
@@ -112,7 +112,7 @@ export default function DeleteAttendancePage() {
             </div>
             <Link
               href="/hr/attendance"
-              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+              className="inline-flex items-center px-4 py-2 border border-gray-400 rounded-lg text-sm font-semibold text-gray-900 bg-white hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
             >
               ← Back to Attendance
             </Link>
@@ -140,7 +140,7 @@ export default function DeleteAttendancePage() {
           </div>
 
           {/* Attendance Details */}
-          <div className="bg-gray-50 rounded-lg p-6 mb-6">
+          <div className="bg-gray-100 rounded-lg p-6 mb-6">
             <h4 className="text-lg font-medium text-gray-900 mb-4">Attendance Details</h4>
             <dl className="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
               <div>
@@ -174,7 +174,7 @@ export default function DeleteAttendancePage() {
               <div>
                 <dt className="text-sm font-medium text-gray-500">Status</dt>
                 <dd className="mt-1 text-sm text-gray-900">
-                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                  <span className={`inline-flex px-4 py-2 text-xs font-semibold rounded-full ${
                     attendance.status === 'present'
                       ? 'bg-green-100 text-green-800'
                       : attendance.status === 'absent'
@@ -202,14 +202,14 @@ export default function DeleteAttendancePage() {
           <div className="flex justify-end space-x-4">
             <Link
               href="/hr/attendance"
-              className="px-6 py-3 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+              className="px-6 py-3 border border-gray-400 rounded-lg text-sm font-semibold text-gray-900 bg-white hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
             >
               Cancel
             </Link>
             <button
               onClick={handleDelete}
               disabled={deleting}
-              className="px-6 py-3 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-6 py-3 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed disabled:cursor-not-allowed transition-colors"
             >
               {deleting ? 'Deleting...' : 'Delete Attendance'}
             </button>

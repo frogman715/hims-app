@@ -51,24 +51,24 @@ export default function CrewSignOffPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-100 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <nav className="flex mb-4" aria-label="Breadcrumb">
           <ol className="inline-flex items-center space-x-1 md:space-x-3">
-            <li><Link href="/dashboard" className="text-gray-700 hover:text-blue-600">Dashboard</Link></li>
-            <li><Link href="/crewing" className="text-gray-700 hover:text-blue-600 ml-1">Crewing</Link></li>
+            <li><Link href="/dashboard" className="text-gray-700 hover:text-blue-700">Dashboard</Link></li>
+            <li><Link href="/crewing" className="text-gray-700 hover:text-blue-700 ml-1">Crewing</Link></li>
             <li><span className="ml-1 text-gray-500">Sign-Off Management</span></li>
           </ol>
         </nav>
 
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Crew Sign-Off Management</h1>
-          <p className="text-gray-600 mt-1">HGQS Annex D - Sign-off Procedures & Wage Settlement</p>
+          <p className="text-gray-700 mt-1">HGQS Annex D - Sign-off Procedures & Wage Settlement</p>
         </div>
 
         {/* Sign-Off Process Flowchart */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-          <h2 className="text-xl font-bold text-gray-800 mb-6">Sign-Off Process Flowchart</h2>
+          <h2 className="text-xl font-extrabold text-gray-900 mb-6">Sign-Off Process Flowchart</h2>
           <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
             {signOffSteps.map((step, index) => (
               <div key={step.step} className="relative">
@@ -77,7 +77,7 @@ export default function CrewSignOffPage() {
                     {step.icon}
                   </div>
                   <div className="text-xs font-semibold text-gray-700">{step.title}</div>
-                  <div className="text-xs text-gray-500 mt-1">Step {step.step}</div>
+                  <div className="text-sm text-gray-700 mt-1">Step {step.step}</div>
                 </div>
                 {index < signOffSteps.length - 1 && (
                   <div className="hidden md:block absolute top-8 left-full w-full h-0.5 bg-gray-300 -translate-x-1/2"></div>
@@ -93,8 +93,8 @@ export default function CrewSignOffPage() {
             <button
               key={status}
               onClick={() => setFilter(status)}
-              className={`px-4 py-2 rounded-md font-medium whitespace-nowrap ${
-                filter === status ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-100"
+              className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap ${
+                filter === status ? "bg-blue-600 text-white" : "text-gray-700 hover:bg-gray-100"
               }`}
             >
               {status.replace(/_/g, " ")}
@@ -111,7 +111,7 @@ export default function CrewSignOffPage() {
           <div className="bg-white rounded-xl shadow p-12 text-center">
             <div className="text-6xl mb-4">🚢</div>
             <h3 className="text-xl font-semibold text-gray-800 mb-2">No Sign-Off Records</h3>
-            <p className="text-gray-600">Create sign-off records for crew members returning from vessels.</p>
+            <p className="text-gray-700">Create sign-off records for crew members returning from vessels.</p>
           </div>
         ) : (
           <div className="grid gap-4">
@@ -120,10 +120,10 @@ export default function CrewSignOffPage() {
                 <div className="flex justify-between items-start mb-4">
                   <div>
                     <h3 className="text-lg font-bold text-gray-900">{signOff.crew?.fullName}</h3>
-                    <p className="text-gray-600">{signOff.crew?.rank}</p>
+                    <p className="text-gray-700">{signOff.crew?.rank}</p>
                     <p className="text-sm text-gray-500">Sign-Off: {new Date(signOff.signOffDate).toLocaleDateString()}</p>
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(signOff.status)}`}>
+                  <span className={`px-3 py-2 rounded-full text-xs font-semibold ${getStatusColor(signOff.status)}`}>
                     {signOff.status.replace(/_/g, " ")}
                   </span>
                 </div>
@@ -159,7 +159,7 @@ export default function CrewSignOffPage() {
                   <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium">
                     Update Status
                   </button>
-                  <button className="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium">
+                  <button className="px-4 py-2 bg-white text-gray-700 border border-gray-400 rounded-lg hover:bg-gray-100 text-sm font-medium">
                     View Details
                   </button>
                 </div>

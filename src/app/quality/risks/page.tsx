@@ -116,25 +116,25 @@ export default function Risks() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-lg shadow-xl border-b border-white/20">
+      <header className="bg-white backdrop-blur-lg shadow-2xl border-b border-white/20">
         <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-4xl font-bold bg-gradient-to-r from-red-600 to-red-700 bg-clip-text text-transparent">
                 Risk Register
               </h1>
-              <p className="text-lg text-gray-600 mt-2 font-medium">Identify and mitigate operational risks</p>
+              <p className="text-lg text-gray-700 mt-2 font-medium">Identify and mitigate operational risks</p>
             </div>
             <div className="flex items-center space-x-4">
               <Link
                 href="/quality"
-                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-xl"
+                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
               >
                 ← Back to Quality
               </Link>
               <button
                 onClick={() => setShowForm(true)}
-                className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-xl"
+                className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
               >
                 + Add Risk
               </button>
@@ -146,12 +146,12 @@ export default function Risks() {
       <main className="max-w-7xl mx-auto py-8 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           {/* Risk Register Table */}
-          <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200">
+          <div className="bg-white backdrop-blur-md rounded-2xl shadow-lg border border-white overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-300">
               <h2 className="text-xl font-semibold text-gray-900">Risk Assessment Matrix</h2>
             </div>
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
+              <table className="min-w-full divide-y divide-gray-300">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -179,18 +179,18 @@ export default function Risks() {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {risks.map((risk) => (
-                    <tr key={risk.id} className="hover:bg-gray-50">
+                    <tr key={risk.id} className="hover:bg-gray-100">
                       <td className="px-6 py-4">
                         <div className="text-sm font-medium text-gray-900">{risk.source}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {risk.likelihood}/5
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {risk.consequence}/5
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRiskColor(risk.level)}`}>
+                        <span className={`inline-flex px-4 py-2 text-xs font-semibold rounded-full ${getRiskColor(risk.level)}`}>
                           {risk.level}
                         </span>
                       </td>
@@ -200,7 +200,7 @@ export default function Risks() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {risk.pic}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {risk.residual ? `${risk.residual}/25` : 'N/A'}
                       </td>
                     </tr>
@@ -216,10 +216,10 @@ export default function Risks() {
       {showForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl p-8 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <h3 className="text-xl font-bold text-gray-900 mb-6">Add Risk Assessment</h3>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <h3 className="text-xl font-extrabold text-gray-900 mb-6">Add Risk Assessment</h3>
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
                   Risk Source
                 </label>
                 <textarea
@@ -227,19 +227,19 @@ export default function Risks() {
                   value={formData.source}
                   onChange={(e) => setFormData({ ...formData, source: e.target.value })}
                   rows={2}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                   placeholder="Describe the source of the risk"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
                     Likelihood (1-5)
                   </label>
                   <select
                     value={formData.likelihood}
                     onChange={(e) => setFormData({ ...formData, likelihood: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                   >
                     <option value="1">1 - Very Low</option>
                     <option value="2">2 - Low</option>
@@ -249,13 +249,13 @@ export default function Risks() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
                     Consequence (1-5)
                   </label>
                   <select
                     value={formData.consequence}
                     onChange={(e) => setFormData({ ...formData, consequence: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                   >
                     <option value="1">1 - Minor</option>
                     <option value="2">2 - Moderate</option>
@@ -266,7 +266,7 @@ export default function Risks() {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
                   Mitigation Measures
                 </label>
                 <textarea
@@ -274,12 +274,12 @@ export default function Risks() {
                   value={formData.mitigation}
                   onChange={(e) => setFormData({ ...formData, mitigation: e.target.value })}
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                   placeholder="Describe measures to mitigate this risk"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
                   Person In Charge (PIC)
                 </label>
                 <input
@@ -287,12 +287,12 @@ export default function Risks() {
                   required
                   value={formData.pic}
                   onChange={(e) => setFormData({ ...formData, pic: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                   placeholder="Name of person responsible for mitigation"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
                   Residual Risk Score (Optional)
                 </label>
                 <input
@@ -301,7 +301,7 @@ export default function Risks() {
                   max="25"
                   value={formData.residual}
                   onChange={(e) => setFormData({ ...formData, residual: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                   placeholder="Risk score after mitigation (1-25)"
                 />
               </div>

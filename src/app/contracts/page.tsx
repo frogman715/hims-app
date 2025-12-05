@@ -283,7 +283,7 @@ export default function ContractsPage() {
           <div className="flex items-center gap-4">
             <button
               onClick={() => router.push('/crewing')}
-              className="flex items-center gap-2 bg-gray-500 hover:bg-gray-600 text-white font-semibold px-4 py-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+              className="flex items-center gap-2 bg-gray-500 hover:bg-gray-600 text-white font-semibold px-4 py-2 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -292,12 +292,12 @@ export default function ContractsPage() {
             </button>
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Employment Contracts</h1>
-              <p className="mt-2 text-gray-600">Manage seafarer employment contracts</p>
+              <p className="mt-2 text-gray-700">Manage seafarer employment contracts</p>
             </div>
           </div>
           <button
             onClick={() => setShowForm(!showForm)}
-            className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+            className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105"
           >
             {showForm ? 'Cancel' : '+ New Contract'}
           </button>
@@ -306,10 +306,10 @@ export default function ContractsPage() {
 
       {/* Add/Edit Form */}
       {showForm && (
-        <div className="bg-gradient-to-r from-white/90 to-blue-50/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200/50 p-8 mb-8">
+        <div className="bg-gradient-to-r from-white to-blue-50 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-300 p-8 mb-8">
           <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">{editingContract ? 'Edit Employment Contract' : 'Add New Employment Contract'}</h2>
-            <p className="text-gray-600">Create and manage seafarer employment agreements</p>
+            <h2 className="text-2xl font-extrabold text-gray-900 mb-2">{editingContract ? 'Edit Employment Contract' : 'Add New Employment Contract'}</h2>
+            <p className="text-gray-700">Create and manage seafarer employment agreements</p>
           </div>
           <form onSubmit={handleSubmit} className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -323,7 +323,7 @@ export default function ContractsPage() {
                   value={formData.contractNumber}
                   onChange={handleInputChange}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                   placeholder="Contract number"
                 />
               </div>
@@ -336,7 +336,7 @@ export default function ContractsPage() {
                   value={formData.contractKind}
                   onChange={handleInputChange}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                 >
                   <option value="SEA">SEA Contract (MLC Compliant)</option>
                   <option value="OFFICE_PKL">Office PKL Contract</option>
@@ -352,7 +352,7 @@ export default function ContractsPage() {
                       name="seaType"
                       value={formData.seaType}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                      className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                     >
                       <option value="">Select SEA Type</option>
                       <option value="KOREA">Korea</option>
@@ -370,7 +370,7 @@ export default function ContractsPage() {
                       name="maritimeLaw"
                       value={formData.maritimeLaw}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                      className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                       placeholder="e.g. Bahamas, Panama, Korea"
                     />
                   </div>
@@ -383,7 +383,7 @@ export default function ContractsPage() {
                       name="cbaReference"
                       value={formData.cbaReference}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                      className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                       placeholder="e.g. Lundqvist CBA 2024"
                     />
                   </div>
@@ -396,7 +396,7 @@ export default function ContractsPage() {
                       name="wageScaleHeaderId"
                       value={formData.wageScaleHeaderId}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                      className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                       placeholder="Wage scale header ID"
                     />
                   </div>
@@ -409,7 +409,7 @@ export default function ContractsPage() {
                       name="guaranteedOTHours"
                       value={formData.guaranteedOTHours}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                      className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                       placeholder="e.g. 103"
                     />
                   </div>
@@ -422,7 +422,7 @@ export default function ContractsPage() {
                       name="overtimeRate"
                       value={formData.overtimeRate}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                      className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                       placeholder="e.g. 125%"
                     />
                   </div>
@@ -436,7 +436,7 @@ export default function ContractsPage() {
                       name="onboardAllowance"
                       value={formData.onboardAllowance}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                      className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                       placeholder="Cash advance on board"
                     />
                   </div>
@@ -450,7 +450,7 @@ export default function ContractsPage() {
                       name="homeAllotment"
                       value={formData.homeAllotment}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                      className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                       placeholder="Monthly remittance"
                     />
                   </div>
@@ -464,7 +464,7 @@ export default function ContractsPage() {
                       name="specialAllowance"
                       value={formData.specialAllowance}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                      className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                       placeholder="SA for certain ships"
                     />
                   </div>
@@ -477,7 +477,7 @@ export default function ContractsPage() {
                       name="templateVersion"
                       value={formData.templateVersion}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                      className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                       placeholder="SEA template revision"
                     />
                   </div>
@@ -493,7 +493,7 @@ export default function ContractsPage() {
                   value={formData.crewId}
                   onChange={handleInputChange}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                   placeholder="Crew member ID"
                 />
               </div>
@@ -506,7 +506,7 @@ export default function ContractsPage() {
                   name="vesselId"
                   value={formData.vesselId}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                   placeholder="Vessel ID"
                 />
               </div>
@@ -519,7 +519,7 @@ export default function ContractsPage() {
                   name="principalId"
                   value={formData.principalId}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                   placeholder="Principal company ID"
                 />
               </div>
@@ -532,7 +532,7 @@ export default function ContractsPage() {
                   value={formData.rank}
                   onChange={handleInputChange}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                 >
                   <option value="">Select Rank</option>
                   <option value="MASTER">Master</option>
@@ -566,7 +566,7 @@ export default function ContractsPage() {
                   value={formData.contractStart}
                   onChange={handleInputChange}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                 />
               </div>
               <div>
@@ -579,7 +579,7 @@ export default function ContractsPage() {
                   value={formData.contractEnd}
                   onChange={handleInputChange}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                 />
               </div>
               <div>
@@ -591,7 +591,7 @@ export default function ContractsPage() {
                   value={formData.status}
                   onChange={handleInputChange}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                 >
                   <option value="ACTIVE">Active</option>
                   <option value="COMPLETED">Completed</option>
@@ -608,7 +608,7 @@ export default function ContractsPage() {
                   value={formData.currency}
                   onChange={handleInputChange}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                 >
                   <option value="USD">USD</option>
                   <option value="EUR">EUR</option>
@@ -629,7 +629,7 @@ export default function ContractsPage() {
                   onChange={handleInputChange}
                   required
                   step="0.01"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                   placeholder="0.00"
                 />
               </div>
@@ -643,7 +643,7 @@ export default function ContractsPage() {
                   value={formData.specialAllowance}
                   onChange={handleInputChange}
                   step="0.01"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                   placeholder="0.00"
                 />
               </div>
@@ -657,7 +657,7 @@ export default function ContractsPage() {
                   value={formData.onboardAllowance}
                   onChange={handleInputChange}
                   step="0.01"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                   placeholder="0.00"
                 />
               </div>
@@ -672,23 +672,23 @@ export default function ContractsPage() {
                   onChange={handleInputChange}
                   required
                   step="0.01"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                   placeholder="0.00"
                 />
               </div>
             </div>
 
-            <div className="flex gap-4 pt-6 border-t border-gray-200">
+            <div className="flex gap-4 pt-6 border-t border-gray-300">
               <button
                 type="submit"
-                className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold px-8 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold px-8 py-3 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105"
               >
                 {editingContract ? 'Update Contract' : 'Save Employment Contract'}
               </button>
               <button
                 type="button"
                 onClick={handleCancel}
-                className="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-semibold px-8 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                className="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-semibold px-8 py-3 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105"
               >
                 Cancel
               </button>
@@ -698,11 +698,11 @@ export default function ContractsPage() {
       )}
 
       {/* Contracts List */}
-      <div className="bg-gradient-to-r from-white/90 to-gray-50/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200/50 overflow-hidden">
+      <div className="bg-gradient-to-r from-white to-gray-50 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-300 overflow-hidden">
         {/* Metrics Dashboard */}
-        <div className="px-8 py-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+        <div className="px-8 py-6 border-b border-gray-300 bg-gradient-to-r from-blue-50 to-indigo-50">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+            <div className="bg-white rounded-xl p-4 shadow-md border border-gray-100">
               <div className="flex items-center">
                 <div className="p-2 bg-blue-100 rounded-lg">
                   <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -710,12 +710,12 @@ export default function ContractsPage() {
                   </svg>
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Total Contracts</p>
-                  <p className="text-2xl font-bold text-gray-900">{contracts.length}</p>
+                  <p className="text-sm font-medium text-gray-700">Total Contracts</p>
+                  <p className="text-2xl font-extrabold text-gray-900">{contracts.length}</p>
                 </div>
               </div>
             </div>
-            <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+            <div className="bg-white rounded-xl p-4 shadow-md border border-gray-100">
               <div className="flex items-center">
                 <div className="p-2 bg-green-100 rounded-lg">
                   <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -723,12 +723,12 @@ export default function ContractsPage() {
                   </svg>
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Active Contracts</p>
-                  <p className="text-2xl font-bold text-gray-900">{contracts.filter(c => c.status === 'ACTIVE').length}</p>
+                  <p className="text-sm font-medium text-gray-700">Active Contracts</p>
+                  <p className="text-2xl font-extrabold text-gray-900">{contracts.filter(c => c.status === 'ACTIVE').length}</p>
                 </div>
               </div>
             </div>
-            <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+            <div className="bg-white rounded-xl p-4 shadow-md border border-gray-100">
               <div className="flex items-center">
                 <div className="p-2 bg-yellow-100 rounded-lg">
                   <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -736,8 +736,8 @@ export default function ContractsPage() {
                   </svg>
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Expiring Soon</p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-sm font-medium text-gray-700">Expiring Soon</p>
+                  <p className="text-2xl font-extrabold text-gray-900">
                     {contracts.filter(c => {
                       const endDate = new Date(c.contractEnd);
                       const now = new Date();
@@ -749,7 +749,7 @@ export default function ContractsPage() {
                 </div>
               </div>
             </div>
-            <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+            <div className="bg-white rounded-xl p-4 shadow-md border border-gray-100">
               <div className="flex items-center">
                 <div className="p-2 bg-purple-100 rounded-lg">
                   <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -757,8 +757,8 @@ export default function ContractsPage() {
                   </svg>
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Total Value</p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-sm font-medium text-gray-700">Total Value</p>
+                  <p className="text-2xl font-extrabold text-gray-900">
                     ${contracts.filter(c => c.status === 'ACTIVE').reduce((sum, c) => sum + c.basicWage, 0).toLocaleString()}
                   </p>
                 </div>
@@ -767,9 +767,9 @@ export default function ContractsPage() {
           </div>
         </div>
 
-        <div className="px-8 py-6 border-b border-gray-200">
+        <div className="px-8 py-6 border-b border-gray-300">
           <div className="flex justify-between items-center">
-            <h2 className="text-xl font-bold text-gray-900">All Contracts</h2>
+            <h2 className="text-xl font-extrabold text-gray-900">All Contracts</h2>
             <div className="flex space-x-2">
               <button
                 onClick={() => setFilter('ALL')}
@@ -808,30 +808,30 @@ export default function ContractsPage() {
         {isLoading ? (
           <div className="p-8 text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading contracts...</p>
+            <p className="mt-4 text-gray-700">Loading contracts...</p>
           </div>
         ) : contracts.length === 0 ? (
           <div className="p-8 text-center">
-            <p className="text-gray-600">No contracts found. Create your first contract above.</p>
+            <p className="text-gray-700">No contracts found. Create your first contract above.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Contract #</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Type</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">SEA Type</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Crew</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Rank</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Vessel</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Principal</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Start Date</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">End Date</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Days Left</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Monthly Wage</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Contract #</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Type</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">SEA Type</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Crew</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Rank</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Vessel</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Principal</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Start Date</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">End Date</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Days Left</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Monthly Wage</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -846,12 +846,12 @@ export default function ContractsPage() {
                     const isExpiringSoon = diffDays <= 30 && diffDays >= 0 && contract.status === 'ACTIVE';
                     
                     return (
-                      <tr key={contract.id} className={`hover:bg-gray-50 ${isExpiringSoon ? 'bg-yellow-50' : ''}`}>
+                      <tr key={contract.id} className={`hover:bg-gray-100 ${isExpiringSoon ? 'bg-yellow-50' : ''}`}>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-semibold text-gray-900">{contract.contractNumber}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                          <span className={`inline-flex items-center px-3 py-2 rounded-full text-xs font-medium ${
                             contract.contractKind === 'SEA'
                               ? 'bg-blue-100 text-blue-800'
                               : 'bg-green-100 text-green-800'
@@ -861,7 +861,7 @@ export default function ContractsPage() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           {contract.contractKind === 'SEA' ? (
-                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                            <span className={`inline-flex items-center px-3 py-2 rounded-full text-xs font-medium ${
                               contract.seaType === 'KOREA' ? 'bg-red-100 text-red-800' :
                               contract.seaType === 'BAHAMAS_PANAMA' ? 'bg-yellow-100 text-yellow-800' :
                               contract.seaType === 'TANKER_LUNDQVIST' ? 'bg-purple-100 text-purple-800' :
@@ -873,34 +873,34 @@ export default function ContractsPage() {
                                contract.seaType || '-'}
                             </span>
                           ) : (
-                            <span className="text-gray-400">-</span>
+                            <span className="text-gray-700">-</span>
                           )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">{contract.crew?.fullName}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-600">{contract.rank}</div>
+                          <div className="text-sm text-gray-800">{contract.rank}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-600">{contract.vessel?.name || '-'}</div>
+                          <div className="text-sm text-gray-800">{contract.vessel?.name || '-'}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-600">{contract.principal?.name || '-'}</div>
+                          <div className="text-sm text-gray-800">{contract.principal?.name || '-'}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-600">{new Date(contract.contractStart).toLocaleDateString()}</div>
+                          <div className="text-sm text-gray-800">{new Date(contract.contractStart).toLocaleDateString()}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-600">{new Date(contract.contractEnd).toLocaleDateString()}</div>
+                          <div className="text-sm text-gray-800">{new Date(contract.contractEnd).toLocaleDateString()}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className={`text-sm font-medium ${isExpiringSoon ? 'text-red-600' : 'text-gray-600'}`}>
+                          <div className={`text-sm font-medium ${isExpiringSoon ? 'text-red-600' : 'text-gray-700'}`}>
                             {contract.status === 'ACTIVE' ? (diffDays > 0 ? `${diffDays} days` : 'Expired') : '-'}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                          <span className={`inline-flex items-center px-3 py-2 rounded-full text-xs font-medium ${
                             contract.status === 'ACTIVE' ? 'bg-green-100 text-green-800' :
                             contract.status === 'COMPLETED' ? 'bg-blue-100 text-blue-800' :
                             contract.status === 'TERMINATED' ? 'bg-red-100 text-red-800' :
@@ -918,14 +918,14 @@ export default function ContractsPage() {
                           <div className="flex space-x-2">
                             <button
                               onClick={() => router.push(`/contracts/${contract.id}`)}
-                              className="text-blue-600 hover:text-blue-900 font-semibold px-2 py-1 rounded hover:bg-blue-50"
+                              className="text-blue-600 hover:text-blue-900 font-semibold px-4 py-2 rounded hover:bg-blue-100"
                               title="View Details"
                             >
                               👁️
                             </button>
                             <button
                               onClick={() => handleEdit(contract)}
-                              className="text-green-600 hover:text-green-900 font-semibold px-2 py-1 rounded hover:bg-green-50"
+                              className="text-green-600 hover:text-green-900 font-semibold px-4 py-2 rounded hover:bg-green-50"
                               title="Edit Contract"
                             >
                               ✏️
@@ -933,7 +933,7 @@ export default function ContractsPage() {
                             {contract.contractKind === 'SEA' && (
                               <button
                                 onClick={() => handleGenerateDocument(contract.id, 'sea_agreement')}
-                                className="text-purple-600 hover:text-purple-900 font-semibold px-2 py-1 rounded hover:bg-purple-50"
+                                className="text-purple-600 hover:text-purple-900 font-semibold px-4 py-2 rounded hover:bg-purple-50"
                                 title="Generate SEA"
                               >
                                 📄
@@ -942,7 +942,7 @@ export default function ContractsPage() {
                             {contract.contractKind === 'OFFICE_PKL' && (
                               <button
                                 onClick={() => handleGenerateDocument(contract.id, 'pkl_contract')}
-                                className="text-purple-600 hover:text-purple-900 font-semibold px-2 py-1 rounded hover:bg-purple-50"
+                                className="text-purple-600 hover:text-purple-900 font-semibold px-4 py-2 rounded hover:bg-purple-50"
                                 title="Generate PKL"
                               >
                                 📄
@@ -950,7 +950,7 @@ export default function ContractsPage() {
                             )}
                             <button
                               onClick={() => handleDelete(contract.id)}
-                              className="text-red-600 hover:text-red-900 font-semibold px-2 py-1 rounded hover:bg-red-50"
+                              className="text-red-600 hover:text-red-900 font-semibold px-4 py-2 rounded hover:bg-red-50"
                               title="Delete Contract"
                             >
                               🗑️

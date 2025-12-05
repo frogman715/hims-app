@@ -91,7 +91,7 @@ export default function Documents() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       {/* Header */}
-      <div className="bg-white/70 backdrop-blur-sm border-b border-slate-200">
+      <div className="bg-white backdrop-blur-md border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center space-x-4">
@@ -109,15 +109,15 @@ export default function Documents() {
               </div>
             </div>
             <div className="flex items-center space-x-2">
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+              <span className="inline-flex items-center px-3 py-2 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
                 ISO 9001:2015
               </span>
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+              <span className="inline-flex items-center px-3 py-2 rounded-full text-sm font-medium bg-green-100 text-green-800">
                 MLC 2006
               </span>
               <button
                 onClick={() => setShowForm(true)}
-                className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-all duration-300 shadow-lg hover:shadow-xl"
+                className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
               >
                 + New Document
               </button>
@@ -129,8 +129,8 @@ export default function Documents() {
       <main className="max-w-7xl mx-auto py-8 sm:px-6 lg:px-8">
         {/* HGQS Document Overview */}
         <div className="px-4 py-6 sm:px-0 mb-8">
-          <div className="bg-white/70 backdrop-blur-sm rounded-xl shadow-lg border border-gray-100 p-6">
-            <h2 className="text-2xl font-bold text-slate-800 mb-4">HGQS Document Control System</h2>
+          <div className="bg-white backdrop-blur-md rounded-xl shadow-lg border border-gray-100 p-6">
+            <h2 className="text-2xl font-extrabold text-slate-800 mb-4">HGQS Document Control System</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="text-center">
                 <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -159,13 +159,13 @@ export default function Documents() {
 
         <div className="px-4 py-6 sm:px-0">
           {/* Documents Table */}
-          <div className="bg-white/70 backdrop-blur-sm rounded-xl shadow-lg border border-gray-100 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200">
+          <div className="bg-white backdrop-blur-md rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-300">
               <h2 className="text-xl font-semibold text-gray-900">Quality Documents</h2>
-              <p className="text-sm text-gray-600 mt-1">HGQS controlled documents and procedures</p>
+              <p className="text-sm text-gray-800 mt-1">HGQS controlled documents and procedures</p>
             </div>
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
+              <table className="min-w-full divide-y divide-gray-300">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -187,18 +187,18 @@ export default function Documents() {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {documents.map((document) => (
-                    <tr key={document.id} className="hover:bg-gray-50">
+                    <tr key={document.id} className="hover:bg-gray-100">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">{document.title}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {document.type}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {document.version}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        <span className={`inline-flex px-4 py-2 text-xs font-semibold rounded-full ${
                           document.status === 'APPROVED'
                             ? 'bg-green-100 text-green-800'
                             : document.status === 'REVIEW'
@@ -208,7 +208,7 @@ export default function Documents() {
                           {document.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {document.revisions.length > 0
                           ? new Date(document.revisions[0].date).toLocaleDateString()
                           : 'No revisions'
@@ -226,9 +226,9 @@ export default function Documents() {
       {/* New Document Form Modal */}
       {showForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white/70 backdrop-blur-sm rounded-xl p-8 max-w-md w-full mx-4 shadow-2xl border border-gray-200">
+          <div className="bg-white backdrop-blur-md rounded-xl p-8 max-w-md w-full mx-4 shadow-2xl border border-gray-300">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-slate-800">Create New HGQS Document</h3>
+              <h3 className="text-xl font-extrabold text-slate-800">Create New HGQS Document</h3>
               <button
                 onClick={() => setShowForm(false)}
                 className="text-slate-400 hover:text-slate-600 transition-colors"
@@ -238,7 +238,7 @@ export default function Documents() {
                 </svg>
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
                   Document Title
@@ -248,7 +248,7 @@ export default function Documents() {
                   required
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent"
                   placeholder="e.g., HGQS Quality Management Manual"
                 />
               </div>
@@ -259,7 +259,7 @@ export default function Documents() {
                 <select
                   value={formData.type}
                   onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent"
                 >
                   <option value="Manual">HGQS Manual</option>
                   <option value="Procedure">Procedure</option>
@@ -278,14 +278,14 @@ export default function Documents() {
                   required
                   value={formData.version}
                   onChange={(e) => setFormData({ ...formData, version: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent"
                   placeholder="e.g., 1.0"
                 />
               </div>
               <div className="flex space-x-3 pt-4">
                 <button
                   type="submit"
-                  className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-2 px-4 rounded-lg font-medium transition-all duration-300 shadow-lg hover:shadow-xl"
+                  className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-2 px-4 rounded-lg font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
                 >
                   Create Document
                 </button>

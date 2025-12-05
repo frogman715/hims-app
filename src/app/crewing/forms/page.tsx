@@ -107,7 +107,7 @@ export default function FormManagementPage() {
 
     const item = config[status] || { color: "bg-gray-100 text-gray-800", text: status };
     return (
-      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${item.color}`}>
+      <span className={`px-3 py-2 rounded-full text-xs font-semibold ${item.color}`}>
         {item.text}
       </span>
     );
@@ -123,7 +123,7 @@ export default function FormManagementPage() {
 
     const item = config[category] || { color: "bg-gray-100 text-gray-800", icon: "📄" };
     return (
-      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${item.color}`}>
+      <span className={`px-3 py-2 rounded-full text-xs font-semibold ${item.color}`}>
         {item.icon} {category}
       </span>
     );
@@ -158,14 +158,14 @@ export default function FormManagementPage() {
               <h1 className="text-4xl font-bold text-gray-900 mb-2">
                 Form Management & Approval
               </h1>
-              <p className="text-gray-600">
+              <p className="text-gray-700">
                 Manage principal-specific forms dengan approval workflow
               </p>
             </div>
             <div className="flex gap-3">
               <Link
                 href="/crewing"
-                className="px-6 py-3 bg-white border-2 border-gray-200 rounded-xl text-gray-700 font-semibold hover:border-purple-500 hover:text-purple-600 transition-all duration-200 shadow-sm hover:shadow-md"
+                className="px-6 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-700 font-semibold hover:border-purple-500 hover:text-purple-600 transition-all duration-200 shadow-md hover:shadow-md"
               >
                 ← Crewing Menu
               </Link>
@@ -179,13 +179,13 @@ export default function FormManagementPage() {
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-3 border-b-2 border-gray-200">
+          <div className="flex gap-3 border-b-2 border-gray-300">
             <button
               onClick={() => setActiveTab("submissions")}
               className={`px-6 py-3 font-semibold transition-all duration-200 ${
                 activeTab === "submissions"
                   ? "text-purple-600 border-b-2 border-purple-600 -mb-0.5"
-                  : "text-gray-600 hover:text-purple-600"
+                  : "text-gray-700 hover:text-purple-600"
               }`}
             >
               📝 Form Submissions ({forms.length})
@@ -195,7 +195,7 @@ export default function FormManagementPage() {
               className={`px-6 py-3 font-semibold transition-all duration-200 ${
                 activeTab === "templates"
                   ? "text-purple-600 border-b-2 border-purple-600 -mb-0.5"
-                  : "text-gray-600 hover:text-purple-600"
+                  : "text-gray-700 hover:text-purple-600"
               }`}
             >
               📋 Form Templates ({templates.length})
@@ -208,28 +208,28 @@ export default function FormManagementPage() {
           <div className="space-y-6">
             {/* Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-white rounded-xl shadow-sm border-2 border-gray-100 p-4">
-                <div className="text-sm text-gray-600 mb-1">Pending Review</div>
+              <div className="bg-white rounded-xl shadow-md border-2 border-gray-100 p-4">
+                <div className="text-sm text-gray-800 mb-1">Pending Review</div>
                 <div className="text-3xl font-bold text-yellow-600">
                   {(formsByStatus["SUBMITTED"]?.length || 0) +
                     (formsByStatus["UNDER_REVIEW"]?.length || 0)}
                 </div>
               </div>
-              <div className="bg-white rounded-xl shadow-sm border-2 border-gray-100 p-4">
-                <div className="text-sm text-gray-600 mb-1">Approved</div>
+              <div className="bg-white rounded-xl shadow-md border-2 border-gray-100 p-4">
+                <div className="text-sm text-gray-800 mb-1">Approved</div>
                 <div className="text-3xl font-bold text-green-600">
                   {formsByStatus["APPROVED"]?.length || 0}
                 </div>
               </div>
-              <div className="bg-white rounded-xl shadow-sm border-2 border-gray-100 p-4">
-                <div className="text-sm text-gray-600 mb-1">Changes Requested</div>
+              <div className="bg-white rounded-xl shadow-md border-2 border-gray-100 p-4">
+                <div className="text-sm text-gray-800 mb-1">Changes Requested</div>
                 <div className="text-3xl font-bold text-orange-600">
                   {formsByStatus["CHANGES_REQUESTED"]?.length || 0}
                 </div>
               </div>
-              <div className="bg-white rounded-xl shadow-sm border-2 border-gray-100 p-4">
-                <div className="text-sm text-gray-600 mb-1">Draft</div>
-                <div className="text-3xl font-bold text-gray-600">
+              <div className="bg-white rounded-xl shadow-md border-2 border-gray-100 p-4">
+                <div className="text-sm text-gray-800 mb-1">Draft</div>
+                <div className="text-3xl font-bold text-gray-700">
                   {formsByStatus["DRAFT"]?.length || 0}
                 </div>
               </div>
@@ -239,10 +239,10 @@ export default function FormManagementPage() {
             {forms.length === 0 ? (
               <div className="bg-white rounded-2xl shadow-lg p-12 text-center border-2 border-gray-100">
                 <div className="text-6xl mb-4">📋</div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                <h3 className="text-xl font-extrabold text-gray-900 mb-2">
                   Tidak ada form submissions
                 </h3>
-                <p className="text-gray-600">
+                <p className="text-gray-700">
                   Form akan muncul ketika crew mulai prepare joining
                 </p>
               </div>
@@ -251,7 +251,7 @@ export default function FormManagementPage() {
                 {forms.map((form) => (
                   <div
                     key={form.id}
-                    className="bg-white rounded-xl shadow-sm border-2 border-gray-100 p-6 hover:border-purple-300 transition-all duration-200"
+                    className="bg-white rounded-xl shadow-md border-2 border-gray-100 p-6 hover:border-purple-300 transition-all duration-200"
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
@@ -299,10 +299,10 @@ export default function FormManagementPage() {
             {Object.keys(templatesByPrincipal).length === 0 ? (
               <div className="bg-white rounded-2xl shadow-lg p-12 text-center border-2 border-gray-100">
                 <div className="text-6xl mb-4">📋</div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                <h3 className="text-xl font-extrabold text-gray-900 mb-2">
                   Tidak ada form templates
                 </h3>
-                <p className="text-gray-600 mb-6">
+                <p className="text-gray-700 mb-6">
                   Belum ada template yang didefinisikan untuk principal
                 </p>
               </div>
@@ -313,8 +313,8 @@ export default function FormManagementPage() {
                   className="bg-white rounded-2xl shadow-lg border-2 border-gray-100 overflow-hidden"
                 >
                   <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-6 border-b-2 border-gray-100">
-                    <h2 className="text-2xl font-bold text-gray-900">{principalName}</h2>
-                    <p className="text-gray-600">
+                    <h2 className="text-2xl font-extrabold text-gray-900">{principalName}</h2>
+                    <p className="text-gray-700">
                       {principalTemplates.length} form template(s)
                     </p>
                   </div>
@@ -325,7 +325,7 @@ export default function FormManagementPage() {
                         .map((template) => (
                           <div
                             key={template.id}
-                            className="border-2 border-gray-200 rounded-xl p-4 hover:border-purple-300 transition-all duration-200"
+                            className="border-2 border-gray-300 rounded-xl p-4 hover:border-purple-300 transition-all duration-200"
                           >
                             <div className="flex items-start justify-between mb-3">
                               <div className="flex-1">
@@ -333,20 +333,20 @@ export default function FormManagementPage() {
                                   {template.formName}
                                 </h3>
                                 {template.description && (
-                                  <p className="text-sm text-gray-600 mb-2">
+                                  <p className="text-sm text-gray-800 mb-2">
                                     {template.description}
                                   </p>
                                 )}
                               </div>
                               {template.isRequired && (
-                                <span className="px-2 py-1 bg-red-100 text-red-800 text-xs font-semibold rounded">
+                                <span className="px-4 py-2 bg-red-100 text-red-800 text-xs font-semibold rounded">
                                   Required
                                 </span>
                               )}
                             </div>
                             <div className="flex items-center justify-between">
                               {getCategoryBadge(template.formCategory)}
-                              <span className="text-xs text-gray-500">
+                              <span className="text-sm text-gray-700">
                                 Order: {template.displayOrder}
                               </span>
                             </div>

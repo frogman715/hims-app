@@ -158,7 +158,7 @@ function CreateReplacementForm() {
             <div className="flex items-center space-x-4">
               <Link
                 href="/crewing/replacements/new"
-                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-xl"
+                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
               >
                 ← Back to Search
               </Link>
@@ -175,31 +175,31 @@ function CreateReplacementForm() {
           <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-400 p-6 rounded-xl shadow-lg">
             <div className="flex items-center mb-4">
               <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mr-4 shadow-lg">
-                <span className="text-white text-xl font-bold">✅</span>
+                <span className="text-white text-xl font-extrabold">✅</span>
               </div>
               <div>
-                <h2 className="text-xl font-bold text-gray-900">Replacement Plan Summary</h2>
+                <h2 className="text-xl font-extrabold text-gray-900">Replacement Plan Summary</h2>
                 <p className="text-gray-700">Review and confirm the replacement details</p>
               </div>
             </div>
 
-            <div className="bg-white rounded-xl p-4 shadow-sm">
+            <div className="bg-white rounded-xl p-4 shadow-md">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-3">Current Crew</h3>
                   <div className="space-y-2 text-sm">
-                    <div><span className="font-medium text-gray-600">Name:</span> {replacementPlan.replaceSeafarerName}</div>
-                    <div><span className="font-medium text-gray-600">Vessel:</span> {replacementPlan.vesselName}</div>
-                    <div><span className="font-medium text-gray-600">Sign-off Date:</span> {new Date(replacementPlan.plannedSignOff).toLocaleDateString()}</div>
+                    <div><span className="font-medium text-gray-700">Name:</span> {replacementPlan.replaceSeafarerName}</div>
+                    <div><span className="font-medium text-gray-700">Vessel:</span> {replacementPlan.vesselName}</div>
+                    <div><span className="font-medium text-gray-700">Sign-off Date:</span> {new Date(replacementPlan.plannedSignOff).toLocaleDateString()}</div>
                   </div>
                 </div>
 
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-3">Replacement Crew</h3>
                   <div className="space-y-2 text-sm">
-                    <div><span className="font-medium text-gray-600">Name:</span> {replacementPlan.newSeafarerName}</div>
-                    <div><span className="font-medium text-gray-600">Vessel:</span> {replacementPlan.vesselName}</div>
-                    <div><span className="font-medium text-gray-600">Sign-on Date:</span> {replacementPlan.plannedSignOn ? new Date(replacementPlan.plannedSignOn).toLocaleDateString() : 'To be scheduled'}</div>
+                    <div><span className="font-medium text-gray-700">Name:</span> {replacementPlan.newSeafarerName}</div>
+                    <div><span className="font-medium text-gray-700">Vessel:</span> {replacementPlan.vesselName}</div>
+                    <div><span className="font-medium text-gray-700">Sign-on Date:</span> {replacementPlan.plannedSignOn ? new Date(replacementPlan.plannedSignOn).toLocaleDateString() : 'To be scheduled'}</div>
                   </div>
                 </div>
               </div>
@@ -213,7 +213,7 @@ function CreateReplacementForm() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-900 mb-2">
                 Planned Sign-off Date *
               </label>
               <input
@@ -221,12 +221,12 @@ function CreateReplacementForm() {
                 required
                 value={replacementPlan.plannedSignOff}
                 onChange={(e) => handleInputChange('plannedSignOff', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-900 mb-2">
                 Planned Sign-on Date *
               </label>
               <input
@@ -234,19 +234,19 @@ function CreateReplacementForm() {
                 required
                 value={replacementPlan.plannedSignOn}
                 onChange={(e) => handleInputChange('plannedSignOn', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-900 mb-2">
                 Reason for Replacement *
               </label>
               <select
                 required
                 value={replacementPlan.reason}
                 onChange={(e) => handleInputChange('reason', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               >
                 <option value="Contract expiry">Contract expiry</option>
                 <option value="Medical leave">Medical leave</option>
@@ -257,7 +257,7 @@ function CreateReplacementForm() {
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-900 mb-2">
                 Notes
               </label>
               <textarea
@@ -265,7 +265,7 @@ function CreateReplacementForm() {
                 value={replacementPlan.notes}
                 onChange={(e) => handleInputChange('notes', e.target.value)}
                 placeholder="Additional notes about this replacement..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               />
             </div>
           </div>
@@ -274,14 +274,14 @@ function CreateReplacementForm() {
           <div className="mt-8 flex justify-end space-x-4">
             <Link
               href="/crewing/replacements/new"
-              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              className="inline-flex items-center px-4 py-2 border border-gray-400 rounded-lg text-sm font-semibold text-gray-900 bg-white hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
             >
               Cancel
             </Link>
             <button
               type="submit"
               disabled={submitting}
-              className="inline-flex items-center px-6 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center px-6 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed disabled:cursor-not-allowed"
             >
               {submitting ? (
                 <>

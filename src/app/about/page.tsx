@@ -44,7 +44,7 @@ export default function AboutPage() {
       <div className="bg-gradient-to-r from-blue-900 via-blue-800 to-cyan-900 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="text-center">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-white/10 backdrop-blur-sm mb-6">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-white backdrop-blur-md mb-6">
               <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
               </svg>
@@ -62,13 +62,13 @@ export default function AboutPage() {
           <nav className="flex" aria-label="Breadcrumb">
             <ol className="inline-flex items-center space-x-1 md:space-x-3">
               <li className="inline-flex items-center">
-                <Link href="/dashboard" className="text-gray-700 hover:text-blue-600">
+                <Link href="/dashboard" className="text-gray-700 hover:text-blue-700">
                   Dashboard
                 </Link>
               </li>
               <li>
                 <div className="flex items-center">
-                  <svg className="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="w-6 h-6 text-gray-700" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
                   </svg>
                   <span className="ml-1 text-gray-500">About Us</span>
@@ -80,7 +80,7 @@ export default function AboutPage() {
 
         <div className="grid md:grid-cols-2 gap-8 mb-12">
           {/* Vision Card */}
-          <div className="bg-white rounded-2xl shadow-xl p-8 border-l-4 border-blue-600">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 border-l-4 border-blue-600">
             <div className="flex items-center mb-6">
               <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mr-4">
                 <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -88,7 +88,7 @@ export default function AboutPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                 </svg>
               </div>
-              <h2 className="text-3xl font-bold text-gray-800">Our Vision</h2>
+              <h2 className="text-3xl font-bold text-gray-900">Our Vision</h2>
             </div>
             <p className="text-gray-700 text-lg leading-relaxed">
               {vision?.vision || "To be the leading maritime crew management company in Indonesia, recognized globally for excellence, integrity, and commitment to seafarers' welfare and international maritime standards."}
@@ -96,14 +96,14 @@ export default function AboutPage() {
           </div>
 
           {/* Mission Card */}
-          <div className="bg-white rounded-2xl shadow-xl p-8 border-l-4 border-cyan-600">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 border-l-4 border-cyan-600">
             <div className="flex items-center mb-6">
               <div className="w-12 h-12 rounded-full bg-cyan-100 flex items-center justify-center mr-4">
                 <svg className="w-6 h-6 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <h2 className="text-3xl font-bold text-gray-800">Our Mission</h2>
+              <h2 className="text-3xl font-bold text-gray-900">Our Mission</h2>
             </div>
             <p className="text-gray-700 text-lg leading-relaxed">
               {vision?.mission || "To provide professional maritime crew management services that comply with MLC 2006 and STCW standards, ensuring quality seafarers, excellent service to ship owners, and fostering a safe, respectful working environment for all maritime professionals."}
@@ -112,8 +112,8 @@ export default function AboutPage() {
         </div>
 
         {/* Core Values */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 mb-12">
-          <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">Core Values</h2>
+        <div className="bg-white rounded-2xl shadow-2xl p-8 mb-12">
+          <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">Core Values</h2>
           <div className="grid md:grid-cols-3 gap-6">
             {(vision?.coreValues || [
               "Integrity & Transparency",
@@ -136,8 +136,8 @@ export default function AboutPage() {
         </div>
 
         {/* Quality Objectives */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 mb-12">
-          <h2 className="text-3xl font-bold text-gray-800 mb-6">Quality Objectives</h2>
+        <div className="bg-white rounded-2xl shadow-2xl p-8 mb-12">
+          <h2 className="text-3xl font-bold text-gray-900 mb-6">Quality Objectives</h2>
           <div className="prose max-w-none text-gray-700">
             <p className="text-lg leading-relaxed whitespace-pre-line">
               {vision?.objectives || `Our quality management system is designed to:
@@ -154,8 +154,8 @@ export default function AboutPage() {
         </div>
 
         {/* Compliance Badges */}
-        <div className="bg-gradient-to-r from-blue-900 to-cyan-900 rounded-2xl shadow-xl p-8 text-white">
-          <h2 className="text-2xl font-bold mb-6 text-center">Certifications & Compliance</h2>
+        <div className="bg-gradient-to-r from-blue-900 to-cyan-900 rounded-2xl shadow-2xl p-8 text-white">
+          <h2 className="text-2xl font-extrabold mb-6 text-center">Certifications & Compliance</h2>
           <div className="grid md:grid-cols-4 gap-6 text-center">
             <div>
               <div className="text-4xl font-bold mb-2">ISO 9001</div>

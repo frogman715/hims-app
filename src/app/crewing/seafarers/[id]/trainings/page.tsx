@@ -121,23 +121,23 @@ export default function SeafarerTrainingsPage() {
         >
           ← Back to Seafarer
         </button>
-        <h1 className="text-2xl font-bold">Training Records for {seafarer.fullName}</h1>
+        <h1 className="text-2xl font-extrabold">Training Records for {seafarer.fullName}</h1>
       </div>
 
       {/* Add Training Form */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-6">
         <h2 className="text-xl font-semibold mb-4">Add New Training</h2>
-        <form onSubmit={handleAddTraining} className="space-y-4">
+        <form onSubmit={handleAddTraining} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="trainingType" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="trainingType" className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
                 Training Type *
               </label>
               <select
                 id="trainingType"
                 name="trainingType"
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="">Select training type</option>
                 <option value="Basic Safety Training (BST)">Basic Safety Training (BST)</option>
@@ -155,26 +155,26 @@ export default function SeafarerTrainingsPage() {
             </div>
 
             <div>
-              <label htmlFor="provider" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="provider" className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
                 Training Provider
               </label>
               <input
                 type="text"
                 id="provider"
                 name="provider"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="e.g., Maritime Training Center"
               />
             </div>
 
             <div>
-              <label htmlFor="result" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="result" className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
                 Result
               </label>
               <select
                 id="result"
                 name="result"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="">Select result</option>
                 <option value="Passed">Passed</option>
@@ -185,34 +185,34 @@ export default function SeafarerTrainingsPage() {
             </div>
 
             <div>
-              <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="date" className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
                 Training Date
               </label>
               <input
                 type="date"
                 id="date"
                 name="date"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
           </div>
 
           <div>
-            <label htmlFor="remarks" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="remarks" className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
               Remarks
             </label>
             <textarea
               id="remarks"
               name="remarks"
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
 
           <button
             type="submit"
             disabled={saving}
-            className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
+            className="bg-blue-600 text-white font-semibold px-8 py-3 rounded-lg shadow-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {saving ? 'Saving...' : 'Add Training'}
           </button>
@@ -220,19 +220,19 @@ export default function SeafarerTrainingsPage() {
       </div>
 
       {/* Trainings List */}
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="bg-white rounded-lg shadow-lg border border-gray-300 p-8">
         <h2 className="text-xl font-semibold mb-4">Training History</h2>
         {trainings.length === 0 ? (
           <p className="text-gray-500">No training records found.</p>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-6">
             {trainings.map((training) => (
-              <div key={training.id} className="border border-gray-200 rounded-lg p-4">
+              <div key={training.id} className="border border-gray-300 rounded-lg p-4">
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="font-medium text-gray-900">{training.trainingType}</h3>
                     {training.provider && (
-                      <p className="text-sm text-gray-600">Provider: {training.provider}</p>
+                      <p className="text-sm text-gray-800">Provider: {training.provider}</p>
                     )}
                     <div className="flex gap-4 text-sm text-gray-500 mt-1">
                       {training.date && (
@@ -249,7 +249,7 @@ export default function SeafarerTrainingsPage() {
                       )}
                     </div>
                     {training.remarks && (
-                      <p className="text-sm text-gray-600 mt-1">{training.remarks}</p>
+                      <p className="text-sm text-gray-800 mt-1">{training.remarks}</p>
                     )}
                   </div>
                   <div className="flex gap-2">

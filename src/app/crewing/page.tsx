@@ -190,7 +190,7 @@ export default function Crewing() {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-6">
               <div className="relative">
-                <div className="w-20 h-20 bg-white/20 rounded-3xl flex items-center justify-center backdrop-blur-sm shadow-2xl animate-pulse">
+                <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center backdrop-blur-md shadow-2xl animate-pulse">
                   <span className="text-4xl">⚓</span>
                 </div>
                 <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-400 rounded-full border-4 border-white animate-bounce"></div>
@@ -212,7 +212,7 @@ export default function Crewing() {
             <div className="hidden md:block">
               <button
                 onClick={() => router.push("/dashboard")}
-                className="group bg-white/10 hover:bg-white/20 text-white px-8 py-4 rounded-2xl backdrop-blur-sm border border-white/20 transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl"
+                className="group bg-white hover:bg-white text-white px-8 py-4 rounded-2xl backdrop-blur-md border border-white/20 transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-2xl"
               >
                 <div className="flex items-center space-x-3">
                   <svg className="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -226,51 +226,51 @@ export default function Crewing() {
 
           {/* Quick Stats */}
           <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-6">
-            <div className="group bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 hover:bg-white/20 transition-all duration-300 hover:scale-105 cursor-pointer">
+            <div className="group bg-white backdrop-blur-md rounded-2xl p-6 border border-white/20 hover:bg-white transition-all duration-300 hover:scale-105 cursor-pointer">
               <div className="flex items-center justify-between mb-2">
                 <div className="text-3xl font-bold text-white">245</div>
-                <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+                <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
                   <span className="text-white text-sm">👥</span>
                 </div>
               </div>
               <div className="text-blue-100 text-sm font-medium">Active Seafarers</div>
-              <div className="mt-2 w-full bg-white/20 rounded-full h-1">
+              <div className="mt-2 w-full bg-white rounded-full h-1">
                 <div className="bg-white h-1 rounded-full w-3/4"></div>
               </div>
             </div>
-            <div className="group bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 hover:bg-white/20 transition-all duration-300 hover:scale-105 cursor-pointer">
+            <div className="group bg-white backdrop-blur-md rounded-2xl p-6 border border-white/20 hover:bg-white transition-all duration-300 hover:scale-105 cursor-pointer">
               <div className="flex items-center justify-between mb-2">
                 <div className="text-3xl font-bold text-white">6</div>
-                <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+                <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
                   <span className="text-white text-sm">🏢</span>
                 </div>
               </div>
               <div className="text-blue-100 text-sm font-medium">Principals (18 Vessels)</div>
-              <div className="mt-2 w-full bg-white/20 rounded-full h-1">
+              <div className="mt-2 w-full bg-white rounded-full h-1">
                 <div className="bg-green-400 h-1 rounded-full w-5/6"></div>
               </div>
             </div>
-            <div className="group bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 hover:bg-white/20 transition-all duration-300 hover:scale-105 cursor-pointer">
+            <div className="group bg-white backdrop-blur-md rounded-2xl p-6 border border-white/20 hover:bg-white transition-all duration-300 hover:scale-105 cursor-pointer">
               <div className="flex items-center justify-between mb-2">
                 <div className="text-3xl font-bold text-white">156</div>
-                <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+                <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
                   <span className="text-white text-sm">📋</span>
                 </div>
               </div>
               <div className="text-blue-100 text-sm font-medium">Active Assignments</div>
-              <div className="mt-2 w-full bg-white/20 rounded-full h-1">
+              <div className="mt-2 w-full bg-white rounded-full h-1">
                 <div className="bg-yellow-400 h-1 rounded-full w-4/5"></div>
               </div>
             </div>
-            <div className="group bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 hover:bg-white/20 transition-all duration-300 hover:scale-105 cursor-pointer">
+            <div className="group bg-white backdrop-blur-md rounded-2xl p-6 border border-white/20 hover:bg-white transition-all duration-300 hover:scale-105 cursor-pointer">
               <div className="flex items-center justify-between mb-2">
                 <div className="text-3xl font-bold text-white">98%</div>
-                <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+                <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
                   <span className="text-white text-sm">✅</span>
                 </div>
               </div>
               <div className="text-blue-100 text-sm font-medium">Compliance Rate</div>
-              <div className="mt-2 w-full bg-white/20 rounded-full h-1">
+              <div className="mt-2 w-full bg-white rounded-full h-1">
                 <div className="bg-green-400 h-1 rounded-full w-full"></div>
               </div>
             </div>
@@ -290,7 +290,7 @@ export default function Crewing() {
         {/* Quick Actions & Recent Activity - MODERN MINIMALIST */}
         <div className="mb-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Quick Actions - Ultra Clean */}
-          <div className="bg-white rounded-xl border border-gray-200 hover:border-gray-300 transition-all duration-300 overflow-hidden group">
+          <div className="bg-white rounded-xl border border-gray-300 hover:border-gray-400 transition-all duration-300 overflow-hidden group">
             <div className="p-5 border-b border-gray-100">
               <div className="flex items-center gap-2">
                 <div className="w-1 h-6 bg-blue-600 rounded-full"></div>
@@ -300,14 +300,14 @@ export default function Crewing() {
             <div className="p-5 space-y-2">
               <Link
                 href="/crewing/seafarers/new"
-                className="flex items-center gap-3 p-3 rounded-lg hover:bg-blue-50 transition-colors group/item"
+                className="flex items-center gap-3 p-3 rounded-lg hover:bg-blue-100 transition-colors group/item"
               >
                 <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center group-hover/item:bg-blue-600 transition-colors">
                   <span className="text-blue-600 group-hover/item:text-white transition-colors text-lg">+</span>
                 </div>
                 <div className="flex-1">
                   <div className="font-medium text-gray-900 text-sm">Add New Seafarer</div>
-                  <div className="text-xs text-gray-500">Register crew member</div>
+                  <div className="text-sm text-gray-700">Register crew member</div>
                 </div>
               </Link>
               <Link
@@ -319,14 +319,14 @@ export default function Crewing() {
                 </div>
                 <div className="flex-1">
                   <div className="font-medium text-gray-900 text-sm">Fleet Management</div>
-                  <div className="text-xs text-gray-500">Principals & vessels</div>
+                  <div className="text-sm text-gray-700">Principals & vessels</div>
                 </div>
               </Link>
             </div>
           </div>
 
           {/* Recent Activity - Minimalist Design */}
-          <div className="bg-white rounded-xl border border-gray-200 hover:border-gray-300 transition-all duration-300 overflow-hidden">
+          <div className="bg-white rounded-xl border border-gray-300 hover:border-gray-400 transition-all duration-300 overflow-hidden">
             <div className="p-5 border-b border-gray-100">
               <div className="flex items-center gap-2">
                 <div className="w-1 h-6 bg-purple-600 rounded-full"></div>
@@ -338,21 +338,21 @@ export default function Crewing() {
                 <div className="w-2 h-2 bg-green-500 rounded-full mt-1.5 flex-shrink-0"></div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-900 truncate">New seafarer onboard</p>
-                  <p className="text-xs text-gray-500 mt-0.5">John Smith • 2h ago</p>
+                  <p className="text-sm text-gray-700 mt-0.5">John Smith • 2h ago</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                <div className="w-2 h-2 bg-blue-500 rounded-full mt-1.5 flex-shrink-0"></div>
+                <div className="w-2 h-2 bg-blue-600 rounded-full mt-1.5 flex-shrink-0"></div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-900 truncate">Document renewed</p>
-                  <p className="text-xs text-gray-500 mt-0.5">STCW for 15 crew • 4h ago</p>
+                  <p className="text-sm text-gray-700 mt-0.5">STCW for 15 crew • 4h ago</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
                 <div className="w-2 h-2 bg-amber-500 rounded-full mt-1.5 flex-shrink-0"></div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-900 truncate">Certificates expiring</p>
-                  <p className="text-xs text-gray-500 mt-0.5">8 documents • 6h ago</p>
+                  <p className="text-sm text-gray-700 mt-0.5">8 documents • 6h ago</p>
                 </div>
               </div>
             </div>
@@ -368,11 +368,11 @@ export default function Crewing() {
                 <div className="flex items-center gap-3">
                   <div className="w-1 h-8 bg-gradient-to-b from-blue-600 to-blue-400 rounded-full"></div>
                   <div>
-                    <h2 className="text-xl font-bold text-gray-900">{category.category}</h2>
+                    <h2 className="text-xl font-extrabold text-gray-900">{category.category}</h2>
                     <p className="text-gray-500 text-xs mt-0.5">{category.description}</p>
                   </div>
                 </div>
-                <div className="hidden md:flex items-center gap-2 text-xs font-medium text-gray-500 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-200">
+                <div className="hidden md:flex items-center gap-2 text-xs font-medium text-gray-500 bg-gray-100 px-3 py-2.5 rounded-full border border-gray-300">
                   <span className="w-1.5 h-1.5 bg-blue-600 rounded-full"></span>
                   {category.modules.length} Modules
                 </div>
@@ -384,7 +384,7 @@ export default function Crewing() {
                   <Link
                     key={module.href}
                     href={module.href}
-                    className="group relative bg-white rounded-lg border border-gray-200 hover:border-blue-400 hover:shadow-md transition-all duration-200 overflow-hidden"
+                    className="group relative bg-white rounded-lg border border-gray-300 hover:border-blue-400 hover:shadow-md transition-all duration-200 overflow-hidden"
                     style={{
                       animationDelay: `${(catIndex * 4 + index) * 50}ms`,
                       animationFillMode: 'both',
@@ -395,21 +395,21 @@ export default function Crewing() {
                     {/* Modern Card Layout */}
                     <div className="p-4">
                       <div className="flex items-start gap-3 mb-3">
-                        <div className={`w-10 h-10 bg-gradient-to-br ${module.color} rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform shadow-sm`}>
+                        <div className={`w-10 h-10 bg-gradient-to-br ${module.color} rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform shadow-md`}>
                           <span className="text-xl">{module.icon}</span>
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h3 className="text-sm font-semibold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors leading-tight">
+                          <h3 className="text-sm font-semibold text-gray-900 mb-1 group-hover:text-blue-700 transition-colors leading-tight">
                             {module.title}
                           </h3>
-                          <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">{module.description}</p>
+                          <p className="text-sm text-gray-700 line-clamp-2 leading-relaxed">{module.description}</p>
                         </div>
                       </div>
                       <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-600 bg-gray-50 px-2 py-1 rounded">
+                        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-700 bg-gray-100 px-4 py-2 rounded">
                           {module.stats}
                         </span>
-                        <svg className="w-4 h-4 text-gray-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4 text-gray-700 group-hover:text-blue-700 group-hover:translate-x-0.5 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                         </svg>
                       </div>

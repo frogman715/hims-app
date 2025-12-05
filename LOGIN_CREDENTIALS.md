@@ -1,32 +1,40 @@
 # 🔐 HANMARINE HIMS - LOGIN CREDENTIALS
-
-## 📧 Email yang BENAR untuk Login
-
-### ✅ ADMIN UTAMA (Gunakan ini untuk testing)
-```
-Email: admin@hanmarine.com
-Password: admin123
-Role: DIRECTOR (Full Access ke semua module)
-```
+**UPDATED: 6 Desember 2025 - 22:30 WIB**
 
 ---
 
-## 👥 User Berdasarkan ROLE
+## ✅ KREDENSIAL YANG BENAR (WORKING!)
 
-### 1️⃣ DIRECTOR Role
-**admin@hanmarine.com** / admin123 ⭐ (Recommended)
+### 🎯 ADMIN UTAMA - GUNAKAN INI!
+```
+Email: admin@hanmarine.co
+Password: admin123
+Role: DIRECTOR (Full Access)
+```
+
+**⚠️ PENTING**: Domain email sekarang `@hanmarine.co` (bukan .com!)
+
+---
+
+---
+
+## 👥 SEMUA USER ACCOUNTS (Password sama semua: admin123)
+
+### 1️⃣ DIRECTOR Role (Full Access)
+```
+admin@hanmarine.co / admin123 ⭐ RECOMMENDED
+rinaldy@hanmarine.co / admin123
+```
 - Full access ke semua module
 - Bisa lihat/edit semua data
-- Access: Crewing, Crew, Contracts, Documents, Compliance, Insurance, Accounting, HR, Quality, Admin
-
-**director@hims.com** / director123
-- Full access ke semua module
-- Same permissions dengan admin@hanmarine.com
+- Access: ALL modules
 
 ---
 
 ### 2️⃣ CDMO Role (Technical Admin)
-**cdmo@hims.com** / cdmo123
+```
+cdmo@hanmarine.co / admin123
+```
 - System administrator
 - Technical override capability
 - Access: Crewing, Crew, Contracts, Documents, Compliance, Insurance
@@ -34,20 +42,28 @@ Role: DIRECTOR (Full Access ke semua module)
 ---
 
 ### 3️⃣ OPERATIONAL Role
-**operational@hims.com** / operational123
+```
+dino@hanmarine.co / admin123
+```
 - Focus on vessel operations
-- Access: Vessels, Crew assignments
+- Access: Vessels, Crew assignments, Operations
 
 ---
 
 ### 4️⃣ ACCOUNTING Role
-**accounting@hims.com** / accounting123
+```
+arief@hanmarine.co / admin123
+```
 - Financial management
 - Access: Accounting, Agency Fees, Wages, Allotments, Billing
 
 ---
 
 ### 5️⃣ HR Role
+```
+hr@hanmarine.co / admin123
+auditor@hanmarine.co / admin123
+```
 **hr@hims.com** / hr123
 - Human resources management
 - Access: HR, Disciplinary, Orientation, National Holidays

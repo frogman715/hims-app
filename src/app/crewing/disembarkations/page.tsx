@@ -74,18 +74,18 @@ export default function DisembarkationsPage() {
             </h1>
             <button
               onClick={() => router.push("/crewing/disembarkations/new")}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
             >
               Add Disembarkation
             </button>
           </div>
-          <p className="text-sm text-gray-600">Pengajuan sign-off dengan alasan kontrak selesai, medical, emergency</p>
+          <p className="text-sm text-gray-800">Pengajuan sign-off dengan alasan kontrak selesai, medical, emergency</p>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
-          <div className="bg-white shadow overflow-hidden sm:rounded-md">
+          <div className="bg-white shadow overflow-hidden sm:rounded-lg">
             <ul className="divide-y divide-gray-200">
               {disembarkations.map((disembarkation) => (
                 <li key={disembarkation.id}>
@@ -110,7 +110,7 @@ export default function DisembarkationsPage() {
                             </p>
                           </div>
                           <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            <span className={`inline-flex items-center px-4.5 py-0.5 rounded-full text-xs font-medium ${
                               disembarkation.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :
                               disembarkation.status === 'APPROVED' ? 'bg-blue-100 text-blue-800' :
                               'bg-yellow-100 text-yellow-800'
@@ -125,7 +125,7 @@ export default function DisembarkationsPage() {
                           </div>
                         </div>
                         {disembarkation.remarks && (
-                          <p className="mt-2 text-sm text-gray-600">
+                          <p className="mt-2 text-sm text-gray-700">
                             Remarks: {disembarkation.remarks}
                           </p>
                         )}

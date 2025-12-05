@@ -73,18 +73,18 @@ export default function TreatmentRequestsPage() {
             </h1>
             <button
               onClick={() => router.push("/crewing/treatment-requests/new")}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
             >
               Add Treatment Request
             </button>
           </div>
-          <p className="text-sm text-gray-600">Form permintaan medical treatment yang harus di-approve Crewing Manager</p>
+          <p className="text-sm text-gray-800">Form permintaan medical treatment yang harus di-approve Crewing Manager</p>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
-          <div className="bg-white shadow overflow-hidden sm:rounded-md">
+          <div className="bg-white shadow overflow-hidden sm:rounded-lg">
             <ul className="divide-y divide-gray-200">
               {treatmentRequests.map((request) => (
                 <li key={request.id}>
@@ -111,7 +111,7 @@ export default function TreatmentRequestsPage() {
                             </p>
                           </div>
                           <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            <span className={`inline-flex items-center px-4.5 py-0.5 rounded-full text-xs font-medium ${
                               request.status === 'APPROVED' ? 'bg-green-100 text-green-800' :
                               request.status === 'REJECTED' ? 'bg-red-100 text-red-800' :
                               'bg-yellow-100 text-yellow-800'
@@ -123,7 +123,7 @@ export default function TreatmentRequestsPage() {
                             )}
                           </div>
                         </div>
-                        <p className="mt-2 text-sm text-gray-600">
+                        <p className="mt-2 text-sm text-gray-700">
                           {request.description}
                         </p>
                       </div>

@@ -75,18 +75,18 @@ export default function VacationPlansPage() {
             </h1>
             <button
               onClick={() => router.push("/crewing/vacation-plans/new")}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
             >
               Add Vacation Plan
             </button>
           </div>
-          <p className="text-sm text-gray-600">Rencana cuti crew untuk rotasi dan replacement planning</p>
+          <p className="text-sm text-gray-800">Rencana cuti crew untuk rotasi dan replacement planning</p>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
-          <div className="bg-white shadow overflow-hidden sm:rounded-md">
+          <div className="bg-white shadow overflow-hidden sm:rounded-lg">
             <ul className="divide-y divide-gray-200">
               {vacationPlans.map((plan) => (
                 <li key={plan.id}>
@@ -115,7 +115,7 @@ export default function VacationPlansPage() {
                             )}
                           </div>
                           <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            <span className={`inline-flex items-center px-4.5 py-0.5 rounded-full text-xs font-medium ${
                               plan.status === 'APPROVED' ? 'bg-green-100 text-green-800' :
                               plan.status === 'COMPLETED' ? 'bg-blue-100 text-blue-800' :
                               'bg-yellow-100 text-yellow-800'

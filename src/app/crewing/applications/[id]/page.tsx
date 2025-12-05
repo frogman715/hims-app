@@ -93,7 +93,7 @@ export default function EditApplicationPage() {
   if (fetchLoading) {
     return (
       <div className="max-w-2xl mx-auto p-6">
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white rounded-lg shadow-lg border border-gray-300 p-8">
           <div className="text-center">Loading...</div>
         </div>
       </div>
@@ -106,15 +106,15 @@ export default function EditApplicationPage() {
 
   return (
     <div className="max-w-2xl mx-auto p-6">
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h1 className="text-2xl font-bold mb-6">Edit Application</h1>
-        <p className="text-gray-600 mb-4">
+      <div className="bg-white rounded-lg shadow-lg border border-gray-300 p-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-6">Edit Application</h1>
+        <p className="text-gray-700 mb-4">
           Seafarer: <span className="font-medium">{application.seafarer.fullName}</span>
         </p>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label htmlFor="appliedRank" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="appliedRank" className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
               Applied Rank
             </label>
             <input
@@ -124,12 +124,12 @@ export default function EditApplicationPage() {
               value={formData.appliedRank}
               onChange={handleChange}
               placeholder="e.g., Captain, Chief Engineer, etc."
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
 
           <div>
-            <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="status" className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
               Status
             </label>
             <select
@@ -137,7 +137,7 @@ export default function EditApplicationPage() {
               name="status"
               value={formData.status}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="PENDING">Pending</option>
               <option value="APPROVED">Approved</option>
@@ -149,14 +149,14 @@ export default function EditApplicationPage() {
             <button
               type="submit"
               disabled={loading}
-              className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
+              className="bg-blue-600 text-white font-semibold px-8 py-3 rounded-lg shadow-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Updating...' : 'Update Application'}
             </button>
             <button
               type="button"
               onClick={() => router.back()}
-              className="bg-gray-500 text-white px-6 py-2 rounded-md hover:bg-gray-600"
+              className="bg-gray-600 text-white font-semibold px-8 py-3 rounded-lg shadow-md hover:bg-gray-600"
             >
               Cancel
             </button>

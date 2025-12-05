@@ -61,7 +61,7 @@ export default function ContractActionsPage() {
   const getStatusColor = (daysUntilExpiry: number) => {
     if (daysUntilExpiry < 0) return 'bg-red-100 text-red-800 border-red-200';
     if (daysUntilExpiry <= 30) return 'bg-amber-100 text-amber-800 border-amber-200';
-    return 'bg-gray-100 text-gray-800 border-gray-200';
+    return 'bg-gray-100 text-gray-800 border-gray-300';
   };
 
   const getStatusText = (daysUntilExpiry: number) => {
@@ -76,7 +76,7 @@ export default function ContractActionsPage() {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading contract actions...</p>
+          <p className="mt-4 text-gray-700">Loading contract actions...</p>
         </div>
       </div>
     );
@@ -95,7 +95,7 @@ export default function ContractActionsPage() {
             <div className="flex items-center space-x-4">
               <Link
                 href="/dashboard"
-                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-xl"
+                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
               >
                 ← Back to Dashboard
               </Link>
@@ -116,11 +116,11 @@ export default function ContractActionsPage() {
             <div className="bg-gradient-to-r from-red-50 to-red-100 border border-red-200 rounded-xl p-6">
               <div className="flex items-center">
                 <div className="w-12 h-12 bg-red-500 rounded-xl flex items-center justify-center mr-4">
-                  <span className="text-white text-xl font-bold">⚠️</span>
+                  <span className="text-white text-xl font-extrabold">⚠️</span>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-red-800">Expired Contracts</p>
-                  <p className="text-2xl font-bold text-red-900">
+                  <p className="text-2xl font-extrabold text-red-900">
                     {seafarersWithIssues.reduce((acc, seafarer) =>
                       acc + seafarer.contracts.filter(c => c.daysUntilExpiry < 0).length, 0
                     )}
@@ -132,11 +132,11 @@ export default function ContractActionsPage() {
             <div className="bg-gradient-to-r from-amber-50 to-amber-100 border border-amber-200 rounded-xl p-6">
               <div className="flex items-center">
                 <div className="w-12 h-12 bg-amber-500 rounded-xl flex items-center justify-center mr-4">
-                  <span className="text-white text-xl font-bold">📅</span>
+                  <span className="text-white text-xl font-extrabold">📅</span>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-amber-800">Expiring Soon</p>
-                  <p className="text-2xl font-bold text-amber-900">
+                  <p className="text-2xl font-extrabold text-amber-900">
                     {seafarersWithIssues.reduce((acc, seafarer) =>
                       acc + seafarer.contracts.filter(c => c.daysUntilExpiry >= 0 && c.daysUntilExpiry <= 30).length, 0
                     )}
@@ -147,12 +147,12 @@ export default function ContractActionsPage() {
 
             <div className="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-6">
               <div className="flex items-center">
-                <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center mr-4">
-                  <span className="text-white text-xl font-bold">📄</span>
+                <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center mr-4">
+                  <span className="text-white text-xl font-extrabold">📄</span>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-blue-800">Document Issues</p>
-                  <p className="text-2xl font-bold text-blue-900">
+                  <p className="text-2xl font-extrabold text-blue-900">
                     {seafarersWithIssues.reduce((acc, seafarer) => acc + seafarer.documents.length, 0)}
                   </p>
                 </div>
@@ -168,7 +168,7 @@ export default function ContractActionsPage() {
               <span className="text-green-600 text-2xl">✅</span>
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">All Clear!</h3>
-            <p className="text-gray-600">No seafarers require immediate attention at this time.</p>
+            <p className="text-gray-700">No seafarers require immediate attention at this time.</p>
             <Link
               href="/dashboard"
               className="inline-flex items-center mt-6 px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
@@ -179,7 +179,7 @@ export default function ContractActionsPage() {
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
             {seafarersWithIssues.map((seafarer, index) => (
-              <div key={index} className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-300">
+              <div key={index} className="bg-white rounded-xl shadow-lg border border-gray-300 overflow-hidden hover:shadow-2xl transition-all duration-300">
                 {/* Seafarer Header */}
                 <div className="bg-gradient-to-r from-slate-600 to-slate-700 p-4">
                   <div className="flex items-center">
@@ -209,11 +209,11 @@ export default function ContractActionsPage() {
                           <div key={contractIndex} className={`p-3 rounded-lg border ${getStatusColor(contract.daysUntilExpiry)}`}>
                             <div className="flex items-center justify-between mb-2">
                               <span className="font-medium text-sm">{contract.vesselName}</span>
-                              <span className="text-xs font-bold px-2 py-1 rounded-full bg-white/50">
+                              <span className="text-xs font-bold px-4 py-2 rounded-full bg-white">
                                 {getStatusText(contract.daysUntilExpiry)}
                               </span>
                             </div>
-                            <p className="text-xs text-gray-600 mb-3">
+                            <p className="text-xs text-gray-700 mb-3">
                               Expires: {new Date(contract.expiryDate).toLocaleDateString()}
                             </p>
 
@@ -250,11 +250,11 @@ export default function ContractActionsPage() {
                           <div key={docIndex} className={`p-3 rounded-lg border ${getStatusColor(doc.daysUntilExpiry)}`}>
                             <div className="flex items-center justify-between mb-2">
                               <span className="font-medium text-sm">{doc.type}</span>
-                              <span className="text-xs font-bold px-2 py-1 rounded-full bg-white/50">
+                              <span className="text-xs font-bold px-4 py-2 rounded-full bg-white">
                                 {getStatusText(doc.daysUntilExpiry)}
                               </span>
                             </div>
-                            <p className="text-xs text-gray-600">
+                            <p className="text-xs text-gray-700">
                               Expires: {new Date(doc.expiryDate).toLocaleDateString()}
                             </p>
                           </div>
@@ -284,7 +284,7 @@ export default function ContractActionsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-1">Quick Actions</h3>
-                <p className="text-gray-600 text-sm">Common tasks for managing crew contracts and documents</p>
+                <p className="text-gray-700 text-sm">Common tasks for managing crew contracts and documents</p>
               </div>
               <div className="flex gap-3">
                 <Link

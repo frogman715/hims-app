@@ -69,7 +69,7 @@ export default function CrewManningWorkflow() {
       description: "Seafarer submits application",
       icon: "📝",
       color: "from-blue-500 to-blue-600",
-      bgColor: "bg-blue-50",
+      bgColor: "bg-blue-100",
       borderColor: "border-blue-200",
       count: stats.received,
       link: "/crewing/applications?status=RECEIVED",
@@ -147,13 +147,13 @@ export default function CrewManningWorkflow() {
               <h1 className="text-4xl font-bold text-gray-900 mb-2">
                 Crew Manning Workflow
               </h1>
-              <p className="text-gray-600">
+              <p className="text-gray-700">
                 Alur lengkap dari aplikasi sampai seafarer siap berangkat ke kapal
               </p>
             </div>
             <Link
               href="/crewing"
-              className="px-6 py-3 bg-white border-2 border-gray-200 rounded-xl text-gray-700 font-semibold hover:border-blue-500 hover:text-blue-600 transition-all duration-200 shadow-sm hover:shadow-md"
+              className="px-6 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-700 font-semibold hover:border-blue-500 hover:text-blue-700 transition-all duration-200 shadow-md hover:shadow-md"
             >
               ← Kembali ke Crewing
             </Link>
@@ -166,11 +166,11 @@ export default function CrewManningWorkflow() {
             <Link
               key={step.id}
               href={step.link}
-              className={`${step.bgColor} border-2 ${step.borderColor} rounded-2xl p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 relative overflow-hidden group`}
+              className={`${step.bgColor} border-2 ${step.borderColor} rounded-2xl p-6 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 relative overflow-hidden group`}
             >
               {/* Badge Number */}
               <div className="absolute top-4 right-4">
-                <span className={`inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br ${step.color} text-white text-xl font-bold shadow-lg`}>
+                <span className={`inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br ${step.color} text-white text-xl font-extrabold shadow-lg`}>
                   {step.count}
                 </span>
               </div>
@@ -179,17 +179,17 @@ export default function CrewManningWorkflow() {
               <div className="text-6xl mb-4">{step.icon}</div>
 
               {/* Step Number */}
-              <div className={`inline-block px-3 py-1 rounded-full bg-gradient-to-br ${step.color} text-white text-sm font-semibold mb-3`}>
+              <div className={`inline-block px-3 py-2 rounded-full bg-gradient-to-br ${step.color} text-white text-sm font-semibold mb-3`}>
                 Step {step.id}
               </div>
 
               {/* Title */}
-              <h3 className="text-xl font-bold text-gray-900 mb-2">
+              <h3 className="text-xl font-extrabold text-gray-900 mb-2">
                 {step.title}
               </h3>
 
               {/* Description */}
-              <p className="text-gray-600 text-sm">
+              <p className="text-gray-700 text-sm">
                 {step.description}
               </p>
 
@@ -204,8 +204,8 @@ export default function CrewManningWorkflow() {
         </div>
 
         {/* Flow Diagram */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 border-2 border-gray-100">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">
+        <div className="bg-white rounded-2xl shadow-2xl p-8 border-2 border-gray-100">
+          <h2 className="text-2xl font-extrabold text-gray-900 mb-6">
             Alur Proses Manning
           </h2>
           
@@ -232,7 +232,7 @@ export default function CrewManningWorkflow() {
 
                 {/* Arrow */}
                 {index < workflowSteps.length - 1 && (
-                  <div className="mx-4 text-3xl text-gray-400">
+                  <div className="mx-4 text-3xl text-gray-700">
                     →
                   </div>
                 )}
@@ -245,10 +245,10 @@ export default function CrewManningWorkflow() {
         <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
           <Link
             href="/crewing/applications/new"
-            className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+            className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1"
           >
             <div className="text-4xl mb-3">➕</div>
-            <h3 className="text-xl font-bold mb-2">New Application</h3>
+            <h3 className="text-xl font-extrabold mb-2">New Application</h3>
             <p className="text-blue-100 text-sm">
               Input aplikasi baru dari seafarer
             </p>
@@ -256,10 +256,10 @@ export default function CrewManningWorkflow() {
 
           <Link
             href="/crewing/interviews/schedule"
-            className="bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl p-6 text-white hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+            className="bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl p-6 text-white hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1"
           >
             <div className="text-4xl mb-3">📅</div>
-            <h3 className="text-xl font-bold mb-2">Schedule Interview</h3>
+            <h3 className="text-xl font-extrabold mb-2">Schedule Interview</h3>
             <p className="text-indigo-100 text-sm">
               Jadwalkan interview untuk kandidat
             </p>
@@ -267,10 +267,10 @@ export default function CrewManningWorkflow() {
 
           <Link
             href="/crewing/reports"
-            className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 text-white hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+            className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 text-white hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1"
           >
             <div className="text-4xl mb-3">📊</div>
-            <h3 className="text-xl font-bold mb-2">Reports</h3>
+            <h3 className="text-xl font-extrabold mb-2">Reports</h3>
             <p className="text-green-100 text-sm">
               Lihat laporan recruitment & manning
             </p>

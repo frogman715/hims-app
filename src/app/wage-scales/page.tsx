@@ -181,7 +181,7 @@ export default function WageScalesPage() {
           <div className="flex items-center gap-4">
             <button
               onClick={() => router.push('/dashboard')}
-              className="flex items-center gap-2 bg-gray-500 hover:bg-gray-600 text-white font-semibold px-4 py-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+              className="flex items-center gap-2 bg-gray-500 hover:bg-gray-600 text-white font-semibold px-4 py-2 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -190,12 +190,12 @@ export default function WageScalesPage() {
             </button>
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Wage Scales Management</h1>
-              <p className="mt-2 text-gray-600">Manage standard wage scales for different vessel types and ranks</p>
+              <p className="mt-2 text-gray-700">Manage standard wage scales for different vessel types and ranks</p>
             </div>
           </div>
           <button
             onClick={() => setShowForm(!showForm)}
-            className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+            className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105"
           >
             {showForm ? 'Cancel' : '+ Add Wage Scale'}
           </button>
@@ -204,10 +204,10 @@ export default function WageScalesPage() {
 
       {/* Add/Edit Form */}
       {showForm && (
-        <div className="bg-gradient-to-r from-white/90 to-blue-50/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200/50 p-8 mb-8">
+        <div className="bg-gradient-to-r from-white to-blue-50 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-300 p-8 mb-8">
           <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">{editingScale ? 'Edit Wage Scale' : 'Add New Wage Scale'}</h2>
-            <p className="text-gray-600">Set standard wages for seafarers based on vessel type and rank</p>
+            <h2 className="text-2xl font-extrabold text-gray-900 mb-2">{editingScale ? 'Edit Wage Scale' : 'Add New Wage Scale'}</h2>
+            <p className="text-gray-700">Set standard wages for seafarers based on vessel type and rank</p>
           </div>
           <form onSubmit={handleSubmit} className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -220,7 +220,7 @@ export default function WageScalesPage() {
                   value={formData.vesselType}
                   onChange={handleInputChange}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                 >
                   <option value="">Select Vessel Type</option>
                   <option value="OIL_TANKER">Oil Tanker</option>
@@ -239,7 +239,7 @@ export default function WageScalesPage() {
                   value={formData.rank}
                   onChange={handleInputChange}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                 >
                   <option value="">Select Rank</option>
                   <option value="CAPTAIN">Captain</option>
@@ -269,7 +269,7 @@ export default function WageScalesPage() {
                   onChange={handleInputChange}
                   required
                   step="0.01"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                   placeholder="0.00"
                 />
               </div>
@@ -284,7 +284,7 @@ export default function WageScalesPage() {
                   onChange={handleInputChange}
                   required
                   step="0.01"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                   placeholder="0.00"
                 />
               </div>
@@ -299,7 +299,7 @@ export default function WageScalesPage() {
                   onChange={handleInputChange}
                   required
                   step="0.01"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                   placeholder="0.00"
                 />
               </div>
@@ -313,7 +313,7 @@ export default function WageScalesPage() {
                   value={formData.specialAllowance}
                   onChange={handleInputChange}
                   step="0.01"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                   placeholder="0.00"
                 />
               </div>
@@ -328,7 +328,7 @@ export default function WageScalesPage() {
                   onChange={handleInputChange}
                   required
                   step="0.01"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                   placeholder="0.00"
                 />
               </div>
@@ -343,7 +343,7 @@ export default function WageScalesPage() {
                   onChange={handleInputChange}
                   required
                   step="0.01"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                   placeholder="0.00"
                 />
               </div>
@@ -357,7 +357,7 @@ export default function WageScalesPage() {
                   value={formData.effectiveDate}
                   onChange={handleInputChange}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                 />
               </div>
               <div>
@@ -369,22 +369,22 @@ export default function WageScalesPage() {
                   name="expiryDate"
                   value={formData.expiryDate}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                 />
               </div>
             </div>
 
-            <div className="flex gap-4 pt-6 border-t border-gray-200">
+            <div className="flex gap-4 pt-6 border-t border-gray-300">
               <button
                 type="submit"
-                className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold px-8 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold px-8 py-3 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105"
               >
                 {editingScale ? 'Update Wage Scale' : 'Save Wage Scale'}
               </button>
               <button
                 type="button"
                 onClick={handleCancel}
-                className="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-semibold px-8 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                className="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-semibold px-8 py-3 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105"
               >
                 Cancel
               </button>
@@ -394,42 +394,42 @@ export default function WageScalesPage() {
       )}
 
       {/* Wage Scales List */}
-      <div className="bg-gradient-to-r from-white/90 to-gray-50/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200/50 overflow-hidden">
-        <div className="px-8 py-6 border-b border-gray-200">
-          <h2 className="text-xl font-bold text-gray-900">Standard Wage Scales</h2>
+      <div className="bg-gradient-to-r from-white to-gray-50 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-300 overflow-hidden">
+        <div className="px-8 py-6 border-b border-gray-300">
+          <h2 className="text-xl font-extrabold text-gray-900">Standard Wage Scales</h2>
         </div>
 
         {isLoading ? (
           <div className="p-8 text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading wage scales...</p>
+            <p className="mt-4 text-gray-700">Loading wage scales...</p>
           </div>
         ) : wageScales.length === 0 ? (
           <div className="p-8 text-center">
-            <p className="text-gray-600">No wage scales found. Create your first wage scale above.</p>
+            <p className="text-gray-700">No wage scales found. Create your first wage scale above.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-8 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Vessel Type</th>
-                  <th className="px-8 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Rank</th>
-                  <th className="px-8 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Basic Wage</th>
-                  <th className="px-8 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Monthly Total</th>
-                  <th className="px-8 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Effective</th>
-                  <th className="px-8 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
-                  <th className="px-8 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                  <th className="px-8 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Vessel Type</th>
+                  <th className="px-8 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Rank</th>
+                  <th className="px-8 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Basic Wage</th>
+                  <th className="px-8 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Monthly Total</th>
+                  <th className="px-8 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Effective</th>
+                  <th className="px-8 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</th>
+                  <th className="px-8 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {wageScales.map((scale) => (
-                  <tr key={scale.id} className="hover:bg-gray-50">
+                  <tr key={scale.id} className="hover:bg-gray-100">
                     <td className="px-8 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">{scale.vesselType.replace('_', ' ')}</div>
                     </td>
                     <td className="px-8 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-600">{scale.rank.replace('_', ' ')}</div>
+                      <div className="text-sm text-gray-800">{scale.rank.replace('_', ' ')}</div>
                     </td>
                     <td className="px-8 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">
@@ -442,12 +442,12 @@ export default function WageScalesPage() {
                       </div>
                     </td>
                     <td className="px-8 py-4 whitespace-nowrap">
-                      <div className="text-xs text-gray-500">
+                      <div className="text-sm text-gray-700">
                         {new Date(scale.effectiveDate).toLocaleDateString()}
                       </div>
                     </td>
                     <td className="px-8 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                      <span className={`inline-flex items-center px-3 py-2 rounded-full text-xs font-medium ${
                         scale.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                       }`}>
                         {scale.isActive ? 'Active' : 'Inactive'}

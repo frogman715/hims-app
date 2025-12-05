@@ -113,13 +113,13 @@ function NewContractForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-100 p-6">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Create New Contract</h1>
-            <p className="text-gray-600 mt-1">Add a new employment contract</p>
+            <p className="text-gray-700 mt-1">Add a new employment contract</p>
           </div>
           <Link
             href="/contracts"
@@ -131,7 +131,7 @@ function NewContractForm() {
 
         {/* Form */}
         <div className="bg-white rounded-lg shadow">
-          <div className="px-6 py-4 border-b border-gray-200">
+          <div className="px-6 py-4 border-b border-gray-300">
             <h2 className="text-xl font-semibold text-gray-900">Contract Details</h2>
           </div>
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
@@ -146,7 +146,7 @@ function NewContractForm() {
                   value={formData.contractNumber}
                   onChange={handleInputChange}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                   placeholder="Enter contract number"
                 />
               </div>
@@ -159,7 +159,7 @@ function NewContractForm() {
                   value={formData.contractKind}
                   onChange={handleInputChange}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                 >
                   <option value="SEA">SEA Contract (MLC Compliant)</option>
                   <option value="OFFICE_PKL">Office PKL Contract</option>
@@ -175,7 +175,7 @@ function NewContractForm() {
                       name="seaType"
                       value={formData.seaType}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                      className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                     >
                       <option value="">Select SEA Type</option>
                       <option value="KOREA">Korea</option>
@@ -193,7 +193,7 @@ function NewContractForm() {
                       name="maritimeLaw"
                       value={formData.maritimeLaw}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                      className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                       placeholder="e.g. Bahamas, Panama, Korea"
                     />
                   </div>
@@ -206,7 +206,7 @@ function NewContractForm() {
                       name="cbaReference"
                       value={formData.cbaReference}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                      className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                       placeholder="e.g. Lundqvist CBA 2024"
                     />
                   </div>
@@ -219,7 +219,7 @@ function NewContractForm() {
                       name="wageScaleHeaderId"
                       value={formData.wageScaleHeaderId}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                      className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                       placeholder="Wage scale header ID"
                     />
                   </div>
@@ -232,7 +232,7 @@ function NewContractForm() {
                       name="guaranteedOTHours"
                       value={formData.guaranteedOTHours}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                      className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                       placeholder="e.g. 103"
                     />
                   </div>
@@ -245,7 +245,7 @@ function NewContractForm() {
                       name="overtimeRate"
                       value={formData.overtimeRate}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                      className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                       placeholder="e.g. 125%"
                     />
                   </div>
@@ -259,7 +259,7 @@ function NewContractForm() {
                       name="onboardAllowance"
                       value={formData.onboardAllowance}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                      className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                       placeholder="Cash advance on board"
                     />
                   </div>
@@ -273,7 +273,7 @@ function NewContractForm() {
                       name="homeAllotment"
                       value={formData.homeAllotment}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                      className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                       placeholder="Monthly remittance"
                     />
                   </div>
@@ -287,7 +287,7 @@ function NewContractForm() {
                       name="specialAllowance"
                       value={formData.specialAllowance}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                      className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                       placeholder="SA for certain ships"
                     />
                   </div>
@@ -300,7 +300,7 @@ function NewContractForm() {
                       name="templateVersion"
                       value={formData.templateVersion}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                      className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                       placeholder="SEA template revision"
                     />
                   </div>
@@ -316,7 +316,7 @@ function NewContractForm() {
                   value={formData.crewId}
                   onChange={handleInputChange}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                   placeholder="Crew member ID"
                 />
               </div>
@@ -329,7 +329,7 @@ function NewContractForm() {
                   name="vesselId"
                   value={formData.vesselId}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                   placeholder="Vessel ID"
                 />
               </div>
@@ -342,7 +342,7 @@ function NewContractForm() {
                   name="principalId"
                   value={formData.principalId}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                   placeholder="Principal company ID"
                 />
               </div>
@@ -356,7 +356,7 @@ function NewContractForm() {
                   value={formData.rank}
                   onChange={handleInputChange}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                   placeholder="Job rank/position"
                 />
               </div>
@@ -370,7 +370,7 @@ function NewContractForm() {
                   value={formData.contractStart}
                   onChange={handleInputChange}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                 />
               </div>
               <div>
@@ -383,7 +383,7 @@ function NewContractForm() {
                   value={formData.contractEnd}
                   onChange={handleInputChange}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                 />
               </div>
               <div>
@@ -394,7 +394,7 @@ function NewContractForm() {
                   name="status"
                   value={formData.status}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                 >
                   <option value="DRAFT">Draft</option>
                   <option value="ACTIVE">Active</option>
@@ -410,7 +410,7 @@ function NewContractForm() {
                   name="currency"
                   value={formData.currency}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                 >
                   <option value="USD">USD</option>
                   <option value="EUR">EUR</option>
@@ -434,7 +434,7 @@ function NewContractForm() {
                     onChange={handleInputChange}
                     required
                     step="0.01"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                    className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                     placeholder="0.00"
                   />
                 </div>
@@ -448,7 +448,7 @@ function NewContractForm() {
                     value={formData.specialAllowance}
                     onChange={handleInputChange}
                     step="0.01"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                    className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                     placeholder="0.00"
                   />
                 </div>
@@ -462,7 +462,7 @@ function NewContractForm() {
                     value={formData.onboardAllowance}
                     onChange={handleInputChange}
                     step="0.01"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                    className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                     placeholder="0.00"
                   />
                 </div>
@@ -477,7 +477,7 @@ function NewContractForm() {
                     onChange={handleInputChange}
                     required
                     step="0.01"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                    className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                     placeholder="0.00"
                   />
                 </div>
@@ -494,7 +494,7 @@ function NewContractForm() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                className="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:cursor-not-allowed transition-all duration-200"
               >
                 {isSubmitting ? 'Creating...' : 'Create Contract'}
               </button>

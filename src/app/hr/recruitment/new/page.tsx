@@ -71,21 +71,21 @@ export default function NewRecruitmentPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-lg shadow-xl border-b border-white/20">
+      <header className="bg-white backdrop-blur-lg shadow-2xl border-b border-white/20">
         <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">
                 Add New Candidate
               </h1>
-              <p className="text-lg text-gray-600 mt-2 font-medium">
+              <p className="text-lg text-gray-700 mt-2 font-medium">
                 Register new recruitment candidate (AD-06)
               </p>
             </div>
             <div className="flex items-center space-x-4">
               <Link
                 href="/hr/recruitment"
-                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-xl"
+                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
               >
                 ← Back to Recruitment
               </Link>
@@ -96,7 +96,7 @@ export default function NewRecruitmentPage() {
 
       <main className="max-w-4xl mx-auto py-8 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
-          <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 p-8">
+          <div className="bg-white backdrop-blur-md rounded-2xl shadow-lg border border-white p-8">
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Candidate Name */}
               <div>
@@ -110,7 +110,7 @@ export default function NewRecruitmentPage() {
                   required
                   value={formData.candidateName}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                   placeholder="Enter candidate full name"
                 />
               </div>
@@ -126,7 +126,7 @@ export default function NewRecruitmentPage() {
                   required
                   value={formData.position}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                 >
                   <option value="">Select Position</option>
                   <option value="Captain">Captain</option>
@@ -163,9 +163,9 @@ export default function NewRecruitmentPage() {
                   name="appliedDate"
                   value={formData.appliedDate}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                 />
-                <p className="text-sm text-gray-600 mt-1">Leave empty to use today&apos;s date</p>
+                <p className="text-sm text-gray-800 mt-1">Leave empty to use today&apos;s date</p>
               </div>
 
               {/* Interview Date */}
@@ -179,7 +179,7 @@ export default function NewRecruitmentPage() {
                   name="interviewDate"
                   value={formData.interviewDate}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                 />
               </div>
 
@@ -194,7 +194,7 @@ export default function NewRecruitmentPage() {
                   name="interviewer"
                   value={formData.interviewer}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                   placeholder="Name of interviewer"
                 />
               </div>
@@ -209,7 +209,7 @@ export default function NewRecruitmentPage() {
                   name="result"
                   value={formData.result}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                 >
                   <option value="">Select Result</option>
                   <option value="PASSED">PASSED</option>
@@ -232,7 +232,7 @@ export default function NewRecruitmentPage() {
                   name="status"
                   value={formData.status}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                 >
                   <option value="APPLIED">APPLIED</option>
                   <option value="INTERVIEWED">INTERVIEWED</option>
@@ -252,24 +252,24 @@ export default function NewRecruitmentPage() {
                   rows={4}
                   value={formData.notes}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                   placeholder="Additional notes, comments, or observations"
                 />
               </div>
 
               {/* Action Buttons */}
-              <div className="flex gap-4 pt-6 border-t border-gray-200">
+              <div className="flex gap-4 pt-6 border-t border-gray-300">
                 <button
                   type="submit"
                   disabled={loading}
-                  className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-8 py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-8 py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed disabled:cursor-not-allowed"
                 >
                   {loading ? 'Creating...' : 'Create Candidate'}
                 </button>
                 <button
                   type="button"
                   onClick={() => router.back()}
-                  className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-8 py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl"
+                  className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-8 py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-2xl"
                 >
                   Cancel
                 </button>

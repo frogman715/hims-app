@@ -168,7 +168,7 @@ function NewReplacementForm() {
             <div className="flex items-center space-x-4">
               <Link
                 href="/crewing/replacements"
-                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-xl"
+                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
               >
                 ← Back to Replacements
               </Link>
@@ -186,26 +186,26 @@ function NewReplacementForm() {
             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-400 p-6 rounded-xl shadow-lg">
               <div className="flex items-center mb-4">
                 <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mr-4 shadow-lg">
-                  <span className="text-white text-xl font-bold">🔄</span>
+                  <span className="text-white text-xl font-extrabold">🔄</span>
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900">Replacement Needed</h2>
+                  <h2 className="text-xl font-extrabold text-gray-900">Replacement Needed</h2>
                   <p className="text-gray-700">Finding replacement for {replacementInfo.replaceSeafarerName} on {replacementInfo.vesselName}</p>
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl p-4 shadow-sm">
+              <div className="bg-white rounded-xl p-4 shadow-md">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                   <div>
-                    <span className="font-medium text-gray-600">Replacing:</span>
+                    <span className="font-medium text-gray-700">Replacing:</span>
                     <span className="ml-2 text-gray-900">{replacementInfo.replaceSeafarerName}</span>
                   </div>
                   <div>
-                    <span className="font-medium text-gray-600">Vessel:</span>
+                    <span className="font-medium text-gray-700">Vessel:</span>
                     <span className="ml-2 text-gray-900">{replacementInfo.vesselName}</span>
                   </div>
                   <div>
-                    <span className="font-medium text-gray-600">Contract Expires:</span>
+                    <span className="font-medium text-gray-700">Contract Expires:</span>
                     <span className="ml-2 text-gray-900">{new Date(replacementInfo.contractExpiry).toLocaleDateString()}</span>
                   </div>
                 </div>
@@ -221,22 +221,22 @@ function NewReplacementForm() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">Search</label>
                 <input
                   type="text"
                   placeholder="Name, rank, or nationality..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Rank</label>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">Rank</label>
                 <select
                   value={selectedRank}
                   onChange={(e) => setSelectedRank(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 >
                   <option value="">All Ranks</option>
                   <option value="Chief Engineer">Chief Engineer</option>
@@ -265,7 +265,7 @@ function NewReplacementForm() {
 
         {/* Available Seafarers List */}
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200">
+          <div className="px-6 py-4 border-b border-gray-300">
             <h2 className="text-xl font-semibold text-gray-900">
               Available Seafarers ({filteredSeafarers.length})
             </h2>
@@ -273,15 +273,15 @@ function NewReplacementForm() {
 
           {filteredSeafarers.length === 0 ? (
             <div className="text-center py-12">
-              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="mx-auto h-12 w-12 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
               <h3 className="mt-2 text-sm font-medium text-gray-900">No seafarers found</h3>
-              <p className="mt-1 text-sm text-gray-600">Try adjusting your search criteria.</p>
+              <p className="mt-1 text-sm text-gray-700">Try adjusting your search criteria.</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
+              <table className="min-w-full divide-y divide-gray-300">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -306,7 +306,7 @@ function NewReplacementForm() {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {filteredSeafarers.map((seafarer) => (
-                    <tr key={seafarer.id} className="hover:bg-gray-50">
+                    <tr key={seafarer.id} className="hover:bg-gray-100">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mr-3">
@@ -326,22 +326,22 @@ function NewReplacementForm() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {seafarer.rank}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {seafarer.experience} years
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {seafarer.nationality}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {seafarer.availableDate ? new Date(seafarer.availableDate).toLocaleDateString() : 'Immediate'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <button
                           onClick={() => handleSelectSeafarer(seafarer)}
-                          className="inline-flex items-center px-3 py-1 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
+                          className="inline-flex items-center px-3 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
                         >
                           Select for Replacement
                         </button>

@@ -45,16 +45,16 @@ export default async function SystemHealthPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header with Back Button */}
-      <div className="bg-white shadow-sm border-b">
+      <div className="bg-white shadow-md border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">System Health Dashboard</h1>
-              <p className="text-gray-600 mt-1">Overview of key system metrics and health indicators</p>
+              <p className="text-gray-700 mt-1">Overview of key system metrics and health indicators</p>
             </div>
             <Link
               href="/dashboard"
-              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-xl flex items-center space-x-2"
+              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl flex items-center space-x-2"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -68,7 +68,7 @@ export default async function SystemHealthPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Total Crew */}
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white rounded-lg shadow-lg border border-gray-300 p-8">
           <div className="flex items-center">
             <div className="p-3 rounded-full bg-blue-100">
               <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -76,14 +76,14 @@ export default async function SystemHealthPage() {
               </svg>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Crew</p>
-              <p className="text-2xl font-bold text-gray-900">{totalCrew.toLocaleString()}</p>
+              <p className="text-sm font-medium text-gray-700">Total Crew</p>
+              <p className="text-2xl font-extrabold text-gray-900">{totalCrew.toLocaleString()}</p>
             </div>
           </div>
         </div>
 
         {/* Active Contracts */}
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white rounded-lg shadow-lg border border-gray-300 p-8">
           <div className="flex items-center">
             <div className="p-3 rounded-full bg-green-100">
               <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -91,14 +91,14 @@ export default async function SystemHealthPage() {
               </svg>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Active Contracts</p>
-              <p className="text-2xl font-bold text-gray-900">{activeContracts.toLocaleString()}</p>
+              <p className="text-sm font-medium text-gray-700">Active Contracts</p>
+              <p className="text-2xl font-extrabold text-gray-900">{activeContracts.toLocaleString()}</p>
             </div>
           </div>
         </div>
 
         {/* Expiring Contracts */}
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white rounded-lg shadow-lg border border-gray-300 p-8">
           <div className="flex items-center">
             <div className="p-3 rounded-full bg-yellow-100">
               <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -106,14 +106,14 @@ export default async function SystemHealthPage() {
               </svg>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Expiring Soon (&lt; 30 days)</p>
-              <p className="text-2xl font-bold text-gray-900">{expiringContracts.toLocaleString()}</p>
+              <p className="text-sm font-medium text-gray-700">Expiring Soon (&lt; 30 days)</p>
+              <p className="text-2xl font-extrabold text-gray-900">{expiringContracts.toLocaleString()}</p>
             </div>
           </div>
         </div>
 
         {/* Total Principals */}
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white rounded-lg shadow-lg border border-gray-300 p-8">
           <div className="flex items-center">
             <div className="p-3 rounded-full bg-purple-100">
               <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -121,14 +121,14 @@ export default async function SystemHealthPage() {
               </svg>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Principals</p>
-              <p className="text-2xl font-bold text-gray-900">{totalPrincipals.toLocaleString()}</p>
+              <p className="text-sm font-medium text-gray-700">Total Principals</p>
+              <p className="text-2xl font-extrabold text-gray-900">{totalPrincipals.toLocaleString()}</p>
             </div>
           </div>
         </div>
 
         {/* Total Vessels */}
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white rounded-lg shadow-lg border border-gray-300 p-8">
           <div className="flex items-center">
             <div className="p-3 rounded-full bg-indigo-100">
               <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -136,8 +136,8 @@ export default async function SystemHealthPage() {
               </svg>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Vessels</p>
-              <p className="text-2xl font-bold text-gray-900">{totalVessels.toLocaleString()}</p>
+              <p className="text-sm font-medium text-gray-700">Total Vessels</p>
+              <p className="text-2xl font-extrabold text-gray-900">{totalVessels.toLocaleString()}</p>
             </div>
           </div>
         </div>

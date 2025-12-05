@@ -114,7 +114,7 @@ function ApplicationsContent() {
     
     const config = statusConfig[status] || { color: 'bg-gray-100 text-gray-800', text: status };
     return (
-      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${config.color}`}>
+      <span className={`px-3 py-2 rounded-full text-xs font-semibold ${config.color}`}>
         {config.text}
       </span>
     );
@@ -130,14 +130,14 @@ function ApplicationsContent() {
               <h1 className="text-4xl font-bold text-gray-900 mb-2">
                 Applications
               </h1>
-              <p className="text-gray-600">
+              <p className="text-gray-700">
                 Manage seafarer employment applications (Form CR-02)
               </p>
             </div>
             <div className="flex gap-3">
               <Link
                 href="/crewing/workflow"
-                className="px-6 py-3 bg-white border-2 border-gray-200 rounded-xl text-gray-700 font-semibold hover:border-blue-500 hover:text-blue-600 transition-all duration-200 shadow-sm hover:shadow-md"
+                className="px-6 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-700 font-semibold hover:border-blue-500 hover:text-blue-700 transition-all duration-200 shadow-md hover:shadow-md"
               >
                 ← Workflow
               </Link>
@@ -156,8 +156,8 @@ function ApplicationsContent() {
               const isActive = selectedStatus === option.value;
               const baseClasses = "px-4 py-2 rounded-xl font-semibold whitespace-nowrap transition-all duration-200";
               const activeClasses = isActive 
-                ? "bg-blue-500 text-white shadow-lg"
-                : "bg-white text-gray-700 border-2 border-gray-200 hover:border-blue-500";
+                ? "bg-blue-600 text-white shadow-lg"
+                : "bg-white text-gray-700 border-2 border-gray-300 hover:border-blue-500";
               
               return (
                 <button
@@ -176,10 +176,10 @@ function ApplicationsContent() {
         {applications.length === 0 ? (
           <div className="bg-white rounded-2xl shadow-lg p-12 text-center border-2 border-gray-100">
             <div className="text-6xl mb-4">📝</div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">
+            <h3 className="text-xl font-extrabold text-gray-900 mb-2">
               Tidak ada aplikasi
             </h3>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-700 mb-6">
               Belum ada aplikasi dengan status {selectedStatus}
             </p>
             <Link
@@ -204,10 +204,10 @@ function ApplicationsContent() {
                         {application.crew.fullName.charAt(0)}
                       </div>
                       <div>
-                        <h3 className="text-xl font-bold text-gray-900">
+                        <h3 className="text-xl font-extrabold text-gray-900">
                           {application.crew.fullName}
                         </h3>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-gray-800">
                           {application.crew.nationality || 'N/A'} • Current: {application.crew.rank}
                         </p>
                       </div>
@@ -216,29 +216,29 @@ function ApplicationsContent() {
                     {/* Application Details */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
                       <div>
-                        <div className="text-xs text-gray-500 mb-1">Applied Position</div>
+                        <div className="text-sm text-gray-700 mb-1">Applied Position</div>
                         <div className="font-semibold text-gray-900">{application.position}</div>
                       </div>
                       <div>
-                        <div className="text-xs text-gray-500 mb-1">Principal</div>
+                        <div className="text-sm text-gray-700 mb-1">Principal</div>
                         <div className="font-semibold text-gray-900">
                           {application.principal?.name || 'Any'}
                         </div>
                       </div>
                       <div>
-                        <div className="text-xs text-gray-500 mb-1">Application Date</div>
+                        <div className="text-sm text-gray-700 mb-1">Application Date</div>
                         <div className="font-semibold text-gray-900">
                           {new Date(application.applicationDate).toLocaleDateString('id-ID')}
                         </div>
                       </div>
                       <div>
-                        <div className="text-xs text-gray-500 mb-1">Status</div>
+                        <div className="text-sm text-gray-700 mb-1">Status</div>
                         {getStatusBadge(application.status)}
                       </div>
                     </div>
 
                     {/* Contact */}
-                    <div className="flex gap-4 text-sm text-gray-600">
+                    <div className="flex gap-4 text-sm text-gray-700">
                       {application.crew.phone && (
                         <div className="flex items-center gap-1">
                           📱 {application.crew.phone}
@@ -253,8 +253,8 @@ function ApplicationsContent() {
 
                     {/* Remarks */}
                     {application.remarks && (
-                      <div className="mt-3 p-3 bg-gray-50 rounded-lg">
-                        <div className="text-xs text-gray-500 mb-1">Remarks</div>
+                      <div className="mt-3 p-3 bg-gray-100 rounded-lg">
+                        <div className="text-sm text-gray-700 mb-1">Remarks</div>
                         <div className="text-sm text-gray-700">{application.remarks}</div>
                       </div>
                     )}
@@ -264,7 +264,7 @@ function ApplicationsContent() {
                   <div className="ml-4 flex flex-col gap-2">
                     <Link
                       href={`/crewing/applications/${application.id}`}
-                      className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-semibold hover:bg-blue-600 transition-all duration-200 text-center"
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-all duration-200 text-center"
                     >
                       View Details
                     </Link>

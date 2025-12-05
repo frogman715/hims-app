@@ -137,7 +137,7 @@ export default function PrepareJoiningPage() {
 
     const item = config[status] || { color: "bg-gray-100 text-gray-800", text: status };
     return (
-      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${item.color}`}>
+      <span className={`px-3 py-2 rounded-full text-xs font-semibold ${item.color}`}>
         {item.text}
       </span>
     );
@@ -168,14 +168,14 @@ export default function PrepareJoiningPage() {
               <h1 className="text-4xl font-bold text-gray-900 mb-2">
                 Preparing to Join
               </h1>
-              <p className="text-gray-600">
+              <p className="text-gray-700">
                 Step-by-step checklist untuk seafarer siap berangkat ke kapal
               </p>
             </div>
             <div className="flex gap-3">
               <Link
                 href="/crewing/workflow"
-                className="px-6 py-3 bg-white border-2 border-gray-200 rounded-xl text-gray-700 font-semibold hover:border-blue-500 hover:text-blue-600 transition-all duration-200 shadow-sm hover:shadow-md"
+                className="px-6 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-700 font-semibold hover:border-blue-500 hover:text-blue-700 transition-all duration-200 shadow-md hover:shadow-md"
               >
                 ← Workflow
               </Link>
@@ -191,8 +191,8 @@ export default function PrepareJoiningPage() {
                   onClick={() => setSelectedStatus(option.value)}
                   className={`px-4 py-2 rounded-xl font-semibold whitespace-nowrap transition-all duration-200 ${
                     isActive
-                      ? "bg-blue-500 text-white shadow-lg"
-                      : "bg-white text-gray-700 border-2 border-gray-200 hover:border-blue-500"
+                      ? "bg-blue-600 text-white shadow-lg"
+                      : "bg-white text-gray-700 border-2 border-gray-300 hover:border-blue-500"
                   }`}
                 >
                   {option.icon} {option.label}
@@ -205,10 +205,10 @@ export default function PrepareJoiningPage() {
         {prepareJoinings.length === 0 ? (
           <div className="bg-white rounded-2xl shadow-lg p-12 text-center border-2 border-gray-100">
             <div className="text-6xl mb-4">📋</div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">
+            <h3 className="text-xl font-extrabold text-gray-900 mb-2">
               Tidak ada preparation
             </h3>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-700 mb-6">
               Belum ada crew yang sedang preparing to join
             </p>
           </div>
@@ -229,10 +229,10 @@ export default function PrepareJoiningPage() {
                             {pj.crew.fullName.charAt(0)}
                           </div>
                           <div>
-                            <h3 className="text-2xl font-bold text-gray-900">
+                            <h3 className="text-2xl font-extrabold text-gray-900">
                               {pj.crew.fullName}
                             </h3>
-                            <p className="text-gray-600">
+                            <p className="text-gray-700">
                               {pj.crew.rank} • {pj.crew.nationality || "N/A"}
                             </p>
                           </div>
@@ -240,23 +240,23 @@ export default function PrepareJoiningPage() {
 
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                           <div>
-                            <div className="text-xs text-gray-500 mb-1">Vessel</div>
+                            <div className="text-sm text-gray-700 mb-1">Vessel</div>
                             <div className="font-semibold text-gray-900">
                               {pj.vessel?.name || "TBD"}
                             </div>
                           </div>
                           <div>
-                            <div className="text-xs text-gray-500 mb-1">Principal</div>
+                            <div className="text-sm text-gray-700 mb-1">Principal</div>
                             <div className="font-semibold text-gray-900">
                               {pj.principal?.name || "TBD"}
                             </div>
                           </div>
                           <div>
-                            <div className="text-xs text-gray-500 mb-1">Status</div>
+                            <div className="text-sm text-gray-700 mb-1">Status</div>
                             {getStatusBadge(pj.status)}
                           </div>
                           <div>
-                            <div className="text-xs text-gray-500 mb-1">Progress</div>
+                            <div className="text-sm text-gray-700 mb-1">Progress</div>
                             <div className="flex items-center gap-2">
                               <div className="flex-1 bg-gray-200 rounded-full h-2">
                                 <div
@@ -289,7 +289,7 @@ export default function PrepareJoiningPage() {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="bg-blue-50 rounded-xl p-4">
+                      <div className="bg-blue-100 rounded-xl p-4">
                         <div className="font-bold text-blue-900 mb-3">
                           📄 Documents
                         </div>
@@ -378,7 +378,7 @@ export default function PrepareJoiningPage() {
                             <span className="text-sm">Medical Valid</span>
                           </label>
                           {pj.medicalExpiry && (
-                            <div className="text-xs text-gray-600 ml-7">
+                            <div className="text-xs text-gray-700 ml-7">
                               Exp: {new Date(pj.medicalExpiry).toLocaleDateString("id-ID")}
                             </div>
                           )}
@@ -421,7 +421,7 @@ export default function PrepareJoiningPage() {
                             <span className="text-sm">Ticket Booked</span>
                           </label>
                           {pj.flightNumber && (
-                            <div className="text-xs text-gray-600 ml-7">
+                            <div className="text-xs text-gray-700 ml-7">
                               Flight: {pj.flightNumber}
                             </div>
                           )}
@@ -460,8 +460,8 @@ export default function PrepareJoiningPage() {
                     </div>
 
                     {pj.remarks && (
-                      <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                        <div className="text-xs text-gray-500 mb-1">Remarks</div>
+                      <div className="mt-4 p-4 bg-gray-100 rounded-lg">
+                        <div className="text-sm text-gray-700 mb-1">Remarks</div>
                         <div className="text-sm text-gray-700">{pj.remarks}</div>
                       </div>
                     )}

@@ -121,23 +121,23 @@ export default function SeafarerMedicalPage() {
         >
           ← Back to Seafarer
         </button>
-        <h1 className="text-2xl font-bold">Medical Records for {seafarer.fullName}</h1>
+        <h1 className="text-2xl font-extrabold">Medical Records for {seafarer.fullName}</h1>
       </div>
 
       {/* Add Medical Record Form */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-6">
         <h2 className="text-xl font-semibold mb-4">Add New Medical Record</h2>
-        <form onSubmit={handleAddMedicalRecord} className="space-y-4">
+        <form onSubmit={handleAddMedicalRecord} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="type" className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
                 Record Type *
               </label>
               <select
                 id="type"
                 name="type"
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="">Select record type</option>
                 <option value="Medical Advice">Medical Advice</option>
@@ -151,25 +151,25 @@ export default function SeafarerMedicalPage() {
             </div>
 
             <div>
-              <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="date" className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
                 Date
               </label>
               <input
                 type="date"
                 id="date"
                 name="date"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
 
             <div>
-              <label htmlFor="result" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="result" className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
                 Result/Status
               </label>
               <select
                 id="result"
                 name="result"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="">Select result</option>
                 <option value="Fit for Duty">Fit for Duty</option>
@@ -183,28 +183,28 @@ export default function SeafarerMedicalPage() {
             </div>
 
             <div>
-              <label htmlFor="approvedBy" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="approvedBy" className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
                 Approved By
               </label>
               <input
                 type="text"
                 id="approvedBy"
                 name="approvedBy"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Doctor's name"
               />
             </div>
           </div>
 
           <div>
-            <label htmlFor="remarks" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="remarks" className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
               Details/Remarks
             </label>
             <textarea
               id="remarks"
               name="remarks"
               rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Describe the medical condition, treatment, or advice given..."
             />
           </div>
@@ -212,7 +212,7 @@ export default function SeafarerMedicalPage() {
           <button
             type="submit"
             disabled={saving}
-            className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
+            className="bg-blue-600 text-white font-semibold px-8 py-3 rounded-lg shadow-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {saving ? 'Saving...' : 'Add Medical Record'}
           </button>
@@ -220,14 +220,14 @@ export default function SeafarerMedicalPage() {
       </div>
 
       {/* Medical Records List */}
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="bg-white rounded-lg shadow-lg border border-gray-300 p-8">
         <h2 className="text-xl font-semibold mb-4">Medical History</h2>
         {medicalRecords.length === 0 ? (
           <p className="text-gray-500">No medical records found.</p>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-6">
             {medicalRecords.map((record) => (
-              <div key={record.id} className="border border-gray-200 rounded-lg p-4">
+              <div key={record.id} className="border border-gray-300 rounded-lg p-4">
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="font-medium text-gray-900">{record.type}</h3>
@@ -248,10 +248,10 @@ export default function SeafarerMedicalPage() {
                       )}
                     </div>
                     {record.approvedBy && (
-                      <p className="text-sm text-gray-600 mt-1">Approved by: {record.approvedBy}</p>
+                      <p className="text-sm text-gray-800 mt-1">Approved by: {record.approvedBy}</p>
                     )}
                     {record.remarks && (
-                      <p className="text-sm text-gray-600 mt-2">{record.remarks}</p>
+                      <p className="text-sm text-gray-800 mt-2">{record.remarks}</p>
                     )}
                   </div>
                   <div className="flex gap-2">

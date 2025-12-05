@@ -67,30 +67,30 @@ export default function CommunicationManagementPage() {
       HIGH: "bg-orange-50 text-orange-700 border-orange-200",
       CRITICAL: "bg-red-50 text-red-700 border-red-200"
     };
-    return styles[priority] || "bg-gray-50 text-gray-700";
+    return styles[priority] || "bg-gray-100 text-gray-700";
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-100 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
           <nav className="flex mb-4" aria-label="Breadcrumb">
             <ol className="inline-flex items-center space-x-1 md:space-x-3">
               <li className="inline-flex items-center">
-                <Link href="/dashboard" className="text-gray-700 hover:text-blue-600">Dashboard</Link>
+                <Link href="/dashboard" className="text-gray-700 hover:text-blue-700">Dashboard</Link>
               </li>
               <li>
                 <div className="flex items-center">
-                  <svg className="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="w-6 h-6 text-gray-700" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
                   </svg>
-                  <Link href="/compliance" className="ml-1 text-gray-700 hover:text-blue-600">Compliance</Link>
+                  <Link href="/compliance" className="ml-1 text-gray-700 hover:text-blue-700">Compliance</Link>
                 </div>
               </li>
               <li>
                 <div className="flex items-center">
-                  <svg className="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="w-6 h-6 text-gray-700" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
                   </svg>
                   <span className="ml-1 text-gray-500">Communication Management</span>
@@ -102,7 +102,7 @@ export default function CommunicationManagementPage() {
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Communication Management</h1>
-              <p className="text-gray-600 mt-1">HGQS Annex C - MLC 2006 Reg 5.1.5 Compliant</p>
+              <p className="text-gray-700 mt-1">HGQS Annex C - MLC 2006 Reg 5.1.5 Compliant</p>
             </div>
             <button
               onClick={() => setShowNewForm(true)}
@@ -122,7 +122,7 @@ export default function CommunicationManagementPage() {
               className={`p-4 rounded-xl border-2 text-left transition-all ${
                 filter === type.value
                   ? `border-${type.color}-500 bg-${type.color}-50`
-                  : "border-gray-200 bg-white hover:border-gray-300"
+                  : "border-gray-300 bg-white hover:border-gray-400"
               }`}
             >
               <div className="text-2xl mb-2">{type.icon}</div>
@@ -133,7 +133,7 @@ export default function CommunicationManagementPage() {
 
         {/* Emergency Contact List */}
         <div className="bg-gradient-to-r from-red-600 to-orange-600 rounded-xl shadow-lg p-6 mb-8 text-white">
-          <h2 className="text-xl font-bold mb-4 flex items-center">
+          <h2 className="text-xl font-extrabold mb-4 flex items-center">
             <span className="mr-2">🚨</span>
             Emergency Contact List
           </h2>
@@ -165,24 +165,24 @@ export default function CommunicationManagementPage() {
         <div className="bg-white rounded-lg shadow mb-6 p-2 flex gap-2 overflow-x-auto">
           <button
             onClick={() => setFilter("ALL")}
-            className={`px-4 py-2 rounded-md font-medium whitespace-nowrap ${
-              filter === "ALL" ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-100"
+            className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap ${
+              filter === "ALL" ? "bg-blue-600 text-white" : "text-gray-700 hover:bg-gray-100"
             }`}
           >
             All Communications
           </button>
           <button
             onClick={() => setFilter("PENDING")}
-            className={`px-4 py-2 rounded-md font-medium whitespace-nowrap ${
-              filter === "PENDING" ? "bg-yellow-600 text-white" : "text-gray-600 hover:bg-gray-100"
+            className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap ${
+              filter === "PENDING" ? "bg-yellow-600 text-white" : "text-gray-700 hover:bg-gray-100"
             }`}
           >
             Pending
           </button>
           <button
             onClick={() => setFilter("CRITICAL")}
-            className={`px-4 py-2 rounded-md font-medium whitespace-nowrap ${
-              filter === "CRITICAL" ? "bg-red-600 text-white" : "text-gray-600 hover:bg-gray-100"
+            className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap ${
+              filter === "CRITICAL" ? "bg-red-600 text-white" : "text-gray-700 hover:bg-gray-100"
             }`}
           >
             Critical
@@ -198,29 +198,29 @@ export default function CommunicationManagementPage() {
           <div className="bg-white rounded-xl shadow p-12 text-center">
             <div className="text-6xl mb-4">📭</div>
             <h3 className="text-xl font-semibold text-gray-800 mb-2">No Communications Found</h3>
-            <p className="text-gray-600">Start by creating a new communication record.</p>
+            <p className="text-gray-700">Start by creating a new communication record.</p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-6">
             {communications.map((comm) => (
               <div key={comm.id} className="bg-white rounded-xl shadow hover:shadow-lg transition-shadow p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadge(comm.status)}`}>
+                      <span className={`px-3 py-2 rounded-full text-xs font-semibold ${getStatusBadge(comm.status)}`}>
                         {comm.status}
                       </span>
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getPriorityBadge(comm.priority)}`}>
+                      <span className={`px-3 py-2 rounded-full text-xs font-semibold border ${getPriorityBadge(comm.priority)}`}>
                         {comm.priority} PRIORITY
                       </span>
-                      <span className="text-xs text-gray-500">
+                      <span className="text-sm text-gray-700">
                         {new Date(comm.createdAt).toLocaleDateString()}
                       </span>
                     </div>
                     <h3 className="text-lg font-bold text-gray-900">{comm.subject}</h3>
-                    <p className="text-gray-600 mt-1">{comm.description}</p>
+                    <p className="text-gray-700 mt-1">{comm.description}</p>
                   </div>
-                  <button className="ml-4 px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-lg font-medium">
+                  <button className="ml-4 px-4 py-2 text-blue-600 hover:bg-blue-100 rounded-lg font-medium">
                     View Details →
                   </button>
                 </div>

@@ -413,20 +413,20 @@ export default function FormReviewPage() {
             <h1 className="text-3xl font-bold mb-2">{form.template.formName}</h1>
             <div className="flex gap-2 mb-4">
               <span
-                className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(
+                className={`px-3 py-2 rounded-full text-sm font-semibold ${getStatusColor(
                   form.status
                 )}`}
               >
                 {form.status.replace("_", " ")}
               </span>
               <span
-                className={`px-3 py-1 rounded-full text-sm font-semibold ${getCategoryColor(
+                className={`px-3 py-2 rounded-full text-sm font-semibold ${getCategoryColor(
                   form.template.formCategory
                 )}`}
               >
                 {form.template.formCategory}
               </span>
-              <span className="px-3 py-1 rounded-full text-sm font-semibold bg-gray-100 text-gray-800">
+              <span className="px-3 py-2 rounded-full text-sm font-semibold bg-gray-100 text-gray-800">
                 v{form.version}
               </span>
             </div>
@@ -520,10 +520,10 @@ export default function FormReviewPage() {
 
       {/* Crew Information */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-        <h2 className="text-xl font-bold mb-4">Crew Information</h2>
+        <h2 className="text-2xl font-extrabold text-gray-900 mb-4">Crew Information</h2>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
               Full Name
             </label>
             <div className="text-lg font-semibold">
@@ -531,7 +531,7 @@ export default function FormReviewPage() {
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
               Rank
             </label>
             <div className="text-lg font-semibold">
@@ -539,7 +539,7 @@ export default function FormReviewPage() {
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
               Date of Birth
             </label>
             <div className="text-lg">
@@ -547,7 +547,7 @@ export default function FormReviewPage() {
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
               Passport Number
             </label>
             <div className="text-lg">
@@ -555,7 +555,7 @@ export default function FormReviewPage() {
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
               Seaman Book Number
             </label>
             <div className="text-lg">
@@ -563,7 +563,7 @@ export default function FormReviewPage() {
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
               Principal
             </label>
             <div className="text-lg font-semibold">
@@ -573,7 +573,7 @@ export default function FormReviewPage() {
           {form.prepareJoining.assignment && (
             <>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
                   Vessel
                 </label>
                 <div className="text-lg font-semibold">
@@ -581,7 +581,7 @@ export default function FormReviewPage() {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
                   Join Date
                 </label>
                 <div className="text-lg">
@@ -591,7 +591,7 @@ export default function FormReviewPage() {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
                   Port
                 </label>
                 <div className="text-lg">
@@ -605,11 +605,11 @@ export default function FormReviewPage() {
 
       {/* Form Data */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-        <h2 className="text-xl font-bold mb-4">Form Data</h2>
-        <div className="space-y-4">
+        <h2 className="text-2xl font-extrabold text-gray-900 mb-4">Form Data</h2>
+        <div className="space-y-6">
           {Object.entries(formData).map(([key, value]) => (
             <div key={key}>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
                 {key
                   .replace(/([A-Z])/g, " $1")
                   .replace(/^./, (str) => str.toUpperCase())}
@@ -621,7 +621,7 @@ export default function FormReviewPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, [key]: e.target.value })
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               ) : (
                 <div className="text-lg">{value as string}</div>
@@ -632,9 +632,9 @@ export default function FormReviewPage() {
       </div>
 
       {/* Approval Timeline */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-xl font-bold mb-4">Approval Timeline</h2>
-        <div className="space-y-4">
+      <div className="bg-white rounded-lg shadow-lg border border-gray-300 p-8">
+        <h2 className="text-2xl font-extrabold text-gray-900 mb-4">Approval Timeline</h2>
+        <div className="space-y-6">
           <div className="flex items-start gap-4">
             <div className="w-24 text-sm text-gray-500">Created</div>
             <div className="flex-1">
@@ -651,7 +651,7 @@ export default function FormReviewPage() {
                 <div className="font-semibold">
                   {new Date(form.submittedAt).toLocaleString()}
                 </div>
-                <div className="text-sm text-gray-600">by {form.submittedBy}</div>
+                <div className="text-sm text-gray-800">by {form.submittedBy}</div>
               </div>
             </div>
           )}
@@ -663,7 +663,7 @@ export default function FormReviewPage() {
                 <div className="font-semibold">
                   {new Date(form.reviewedAt).toLocaleString()}
                 </div>
-                <div className="text-sm text-gray-600">by {form.reviewedBy}</div>
+                <div className="text-sm text-gray-800">by {form.reviewedBy}</div>
               </div>
             </div>
           )}
@@ -675,7 +675,7 @@ export default function FormReviewPage() {
                 <div className="font-semibold">
                   {new Date(form.approvedAt).toLocaleString()}
                 </div>
-                <div className="text-sm text-gray-600">by {form.approvedBy}</div>
+                <div className="text-sm text-gray-800">by {form.approvedBy}</div>
               </div>
             </div>
           )}
@@ -714,7 +714,7 @@ export default function FormReviewPage() {
           value={rejectionReason}
           onChange={(e) => setRejectionReason(e.target.value)}
           placeholder="Provide reason for rejection..."
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 mb-4"
+          className="w-full px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 mb-4"
           rows={4}
         />
         <div className="flex flex-col sm:flex-row justify-end gap-2 mt-6">
@@ -746,7 +746,7 @@ export default function FormReviewPage() {
           value={requestedChanges}
           onChange={(e) => setRequestedChanges(e.target.value)}
           placeholder="Describe what changes are needed..."
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 mb-4"
+          className="w-full px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 mb-4"
           rows={4}
         />
         <div className="flex flex-col sm:flex-row justify-end gap-2 mt-6">

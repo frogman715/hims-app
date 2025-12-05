@@ -27,22 +27,22 @@ export default function Quality() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       {/* Header with HGQS branding */}
-      <header className="bg-white/80 backdrop-blur-lg shadow-xl border-b border-white/20">
+      <header className="bg-white backdrop-blur-lg shadow-2xl border-b border-white/20">
         <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-700 to-slate-900 bg-clip-text text-transparent">
                 HGQS Quality Management System
               </h1>
-              <p className="text-lg text-gray-600 mt-2 font-medium">ISO 9001:2015 & MLC 2006 Compliant Quality Assurance</p>
+              <p className="text-lg text-gray-700 mt-2 font-medium">ISO 9001:2015 & MLC 2006 Compliant Quality Assurance</p>
               <div className="flex items-center space-x-4 mt-3">
-                <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+                <div className="bg-blue-100 text-blue-800 px-3 py-2 rounded-full text-sm font-medium">
                   ISO 9001:2015 Certified
                 </div>
-                <div className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                <div className="bg-green-100 text-green-800 px-3 py-2 rounded-full text-sm font-medium">
                   MLC 2006 Compliant
                 </div>
-                <div className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium">
+                <div className="bg-purple-100 text-purple-800 px-3 py-2 rounded-full text-sm font-medium">
                   HGQS-MM Rev. 00
                 </div>
               </div>
@@ -50,11 +50,11 @@ export default function Quality() {
             <div className="flex items-center space-x-4">
               <Link
                 href="/dashboard"
-                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-xl"
+                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
               >
                 ← Back to Dashboard
               </Link>
-              <div className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+              <div className="bg-green-100 text-green-800 px-3 py-2 rounded-full text-sm font-medium">
                 System Online
               </div>
             </div>
@@ -65,12 +65,12 @@ export default function Quality() {
       <main className="max-w-7xl mx-auto py-8 sm:px-6 lg:px-8">
         {/* HGQS Overview */}
         <div className="px-4 py-6 sm:px-0 mb-8">
-          <div className="bg-white/70 backdrop-blur-sm rounded-xl shadow-lg border border-gray-100 p-6">
-            <h2 className="text-2xl font-bold text-slate-800 mb-4">HGQS Quality Management System Overview</h2>
+          <div className="bg-white backdrop-blur-md rounded-xl shadow-lg border border-gray-100 p-6">
+            <h2 className="text-2xl font-extrabold text-slate-800 mb-4">HGQS Quality Management System Overview</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <Link
                 href="/quality/manual/main"
-                className="group text-center p-4 rounded-lg border border-blue-200 hover:bg-blue-50 transition-colors duration-300"
+                className="group text-center p-4 rounded-lg border border-blue-200 hover:bg-blue-100 transition-colors duration-300"
               >
                 <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform duration-300">
                   <span className="text-blue-600 text-2xl">📋</span>
@@ -104,7 +104,7 @@ export default function Quality() {
 
         {/* Core HGQS Modules */}
         <div className="px-4 py-6 sm:px-0">
-          <h2 className="text-2xl font-bold text-slate-800 mb-6">Core Quality Management Modules</h2>
+          <h2 className="text-2xl font-extrabold text-slate-800 mb-6">Core Quality Management Modules</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Document Control */}
             <Link
@@ -113,9 +113,9 @@ export default function Quality() {
             >
               <div className="flex items-center mb-4">
                 <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-300">
-                  <span className="text-white text-xl font-bold">📋</span>
+                  <span className="text-white text-xl font-extrabold">📋</span>
                 </div>
-                <h3 className="text-xl font-bold text-blue-900">Document Control</h3>
+                <h3 className="text-xl font-extrabold text-blue-900">Document Control</h3>
               </div>
               <p className="text-sm text-blue-700 leading-relaxed mb-4">
                 HGQS Document Management System - Control quality documents, procedures, and maintain version control
@@ -135,9 +135,9 @@ export default function Quality() {
             >
               <div className="flex items-center mb-4">
                 <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-300">
-                  <span className="text-white text-xl font-bold">🔍</span>
+                  <span className="text-white text-xl font-extrabold">🔍</span>
                 </div>
-                <h3 className="text-xl font-bold text-green-900">Internal Audits</h3>
+                <h3 className="text-xl font-extrabold text-green-900">Internal Audits</h3>
               </div>
               <p className="text-sm text-green-700 leading-relaxed mb-4">
                 Conduct internal quality audits, track findings, and ensure ISO 9001:2015 compliance
@@ -157,9 +157,9 @@ export default function Quality() {
             >
               <div className="flex items-center mb-4">
                 <div className="w-12 h-12 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-lg flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-300">
-                  <span className="text-white text-xl font-bold">🔧</span>
+                  <span className="text-white text-xl font-extrabold">🔧</span>
                 </div>
-                <h3 className="text-xl font-bold text-orange-900">Non-conformance & CAPA</h3>
+                <h3 className="text-xl font-extrabold text-orange-900">Non-conformance & CAPA</h3>
               </div>
               <p className="text-sm text-orange-700 leading-relaxed mb-4">
                 Track non-conformities, implement corrective and preventive actions (CAPA)
@@ -179,9 +179,9 @@ export default function Quality() {
             >
               <div className="flex items-center mb-4">
                 <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-300">
-                  <span className="text-white text-xl font-bold">⚠️</span>
+                  <span className="text-white text-xl font-extrabold">⚠️</span>
                 </div>
-                <h3 className="text-xl font-bold text-red-900">Risk Management</h3>
+                <h3 className="text-xl font-extrabold text-red-900">Risk Management</h3>
               </div>
               <p className="text-sm text-red-700 leading-relaxed mb-4">
                 Identify, assess, and mitigate operational risks - HGQS Risk Evaluation & Treatment
@@ -201,9 +201,9 @@ export default function Quality() {
             >
               <div className="flex items-center mb-4">
                 <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-300">
-                  <span className="text-white text-xl font-bold">🎓</span>
+                  <span className="text-white text-xl font-extrabold">🎓</span>
                 </div>
-                <h3 className="text-xl font-bold text-indigo-900">Training Management</h3>
+                <h3 className="text-xl font-extrabold text-indigo-900">Training Management</h3>
               </div>
               <p className="text-sm text-indigo-700 leading-relaxed mb-4">
                 Employee training programs, competency assessment, and STCW compliance
@@ -223,9 +223,9 @@ export default function Quality() {
             >
               <div className="flex items-center mb-4">
                 <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-teal-600 rounded-lg flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-300">
-                  <span className="text-white text-xl font-bold">🏢</span>
+                  <span className="text-white text-xl font-extrabold">🏢</span>
                 </div>
-                <h3 className="text-xl font-bold text-teal-900">Supplier Evaluation</h3>
+                <h3 className="text-xl font-extrabold text-teal-900">Supplier Evaluation</h3>
               </div>
               <p className="text-sm text-teal-700 leading-relaxed mb-4">
                 Evaluate and monitor external providers, subcontractors, and service suppliers
@@ -248,10 +248,10 @@ export default function Quality() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
                   <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-300">
-                    <span className="text-white text-xl font-bold">📊</span>
+                    <span className="text-white text-xl font-extrabold">📊</span>
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-purple-900">Management Review</h3>
+                    <h3 className="text-xl font-extrabold text-purple-900">Management Review</h3>
                     <p className="text-sm text-purple-700 leading-relaxed mt-1">
                       Conduct management review meetings, track decisions, and monitor continuous improvement initiatives - HGQS Management Review Process
                     </p>

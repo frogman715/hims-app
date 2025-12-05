@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default function ForbiddenPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           {/* HANMARINE Logo/Branding */}
@@ -22,7 +22,7 @@ export default function ForbiddenPage() {
             Access Denied
           </h1>
 
-          <p className="text-lg text-gray-600 mb-8">
+          <p className="text-lg text-gray-700 mb-8">
             You don&apos;t have permission to access this page.
           </p>
 
@@ -47,17 +47,17 @@ export default function ForbiddenPage() {
             </div>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-6">
             <Link
               href="/dashboard"
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
               Return to Dashboard
             </Link>
 
             <Link
               href="/auth/signin"
-              className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="w-full flex justify-center py-2 px-4 border border-gray-400 rounded-lg shadow-md text-sm font-semibold text-gray-900 bg-white hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
               Sign In with Different Account
             </Link>

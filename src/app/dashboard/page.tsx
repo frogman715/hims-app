@@ -214,7 +214,7 @@ export default function DashboardPage() {
       <Link
         key={index}
         href={item.href}
-        className="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-all duration-200 hover:translate-x-1"
+        className="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-100 hover:text-blue-700 rounded-lg transition-all duration-200 hover:translate-x-1"
       >
         <span className="mr-4 text-lg">{item.icon}</span>
         <span className="font-medium">{item.label}</span>
@@ -237,7 +237,7 @@ export default function DashboardPage() {
                 <span className="text-xl">⚓</span>
               </div>
               <div>
-                <h1 className="text-2xl font-bold tracking-wide">HANMARINE</h1>
+                <h1 className="text-2xl font-extrabold tracking-wide">HANMARINE</h1>
                 <p className="text-sm opacity-80">HIMS System</p>
               </div>
             </div>
@@ -252,7 +252,7 @@ export default function DashboardPage() {
 
         <nav className="flex-1 overflow-y-auto p-4" style={{ maxHeight: 'calc(100vh - 300px)' }}>
           <div className="space-y-2 pb-4">
-            <Link href="/dashboard" className="flex items-center px-4 py-3 text-white bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+            <Link href="/dashboard" className="flex items-center px-4 py-3 text-white bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl font-semibold shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105">
               <span className="mr-3 text-lg">📊</span>
               <span>Dashboard</span>
             </Link>
@@ -263,14 +263,14 @@ export default function DashboardPage() {
         </nav>
 
         {/* User Info */}
-        <div className="border-t border-gray-100 bg-gray-50 p-4">
+        <div className="border-t border-gray-100 bg-gray-100 p-4">
           <div className="flex items-center space-x-3 mb-3">
             <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
               {session?.user?.name?.charAt(0) || "U"}
             </div>
             <div className="flex-1">
               <div className="font-medium text-gray-900 text-sm">{session?.user?.name || "User"}</div>
-              <div className="text-xs text-gray-500">{session?.user?.roles?.[0] || "Role"}</div>
+              <div className="text-sm text-gray-700">{session?.user?.roles?.[0] || "Role"}</div>
             </div>
           </div>
           <button onClick={handleLogout} className="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-all duration-200 shadow-md hover:shadow-lg">
@@ -291,10 +291,10 @@ function DirectorDashboard({ user }: { user: any }) {
   return (
     <div className="space-y-6">
       {/* Executive Overview */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-lg shadow-md border border-gray-300 overflow-hidden">
         {/* Sticky Header */}
-        <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-gray-900">Executive Overview</h2>
+        <div className="sticky top-0 z-10 bg-white border-b border-gray-300 px-6 py-4 flex items-center justify-between">
+          <h2 className="text-2xl font-extrabold text-gray-900">Executive Overview</h2>
           <div className="text-sm text-gray-500">Last updated: {new Date().toLocaleTimeString()}</div>
         </div>
 
@@ -302,7 +302,7 @@ function DirectorDashboard({ user }: { user: any }) {
         <div className="p-6">
         {/* KPI Cards - Make them clickable */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Link href="/crewing/principals" className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-6 text-white hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer">
+          <Link href="/crewing/principals" className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-6 text-white hover:shadow-2xl transition-all duration-300 hover:scale-105 cursor-pointer">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-blue-100">Fleet Management</p>
@@ -313,7 +313,7 @@ function DirectorDashboard({ user }: { user: any }) {
             </div>
           </Link>
 
-          <Link href="/crewing/seafarers" className="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-6 text-white hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer">
+          <Link href="/crewing/seafarers" className="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-6 text-white hover:shadow-2xl transition-all duration-300 hover:scale-105 cursor-pointer">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-green-100">Crew Complement</p>
@@ -324,7 +324,7 @@ function DirectorDashboard({ user }: { user: any }) {
             </div>
           </Link>
 
-          <Link href="/crewing/prepare-joining" className="bg-gradient-to-r from-yellow-500 to-orange-500 rounded-lg p-6 text-white hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer">
+          <Link href="/crewing/prepare-joining" className="bg-gradient-to-r from-yellow-500 to-orange-500 rounded-lg p-6 text-white hover:shadow-2xl transition-all duration-300 hover:scale-105 cursor-pointer">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-yellow-100">Pending Joinings</p>
@@ -335,7 +335,7 @@ function DirectorDashboard({ user }: { user: any }) {
             </div>
           </Link>
 
-          <Link href="/crewing/documents?filter=expiring" className="bg-gradient-to-r from-red-500 to-red-600 rounded-lg p-6 text-white hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer">
+          <Link href="/crewing/documents?filter=expiring" className="bg-gradient-to-r from-red-500 to-red-600 rounded-lg p-6 text-white hover:shadow-2xl transition-all duration-300 hover:scale-105 cursor-pointer">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-red-100">Docs Expiring</p>
@@ -352,7 +352,7 @@ function DirectorDashboard({ user }: { user: any }) {
           href="https://www.vesselfinder.com/"
           target="_blank"
           rel="noopener noreferrer"
-          className="block bg-gradient-to-r from-blue-500 to-cyan-600 rounded-lg p-4 mb-8 text-white hover:shadow-xl transition-all duration-200 hover:scale-105 cursor-pointer"
+          className="block bg-gradient-to-r from-blue-500 to-cyan-600 rounded-lg p-4 mb-8 text-white hover:shadow-2xl transition-all duration-200 hover:scale-105 cursor-pointer"
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -362,7 +362,7 @@ function DirectorDashboard({ user }: { user: any }) {
                 <p className="text-xs text-blue-100">24 vessels • 18 at sea • 6 in port</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-lg">
+            <div className="flex items-center gap-2 bg-white bg-opacity-20 px-4 py-2 rounded-lg">
               <span className="text-sm font-medium">Open Map</span>
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -378,25 +378,25 @@ function DirectorDashboard({ user }: { user: any }) {
             <Link href="/crewing/prepare-joining" className="bg-gradient-to-br from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 rounded-lg p-4 cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-105 border border-blue-200">
               <div className="flex items-center justify-between mb-2">
                 <h4 className="font-medium text-gray-900">Preparing to Join</h4>
-                <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">12</span>
+                <span className="bg-blue-100 text-blue-800 text-xs font-medium px-4.5 py-0.5 rounded">12</span>
               </div>
-              <p className="text-sm text-gray-600">Crew members in final preparation phase</p>
+              <p className="text-sm text-gray-800">Crew members in final preparation phase</p>
             </Link>
 
             <Link href="/crewing/seafarers?status=ONBOARD" className="bg-gradient-to-br from-green-50 to-green-100 hover:from-green-100 hover:to-green-200 rounded-lg p-4 cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-105 border border-green-200">
               <div className="flex items-center justify-between mb-2">
                 <h4 className="font-medium text-gray-900">On Board</h4>
-                <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">1,235</span>
+                <span className="bg-green-100 text-green-800 text-xs font-medium px-4.5 py-0.5 rounded">1,235</span>
               </div>
-              <p className="text-sm text-gray-600">Currently serving on vessels</p>
+              <p className="text-sm text-gray-800">Currently serving on vessels</p>
             </Link>
 
             <Link href="/crewing/seafarers?status=SIGN_OFF_DUE" className="bg-gradient-to-br from-yellow-50 to-yellow-100 hover:from-yellow-100 hover:to-yellow-200 rounded-lg p-4 cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-105 border border-yellow-200">
               <div className="flex items-center justify-between mb-2">
                 <h4 className="font-medium text-gray-900">Sign-Off Due</h4>
-                <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded">23</span>
+                <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-4.5 py-0.5 rounded">23</span>
               </div>
-              <p className="text-sm text-gray-600">Crew completing contracts this month</p>
+              <p className="text-sm text-gray-800">Crew completing contracts this month</p>
             </Link>
           </div>
         </div>
@@ -450,7 +450,7 @@ function DirectorDashboard({ user }: { user: any }) {
                 href="https://www.marinerights.or.kr/fro_end_kor/html/main/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-between p-3 border-2 border-blue-200 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition group"
+                className="flex items-center justify-between p-3 border-2 border-blue-200 rounded-lg hover:border-blue-400 hover:bg-blue-100 transition group"
               >
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center group-hover:bg-blue-200 transition">
@@ -460,7 +460,7 @@ function DirectorDashboard({ user }: { user: any }) {
                   </div>
                   <div>
                     <div className="font-medium text-gray-900">KOSMA Training</div>
-                    <div className="text-xs text-gray-500">Korea certification</div>
+                    <div className="text-sm text-gray-700">Korea certification</div>
                   </div>
                 </div>
                 <svg className="w-5 h-5 text-blue-600 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -482,7 +482,7 @@ function DirectorDashboard({ user }: { user: any }) {
                   </div>
                   <div>
                     <div className="font-medium text-gray-900">Dephub Verify</div>
-                    <div className="text-xs text-gray-500">Certificate check</div>
+                    <div className="text-sm text-gray-700">Certificate check</div>
                   </div>
                 </div>
                 <svg className="w-5 h-5 text-green-600 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -504,7 +504,7 @@ function DirectorDashboard({ user }: { user: any }) {
                   </div>
                   <div>
                     <div className="font-medium text-gray-900">Schengen Visa</div>
-                    <div className="text-xs text-gray-500">Netherlands visa</div>
+                    <div className="text-sm text-gray-700">Netherlands visa</div>
                   </div>
                 </div>
                 <svg className="w-5 h-5 text-purple-600 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -524,9 +524,9 @@ function CDMOBashboard({ user }: { user: any }) {
   return (
     <div className="space-y-6">
       {/* CDMO Overview */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="bg-white rounded-lg shadow-md border border-gray-300 p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold text-gray-900">Crew Department Overview</h2>
+          <h2 className="text-2xl font-extrabold text-gray-900">Crew Department Overview</h2>
           <div className="text-sm text-gray-500">Last updated: {new Date().toLocaleTimeString()}</div>
         </div>
 
@@ -557,7 +557,7 @@ function CDMOBashboard({ user }: { user: any }) {
         {/* Vessel Tracking Card */}
         <div className="bg-gradient-to-br from-blue-500 to-cyan-600 rounded-lg shadow-lg p-6 mb-8 text-white">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-xl font-bold flex items-center gap-2">
+            <h3 className="text-xl font-extrabold flex items-center gap-2">
               <span>🌊</span>
               Vessel Tracking
             </h3>
@@ -574,16 +574,16 @@ function CDMOBashboard({ user }: { user: any }) {
             </a>
           </div>
           <div className="grid grid-cols-3 gap-3">
-            <div className="bg-white/10 backdrop-blur rounded p-2 text-center">
-              <div className="text-2xl font-bold">24</div>
+            <div className="bg-white bg-opacity-90 rounded p-2 text-center">
+              <div className="text-2xl font-extrabold">24</div>
               <div className="text-xs text-blue-100">Fleet</div>
             </div>
-            <div className="bg-white/10 backdrop-blur rounded p-2 text-center">
-              <div className="text-2xl font-bold">18</div>
+            <div className="bg-white bg-opacity-90 rounded p-2 text-center">
+              <div className="text-2xl font-extrabold">18</div>
               <div className="text-xs text-blue-100">At Sea</div>
             </div>
-            <div className="bg-white/10 backdrop-blur rounded p-2 text-center">
-              <div className="text-2xl font-bold">6</div>
+            <div className="bg-white bg-opacity-90 rounded p-2 text-center">
+              <div className="text-2xl font-extrabold">6</div>
               <div className="text-xs text-blue-100">In Port</div>
             </div>
           </div>
@@ -593,40 +593,40 @@ function CDMOBashboard({ user }: { user: any }) {
         <div className="mb-8">
           <h3 className="text-xl font-semibold text-gray-900 mb-4">Today&apos;s Workload</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-blue-50 rounded-lg p-4">
+            <div className="bg-blue-100 rounded-lg p-4">
               <div className="flex items-center justify-between mb-2">
                 <h4 className="font-medium text-gray-900">Joining Today</h4>
-                <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">3</span>
+                <span className="bg-blue-100 text-blue-800 text-xs font-medium px-4.5 py-0.5 rounded">3</span>
               </div>
-              <p className="text-sm text-gray-600">Crew members scheduled to join vessels</p>
+              <p className="text-sm text-gray-800">Crew members scheduled to join vessels</p>
               <div className="mt-2 space-y-1">
-                <div className="text-xs text-gray-500">• John Smith - MV Ocean Pride</div>
-                <div className="text-xs text-gray-500">• Maria Garcia - MV Sea Voyager</div>
-                <div className="text-xs text-gray-500">• Ahmed Hassan - MV Pacific Star</div>
+                <div className="text-sm text-gray-700">• John Smith - MV Ocean Pride</div>
+                <div className="text-sm text-gray-700">• Maria Garcia - MV Sea Voyager</div>
+                <div className="text-sm text-gray-700">• Ahmed Hassan - MV Pacific Star</div>
               </div>
             </div>
 
             <div className="bg-green-50 rounded-lg p-4">
               <div className="flex items-center justify-between mb-2">
                 <h4 className="font-medium text-gray-900">Sign-offs Today</h4>
-                <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">2</span>
+                <span className="bg-green-100 text-green-800 text-xs font-medium px-4.5 py-0.5 rounded">2</span>
               </div>
-              <p className="text-sm text-gray-600">Crew completing their contracts</p>
+              <p className="text-sm text-gray-800">Crew completing their contracts</p>
               <div className="mt-2 space-y-1">
-                <div className="text-xs text-gray-500">• Robert Chen - MV Atlantic</div>
-                <div className="text-xs text-gray-500">• Sarah Johnson - MV Horizon</div>
+                <div className="text-sm text-gray-700">• Robert Chen - MV Atlantic</div>
+                <div className="text-sm text-gray-700">• Sarah Johnson - MV Horizon</div>
               </div>
             </div>
 
             <div className="bg-yellow-50 rounded-lg p-4">
               <div className="flex items-center justify-between mb-2">
                 <h4 className="font-medium text-gray-900">Pending Approvals</h4>
-                <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded">5</span>
+                <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-4.5 py-0.5 rounded">5</span>
               </div>
-              <p className="text-sm text-gray-600">Documents awaiting your approval</p>
+              <p className="text-sm text-gray-800">Documents awaiting your approval</p>
               <div className="mt-2 space-y-1">
-                <div className="text-xs text-gray-500">• 3 Contract renewals</div>
-                <div className="text-xs text-gray-500">• 2 Travel documents</div>
+                <div className="text-sm text-gray-700">• 3 Contract renewals</div>
+                <div className="text-sm text-gray-700">• 2 Travel documents</div>
               </div>
             </div>
           </div>
@@ -640,32 +640,32 @@ function CDMOBashboard({ user }: { user: any }) {
               <div className="bg-gray-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-2">
                 <span className="text-2xl">🎯</span>
               </div>
-              <div className="text-2xl font-bold text-gray-900">15</div>
-              <div className="text-sm text-gray-600">Shortlisted</div>
+              <div className="text-2xl font-extrabold text-gray-900">15</div>
+              <div className="text-sm text-gray-800">Shortlisted</div>
             </div>
 
             <div className="text-center">
               <div className="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-2">
                 <span className="text-2xl">📝</span>
               </div>
-              <div className="text-2xl font-bold text-blue-600">8</div>
-              <div className="text-sm text-gray-600">Interviewing</div>
+              <div className="text-2xl font-extrabold text-blue-600">8</div>
+              <div className="text-sm text-gray-800">Interviewing</div>
             </div>
 
             <div className="text-center">
               <div className="bg-yellow-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-2">
                 <span className="text-2xl">⚖️</span>
               </div>
-              <div className="text-2xl font-bold text-yellow-600">4</div>
-              <div className="text-sm text-gray-600">Medical Check</div>
+              <div className="text-2xl font-extrabold text-yellow-600">4</div>
+              <div className="text-sm text-gray-800">Medical Check</div>
             </div>
 
             <div className="text-center">
               <div className="bg-green-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-2">
                 <span className="text-2xl">✅</span>
               </div>
-              <div className="text-2xl font-bold text-green-600">12</div>
-              <div className="text-sm text-gray-600">Ready to Join</div>
+              <div className="text-2xl font-extrabold text-green-600">12</div>
+              <div className="text-sm text-gray-800">Ready to Join</div>
             </div>
           </div>
         </div>
@@ -687,12 +687,12 @@ function CDMOBashboard({ user }: { user: any }) {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
               <a
                 href="/crewing/documents?type=KOSMA"
-                className="flex items-center gap-2 p-2 bg-white rounded border border-blue-200 hover:border-blue-400 hover:shadow-sm transition text-sm group"
+                className="flex items-center gap-2 p-2 bg-white rounded border border-blue-200 hover:border-blue-400 hover:shadow-md transition text-sm group"
               >
                 <span className="text-xl">🇰🇷</span>
                 <div className="flex-1">
                   <div className="font-medium text-gray-800 text-xs">KOSMA Certificates</div>
-                  <div className="text-xs text-gray-500">View documents</div>
+                  <div className="text-sm text-gray-700">View documents</div>
                 </div>
                 <svg className="w-4 h-4 text-blue-600 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
@@ -702,12 +702,12 @@ function CDMOBashboard({ user }: { user: any }) {
                 href="https://pelaut.dephub.go.id/login-perusahaan"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 p-2 bg-white rounded border border-green-200 hover:border-green-400 hover:shadow-sm transition text-sm group"
+                className="flex items-center gap-2 p-2 bg-white rounded border border-green-200 hover:border-green-400 hover:shadow-md transition text-sm group"
               >
                 <span className="text-xl">🇮🇩</span>
                 <div className="flex-1">
                   <div className="font-medium text-gray-800 text-xs">Dephub Portal</div>
-                  <div className="text-xs text-gray-500">Verify sijil</div>
+                  <div className="text-sm text-gray-700">Verify sijil</div>
                 </div>
                 <svg className="w-4 h-4 text-green-600 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -717,12 +717,12 @@ function CDMOBashboard({ user }: { user: any }) {
                 href="https://consular.mfaservices.nl/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 p-2 bg-white rounded border border-purple-200 hover:border-purple-400 hover:shadow-sm transition text-sm group"
+                className="flex items-center gap-2 p-2 bg-white rounded border border-purple-200 hover:border-purple-400 hover:shadow-md transition text-sm group"
               >
                 <span className="text-xl">🇳🇱</span>
                 <div className="flex-1">
                   <div className="font-medium text-gray-800 text-xs">Schengen NL</div>
-                  <div className="text-xs text-gray-500">Tanker visa</div>
+                  <div className="text-sm text-gray-700">Tanker visa</div>
                 </div>
                 <svg className="w-4 h-4 text-purple-600 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -740,9 +740,9 @@ function AccountingDashboard({ user }: { user: any }) {
   return (
     <div className="space-y-6">
       {/* Accounting Overview */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="bg-white rounded-lg shadow-md border border-gray-300 p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold text-gray-900">Financial Overview</h2>
+          <h2 className="text-2xl font-extrabold text-gray-900">Financial Overview</h2>
           <div className="text-sm text-gray-500">Last updated: {new Date().toLocaleTimeString()}</div>
         </div>
 
@@ -796,8 +796,8 @@ function AccountingDashboard({ user }: { user: any }) {
         {/* Recent Transactions */}
         <div className="mb-8">
           <h3 className="text-xl font-semibold text-gray-900 mb-4">Recent Transactions</h3>
-          <div className="bg-gray-50 rounded-lg overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
+          <div className="bg-gray-100 rounded-lg overflow-hidden">
+            <table className="min-w-full divide-y divide-gray-300">
               <thead className="bg-gray-100">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
@@ -808,27 +808,27 @@ function AccountingDashboard({ user }: { user: any }) {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 <tr>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">2025-01-15</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Crew wages - MV Ocean Pride</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">2025-01-15</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Crew wages - MV Ocean Pride</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-medium">$45,230</td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Paid</span>
+                    <span className="px-4 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Paid</span>
                   </td>
                 </tr>
                 <tr>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">2025-01-14</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Agency fee - Manila recruitment</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">2025-01-14</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Agency fee - Manila recruitment</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600 font-medium">-$12,500</td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Pending</span>
+                    <span className="px-4 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Pending</span>
                   </td>
                 </tr>
                 <tr>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">2025-01-13</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Insurance premium - Fleet</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">2025-01-13</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Insurance premium - Fleet</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600 font-medium">-$28,900</td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Paid</span>
+                    <span className="px-4 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Paid</span>
                   </td>
                 </tr>
               </tbody>
@@ -863,9 +863,9 @@ function OperationalDashboard({ user }: { user: any }) {
   return (
     <div className="space-y-6">
       {/* Operations Overview */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="bg-white rounded-lg shadow-md border border-gray-300 p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold text-gray-900">Operations Overview</h2>
+          <h2 className="text-2xl font-extrabold text-gray-900">Operations Overview</h2>
           <div className="text-sm text-gray-500">Last updated: {new Date().toLocaleTimeString()}</div>
         </div>
 
@@ -876,25 +876,25 @@ function OperationalDashboard({ user }: { user: any }) {
             <div className="bg-green-50 rounded-lg p-4">
               <div className="flex items-center justify-between mb-2">
                 <h4 className="font-medium text-gray-900">Active Vessels</h4>
-                <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">22</span>
+                <span className="bg-green-100 text-green-800 text-xs font-medium px-4.5 py-0.5 rounded">22</span>
               </div>
-              <p className="text-sm text-gray-600">Vessels currently in operation</p>
+              <p className="text-sm text-gray-800">Vessels currently in operation</p>
             </div>
 
             <div className="bg-yellow-50 rounded-lg p-4">
               <div className="flex items-center justify-between mb-2">
                 <h4 className="font-medium text-gray-900">In Port</h4>
-                <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded">2</span>
+                <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-4.5 py-0.5 rounded">2</span>
               </div>
-              <p className="text-sm text-gray-600">Vessels undergoing maintenance or loading</p>
+              <p className="text-sm text-gray-800">Vessels undergoing maintenance or loading</p>
             </div>
 
             <div className="bg-red-50 rounded-lg p-4">
               <div className="flex items-center justify-between mb-2">
                 <h4 className="font-medium text-gray-900">Off Hire</h4>
-                <span className="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded">0</span>
+                <span className="bg-red-100 text-red-800 text-xs font-medium px-4.5 py-0.5 rounded">0</span>
               </div>
-              <p className="text-sm text-gray-600">Vessels temporarily out of service</p>
+              <p className="text-sm text-gray-800">Vessels temporarily out of service</p>
             </div>
           </div>
         </div>
@@ -903,7 +903,7 @@ function OperationalDashboard({ user }: { user: any }) {
         <div className="mb-8">
           <h3 className="text-xl font-semibold text-gray-900 mb-4">Today&apos;s Dispatches</h3>
           <div className="space-y-3">
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="bg-blue-100 border border-blue-200 rounded-lg p-4">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <h4 className="font-medium text-blue-900">MV Ocean Pride - Manila</h4>
@@ -914,7 +914,7 @@ function OperationalDashboard({ user }: { user: any }) {
                   </div>
                 </div>
                 <div className="ml-4">
-                  <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">On Schedule</span>
+                  <span className="bg-blue-100 text-blue-800 text-xs font-medium px-4.5 py-0.5 rounded">On Schedule</span>
                 </div>
               </div>
             </div>
@@ -930,7 +930,7 @@ function OperationalDashboard({ user }: { user: any }) {
                   </div>
                 </div>
                 <div className="ml-4">
-                  <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">Ready</span>
+                  <span className="bg-green-100 text-green-800 text-xs font-medium px-4.5 py-0.5 rounded">Ready</span>
                 </div>
               </div>
             </div>
@@ -945,24 +945,24 @@ function OperationalDashboard({ user }: { user: any }) {
               <div className="bg-green-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-2">
                 <span className="text-2xl">✅</span>
               </div>
-              <div className="text-2xl font-bold text-green-600">18</div>
-              <div className="text-sm text-gray-600">Ready for Travel</div>
+              <div className="text-2xl font-extrabold text-green-600">18</div>
+              <div className="text-sm text-gray-800">Ready for Travel</div>
             </div>
 
             <div className="text-center">
               <div className="bg-yellow-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-2">
                 <span className="text-2xl">⏳</span>
               </div>
-              <div className="text-2xl font-bold text-yellow-600">5</div>
-              <div className="text-sm text-gray-600">Processing</div>
+              <div className="text-2xl font-extrabold text-yellow-600">5</div>
+              <div className="text-sm text-gray-800">Processing</div>
             </div>
 
             <div className="text-center">
               <div className="bg-red-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-2">
                 <span className="text-2xl">❌</span>
               </div>
-              <div className="text-2xl font-bold text-red-600">2</div>
-              <div className="text-sm text-gray-600">Issues Found</div>
+              <div className="text-2xl font-extrabold text-red-600">2</div>
+              <div className="text-sm text-gray-800">Issues Found</div>
             </div>
           </div>
         </div>
@@ -994,9 +994,9 @@ function HRDashboard({ user }: { user: any }) {
   return (
     <div className="space-y-6">
       {/* HR Overview */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="bg-white rounded-lg shadow-md border border-gray-300 p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold text-gray-900">Human Resources Overview</h2>
+          <h2 className="text-2xl font-extrabold text-gray-900">Human Resources Overview</h2>
           <div className="text-sm text-gray-500">Last updated: {new Date().toLocaleTimeString()}</div>
         </div>
 
@@ -1054,31 +1054,31 @@ function HRDashboard({ user }: { user: any }) {
             <div className="bg-green-50 rounded-lg p-4">
               <div className="flex items-center justify-between mb-2">
                 <h4 className="font-medium text-gray-900">STCW Certificates</h4>
-                <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">98.5%</span>
+                <span className="bg-green-100 text-green-800 text-xs font-medium px-4.5 py-0.5 rounded">98.5%</span>
               </div>
-              <p className="text-sm text-gray-600">Crew with valid STCW certification</p>
+              <p className="text-sm text-gray-800">Crew with valid STCW certification</p>
               <div className="mt-2 bg-gray-200 rounded-full h-2">
                 <div className="bg-green-500 h-2 rounded-full" style={{ width: '98.5%' }}></div>
               </div>
             </div>
 
-            <div className="bg-blue-50 rounded-lg p-4">
+            <div className="bg-blue-100 rounded-lg p-4">
               <div className="flex items-center justify-between mb-2">
                 <h4 className="font-medium text-gray-900">Medical Fitness</h4>
-                <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">96.2%</span>
+                <span className="bg-blue-100 text-blue-800 text-xs font-medium px-4.5 py-0.5 rounded">96.2%</span>
               </div>
-              <p className="text-sm text-gray-600">Crew with current medical certificates</p>
+              <p className="text-sm text-gray-800">Crew with current medical certificates</p>
               <div className="mt-2 bg-gray-200 rounded-full h-2">
-                <div className="bg-blue-500 h-2 rounded-full" style={{ width: '96.2%' }}></div>
+                <div className="bg-blue-600 h-2 rounded-full" style={{ width: '96.2%' }}></div>
               </div>
             </div>
 
             <div className="bg-yellow-50 rounded-lg p-4">
               <div className="flex items-center justify-between mb-2">
                 <h4 className="font-medium text-gray-900">Training Records</h4>
-                <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded">94.7%</span>
+                <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-4.5 py-0.5 rounded">94.7%</span>
               </div>
-              <p className="text-sm text-gray-600">Crew with up-to-date training records</p>
+              <p className="text-sm text-gray-800">Crew with up-to-date training records</p>
               <div className="mt-2 bg-gray-200 rounded-full h-2">
                 <div className="bg-yellow-500 h-2 rounded-full" style={{ width: '94.7%' }}></div>
               </div>
@@ -1090,35 +1090,35 @@ function HRDashboard({ user }: { user: any }) {
         <div className="mb-8">
           <h3 className="text-xl font-semibold text-gray-900 mb-4">Recent HR Activities</h3>
           <div className="space-y-3">
-            <div className="bg-gray-50 rounded-lg p-4">
+            <div className="bg-gray-100 rounded-lg p-4">
               <div className="flex items-start">
-                <div className="text-blue-500 text-xl mr-3">📋</div>
+                <div className="text-blue-600 text-xl mr-3">📋</div>
                 <div className="flex-1">
                   <h4 className="font-medium text-gray-900">Performance Review Completed</h4>
-                  <p className="text-sm text-gray-600 mt-1">Captain John Smith - MV Ocean Pride</p>
-                  <div className="mt-2 text-xs text-gray-500">2 hours ago</div>
+                  <p className="text-sm text-gray-800 mt-1">Captain John Smith - MV Ocean Pride</p>
+                  <div className="mt-2 text-sm text-gray-700">2 hours ago</div>
                 </div>
               </div>
             </div>
 
-            <div className="bg-gray-50 rounded-lg p-4">
+            <div className="bg-gray-100 rounded-lg p-4">
               <div className="flex items-start">
                 <div className="text-green-500 text-xl mr-3">🎓</div>
                 <div className="flex-1">
                   <h4 className="font-medium text-gray-900">Training Course Completed</h4>
-                  <p className="text-sm text-gray-600 mt-1">Safety Leadership Program - 15 crew members</p>
-                  <div className="mt-2 text-xs text-gray-500">1 day ago</div>
+                  <p className="text-sm text-gray-800 mt-1">Safety Leadership Program - 15 crew members</p>
+                  <div className="mt-2 text-sm text-gray-700">1 day ago</div>
                 </div>
               </div>
             </div>
 
-            <div className="bg-gray-50 rounded-lg p-4">
+            <div className="bg-gray-100 rounded-lg p-4">
               <div className="flex items-start">
                 <div className="text-yellow-500 text-xl mr-3">⚖️</div>
                 <div className="flex-1">
                   <h4 className="font-medium text-gray-900">Disciplinary Investigation</h4>
-                  <p className="text-sm text-gray-600 mt-1">Case #2025-003 - Under review</p>
-                  <div className="mt-2 text-xs text-gray-500">3 days ago</div>
+                  <p className="text-sm text-gray-800 mt-1">Case #2025-003 - Under review</p>
+                  <div className="mt-2 text-sm text-gray-700">3 days ago</div>
                 </div>
               </div>
             </div>
@@ -1152,9 +1152,9 @@ function CrewPortalDashboard({ user }: { user: any }) {
   return (
     <div className="space-y-6">
       {/* Crew Portal Overview */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="bg-white rounded-lg shadow-md border border-gray-300 p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold text-gray-900">My Dashboard</h2>
+          <h2 className="text-2xl font-extrabold text-gray-900">My Dashboard</h2>
           <div className="text-sm text-gray-500">Welcome back, {user?.name || 'Seafarer'}</div>
         </div>
 
@@ -1165,28 +1165,28 @@ function CrewPortalDashboard({ user }: { user: any }) {
             <div className="bg-green-50 rounded-lg p-4">
               <div className="flex items-center justify-between mb-2">
                 <h4 className="font-medium text-gray-900">Current Assignment</h4>
-                <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">Active</span>
+                <span className="bg-green-100 text-green-800 text-xs font-medium px-4.5 py-0.5 rounded">Active</span>
               </div>
-              <p className="text-sm text-gray-600">MV Ocean Pride - Chief Engineer</p>
-              <div className="mt-2 text-xs text-gray-500">Contract ends: March 15, 2025</div>
+              <p className="text-sm text-gray-800">MV Ocean Pride - Chief Engineer</p>
+              <div className="mt-2 text-sm text-gray-700">Contract ends: March 15, 2025</div>
             </div>
 
-            <div className="bg-blue-50 rounded-lg p-4">
+            <div className="bg-blue-100 rounded-lg p-4">
               <div className="flex items-center justify-between mb-2">
                 <h4 className="font-medium text-gray-900">Next Sign-off</h4>
-                <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">45 days</span>
+                <span className="bg-blue-100 text-blue-800 text-xs font-medium px-4.5 py-0.5 rounded">45 days</span>
               </div>
-              <p className="text-sm text-gray-600">Scheduled leave period</p>
-              <div className="mt-2 text-xs text-gray-500">March 15 - April 15, 2025</div>
+              <p className="text-sm text-gray-800">Scheduled leave period</p>
+              <div className="mt-2 text-sm text-gray-700">March 15 - April 15, 2025</div>
             </div>
 
             <div className="bg-yellow-50 rounded-lg p-4">
               <div className="flex items-center justify-between mb-2">
                 <h4 className="font-medium text-gray-900">Documents Status</h4>
-                <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded">2 expiring</span>
+                <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-4.5 py-0.5 rounded">2 expiring</span>
               </div>
-              <p className="text-sm text-gray-600">Certificates requiring renewal</p>
-              <div className="mt-2 text-xs text-gray-500">Medical certificate expires soon</div>
+              <p className="text-sm text-gray-800">Certificates requiring renewal</p>
+              <div className="mt-2 text-sm text-gray-700">Medical certificate expires soon</div>
             </div>
           </div>
         </div>
@@ -1195,9 +1195,9 @@ function CrewPortalDashboard({ user }: { user: any }) {
         <div className="mb-8">
           <h3 className="text-xl font-semibold text-gray-900 mb-4">Important Notices</h3>
           <div className="space-y-3">
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="bg-blue-100 border border-blue-200 rounded-lg p-4">
               <div className="flex items-start">
-                <div className="text-blue-500 text-xl mr-3">📢</div>
+                <div className="text-blue-600 text-xl mr-3">📢</div>
                 <div className="flex-1">
                   <h4 className="font-medium text-blue-900">New Safety Training Required</h4>
                   <p className="text-sm text-blue-700 mt-1">All crew must complete the updated fire safety training by February 28, 2025.</p>
@@ -1246,24 +1246,24 @@ function CrewPortalDashboard({ user }: { user: any }) {
         <div>
           <h3 className="text-xl font-semibold text-gray-900 mb-4">Recent Activity</h3>
           <div className="space-y-3">
-            <div className="bg-gray-50 rounded-lg p-4">
+            <div className="bg-gray-100 rounded-lg p-4">
               <div className="flex items-start">
                 <div className="text-green-500 text-xl mr-3">✅</div>
                 <div className="flex-1">
                   <h4 className="font-medium text-gray-900">Monthly Performance Review Submitted</h4>
-                  <p className="text-sm text-gray-600 mt-1">Your review for December 2024 has been completed and approved.</p>
-                  <div className="mt-2 text-xs text-gray-500">5 days ago</div>
+                  <p className="text-sm text-gray-800 mt-1">Your review for December 2024 has been completed and approved.</p>
+                  <div className="mt-2 text-sm text-gray-700">5 days ago</div>
                 </div>
               </div>
             </div>
 
-            <div className="bg-gray-50 rounded-lg p-4">
+            <div className="bg-gray-100 rounded-lg p-4">
               <div className="flex items-start">
-                <div className="text-blue-500 text-xl mr-3">📄</div>
+                <div className="text-blue-600 text-xl mr-3">📄</div>
                 <div className="flex-1">
                   <h4 className="font-medium text-gray-900">Contract Extension Signed</h4>
-                  <p className="text-sm text-gray-600 mt-1">Your contract has been extended for an additional 6 months.</p>
-                  <div className="mt-2 text-xs text-gray-500">2 weeks ago</div>
+                  <p className="text-sm text-gray-800 mt-1">Your contract has been extended for an additional 6 months.</p>
+                  <div className="mt-2 text-sm text-gray-700">2 weeks ago</div>
                 </div>
               </div>
             </div>

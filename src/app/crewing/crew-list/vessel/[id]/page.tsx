@@ -176,17 +176,17 @@ export default function VesselCrewListPage() {
           <div className="mb-8">
             <Link
               href="/crewing/crew-list"
-              className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-xl"
+              className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
             >
               ← Back to Crew List
             </Link>
           </div>
           <div className="text-center py-12">
-            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="mx-auto h-12 w-12 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.29-.98-5.5-2.5M12 4.5C7.305 4.5 3.5 8.305 3.5 13S7.305 21.5 12 21.5 20.5 17.695 20.5 13 16.695 4.5 12 4.5z" />
             </svg>
             <h3 className="mt-2 text-sm font-medium text-gray-900">Vessel not found</h3>
-            <p className="mt-1 text-sm text-gray-600">The requested vessel could not be found.</p>
+            <p className="mt-1 text-sm text-gray-700">The requested vessel could not be found.</p>
           </div>
         </div>
       </div>
@@ -202,7 +202,7 @@ export default function VesselCrewListPage() {
             <div className="flex items-center space-x-4">
               <Link
                 href="/crewing/crew-list"
-                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-xl"
+                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
               >
                 ← Back to Crew List
               </Link>
@@ -233,8 +233,8 @@ export default function VesselCrewListPage() {
                 <span className="text-2xl">🚢</span>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Vessel</p>
-                <p className="text-2xl font-bold text-gray-900">{vessel.vesselName}</p>
+                <p className="text-sm font-medium text-gray-700">Vessel</p>
+                <p className="text-2xl font-extrabold text-gray-900">{vessel.vesselName}</p>
               </div>
             </div>
           </div>
@@ -245,8 +245,8 @@ export default function VesselCrewListPage() {
                 <span className="text-2xl">👥</span>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Active Crew</p>
-                <p className="text-2xl font-bold text-gray-900">{vessel.activeCrew}</p>
+                <p className="text-sm font-medium text-gray-700">Active Crew</p>
+                <p className="text-2xl font-extrabold text-gray-900">{vessel.activeCrew}</p>
               </div>
             </div>
           </div>
@@ -257,8 +257,8 @@ export default function VesselCrewListPage() {
                 <span className="text-2xl">📤</span>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Departed This Month</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-sm font-medium text-gray-700">Departed This Month</p>
+                <p className="text-2xl font-extrabold text-gray-900">
                   {vessel.crewMembers.filter(member => member.status === 'DEPARTED').length}
                 </p>
               </div>
@@ -271,8 +271,8 @@ export default function VesselCrewListPage() {
                 <span className="text-2xl">⏰</span>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Capacity</p>
-                <p className="text-2xl font-bold text-gray-900">{vessel.totalCrew}</p>
+                <p className="text-sm font-medium text-gray-700">Total Capacity</p>
+                <p className="text-2xl font-extrabold text-gray-900">{vessel.totalCrew}</p>
               </div>
             </div>
           </div>
@@ -281,10 +281,10 @@ export default function VesselCrewListPage() {
         {/* Crew Table */}
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
           <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4">
-            <h2 className="text-xl font-bold text-white">Crew Members</h2>
+            <h2 className="text-xl font-extrabold text-white">Crew Members</h2>
           </div>
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
+            <table className="min-w-full divide-y divide-gray-300">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -309,7 +309,7 @@ export default function VesselCrewListPage() {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {vessel.crewMembers.map((member) => (
-                  <tr key={member.id} className="hover:bg-gray-50">
+                  <tr key={member.id} className="hover:bg-gray-100">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10">
@@ -326,17 +326,17 @@ export default function VesselCrewListPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {member.rank}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {new Date(member.signOnDate).toLocaleDateString()}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {member.signOffDate ? new Date(member.signOffDate).toLocaleDateString() : '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(member.status)}`}>
+                      <span className={`inline-flex px-4 py-2 text-xs font-semibold rounded-full ${getStatusColor(member.status)}`}>
                         {getStatusText(member.status)}
                       </span>
                     </td>
@@ -364,15 +364,15 @@ export default function VesselCrewListPage() {
         {/* Empty State */}
         {vessel.crewMembers.length === 0 && (
           <div className="text-center py-12">
-            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="mx-auto h-12 w-12 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
             </svg>
             <h3 className="mt-2 text-sm font-medium text-gray-900">No crew members assigned</h3>
-            <p className="mt-1 text-sm text-gray-600">This vessel currently has no crew members assigned.</p>
+            <p className="mt-1 text-sm text-gray-700">This vessel currently has no crew members assigned.</p>
             <div className="mt-6">
               <Link
                 href="/crewing/assignments/new"
-                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+                className="inline-flex items-center px-4 py-2 border border-transparent shadow-md text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700"
               >
                 Create Assignment
               </Link>

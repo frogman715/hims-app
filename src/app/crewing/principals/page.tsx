@@ -313,14 +313,14 @@ export default function PrincipalsPage() {
               <h1 className="text-4xl font-bold text-gray-900 mb-2">
                 Principals Management
               </h1>
-              <p className="text-gray-600">
+              <p className="text-gray-700">
                 Manage ship owners and their vessels
               </p>
             </div>
             <div className="flex gap-3">
               <Link
                 href="/crewing"
-                className="px-6 py-3 bg-white border-2 border-gray-200 rounded-xl text-gray-700 font-semibold hover:border-blue-500 hover:text-blue-600 transition-all duration-200 shadow-sm hover:shadow-md"
+                className="px-6 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-700 font-semibold hover:border-blue-500 hover:text-blue-700 transition-all duration-200 shadow-md hover:shadow-md"
               >
                 ← Back to Crewing
               </Link>
@@ -336,8 +336,8 @@ export default function PrincipalsPage() {
 
         {/* Add/Edit Principal Form */}
         {showForm && (
-          <div className="bg-white rounded-2xl shadow-xl p-8 mb-8 border-2 border-gray-100">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 mb-8 border-2 border-gray-100">
+            <h2 className="text-2xl font-extrabold text-gray-900 mb-6">
               {editingPrincipal ? "Edit Principal" : "Add New Principal"}
             </h2>
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -353,7 +353,7 @@ export default function PrincipalsPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, name: e.target.value })
                     }
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
                     placeholder="e.g., ABC Shipping Co."
                   />
                 </div>
@@ -367,7 +367,7 @@ export default function PrincipalsPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, country: e.target.value })
                     }
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
                   >
                     <option value="INDONESIA">Indonesia</option>
                     <option value="SINGAPORE">Singapore</option>
@@ -394,7 +394,7 @@ export default function PrincipalsPage() {
                       setFormData({ ...formData, address: e.target.value })
                     }
                     rows={3}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
                     placeholder="Company address"
                   />
                 </div>
@@ -412,7 +412,7 @@ export default function PrincipalsPage() {
                         contactPerson: e.target.value,
                       })
                     }
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
                     placeholder="Contact person name"
                   />
                 </div>
@@ -427,7 +427,7 @@ export default function PrincipalsPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, phone: e.target.value })
                     }
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
                     placeholder="+62 xxx xxx xxxx"
                   />
                 </div>
@@ -442,7 +442,7 @@ export default function PrincipalsPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, email: e.target.value })
                     }
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
                     placeholder="email@company.com"
                   />
                 </div>
@@ -457,7 +457,7 @@ export default function PrincipalsPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, taxId: e.target.value })
                     }
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
                     placeholder="Tax identification number"
                   />
                 </div>
@@ -475,7 +475,7 @@ export default function PrincipalsPage() {
                         registrationNumber: e.target.value,
                       })
                     }
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
                     placeholder="Company registration number"
                   />
                 </div>
@@ -493,7 +493,7 @@ export default function PrincipalsPage() {
                         agreementDate: e.target.value,
                       })
                     }
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
                   />
                 </div>
 
@@ -510,7 +510,7 @@ export default function PrincipalsPage() {
                         agreementExpiry: e.target.value,
                       })
                     }
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
                   />
                 </div>
 
@@ -523,7 +523,7 @@ export default function PrincipalsPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, status: e.target.value })
                     }
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
                   >
                     <option value="ACTIVE">Active</option>
                     <option value="INACTIVE">Inactive</option>
@@ -552,11 +552,11 @@ export default function PrincipalsPage() {
 
         {/* Add/Edit Vessel Form */}
         {showVesselForm && (
-          <div className="bg-white rounded-2xl shadow-xl p-8 mb-8 border-2 border-green-100">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 mb-8 border-2 border-green-100">
+            <h2 className="text-2xl font-extrabold text-gray-900 mb-2">
               {editingVessel ? "Edit Vessel" : "Add New Vessel"}
             </h2>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-700 mb-6">
               Principal: <span className="font-semibold">{selectedPrincipal?.name}</span>
             </p>
             <form onSubmit={handleVesselSubmit} className="space-y-6">
@@ -575,7 +575,7 @@ export default function PrincipalsPage() {
                         name: e.target.value,
                       })
                     }
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-200"
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-200"
                     placeholder="e.g., MV PACIFIC STAR"
                   />
                 </div>
@@ -593,7 +593,7 @@ export default function PrincipalsPage() {
                         imoNumber: e.target.value,
                       })
                     }
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-200"
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-200"
                     placeholder="IMO1234567"
                   />
                 </div>
@@ -610,7 +610,7 @@ export default function PrincipalsPage() {
                         flag: e.target.value,
                       })
                     }
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-200"
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-200"
                   >
                     <option value="PANAMA">Panama</option>
                     <option value="LIBERIA">Liberia</option>
@@ -634,7 +634,7 @@ export default function PrincipalsPage() {
                         type: e.target.value,
                       })
                     }
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-200"
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-200"
                   >
                     <option value="TANKER">Tanker</option>
                     <option value="BULK_CARRIER">Bulk Carrier</option>
@@ -663,7 +663,7 @@ export default function PrincipalsPage() {
                         dwt: e.target.value,
                       })
                     }
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-200"
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-200"
                     placeholder="e.g., 50000"
                   />
                 </div>
@@ -682,7 +682,7 @@ export default function PrincipalsPage() {
                         gt: e.target.value,
                       })
                     }
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-200"
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-200"
                     placeholder="e.g., 30000"
                   />
                 </div>
@@ -699,7 +699,7 @@ export default function PrincipalsPage() {
                         status: e.target.value,
                       })
                     }
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-200"
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-200"
                   >
                     <option value="ACTIVE">Active</option>
                     <option value="INACTIVE">Inactive</option>
@@ -731,10 +731,10 @@ export default function PrincipalsPage() {
         {principals.length === 0 ? (
           <div className="bg-white rounded-2xl shadow-lg p-12 text-center border-2 border-gray-100">
             <div className="text-6xl mb-4">🏢</div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">
+            <h3 className="text-xl font-extrabold text-gray-900 mb-2">
               No Principals Yet
             </h3>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-700 mb-6">
               Add your first principal to get started
             </p>
             <button
@@ -760,17 +760,17 @@ export default function PrincipalsPage() {
                           {principal.name.charAt(0)}
                         </div>
                         <div>
-                          <h3 className="text-2xl font-bold text-gray-900">
+                          <h3 className="text-2xl font-extrabold text-gray-900">
                             {principal.name}
                           </h3>
-                          <p className="text-gray-600">{principal.country}</p>
+                          <p className="text-gray-700">{principal.country}</p>
                         </div>
                       </div>
 
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
                         {principal.contactPerson && (
                           <div>
-                            <div className="text-xs text-gray-500 mb-1">
+                            <div className="text-sm text-gray-700 mb-1">
                               Contact Person
                             </div>
                             <div className="font-semibold text-gray-900">
@@ -780,7 +780,7 @@ export default function PrincipalsPage() {
                         )}
                         {principal.phone && (
                           <div>
-                            <div className="text-xs text-gray-500 mb-1">
+                            <div className="text-sm text-gray-700 mb-1">
                               Phone
                             </div>
                             <div className="font-semibold text-gray-900">
@@ -790,7 +790,7 @@ export default function PrincipalsPage() {
                         )}
                         {principal.email && (
                           <div>
-                            <div className="text-xs text-gray-500 mb-1">
+                            <div className="text-sm text-gray-700 mb-1">
                               Email
                             </div>
                             <div className="font-semibold text-gray-900">
@@ -799,11 +799,11 @@ export default function PrincipalsPage() {
                           </div>
                         )}
                         <div>
-                          <div className="text-xs text-gray-500 mb-1">
+                          <div className="text-sm text-gray-700 mb-1">
                             Status
                           </div>
                           <span
-                            className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+                            className={`inline-block px-3 py-2 rounded-full text-xs font-semibold ${
                               principal.status === "ACTIVE"
                                 ? "bg-green-100 text-green-800"
                                 : "bg-gray-100 text-gray-800"
@@ -819,7 +819,7 @@ export default function PrincipalsPage() {
                     <div className="flex flex-col gap-2 ml-4">
                       <button
                         onClick={() => handleEdit(principal)}
-                        className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-semibold hover:bg-blue-600 transition-all duration-200"
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-all duration-200"
                       >
                         ✏️ Edit
                       </button>
@@ -860,19 +860,19 @@ export default function PrincipalsPage() {
                       {principal.vessels.map((vessel) => (
                         <div
                           key={vessel.id}
-                          className="bg-gradient-to-br from-gray-50 to-blue-50 rounded-xl p-4 border-2 border-gray-200 hover:border-green-400 transition-all duration-200"
+                          className="bg-gradient-to-br from-gray-50 to-blue-50 rounded-xl p-4 border-2 border-gray-300 hover:border-green-400 transition-all duration-200"
                         >
                           <div className="flex items-start justify-between mb-3">
                             <div className="flex-1">
                               <h5 className="text-lg font-bold text-gray-900 mb-1">
                                 {vessel.name}
                               </h5>
-                              <p className="text-sm text-gray-600">
+                              <p className="text-sm text-gray-800">
                                 {vessel.type} • {vessel.flag}
                               </p>
                             </div>
                             <span
-                              className={`inline-block px-2 py-1 rounded-lg text-xs font-semibold ${
+                              className={`inline-block px-4 py-2 rounded-lg text-xs font-semibold ${
                                 vessel.status === "ACTIVE"
                                   ? "bg-green-100 text-green-800"
                                   : vessel.status === "UNDER_REPAIR"
@@ -916,7 +916,7 @@ export default function PrincipalsPage() {
                               onClick={() =>
                                 handleEditVessel(vessel, principal)
                               }
-                              className="flex-1 px-3 py-2 bg-blue-500 text-white rounded-lg text-xs font-semibold hover:bg-blue-600 transition-all duration-200"
+                              className="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg text-xs font-semibold hover:bg-blue-700 transition-all duration-200"
                             >
                               ✏️ Edit
                             </button>
@@ -931,9 +931,9 @@ export default function PrincipalsPage() {
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center py-8 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
+                    <div className="text-center py-8 bg-gray-100 rounded-xl border-2 border-dashed border-gray-300">
                       <div className="text-4xl mb-2">🚢</div>
-                      <p className="text-gray-600 mb-3">
+                      <p className="text-gray-700 mb-3">
                         No vessels yet for this principal
                       </p>
                       <button

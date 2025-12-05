@@ -31,7 +31,7 @@ export default function HR() {
             <h1 className="text-3xl font-bold text-gray-900">Human Resources</h1>
             <button
               onClick={() => router.push("/")}
-              className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-xl"
+              className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
             >
               Back to Dashboard
             </button>
@@ -48,7 +48,7 @@ export default function HR() {
               <div className="p-5">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
-                    <div className="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
+                    <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                       <span className="text-white text-sm font-medium">👥</span>
                     </div>
                   </div>
@@ -64,11 +64,11 @@ export default function HR() {
                   </div>
                 </div>
               </div>
-              <div className="bg-gray-50 px-5 py-3">
+              <div className="bg-gray-100 px-5 py-3">
                 <div className="text-sm">
                   <button
                     onClick={() => router.push("/hr/employees")}
-                    className="font-medium text-blue-600 hover:text-blue-500"
+                    className="font-medium text-blue-600 hover:text-blue-700"
                   >
                     View Employees →
                   </button>
@@ -81,7 +81,7 @@ export default function HR() {
               <div className="p-5">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
-                    <div className="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
+                    <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
                       <span className="text-white text-sm font-medium">📅</span>
                     </div>
                   </div>
@@ -97,11 +97,11 @@ export default function HR() {
                   </div>
                 </div>
               </div>
-              <div className="bg-gray-50 px-5 py-3">
+              <div className="bg-gray-100 px-5 py-3">
                 <div className="text-sm">
                   <button
                     onClick={() => router.push("/hr/attendance")}
-                    className="font-medium text-blue-600 hover:text-blue-500"
+                    className="font-medium text-blue-600 hover:text-blue-700"
                   >
                     Track Attendance →
                   </button>
@@ -114,7 +114,7 @@ export default function HR() {
               <div className="p-5">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
-                    <div className="w-8 h-8 bg-yellow-500 rounded-md flex items-center justify-center">
+                    <div className="w-8 h-8 bg-yellow-500 rounded-lg flex items-center justify-center">
                       <span className="text-white text-sm font-medium">🏖️</span>
                     </div>
                   </div>
@@ -130,11 +130,11 @@ export default function HR() {
                   </div>
                 </div>
               </div>
-              <div className="bg-gray-50 px-5 py-3">
+              <div className="bg-gray-100 px-5 py-3">
                 <div className="text-sm">
                   <button
                     onClick={() => router.push("/hr/leaves")}
-                    className="font-medium text-blue-600 hover:text-blue-500"
+                    className="font-medium text-blue-600 hover:text-blue-700"
                   >
                     Manage Leaves →
                   </button>
@@ -147,7 +147,7 @@ export default function HR() {
               <div className="p-5">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
-                    <div className="w-8 h-8 bg-red-500 rounded-md flex items-center justify-center">
+                    <div className="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center">
                       <span className="text-white text-sm font-medium">⚖️</span>
                     </div>
                   </div>
@@ -163,11 +163,11 @@ export default function HR() {
                   </div>
                 </div>
               </div>
-              <div className="bg-gray-50 px-5 py-3">
+              <div className="bg-gray-100 px-5 py-3">
                 <div className="text-sm">
                   <button
                     onClick={() => router.push("/hr/disciplinary")}
-                    className="font-medium text-blue-600 hover:text-blue-500"
+                    className="font-medium text-blue-600 hover:text-blue-700"
                   >
                     View Records →
                   </button>
@@ -180,7 +180,7 @@ export default function HR() {
               <div className="p-5">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
-                    <div className="w-8 h-8 bg-indigo-500 rounded-md flex items-center justify-center">
+                    <div className="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center">
                       <span className="text-white text-sm font-medium">🎯</span>
                     </div>
                   </div>
@@ -196,11 +196,11 @@ export default function HR() {
                   </div>
                 </div>
               </div>
-              <div className="bg-gray-50 px-5 py-3">
+              <div className="bg-gray-100 px-5 py-3">
                 <div className="text-sm">
                   <button
                     onClick={() => router.push("/hr/recruitment")}
-                    className="font-medium text-blue-600 hover:text-blue-500"
+                    className="font-medium text-blue-600 hover:text-blue-700"
                   >
                     Manage Recruitment →
                   </button>
@@ -213,7 +213,7 @@ export default function HR() {
               <div className="p-5">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
-                    <div className="w-8 h-8 bg-teal-500 rounded-md flex items-center justify-center">
+                    <div className="w-8 h-8 bg-teal-500 rounded-lg flex items-center justify-center">
                       <span className="text-white text-sm font-medium">🎓</span>
                     </div>
                   </div>
@@ -229,11 +229,11 @@ export default function HR() {
                   </div>
                 </div>
               </div>
-              <div className="bg-gray-50 px-5 py-3">
+              <div className="bg-gray-100 px-5 py-3">
                 <div className="text-sm">
                   <button
                     onClick={() => router.push("/hr/orientation")}
-                    className="font-medium text-blue-600 hover:text-blue-500"
+                    className="font-medium text-blue-600 hover:text-blue-700"
                   >
                     Schedule Orientation →
                   </button>

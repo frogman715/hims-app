@@ -33,13 +33,13 @@ export default function CompliancePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b border-gray-200">
+      <div className="bg-white shadow-md border-b border-gray-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="py-6">
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">External Compliance Management</h1>
-                <p className="mt-2 text-gray-600">
+                <p className="mt-2 text-gray-700">
                   Manage KOSMA certificates, Dephub seafarer verification, and Schengen visa compliance
                 </p>
               </div>
@@ -59,7 +59,7 @@ export default function CompliancePage() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-lg shadow-md border border-gray-300 p-6">
           <ExternalComplianceManager />
         </div>
       </div>

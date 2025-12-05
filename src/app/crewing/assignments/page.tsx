@@ -76,14 +76,14 @@ export default function Assignments() {
               Back to Crewing
             </button>
           </div>
-          <p className="text-sm text-gray-600">Manage crew assignments and contracts</p>
+          <p className="text-sm text-gray-800">Manage crew assignments and contracts</p>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Assignment List</h2>
+            <h2 className="text-2xl font-extrabold text-gray-900">Assignment List</h2>
             <button
               onClick={() => router.push("/crewing/assignments/new")}
               className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
@@ -92,7 +92,7 @@ export default function Assignments() {
             </button>
           </div>
 
-          <div className="bg-white shadow overflow-hidden sm:rounded-md">
+          <div className="bg-white shadow overflow-hidden sm:rounded-lg">
             <ul className="divide-y divide-gray-200">
               {assignments.map((assignment) => (
                 <li key={assignment.id}>
@@ -120,7 +120,7 @@ export default function Assignments() {
                       </div>
                       <div className="flex items-center space-x-4">
                         <div className="text-sm text-gray-500">
-                          <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          <div className={`inline-flex items-center px-4.5 py-0.5 rounded-full text-xs font-medium ${
                             assignment.status === 'ONBOARD'
                               ? 'bg-green-100 text-green-800'
                               : assignment.status === 'COMPLETED'
@@ -147,7 +147,7 @@ export default function Assignments() {
                           >
                             Edit
                           </button>
-                          <button className="text-gray-600 hover:text-gray-900">
+                          <button className="text-gray-700 hover:text-gray-900">
                             View Details
                           </button>
                         </div>

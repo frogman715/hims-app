@@ -35,18 +35,18 @@ export default function HRManagementPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-100 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <nav className="flex mb-4" aria-label="Breadcrumb">
           <ol className="inline-flex items-center space-x-1">
-            <li><Link href="/dashboard" className="text-gray-700 hover:text-blue-600">Dashboard</Link></li>
+            <li><Link href="/dashboard" className="text-gray-700 hover:text-blue-700">Dashboard</Link></li>
             <li><span className="ml-1 text-gray-500">HR & Administration</span></li>
           </ol>
         </nav>
 
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">HR & Administration Management</h1>
-          <p className="text-gray-600 mt-1">HGQS Annex E - Human Resources, Administration & Purchasing</p>
+          <p className="text-gray-700 mt-1">HGQS Annex E - Human Resources, Administration & Purchasing</p>
         </div>
 
         {/* Module Cards */}
@@ -56,12 +56,12 @@ export default function HRManagementPage() {
             className={`p-6 rounded-xl text-left transition-all ${
               activeTab === "REQUISITIONS"
                 ? "bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg"
-                : "bg-white text-gray-800 border-2 border-gray-200 hover:border-blue-300"
+                : "bg-white text-gray-800 border-2 border-gray-300 hover:border-blue-300"
             }`}
           >
             <div className="text-4xl mb-3">👥</div>
-            <h3 className="text-xl font-bold mb-2">Manpower Requisition</h3>
-            <p className={`text-sm ${activeTab === "REQUISITIONS" ? "text-blue-100" : "text-gray-600"}`}>
+            <h3 className="text-xl font-extrabold mb-2">Manpower Requisition</h3>
+            <p className={`text-sm ${activeTab === "REQUISITIONS" ? "text-blue-100" : "text-gray-700"}`}>
               Form HCF-AD-25: Request new employees
             </p>
           </button>
@@ -71,12 +71,12 @@ export default function HRManagementPage() {
             className={`p-6 rounded-xl text-left transition-all ${
               activeTab === "APPRAISALS"
                 ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg"
-                : "bg-white text-gray-800 border-2 border-gray-200 hover:border-purple-300"
+                : "bg-white text-gray-800 border-2 border-gray-300 hover:border-purple-300"
             }`}
           >
             <div className="text-4xl mb-3">⭐</div>
-            <h3 className="text-xl font-bold mb-2">Performance Appraisal</h3>
-            <p className={`text-sm ${activeTab === "APPRAISALS" ? "text-purple-100" : "text-gray-600"}`}>
+            <h3 className="text-xl font-extrabold mb-2">Performance Appraisal</h3>
+            <p className={`text-sm ${activeTab === "APPRAISALS" ? "text-purple-100" : "text-gray-700"}`}>
               Form HCF-AD-06: Employee evaluations
             </p>
           </button>
@@ -86,12 +86,12 @@ export default function HRManagementPage() {
             className={`p-6 rounded-xl text-left transition-all ${
               activeTab === "PURCHASES"
                 ? "bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg"
-                : "bg-white text-gray-800 border-2 border-gray-200 hover:border-green-300"
+                : "bg-white text-gray-800 border-2 border-gray-300 hover:border-green-300"
             }`}
           >
             <div className="text-4xl mb-3">🛒</div>
-            <h3 className="text-xl font-bold mb-2">Purchase Orders</h3>
-            <p className={`text-sm ${activeTab === "PURCHASES" ? "text-green-100" : "text-gray-600"}`}>
+            <h3 className="text-xl font-extrabold mb-2">Purchase Orders</h3>
+            <p className={`text-sm ${activeTab === "PURCHASES" ? "text-green-100" : "text-gray-700"}`}>
               Form HCF-AD-15: Equipment & supplies
             </p>
           </button>
@@ -108,7 +108,7 @@ export default function HRManagementPage() {
               {activeTab === "REQUISITIONS" && (
                 <div>
                   <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-bold text-gray-900">Manpower Requisitions</h2>
+                    <h2 className="text-2xl font-extrabold text-gray-900">Manpower Requisitions</h2>
                     <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
                       + New Requisition
                     </button>
@@ -116,7 +116,7 @@ export default function HRManagementPage() {
                   {requisitions.length === 0 ? (
                     <div className="text-center py-12">
                       <div className="text-6xl mb-4">📋</div>
-                      <p className="text-gray-600">No requisitions found</p>
+                      <p className="text-gray-700">No requisitions found</p>
                     </div>
                   ) : (
                     <div className="overflow-x-auto">
@@ -133,13 +133,13 @@ export default function HRManagementPage() {
                         </thead>
                         <tbody className="divide-y divide-gray-200">
                           {requisitions.map((req) => (
-                            <tr key={req.id} className="hover:bg-gray-50">
+                            <tr key={req.id} className="hover:bg-gray-100">
                               <td className="px-4 py-3 text-sm text-gray-900">{req.formNumber}</td>
                               <td className="px-4 py-3 text-sm font-medium text-gray-900">{req.position}</td>
-                              <td className="px-4 py-3 text-sm text-gray-600">{req.department}</td>
+                              <td className="px-4 py-3 text-sm text-gray-700">{req.department}</td>
                               <td className="px-4 py-3 text-sm text-gray-900">{req.numberOfVacancy}</td>
                               <td className="px-4 py-3">
-                                <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                                <span className={`px-4 py-2 text-xs font-semibold rounded-full ${
                                   req.status === "APPROVED" ? "bg-green-100 text-green-800" :
                                   req.status === "PENDING" ? "bg-yellow-100 text-yellow-800" :
                                   "bg-gray-100 text-gray-800"
@@ -162,7 +162,7 @@ export default function HRManagementPage() {
               {activeTab === "APPRAISALS" && (
                 <div>
                   <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-bold text-gray-900">Performance Appraisals</h2>
+                    <h2 className="text-2xl font-extrabold text-gray-900">Performance Appraisals</h2>
                     <button className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium">
                       + New Appraisal
                     </button>
@@ -170,21 +170,21 @@ export default function HRManagementPage() {
                   {appraisals.length === 0 ? (
                     <div className="text-center py-12">
                       <div className="text-6xl mb-4">⭐</div>
-                      <p className="text-gray-600">No appraisals found</p>
+                      <p className="text-gray-700">No appraisals found</p>
                     </div>
                   ) : (
-                    <div className="space-y-4">
+                    <div className="space-y-6">
                       {appraisals.map((appraisal) => (
                         <div key={appraisal.id} className="border rounded-lg p-4">
                           <div className="flex justify-between">
                             <div>
                               <h3 className="font-bold text-gray-900">{appraisal.employeeName}</h3>
-                              <p className="text-sm text-gray-600">{appraisal.position} - {appraisal.department}</p>
+                              <p className="text-sm text-gray-800">{appraisal.position} - {appraisal.department}</p>
                               <p className="text-sm text-gray-500">Period: {appraisal.appraisalPeriod}</p>
                             </div>
                             <div className="text-right">
-                              <div className="text-2xl font-bold text-blue-600">{appraisal.overallScore}/5.0</div>
-                              <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                              <div className="text-2xl font-extrabold text-blue-600">{appraisal.overallScore}/5.0</div>
+                              <span className={`px-4 py-2 text-xs font-semibold rounded-full ${
                                 appraisal.recommendation === "EXCELLENT_PROMOTE" ? "bg-green-100 text-green-800" :
                                 appraisal.recommendation === "GOOD_MAINTAIN" ? "bg-blue-100 text-blue-800" :
                                 "bg-yellow-100 text-yellow-800"
@@ -203,7 +203,7 @@ export default function HRManagementPage() {
               {activeTab === "PURCHASES" && (
                 <div>
                   <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-bold text-gray-900">Purchase Orders</h2>
+                    <h2 className="text-2xl font-extrabold text-gray-900">Purchase Orders</h2>
                     <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium">
                       + New Purchase Order
                     </button>
@@ -211,7 +211,7 @@ export default function HRManagementPage() {
                   {purchases.length === 0 ? (
                     <div className="text-center py-12">
                       <div className="text-6xl mb-4">🛒</div>
-                      <p className="text-gray-600">No purchase orders found</p>
+                      <p className="text-gray-700">No purchase orders found</p>
                     </div>
                   ) : (
                     <div className="overflow-x-auto">
@@ -227,12 +227,12 @@ export default function HRManagementPage() {
                         </thead>
                         <tbody className="divide-y divide-gray-200">
                           {purchases.map((po) => (
-                            <tr key={po.id} className="hover:bg-gray-50">
+                            <tr key={po.id} className="hover:bg-gray-100">
                               <td className="px-4 py-3 text-sm font-medium text-gray-900">{po.poNumber}</td>
                               <td className="px-4 py-3 text-sm text-gray-900">{po.supplierName}</td>
                               <td className="px-4 py-3 text-sm text-gray-900">${po.totalAmount.toLocaleString()}</td>
                               <td className="px-4 py-3">
-                                <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                                <span className={`px-4 py-2 text-xs font-semibold rounded-full ${
                                   po.status === "RECEIVED" ? "bg-green-100 text-green-800" :
                                   po.status === "APPROVED" ? "bg-blue-100 text-blue-800" :
                                   "bg-yellow-100 text-yellow-800"
@@ -240,7 +240,7 @@ export default function HRManagementPage() {
                                   {po.status}
                                 </span>
                               </td>
-                              <td className="px-4 py-3 text-sm text-gray-600">
+                              <td className="px-4 py-3 text-sm text-gray-700">
                                 {new Date(po.requestDate).toLocaleDateString()}
                               </td>
                             </tr>
