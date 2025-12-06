@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { checkPermission, PermissionLevel } from '@/lib/permission-middleware';
-import prisma from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 
 export async function GET(
   req: NextRequest,

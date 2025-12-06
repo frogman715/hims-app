@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
 
     // Document status section - populate based on available documents
     // This assumes the template has a table structure for documents
-    let rowOffset = 13; // Starting row for document list
+    const rowOffset = 13; // Starting row for document list
 
     // Essential documents to check
     const essentialDocuments = [

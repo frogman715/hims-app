@@ -1,336 +1,176 @@
+/* ============================================
+   HANMARINE INTEGRATED MANAGEMENT SYSTEM (HIMS)
+   GLOBAL STYLES - PROFESSIONAL & CLEAN
+   Version: 2.0 (December 2025)
+   ============================================ */
+
 @import "tailwindcss";
 
+/* ============================================
+   DESIGN TOKENS (CSS Variables)
+   ============================================ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Colors */
+  --color-background: #ffffff;
+  --color-foreground: #111827;
+  --color-primary: #2563eb;
+  --color-primary-hover: #1d4ed8;
+  --color-secondary: #64748b;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  
+  /* Typography */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
+  
+  /* Spacing scale */
+  --spacing-xs: 0.5rem;
+  --spacing-sm: 0.75rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  
+  /* Border radius */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  font-feature-settings: "rlig" 1, "calt" 1;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
-  font-display: swap;
-}
-
-/* Ensure all text elements inherit the proper font */
-* {
-  font-family: inherit;
-}
-
-/* Font loading optimization */
-@font-face {
-  font-family: 'Geist Fallback';
-  src: local('Arial'), local('Helvetica'), local('sans-serif');
-  font-display: swap;
-}
-
-/* Ensure text is visible while fonts load */
-html {
-  font-display: swap;
-}
-
-/* Loading state for fonts */
-.font-loading {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-}
-
-/* Force font inheritance for all elements */
+/* ============================================
+   BASE STYLES
+   ============================================ */
 *,
 *::before,
 *::after {
-  font-family: inherit;
   box-sizing: border-box;
 }
 
-/* Ensure buttons and form elements use proper fonts */
-button,
-input,
-select,
-textarea {
-  font-family: inherit;
+html {
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
-/* Ensure headings use proper fonts */
-h1, h2, h3, h4, h5, h6 {
-  font-family: inherit;
-  font-weight: inherit;
-}
-
-/* Specific font weights for better readability */
-.font-light {
-  font-weight: 300;
-}
-
-.font-normal {
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
   font-weight: 400;
 }
 
-.font-medium {
-  font-weight: 500;
-}
-
-.font-semibold {
-  font-weight: 600;
-}
-
-.font-bold {
+/* ============================================
+   TYPOGRAPHY
+   ============================================ */
+h1, h2, h3, h4, h5, h6 {
+  margin: 0;
   font-weight: 700;
+  line-height: 1.2;
+  color: var(--color-foreground);
 }
 
-.font-extrabold {
-  font-weight: 800;
+h1 { font-size: 2.25rem; } /* 36px */
+h2 { font-size: 1.875rem; } /* 30px */
+h3 { font-size: 1.5rem; } /* 24px */
+h4 { font-size: 1.25rem; } /* 20px */
+h5 { font-size: 1.125rem; } /* 18px */
+h6 { font-size: 1rem; } /* 16px */
+
+p {
+  margin: 0;
+  line-height: 1.6;
 }
 
-/* Monospace font for code and technical content */
-.font-mono {
-  font-family: var(--font-geist-mono), "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
-}
-
-/* Improve text visibility */
-.text-xs {
-  font-size: 0.75rem !important;
-  line-height: 1rem !important;
-}
-
-.text-sm {
-  font-size: 0.875rem !important;
-  line-height: 1.25rem !important;
-}
-
-.text-base {
-  font-size: 1rem !important;
-  line-height: 1.5rem !important;
-}
-
-.text-lg {
-  font-size: 1.125rem !important;
-  line-height: 1.75rem !important;
-}
-
-.text-xl {
-  font-size: 1.25rem !important;
-  line-height: 1.75rem !important;
-}
-
-.text-2xl {
-  font-size: 1.5rem !important;
-  line-height: 2rem !important;
-}
-
-.text-3xl {
-  font-size: 1.875rem !important;
-  line-height: 2.25rem !important;
-}
-
-.text-4xl {
-  font-size: 2.25rem !important;
-  line-height: 2.5rem !important;
-}
-
-/* Ensure better contrast for text */
-.text-gray-900 {
-  color: #111827 !important;
-}
-
-.text-gray-800 {
-  color: #1f2937 !important;
-}
-
-.text-gray-700 {
-  color: #374151 !important;
-}
-
-.text-gray-600 {
-  color: #4b5563 !important;
-}
-
-.text-gray-500 {
-  color: #6b7280 !important;
-}
-
-/* Font visibility improvements */
-* {
-  -webkit-font-smoothing: antialiased !important;
-  -moz-osx-font-smoothing: grayscale !important;
-  text-rendering: optimizeLegibility !important;
-}
-
-/* Ensure all text has proper font weight */
-.font-medium {
-  font-weight: 500 !important;
-}
-
-.font-semibold {
-  font-weight: 600 !important;
-}
-
-.font-bold {
-  font-weight: 700 !important;
-}
-
-/* COMPREHENSIVE FORM TEXT VISIBILITY FIX */
-/* This ensures all form elements have dark text on white backgrounds */
-
-/* Base form elements */
+/* ============================================
+   FORMS (NO !important HACKS)
+   ============================================ */
 input,
 textarea,
-select,
-button[type="submit"],
-button[type="button"],
-button[type="reset"] {
-  color: #111827 !important; /* Dark gray text */
-  background-color: #ffffff !important; /* White background */
-  border-color: #d1d5db !important; /* Light gray border */
+select {
+  font-family: inherit;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--color-foreground);
+  background: #ffffff;
+  border: 2px solid #d1d5db;
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1rem;
+  transition: all 0.2s ease;
 }
 
-/* Focus states */
 input:focus,
 textarea:focus,
 select:focus {
-  color: #111827 !important;
-  background-color: #ffffff !important;
-  border-color: #3b82f6 !important; /* Blue border on focus */
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
-/* Placeholder text */
 input::placeholder,
-textarea::placeholder,
-select::placeholder {
-  color: #9ca3af !important; /* Medium gray placeholder */
+textarea::placeholder {
+  color: #9ca3af;
 }
 
-/* Labels */
-label,
-legend {
-  color: #374151 !important; /* Dark gray labels */
-}
-
-/* Form groups and fieldsets */
-fieldset,
-.form-group,
-.form-field {
-  color: #111827 !important;
-}
-
-/* Override any Tailwind classes that might set white text */
-input.text-white,
-input.text-gray-50,
-input.text-gray-100,
-textarea.text-white,
-textarea.text-gray-50,
-textarea.text-gray-100,
-select.text-white,
-select.text-gray-50,
-select.text-gray-100 {
-  color: #111827 !important;
-}
-
-/* Ensure all form containers have proper text color */
-form,
-.form-container,
-.form-wrapper {
-  color: #111827 !important;
-}
-
-/* Specific input types */
-input[type="text"],
-input[type="email"],
-input[type="password"],
-input[type="number"],
-input[type="date"],
-input[type="datetime-local"],
-input[type="month"],
-input[type="week"],
-input[type="time"],
-input[type="tel"],
-input[type="url"],
-input[type="search"],
-input[type="file"] {
-  color: #111827 !important;
-  background-color: #ffffff !important;
-}
-
-/* Select dropdown options */
-select option {
-  color: #111827 !important;
-  background-color: #ffffff !important;
-}
-
-/* Ensure readonly and disabled inputs are still visible */
-input:read-only,
 input:disabled,
-textarea:read-only,
 textarea:disabled,
 select:disabled {
-  color: #6b7280 !important; /* Slightly lighter but still visible */
-  background-color: #f9fafb !important; /* Light gray background for disabled */
+  background: #f3f4f6;
+  color: #6b7280;
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
-/* Override any CSS that might set white color */
-*[style*="color: white"],
-*[style*="color: #fff"],
-*[style*="color: #ffffff"],
-*[style*="color: rgb(255, 255, 255)"],
-*[style*="color: rgba(255, 255, 255"] {
-  color: #111827 !important;
+label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
 }
 
-/* Ensure buttons that should be white text stay white */
-button.bg-blue-500,
-button.bg-blue-600,
-button.bg-green-500,
-button.bg-green-600,
-button.bg-red-500,
-button.bg-red-600,
-button.bg-gray-500,
-button.bg-gray-600,
-button.bg-indigo-500,
-button.bg-indigo-600,
-button.bg-purple-500,
-button.bg-purple-600,
-button.bg-pink-500,
-button.bg-pink-600,
-button.bg-yellow-500,
-button.bg-yellow-600,
-button.bg-orange-500,
-button.bg-orange-600,
-button.bg-teal-500,
-button.bg-teal-600,
-button.bg-cyan-500,
-button.bg-cyan-600,
-button.bg-lime-500,
-button.bg-lime-600,
-button.bg-emerald-500,
-button.bg-emerald-600,
-button.bg-violet-500,
-button.bg-violet-600,
-button.bg-fuchsia-500,
-button.bg-fuchsia-600,
-button.bg-rose-500,
-button.bg-rose-600 {
-  color: white !important;
+/* ============================================
+   BUTTONS (Basic defaults - components override)
+   ============================================ */
+button {
+  font-family: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
 }
 
-/* Special handling for gradient buttons */
-button[class*="bg-gradient"] {
-  color: white !important;
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* ============================================
+   UTILITY CLASSES (Tailwind overrides when needed)
+   ============================================ */
+.container {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
 }

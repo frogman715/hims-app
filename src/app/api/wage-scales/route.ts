@@ -1,96 +1,70 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { checkPermission, PermissionLevel } from "@/lib/permission-middleware";
+import { withPermission } from "@/lib/api-middleware";
+import { PermissionLevel } from "@/lib/permission-middleware";
+import { ApiError, validateRequired } from "@/lib/error-handler";
 
-export async function GET() {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Check wage scales permission
-    if (!checkPermission(session, 'wageScales', PermissionLevel.VIEW_ACCESS)) {
-      return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 });
-    }
-
+/**
+ * GET /api/wage-scales - Fetch all wage scale headers with items
+ * Permission: VIEW_ACCESS on wageScales module
+ */
+export const GET = withPermission(
+  "wageScales",
+  PermissionLevel.VIEW_ACCESS,
+  async () => {
     const wageScales = await prisma.wageScaleHeader.findMany({
       include: {
         items: true,
-        principal: true
+        principal: true,
       },
-      orderBy: [
-        { name: 'asc' },
-        { createdAt: 'desc' }
-      ]
+      orderBy: [{ name: "asc" }, { createdAt: "desc" }],
     });
 
-    return NextResponse.json(wageScales);
-  } catch (error) {
-    console.error("Error fetching wage scales:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ data: wageScales, total: wageScales.length });
   }
-}
+);
 
-export async function POST(request: Request) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+/**
+ * POST /api/wage-scales - Create new wage scale header with items
+ * Permission: EDIT_ACCESS on wageScales module
+ */
+export const POST = withPermission(
+  "wageScales",
+  PermissionLevel.EDIT_ACCESS,
+  async (req: NextRequest) => {
+    const body = await req.json();
+    const { name, principalId, rank, items } = body;
 
-    // Check wage scales permission for editing
-    if (!checkPermission(session, 'wageScales', PermissionLevel.EDIT_ACCESS)) {
-      return NextResponse.json({ error: "Insufficient permissions to create wage scales" }, { status: 403 });
-    }
+    // Input validation
+    validateRequired(name, "name");
+    validateRequired(rank, "rank");
 
-    const body = await request.json();
-    const {
-      name,
-      principalId,
-      rank,
-      items
-    } = body;
-
-    if (!name || !rank) {
-      return NextResponse.json(
-        { error: "Name and rank are required" },
-        { status: 400 }
-      );
-    }
-
+    // Create wage scale with items
     const wageScaleHeader = await prisma.wageScaleHeader.create({
       data: {
         name,
         principalId,
         rank,
         items: {
-          create: items?.map((item: any) => ({
-            component: item.component,
-            amount: parseFloat(item.amount),
-            currency: item.currency || 'USD',
-            frequency: item.frequency || 'MONTHLY',
-            isActive: item.isActive !== undefined ? item.isActive : true
-          })) || []
+          create:
+            items?.map((item: any) => ({
+              component: item.component,
+              amount: parseFloat(item.amount),
+              currency: item.currency || "USD",
+              frequency: item.frequency || "MONTHLY",
+              isActive: item.isActive !== undefined ? item.isActive : true,
+            })) || [],
         }
       },
       include: {
         items: true,
-        principal: true
-      }
+        principal: true,
+      },
     });
 
-    return NextResponse.json(wageScaleHeader);
-  } catch (error) {
-    console.error("Error creating wage scale:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({
+      data: wageScaleHeader,
+      message: "Wage scale created successfully",
+    }, { status: 201 });
   }
-}
+);

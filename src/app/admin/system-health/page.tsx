@@ -29,15 +29,19 @@ export default async function SystemHealthPage() {
     prisma.employmentContract.count({
       where: { status: 'ACTIVE' }
     }),
-    prisma.employmentContract.count({
-      where: {
-        status: 'ACTIVE',
-        contractEnd: {
-          lte: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
-          gte: new Date()
+    (async () => {
+      const now = new Date();
+      const thirtyDaysLater = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+      return prisma.employmentContract.count({
+        where: {
+          status: 'ACTIVE',
+          contractEnd: {
+            lte: thirtyDaysLater,
+            gte: now
+          }
         }
-      }
-    }),
+      });
+    })(),
     prisma.principal.count(),
     prisma.vessel.count()
   ]);
