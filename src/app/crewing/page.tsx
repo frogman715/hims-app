@@ -226,52 +226,52 @@ export default function Crewing() {
 
           {/* Quick Stats */}
           <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-6">
-            <div className="group bg-white backdrop-blur-md rounded-2xl p-6 border border-white/20 hover:bg-white transition-all duration-300 hover:scale-105 cursor-pointer">
+            <div className="group bg-white backdrop-blur-md rounded-2xl p-6 border border-gray-200 hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer">
               <div className="flex items-center justify-between mb-2">
-                <div className="text-3xl font-bold text-white">245</div>
-                <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-                  <span className="text-white text-sm">👥</span>
+                <div className="text-3xl font-bold text-gray-900">245</div>
+                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <span className="text-2xl">👥</span>
                 </div>
               </div>
-              <div className="text-blue-100 text-sm font-medium">Active Seafarers</div>
-              <div className="mt-2 w-full bg-white rounded-full h-1">
-                <div className="bg-white h-1 rounded-full w-3/4"></div>
+              <div className="text-gray-700 text-sm font-semibold">Active Seafarers</div>
+              <div className="mt-3 w-full bg-gray-200 rounded-full h-2">
+                <div className="bg-blue-600 h-2 rounded-full w-3/4"></div>
               </div>
             </div>
-            <div className="group bg-white backdrop-blur-md rounded-2xl p-6 border border-white/20 hover:bg-white transition-all duration-300 hover:scale-105 cursor-pointer">
+            <div className="group bg-white backdrop-blur-md rounded-2xl p-6 border border-gray-200 hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer">
               <div className="flex items-center justify-between mb-2">
-                <div className="text-3xl font-bold text-white">6</div>
-                <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-                  <span className="text-white text-sm">🏢</span>
+                <div className="text-3xl font-bold text-gray-900">6</div>
+                <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+                  <span className="text-2xl">🏢</span>
                 </div>
               </div>
-              <div className="text-blue-100 text-sm font-medium">Principals (18 Vessels)</div>
-              <div className="mt-2 w-full bg-white rounded-full h-1">
-                <div className="bg-green-400 h-1 rounded-full w-5/6"></div>
+              <div className="text-gray-700 text-sm font-semibold">Principals (18 Vessels)</div>
+              <div className="mt-3 w-full bg-gray-200 rounded-full h-2">
+                <div className="bg-indigo-600 h-2 rounded-full w-5/6"></div>
               </div>
             </div>
-            <div className="group bg-white backdrop-blur-md rounded-2xl p-6 border border-white/20 hover:bg-white transition-all duration-300 hover:scale-105 cursor-pointer">
+            <div className="group bg-white backdrop-blur-md rounded-2xl p-6 border border-gray-200 hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer">
               <div className="flex items-center justify-between mb-2">
-                <div className="text-3xl font-bold text-white">156</div>
-                <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-                  <span className="text-white text-sm">📋</span>
+                <div className="text-3xl font-bold text-gray-900">156</div>
+                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                  <span className="text-2xl">📋</span>
                 </div>
               </div>
-              <div className="text-blue-100 text-sm font-medium">Active Assignments</div>
-              <div className="mt-2 w-full bg-white rounded-full h-1">
-                <div className="bg-yellow-400 h-1 rounded-full w-4/5"></div>
+              <div className="text-gray-700 text-sm font-semibold">Active Assignments</div>
+              <div className="mt-3 w-full bg-gray-200 rounded-full h-2">
+                <div className="bg-green-600 h-2 rounded-full w-4/5"></div>
               </div>
             </div>
-            <div className="group bg-white backdrop-blur-md rounded-2xl p-6 border border-white/20 hover:bg-white transition-all duration-300 hover:scale-105 cursor-pointer">
+            <div className="group bg-white backdrop-blur-md rounded-2xl p-6 border border-gray-200 hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer">
               <div className="flex items-center justify-between mb-2">
-                <div className="text-3xl font-bold text-white">98%</div>
-                <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-                  <span className="text-white text-sm">✅</span>
+                <div className="text-3xl font-bold text-gray-900">98%</div>
+                <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
+                  <span className="text-2xl">✅</span>
                 </div>
               </div>
-              <div className="text-blue-100 text-sm font-medium">Compliance Rate</div>
-              <div className="mt-2 w-full bg-white rounded-full h-1">
-                <div className="bg-green-400 h-1 rounded-full w-full"></div>
+              <div className="text-gray-700 text-sm font-semibold">Compliance Rate</div>
+              <div className="mt-3 w-full bg-gray-200 rounded-full h-2">
+                <div className="bg-emerald-600 h-2 rounded-full w-full"></div>
               </div>
             </div>
           </div>
