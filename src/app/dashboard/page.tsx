@@ -4,6 +4,7 @@ import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { UserRole } from '@/lib/permissions';
 import ComplianceStatusWidget from '@/components/compliance/ComplianceStatusWidget';
 import ExternalComplianceWidget from '@/components/compliance/ExternalComplianceWidget';
@@ -233,8 +234,8 @@ export default function DashboardPage() {
           <div className="absolute inset-0 bg-black opacity-10"></div>
           <div className="relative z-10">
             <div className="flex items-center space-x-3 mb-2">
-              <div className="w-10 h-10 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
-                <span className="text-xl">⚓</span>
+              <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center p-1 relative">
+                <Image src="/logo.png" alt="HANMARINE Logo" fill className="object-contain p-0.5" />
               </div>
               <div>
                 <h1 className="text-2xl font-extrabold tracking-wide">HANMARINE</h1>
