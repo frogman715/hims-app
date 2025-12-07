@@ -306,9 +306,9 @@ function DirectorDashboard({ user }: { user: any }) {
           <Link href="/crewing/principals" className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-6 text-white hover:shadow-2xl transition-all duration-300 hover:scale-105 cursor-pointer">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-blue-100">Fleet Management</p>
+                <p className="text-white font-semibold">Fleet Management</p>
                 <p className="text-3xl font-bold">6</p>
-                <p className="text-blue-100 text-sm">Principals (24 vessels)</p>
+                <p className="text-white text-sm opacity-90">Principals (24 vessels)</p>
               </div>
               <div className="text-4xl">🏢</div>
             </div>
@@ -317,9 +317,9 @@ function DirectorDashboard({ user }: { user: any }) {
           <Link href="/crewing/seafarers" className="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-6 text-white hover:shadow-2xl transition-all duration-300 hover:scale-105 cursor-pointer">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-green-100">Crew Complement</p>
+                <p className="text-white font-semibold">Crew Complement</p>
                 <p className="text-3xl font-bold">1,247</p>
-                <p className="text-green-100 text-sm">Active seafarers</p>
+                <p className="text-white text-sm opacity-90">Active seafarers</p>
               </div>
               <div className="text-4xl">👥</div>
             </div>
@@ -328,9 +328,9 @@ function DirectorDashboard({ user }: { user: any }) {
           <Link href="/crewing/prepare-joining" className="bg-gradient-to-r from-yellow-500 to-orange-500 rounded-lg p-6 text-white hover:shadow-2xl transition-all duration-300 hover:scale-105 cursor-pointer">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-yellow-100">Pending Joinings</p>
+                <p className="text-white font-semibold">Pending Joinings</p>
                 <p className="text-3xl font-bold">18</p>
-                <p className="text-yellow-100 text-sm">This month</p>
+                <p className="text-white text-sm opacity-90">This month</p>
               </div>
               <div className="text-4xl">📋</div>
             </div>
@@ -339,9 +339,9 @@ function DirectorDashboard({ user }: { user: any }) {
           <Link href="/crewing/documents?filter=expiring" className="bg-gradient-to-r from-red-500 to-red-600 rounded-lg p-6 text-white hover:shadow-2xl transition-all duration-300 hover:scale-105 cursor-pointer">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-red-100">Docs Expiring</p>
+                <p className="text-white font-semibold">Docs Expiring</p>
                 <p className="text-3xl font-bold">8</p>
-                <p className="text-red-100 text-sm">Need renewal</p>
+                <p className="text-white text-sm opacity-90">Need renewal</p>
               </div>
               <div className="text-4xl">📜</div>
             </div>

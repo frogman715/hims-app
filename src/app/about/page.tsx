@@ -50,8 +50,8 @@ export default function AboutPage() {
               </svg>
             </div>
             <h1 className="text-5xl font-bold mb-4">PT. HANN GLOBAL INDONESIA</h1>
-            <p className="text-xl text-blue-100">HANMARINE Integrated Management System</p>
-            <p className="text-sm text-blue-200 mt-2">ISO 9001:2015 & MLC 2006 Compliant</p>
+            <p className="text-xl text-white font-semibold">HANMARINE Integrated Management System</p>
+            <p className="text-sm text-white opacity-90 mt-2">ISO 9001:2015 & MLC 2006 Compliant</p>
           </div>
         </div>
       </div>

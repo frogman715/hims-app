@@ -249,7 +249,7 @@ export default function CrewManningWorkflow() {
           >
             <div className="text-4xl mb-3">➕</div>
             <h3 className="text-xl font-extrabold mb-2">New Application</h3>
-            <p className="text-blue-100 text-sm">
+            <p className="text-white text-sm opacity-90">
               Input aplikasi baru dari seafarer
             </p>
           </Link>
@@ -260,7 +260,7 @@ export default function CrewManningWorkflow() {
           >
             <div className="text-4xl mb-3">📅</div>
             <h3 className="text-xl font-extrabold mb-2">Schedule Interview</h3>
-            <p className="text-indigo-100 text-sm">
+            <p className="text-white text-sm opacity-90">
               Jadwalkan interview untuk kandidat
             </p>
           </Link>
@@ -271,7 +271,7 @@ export default function CrewManningWorkflow() {
           >
             <div className="text-4xl mb-3">📊</div>
             <h3 className="text-xl font-extrabold mb-2">Reports</h3>
-            <p className="text-green-100 text-sm">
+            <p className="text-white text-sm opacity-90">
               Lihat laporan recruitment & manning
             </p>
           </Link>

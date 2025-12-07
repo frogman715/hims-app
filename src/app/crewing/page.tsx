@@ -197,13 +197,13 @@ export default function Crewing() {
               </div>
               <div>
                 <h1 className="text-5xl font-bold text-white mb-3 tracking-tight">Crewing Department</h1>
-                <p className="text-blue-100 text-xl font-medium">Professional maritime crew operations & compliance</p>
+                <p className="text-white text-xl font-medium opacity-95">Professional maritime crew operations & compliance</p>
                 <div className="mt-4 flex items-center space-x-4">
-                  <div className="flex items-center space-x-2 text-blue-100">
+                  <div className="flex items-center space-x-2 text-white opacity-90">
                     <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
                     <span className="text-sm font-medium">System Online</span>
                   </div>
-                  <div className="flex items-center space-x-2 text-blue-100">
+                  <div className="flex items-center space-x-2 text-white opacity-90">
                     <span className="text-sm">Last updated: Today</span>
                   </div>
                 </div>
