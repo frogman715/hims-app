@@ -17,6 +17,7 @@ export default function SidebarHeader() {
                   alt="HANMARINE Logo"
                   fill
                   priority
+                  unoptimized
                   className="object-contain"
                 />
               </div>
