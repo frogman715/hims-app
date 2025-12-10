@@ -3,6 +3,20 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { checkPermission, PermissionLevel } from '@/lib/permission-middleware';
 import { prisma } from '@/lib/prisma';
+import type { Prisma } from '@prisma/client';
+
+type UpdateVesselPayload = {
+  name?: string;
+  imoNumber?: string | null;
+  flag?: string | null;
+  type?: string | null;
+  dwt?: number | string | null;
+  gt?: number | string | null;
+  status?: string | null;
+  principalId?: string | null;
+};
+
+const allowedVesselStatuses = new Set(['ACTIVE', 'INACTIVE', 'UNDER_REPAIR']);
 
 export async function GET(
   req: NextRequest,
@@ -59,7 +73,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
     }
 
-    const body = await req.json();
+    const body = (await req.json()) as UpdateVesselPayload;
     const {
       name,
       imoNumber,
@@ -71,15 +85,96 @@ export async function PUT(
       principalId
     } = body;
 
-    const updateData: any = {};
-    if (name !== undefined) updateData.name = name;
-    if (imoNumber !== undefined) updateData.imoNumber = imoNumber;
-    if (flag !== undefined) updateData.flag = flag;
-    if (type !== undefined) updateData.type = type;
-    if (dwt !== undefined) updateData.dwt = dwt;
-    if (gt !== undefined) updateData.gt = gt;
-    if (status !== undefined) updateData.status = status;
-    if (principalId !== undefined) updateData.principalId = principalId;
+    const updateData: Prisma.VesselUpdateInput = {};
+
+    if (name !== undefined) {
+      if (typeof name !== 'string' || !name.trim()) {
+        return NextResponse.json({ error: 'Invalid vessel name' }, { status: 400 });
+      }
+      updateData.name = name.trim();
+    }
+
+    if (imoNumber !== undefined) {
+      if (imoNumber === null) {
+        updateData.imoNumber = null;
+      } else if (typeof imoNumber === 'string') {
+        updateData.imoNumber = imoNumber.trim();
+      } else {
+        return NextResponse.json({ error: 'Invalid IMO number' }, { status: 400 });
+      }
+    }
+
+    if (flag !== undefined) {
+      if (typeof flag === 'string' && flag.trim()) {
+        updateData.flag = flag.trim();
+      } else {
+        return NextResponse.json({ error: 'Invalid flag value' }, { status: 400 });
+      }
+    }
+
+    if (type !== undefined) {
+      if (typeof type === 'string' && type.trim()) {
+        updateData.type = type.trim();
+      } else {
+        return NextResponse.json({ error: 'Invalid vessel type' }, { status: 400 });
+      }
+    }
+
+    if (dwt !== undefined) {
+      if (dwt === null) {
+        updateData.dwt = null;
+      } else if (typeof dwt === 'number' && Number.isFinite(dwt)) {
+        updateData.dwt = dwt;
+      } else if (typeof dwt === 'string' && dwt.trim() !== '') {
+        const parsedDwt = Number.parseFloat(dwt);
+        if (Number.isNaN(parsedDwt)) {
+          return NextResponse.json({ error: 'Invalid DWT value' }, { status: 400 });
+        }
+        updateData.dwt = parsedDwt;
+      } else {
+        return NextResponse.json({ error: 'Invalid DWT value' }, { status: 400 });
+      }
+    }
+
+    if (gt !== undefined) {
+      if (gt === null) {
+        updateData.gt = null;
+      } else if (typeof gt === 'number' && Number.isFinite(gt)) {
+        updateData.gt = gt;
+      } else if (typeof gt === 'string' && gt.trim() !== '') {
+        const parsedGt = Number.parseFloat(gt);
+        if (Number.isNaN(parsedGt)) {
+          return NextResponse.json({ error: 'Invalid GT value' }, { status: 400 });
+        }
+        updateData.gt = parsedGt;
+      } else {
+        return NextResponse.json({ error: 'Invalid GT value' }, { status: 400 });
+      }
+    }
+
+    if (status !== undefined) {
+      if (status === null) {
+        return NextResponse.json({ error: 'Status cannot be null' }, { status: 400 });
+      }
+      if (typeof status !== 'string') {
+        return NextResponse.json({ error: 'Invalid vessel status' }, { status: 400 });
+      }
+      const normalizedStatus = status.trim().toUpperCase();
+      if (!allowedVesselStatuses.has(normalizedStatus)) {
+        return NextResponse.json({ error: 'Invalid vessel status' }, { status: 400 });
+      }
+      updateData.status = normalizedStatus;
+    }
+
+    if (principalId !== undefined) {
+      if (principalId === null) {
+        updateData.principalId = null;
+      } else if (typeof principalId === 'string' && principalId.trim()) {
+        updateData.principalId = principalId.trim();
+      } else {
+        return NextResponse.json({ error: 'Invalid principal ID' }, { status: 400 });
+      }
+    }
 
     const vessel = await prisma.vessel.update({
       where: { id: params.id },

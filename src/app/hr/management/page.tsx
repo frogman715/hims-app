@@ -1,38 +1,84 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+
+interface ManpowerRequisitionSummary {
+  id: string;
+  formNumber: string;
+  position: string;
+  department: string;
+  numberOfVacancy: number;
+  status: string;
+}
+
+interface PerformanceAppraisalSummary {
+  id: string;
+  employeeName: string;
+  position: string;
+  department: string;
+  appraisalPeriod: string;
+  overallScore: number;
+  recommendation: string;
+}
+
+interface PurchaseOrderSummary {
+  id: string;
+  poNumber: string;
+  supplierName: string;
+  totalAmount: number;
+  status: string;
+  requestDate: string;
+}
 
 export default function HRManagementPage() {
   const [activeTab, setActiveTab] = useState("REQUISITIONS");
-  const [requisitions, setRequisitions] = useState<any[]>([]);
-  const [appraisals, setAppraisals] = useState<any[]>([]);
-  const [purchases, setPurchases] = useState<any[]>([]);
+  const [requisitions, setRequisitions] = useState<ManpowerRequisitionSummary[]>([]);
+  const [appraisals, setAppraisals] = useState<PerformanceAppraisalSummary[]>([]);
+  const [purchases, setPurchases] = useState<PurchaseOrderSummary[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchData();
-  }, [activeTab]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       if (activeTab === "REQUISITIONS") {
         const res = await fetch("/api/hr/requisitions");
-        if (res.ok) setRequisitions((await res.json()).requisitions || []);
+        if (res.ok) {
+          const data = await res.json();
+          const requisitionList = Array.isArray(data.requisitions)
+            ? (data.requisitions as ManpowerRequisitionSummary[])
+            : [];
+          setRequisitions(requisitionList);
+        }
       } else if (activeTab === "APPRAISALS") {
         const res = await fetch("/api/hr/appraisals");
-        if (res.ok) setAppraisals((await res.json()).appraisals || []);
+        if (res.ok) {
+          const data = await res.json();
+          const appraisalList = Array.isArray(data.appraisals)
+            ? (data.appraisals as PerformanceAppraisalSummary[])
+            : [];
+          setAppraisals(appraisalList);
+        }
       } else if (activeTab === "PURCHASES") {
         const res = await fetch("/api/admin/purchases");
-        if (res.ok) setPurchases((await res.json()).purchases || []);
+        if (res.ok) {
+          const data = await res.json();
+          const purchaseList = Array.isArray(data.purchases)
+            ? (data.purchases as PurchaseOrderSummary[])
+            : [];
+          setPurchases(purchaseList);
+        }
       }
     } catch (error) {
       console.error("Failed to fetch data:", error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [activeTab]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   return (
     <div className="min-h-screen bg-gray-100 py-8">

@@ -11,7 +11,7 @@
    ============================================ */
 :root {
   /* Colors */
-  --color-background: #ffffff;
+  --color-background: #f4f7fb;
   --color-foreground: #111827;
   --color-primary: #2563eb;
   --color-primary-hover: #1d4ed8;
@@ -19,6 +19,9 @@
   --color-success: #10b981;
   --color-warning: #f59e0b;
   --color-danger: #ef4444;
+  --color-surface: rgba(255, 255, 255, 0.96);
+  --color-border-subtle: #dbeafe;
+  --color-border-strong: #c7d2ff;
   
   /* Typography */
   --font-sans: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -62,7 +65,7 @@ html {
 body {
   margin: 0;
   padding: 0;
-  background: var(--color-background);
+  background: linear-gradient(180deg, #f8fbff 0%, #f2f5fb 45%, #f8fbff 100%);
   color: var(--color-foreground);
   font-family: var(--font-sans);
   font-weight: 400;
@@ -105,13 +108,13 @@ small {
 
 /* Links */
 a {
-  color: var(--color-primary);
+  color: inherit;
   text-decoration: none;
   transition: color 0.2s ease;
 }
 
 a:hover {
-  color: var(--color-primary-hover);
+  color: inherit;
   text-decoration: underline;
 }
 
@@ -384,4 +387,72 @@ tbody tr:last-child td {
 
 .bg-white {
   background: #ffffff;
+}
+
+/* ============================================
+   MODERN SURFACE UTILITIES
+   ============================================ */
+.page-shell {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.section-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+.surface-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 1rem;
+  box-shadow: 0 28px 48px -32px rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(10px);
+  transition: border-color 0.24s ease, box-shadow 0.24s ease, transform 0.24s ease;
+}
+
+.surface-card:hover {
+  border-color: var(--color-border-strong);
+  box-shadow: 0 32px 54px -30px rgba(15, 23, 42, 0.45);
+  transform: translateY(-1px);
+}
+
+.surface-card__header {
+  margin-bottom: 1.25rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.65);
+}
+
+.action-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.4rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(255, 255, 255, 0.85);
+  font-weight: 600;
+  color: #0f172a;
+  transition: all 0.2s ease;
+  box-shadow: 0 10px 24px -18px rgba(15, 23, 42, 0.4);
+}
+
+.action-pill:hover {
+  border-color: rgba(37, 99, 235, 0.55);
+  background: rgba(248, 250, 255, 0.95);
+  color: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.badge-soft {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.4rem 0.85rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
 }

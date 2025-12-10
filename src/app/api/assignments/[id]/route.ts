@@ -65,7 +65,7 @@ export async function PUT(
     const assignmentId = id; // Keep as string since id is cuid
 
     const body = await request.json();
-    const { rank, startDate, endDate, status, notes } = body;
+    const { rank, startDate, endDate, status } = body;
 
     const assignment = await prisma.assignment.update({
       where: { id: assignmentId },

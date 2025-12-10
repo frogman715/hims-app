@@ -397,7 +397,7 @@ echo -e "${NC}"
 
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${GREEN}✓ Application URL:${NC} https://$DOMAIN"
-echo -e "${GREEN}✓ Admin Login:${NC} admin@hims.com / admin123"
+echo -e "${GREEN}✓ Admin Login:${NC} admin@hanmarine.com / admin123"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
 echo -e "${YELLOW}Database Credentials (SAVE THIS!):${NC}"

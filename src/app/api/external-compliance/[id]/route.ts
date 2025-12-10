@@ -5,6 +5,19 @@ import { PermissionLevel } from "@/lib/permission-middleware";
 import { handleApiError, ApiError } from "@/lib/error-handler";
 import { ComplianceStatus } from "@prisma/client";
 
+type ComplianceHandlerContext = { params: { id: string } };
+
+function parseOptionalDate(value: unknown): Date | undefined {
+  if (typeof value === "string" || typeof value === "number") {
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? undefined : parsed;
+  }
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? undefined : value;
+  }
+  return undefined;
+}
+
 /**
  * GET /api/external-compliance/[id]
  * Get specific external compliance record
@@ -14,9 +27,9 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await withPermission("compliance", PermissionLevel.VIEW_ACCESS, async (req, session) => {
+    return await withPermission<ComplianceHandlerContext>("compliance", PermissionLevel.VIEW_ACCESS, async (req, session, context) => {
       const compliance = await prisma.externalCompliance.findUnique({
-        where: { id: params.id },
+        where: { id: context.params.id },
         include: {
           crew: true,
         },
@@ -27,9 +40,7 @@ export async function GET(
       }
 
       return NextResponse.json({ data: compliance });
-    })(req, { params } as any);
-
-    return session;
+    })(req, { params });
   } catch (error) {
     return handleApiError(error);
   }
@@ -44,24 +55,29 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await withPermission("compliance", PermissionLevel.EDIT_ACCESS, async (req, session) => {
+    return await withPermission<ComplianceHandlerContext>("compliance", PermissionLevel.EDIT_ACCESS, async (req, session, context) => {
       const body = await req.json();
-      const { certificateId, issueDate, expiryDate, status, verificationUrl, notes } = body;
+      const { certificateId, issueDate, expiryDate, status, verificationUrl, notes } = body as Record<string, unknown>;
+
+      const nextStatus = typeof status === "string" ? (status as ComplianceStatus | string) : undefined;
 
       // Validate status if provided
-      if (status && !Object.values(ComplianceStatus).includes(status)) {
+      if (nextStatus && !Object.values(ComplianceStatus).includes(nextStatus as ComplianceStatus)) {
         throw new ApiError(400, "Invalid status", "INVALID_STATUS");
       }
 
+      const issueDateValue = parseOptionalDate(issueDate);
+      const expiryDateValue = parseOptionalDate(expiryDate);
+
       const compliance = await prisma.externalCompliance.update({
-        where: { id: params.id },
+        where: { id: context.params.id },
         data: {
-          ...(certificateId !== undefined && { certificateId }),
-          ...(issueDate && { issueDate: new Date(issueDate) }),
-          ...(expiryDate && { expiryDate: new Date(expiryDate) }),
-          ...(status && { status }),
-          ...(verificationUrl !== undefined && { verificationUrl }),
-          ...(notes !== undefined && { notes }),
+          ...(typeof certificateId === "string" && { certificateId }),
+          ...(issueDateValue && { issueDate: issueDateValue }),
+          ...(expiryDateValue && { expiryDate: expiryDateValue }),
+          ...(nextStatus && { status: nextStatus as ComplianceStatus }),
+          ...(typeof verificationUrl === "string" && { verificationUrl }),
+          ...(typeof notes === "string" && { notes }),
         },
         include: {
           crew: {
@@ -75,9 +91,7 @@ export async function PUT(
       });
 
       return NextResponse.json({ data: compliance });
-    })(req, { params } as any);
-
-    return session;
+    })(req, { params });
   } catch (error) {
     return handleApiError(error);
   }
@@ -92,15 +106,13 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await withPermission("compliance", PermissionLevel.FULL_ACCESS, async (req, session) => {
+    return await withPermission<ComplianceHandlerContext>("compliance", PermissionLevel.FULL_ACCESS, async (req, session, context) => {
       await prisma.externalCompliance.delete({
-        where: { id: params.id },
+        where: { id: context.params.id },
       });
 
       return NextResponse.json({ message: "Compliance record deleted successfully" });
-    })(req, { params } as any);
-
-    return session;
+    })(req, { params });
   } catch (error) {
     return handleApiError(error);
   }

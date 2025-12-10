@@ -3,6 +3,12 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { checkPermission, PermissionLevel } from "@/lib/permission-middleware";
+import { PrepareJoiningStatus } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
+
+const prepareJoiningStatuses = new Set<PrepareJoiningStatus>([
+  ...Object.values(PrepareJoiningStatus),
+]);
 
 // GET /api/prepare-joining - List all prepare joining records
 export async function GET(req: NextRequest) {
@@ -19,9 +25,20 @@ export async function GET(req: NextRequest) {
     const status = searchParams.get("status");
     const crewId = searchParams.get("crewId");
 
-    const where: any = {};
+    const where: Prisma.PrepareJoiningWhereInput = {};
     if (status && status !== "ALL") {
-      where.status = status;
+      const normalizedStatus = status.trim();
+      if (
+        !normalizedStatus ||
+        !prepareJoiningStatuses.has(normalizedStatus as PrepareJoiningStatus)
+      ) {
+        return NextResponse.json(
+          { error: "Invalid status filter" },
+          { status: 400 }
+        );
+      }
+
+      where.status = normalizedStatus as PrepareJoiningStatus;
     }
     if (crewId) {
       where.crewId = crewId;

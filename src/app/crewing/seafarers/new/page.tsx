@@ -16,6 +16,7 @@ interface SeafarerFormData {
   phone: string;
   emergencyContact: string;
   emergencyPhone: string;
+  emergencyRelation: string;
 
   // Professional Information
   rank: string;
@@ -27,6 +28,13 @@ interface SeafarerFormData {
   address: string;
   city: string;
   country: string;
+
+  // Measurements & Uniform
+  heightCm: string;
+  weightKg: string;
+  coverallSize: string;
+  shoeSize: string;
+  waistSize: string;
 }
 
 export default function NewSeafarerPage() {
@@ -44,6 +52,7 @@ export default function NewSeafarerPage() {
     phone: '',
     emergencyContact: '',
     emergencyPhone: '',
+    emergencyRelation: '',
 
     // Professional Information
     rank: '',
@@ -55,6 +64,13 @@ export default function NewSeafarerPage() {
     address: '',
     city: '',
     country: '',
+
+    // Measurements & Uniform
+    heightCm: '',
+    weightKg: '',
+    coverallSize: '',
+    shoeSize: '',
+    waistSize: '',
   });
   const [loading, setLoading] = useState(false);
 
@@ -63,15 +79,33 @@ export default function NewSeafarerPage() {
     setLoading(true);
 
     try {
+      const payload = {
+        fullName: formData.fullName,
+        rank: formData.rank,
+        nationality: formData.nationality || null,
+        dateOfBirth: formData.dateOfBirth ? new Date(formData.dateOfBirth).toISOString() : null,
+        placeOfBirth: formData.placeOfBirth || null,
+        phone: formData.phone || null,
+        email: formData.email || null,
+        emergencyContact: formData.emergencyContact || null,
+        emergencyPhone: formData.emergencyPhone || null,
+        emergencyRelation: formData.emergencyRelation || null,
+        address: formData.address || null,
+        city: formData.city || null,
+        country: formData.country || null,
+        heightCm: formData.heightCm ? Number(formData.heightCm) : null,
+        weightKg: formData.weightKg ? Number(formData.weightKg) : null,
+        coverallSize: formData.coverallSize || null,
+        shoeSize: formData.shoeSize || null,
+        waistSize: formData.waistSize || null,
+      };
+
       const response = await fetch('/api/seafarers', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          ...formData,
-          dateOfBirth: formData.dateOfBirth ? new Date(formData.dateOfBirth).toISOString() : null,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (response.ok) {
@@ -254,6 +288,19 @@ export default function NewSeafarerPage() {
                   placeholder="Full name of emergency contact"
                 />
               </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Emergency Contact Relationship
+                  </label>
+                  <input
+                    type="text"
+                    name="emergencyRelation"
+                    value={formData.emergencyRelation}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200"
+                    placeholder="e.g., Spouse, Father"
+                  />
+                </div>
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Emergency Contact Phone Number
@@ -269,6 +316,83 @@ export default function NewSeafarerPage() {
               </div>
             </div>
           </div>
+
+            {/* Measurements Section */}
+            <div className="bg-white rounded-xl p-6 border border-gray-300">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center mr-3">
+                  <span className="text-orange-600 text-sm font-bold">📏</span>
+                </div>
+                Physical & Uniform Measurements
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Height (cm)
+                  </label>
+                  <input
+                    type="number"
+                    name="heightCm"
+                    min="0"
+                    value={formData.heightCm}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Weight (kg)
+                  </label>
+                  <input
+                    type="number"
+                    name="weightKg"
+                    min="0"
+                    value={formData.weightKg}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Coverall Size
+                  </label>
+                  <input
+                    type="text"
+                    name="coverallSize"
+                    value={formData.coverallSize}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200"
+                    placeholder="e.g., L, XL, 52"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Safety Shoe Size
+                  </label>
+                  <input
+                    type="text"
+                    name="shoeSize"
+                    value={formData.shoeSize}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200"
+                    placeholder="e.g., 42"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Waist Size
+                  </label>
+                  <input
+                    type="text"
+                    name="waistSize"
+                    value={formData.waistSize}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200"
+                    placeholder="e.g., 32"
+                  />
+                </div>
+              </div>
+            </div>
 
           {/* Professional Information Section */}
           <div className="bg-white rounded-xl p-6 border border-gray-300">

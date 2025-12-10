@@ -218,12 +218,12 @@ Role: DIRECTOR (full access)
 
 **Login Credentials Lengkap:**
 - **Admin Utama**: admin@hanmarine.com / admin123 (DIRECTOR - Full Access)
-- **CDMO**: cdmo@hims.com / cdmo123 (Technical Admin)
-- **Director**: director@hims.com / director123
-- **Operational**: operational@hims.com / operational123
-- **Accounting**: accounting@hims.com / accounting123
-- **HR**: hr@hims.com / hr123
-- **Crew Portal**: crew@hims.com / crew123
+- **CDMO**: cdmo@hanmarine.com / cdmo123 (Technical Admin)
+- **Director**: director@hanmarine.com / director123
+- **Operational**: operational@hanmarine.com / operational123
+- **Accounting**: accounting@hanmarine.com / accounting123
+- **HR**: hr@hanmarine.com / hr123
+- **Crew Portal**: crew@hanmarine.com / crew123
 
 ### 2. Test Dashboard Features
 - ✅ Klik KPI cards → harus redirect ke halaman terkait

@@ -76,6 +76,13 @@ export function decrypt(cipherText: string): string {
 import { hasSensitivityAccess } from '@/lib/permissions';
 import { DataSensitivity } from '@prisma/client';
 
-export function canAccessRedData(userRoles: string[], _dataType: 'medical' | 'salary' | 'identity'): boolean {
-  return hasSensitivityAccess(userRoles, DataSensitivity.RED);
+const sensitivityMap: Record<'medical' | 'salary' | 'identity', DataSensitivity> = {
+  medical: DataSensitivity.RED,
+  salary: DataSensitivity.RED,
+  identity: DataSensitivity.RED
+};
+
+export function canAccessRedData(userRoles: string[], dataType: 'medical' | 'salary' | 'identity'): boolean {
+  const requiredSensitivity = sensitivityMap[dataType];
+  return hasSensitivityAccess(userRoles, requiredSensitivity);
 }

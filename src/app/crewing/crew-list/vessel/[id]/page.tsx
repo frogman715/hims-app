@@ -31,6 +31,7 @@ export default function VesselCrewListPage() {
   const vesselId = parseInt(params.id as string);
   const [vessel, setVessel] = useState<VesselCrew | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (status === "loading") return;
@@ -41,6 +42,7 @@ export default function VesselCrewListPage() {
 
   const fetchVesselCrew = useCallback(async () => {
     try {
+      setError(null);
       // Fetch assignments for this specific vessel
       const assignmentsRes = await fetch(`/api/assignments?vesselId=${vesselId}`);
       if (!assignmentsRes.ok) throw new Error('Failed to fetch assignments');
@@ -63,9 +65,9 @@ export default function VesselCrewListPage() {
         rank: assignment.rank,
         signOnDate: assignment.signOnDate,
         signOffDate: assignment.signOffDate,
-        status: assignment.status === 'ONBOARD' ? 'ONBOARD' :
-               assignment.status === 'COMPLETED' ? 'DEPARTED' :
-               assignment.status === 'PLANNED' ? 'PLANNED' : 'UNKNOWN',
+         status: assignment.status === 'ONBOARD' || assignment.status === 'ACTIVE' ? 'ONBOARD' :
+           assignment.status === 'COMPLETED' ? 'DEPARTED' :
+           assignment.status === 'PLANNED' || assignment.status === 'ASSIGNED' ? 'PLANNED' : 'UNKNOWN',
         vesselName: assignment.vessel?.name || 'Unknown Vessel',
         vesselId: assignment.vesselId
       }));
@@ -81,57 +83,8 @@ export default function VesselCrewListPage() {
       setVessel(vesselData);
     } catch (error) {
       console.error("Error fetching vessel crew:", error);
-      // Fallback to mock data if API fails
-      const mockData: VesselCrew[] = [
-        {
-          vesselId: 1,
-          vesselName: "MV Ocean Pride",
-          totalCrew: 18,
-          activeCrew: 16,
-          crewMembers: [
-            {
-              id: 1,
-              seafarerName: "John Smith",
-              rank: "Captain",
-              signOnDate: "2025-10-01",
-              status: "ONBOARD",
-              vesselName: "MV Ocean Pride",
-              vesselId: 1
-            },
-            {
-              id: 2,
-              seafarerName: "Maria Garcia",
-              rank: "Chief Engineer",
-              signOnDate: "2025-10-01",
-              status: "ONBOARD",
-              vesselName: "MV Ocean Pride",
-              vesselId: 1
-            },
-            {
-              id: 3,
-              seafarerName: "David Chen",
-              rank: "Chief Officer",
-              signOnDate: "2025-09-15",
-              signOffDate: "2025-11-15",
-              status: "DEPARTED",
-              vesselName: "MV Ocean Pride",
-              vesselId: 1
-            },
-            {
-              id: 4,
-              seafarerName: "Sarah Johnson",
-              rank: "Second Engineer",
-              signOnDate: "2025-10-20",
-              status: "ONBOARD",
-              vesselName: "MV Ocean Pride",
-              vesselId: 1
-            }
-          ]
-        }
-      ];
-
-      const selectedVessel = mockData.find(v => v.vesselId === vesselId);
-      setVessel(selectedVessel || null);
+      setError("Gagal memuat data crew untuk kapal ini.");
+      setVessel(null);
     } finally {
       setLoading(false);
     }
@@ -162,7 +115,12 @@ export default function VesselCrewListPage() {
   };
 
   if (status === "loading" || loading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex flex-col items-center justify-center gap-4">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
+        <p className="text-sm font-semibold text-gray-700">Memuat crew vessel…</p>
+      </div>
+    );
   }
 
   if (!session) {
@@ -173,20 +131,25 @@ export default function VesselCrewListPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-6">
         <div className="max-w-7xl mx-auto">
-          <div className="mb-8">
+          <div className="mb-8 flex items-center justify-between">
             <Link
               href="/crewing/crew-list"
               className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
             >
               ← Back to Crew List
             </Link>
+            {error ? (
+              <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700">
+                {error}
+              </div>
+            ) : null}
           </div>
           <div className="text-center py-12">
             <svg className="mx-auto h-12 w-12 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.29-.98-5.5-2.5M12 4.5C7.305 4.5 3.5 8.305 3.5 13S7.305 21.5 12 21.5 20.5 17.695 20.5 13 16.695 4.5 12 4.5z" />
             </svg>
-            <h3 className="mt-2 text-sm font-medium text-gray-900">Vessel not found</h3>
-            <p className="mt-1 text-sm text-gray-700">The requested vessel could not be found.</p>
+            <h3 className="mt-2 text-sm font-medium text-gray-900">Data vessel tidak ditemukan</h3>
+            <p className="mt-1 text-sm text-gray-700">Pastikan vessel memiliki crew assignment aktif.</p>
           </div>
         </div>
       </div>

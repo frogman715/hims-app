@@ -1,47 +1,136 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 interface AssignmentFormData {
   seafarerId: string;
   vesselId: string;
   principalId: string;
   rank: string;
-  signOnDate: string;
-  signOffPlan: string;
+  startDate: string;
+  endDate: string;
 }
 
 interface Seafarer {
-  id: number;
+  id: string;
   fullName: string;
 }
 
 interface Vessel {
-  id: number;
+  id: string;
   name: string;
-  principal: { name: string };
+  principal?: {
+    id: string;
+    name: string;
+  } | null;
+  principalId?: string | null;
 }
 
 interface Principal {
-  id: number;
+  id: string;
   name: string;
 }
 
-export default function NewAssignmentPage() {
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function mapSeafarersResponse(data: unknown): Seafarer[] {
+  if (!Array.isArray(data)) {
+    return [];
+  }
+
+  return data.reduce<Seafarer[]>((accumulator, item) => {
+    if (!isRecord(item)) {
+      return accumulator;
+    }
+
+    const { id, fullName } = item;
+    if (typeof id === 'string' && typeof fullName === 'string') {
+      accumulator.push({ id, fullName });
+    }
+
+    return accumulator;
+  }, []);
+}
+
+function mapVesselsResponse(data: unknown): Vessel[] {
+  if (!Array.isArray(data)) {
+    return [];
+  }
+
+  return data.reduce<Vessel[]>((accumulator, item) => {
+    if (!isRecord(item)) {
+      return accumulator;
+    }
+
+    const { id, name, principalId, principal } = item;
+    if (typeof id !== 'string' || typeof name !== 'string') {
+      return accumulator;
+    }
+
+    let normalizedPrincipal: Vessel['principal'] = null;
+    if (isRecord(principal) && typeof principal.id === 'string' && typeof principal.name === 'string') {
+      normalizedPrincipal = { id: principal.id, name: principal.name };
+    }
+
+    const normalizedPrincipalId =
+      typeof principalId === 'string' ? principalId : normalizedPrincipal?.id ?? null;
+
+    accumulator.push({
+      id,
+      name,
+      principalId: normalizedPrincipalId,
+      principal: normalizedPrincipal,
+    });
+
+    return accumulator;
+  }, []);
+}
+
+function mapPrincipalsResponse(data: unknown): Principal[] {
+  if (!Array.isArray(data)) {
+    return [];
+  }
+
+  return data.reduce<Principal[]>((accumulator, item) => {
+    if (!isRecord(item)) {
+      return accumulator;
+    }
+
+    const { id, name } = item;
+    if (typeof id === 'string' && typeof name === 'string') {
+      accumulator.push({ id, name });
+    }
+
+    return accumulator;
+  }, []);
+}
+
+function AssignmentFormContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [formData, setFormData] = useState<AssignmentFormData>({
     seafarerId: '',
     vesselId: '',
     principalId: '',
     rank: '',
-    signOnDate: '',
-    signOffPlan: '',
+    startDate: '',
+    endDate: '',
   });
   const [seafarers, setSeafarers] = useState<Seafarer[]>([]);
   const [vessels, setVessels] = useState<Vessel[]>([]);
   const [principals, setPrincipals] = useState<Principal[]>([]);
   const [loading, setLoading] = useState(false);
+
+  const resolvePrincipalName = (vessel: Vessel) => {
+    if (vessel.principal?.name) {
+      return vessel.principal.name;
+    }
+    const fallback = principals.find((principal) => principal.id === vessel.principalId);
+    return fallback?.name;
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -54,17 +143,17 @@ export default function NewAssignmentPage() {
 
         if (seafarersRes.ok) {
           const seafarersData = await seafarersRes.json();
-          setSeafarers(seafarersData);
+          setSeafarers(mapSeafarersResponse(seafarersData));
         }
 
         if (vesselsRes.ok) {
           const vesselsData = await vesselsRes.json();
-          setVessels(vesselsData);
+          setVessels(mapVesselsResponse(vesselsData));
         }
 
         if (principalsRes.ok) {
           const principalsData = await principalsRes.json();
-          setPrincipals(principalsData);
+          setPrincipals(mapPrincipalsResponse(principalsData));
         }
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -73,6 +162,37 @@ export default function NewAssignmentPage() {
 
     fetchData();
   }, []);
+
+  useEffect(() => {
+    const preselectedSeafarer = searchParams.get('seafarerId');
+    if (!preselectedSeafarer) {
+      return;
+    }
+
+    setFormData((previous) => {
+      if (previous.seafarerId) {
+        return previous;
+      }
+      return {
+        ...previous,
+        seafarerId: preselectedSeafarer,
+      };
+    });
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (!formData.vesselId || formData.principalId) {
+      return;
+    }
+
+    const selectedVessel = vessels.find((vessel) => vessel.id === formData.vesselId);
+    if (selectedVessel?.principalId) {
+      setFormData((previous) => ({
+        ...previous,
+        principalId: selectedVessel.principalId ?? '',
+      }));
+    }
+  }, [formData.vesselId, formData.principalId, vessels]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,12 +205,12 @@ export default function NewAssignmentPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          seafarerId: parseInt(formData.seafarerId),
-          vesselId: parseInt(formData.vesselId),
-          principalId: parseInt(formData.principalId),
+          crewId: formData.seafarerId,
+          vesselId: formData.vesselId,
+          principalId: formData.principalId,
           rank: formData.rank,
-          signOnDate: formData.signOnDate ? new Date(formData.signOnDate).toISOString() : null,
-          signOffPlan: formData.signOffPlan ? new Date(formData.signOffPlan).toISOString() : null,
+          startDate: formData.startDate ? new Date(formData.startDate).toISOString() : null,
+          endDate: formData.endDate ? new Date(formData.endDate).toISOString() : null,
         }),
       });
 
@@ -133,7 +253,7 @@ export default function NewAssignmentPage() {
               className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="">Select a seafarer</option>
-              {seafarers.map(seafarer => (
+              {seafarers.map((seafarer) => (
                 <option key={seafarer.id} value={seafarer.id}>
                   {seafarer.fullName}
                 </option>
@@ -154,7 +274,7 @@ export default function NewAssignmentPage() {
               className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="">Select a principal</option>
-              {principals.map(principal => (
+              {principals.map((principal) => (
                 <option key={principal.id} value={principal.id}>
                   {principal.name}
                 </option>
@@ -175,9 +295,10 @@ export default function NewAssignmentPage() {
               className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="">Select a vessel</option>
-              {vessels.map(vessel => (
+              {vessels.map((vessel) => (
                 <option key={vessel.id} value={vessel.id}>
-                  {vessel.name} ({vessel.principal.name})
+                  {vessel.name}
+                  {resolvePrincipalName(vessel) ? ` (${resolvePrincipalName(vessel)})` : ''}
                 </option>
               ))}
             </select>
@@ -199,28 +320,28 @@ export default function NewAssignmentPage() {
           </div>
 
           <div>
-            <label htmlFor="signOnDate" className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
+            <label htmlFor="startDate" className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
               Sign On Date
             </label>
             <input
               type="date"
-              id="signOnDate"
-              name="signOnDate"
-              value={formData.signOnDate}
+              id="startDate"
+              name="startDate"
+              value={formData.startDate}
               onChange={handleChange}
               className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
 
           <div>
-            <label htmlFor="signOffPlan" className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
+            <label htmlFor="endDate" className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
               Planned Sign Off Date
             </label>
             <input
               type="date"
-              id="signOffPlan"
-              name="signOffPlan"
-              value={formData.signOffPlan}
+              id="endDate"
+              name="endDate"
+              value={formData.endDate}
               onChange={handleChange}
               className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
@@ -245,5 +366,23 @@ export default function NewAssignmentPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+function LoadingFallback() {
+  return (
+    <div className="max-w-2xl mx-auto p-6">
+      <div className="bg-white rounded-lg shadow-lg border border-gray-300 p-8 text-center text-gray-700">
+        Memuat formulir penugasan...
+      </div>
+    </div>
+  );
+}
+
+export default function NewAssignmentPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <AssignmentFormContent />
+    </Suspense>
   );
 }

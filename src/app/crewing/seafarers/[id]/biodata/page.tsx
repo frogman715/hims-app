@@ -2,46 +2,81 @@
 
 import { useSession } from "next-auth/react";
 import { useRouter, useParams } from "next/navigation";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 
 interface Seafarer {
-  id: number;
+  id: string;
   fullName: string;
   dateOfBirth: string | null;
   nationality: string | null;
   createdAt: string;
   updatedAt: string;
+  placeOfBirth: string | null;
+  rank: string | null;
+  phone: string | null;
+  email: string | null;
+  heightCm: number | null;
+  weightKg: number | null;
+  coverallSize: string | null;
+  shoeSize: string | null;
+  waistSize: string | null;
+  emergencyContactName: string | null;
+  emergencyContactRelation: string | null;
+  emergencyContactPhone: string | null;
   assignments: Array<{
-    id: number;
+    id: string;
     rank: string;
     signOnDate: string;
     signOffPlan: string;
     signOffDate?: string;
     status: string;
     vessel: {
-      id: number;
+      id: string;
       name: string;
     };
     principal: {
-      id: number;
+      id: string;
       name: string;
     };
   }>;
   applications: Array<{
-    id: number;
-    appliedRank: string;
-    appliedOn: string;
+    id: string;
+    position: string | null;
+    applicationDate: string;
     status: string;
   }>;
   documents: Array<{
-    id: number;
+    id: string;
     docType: string;
     docNumber: string;
     issueDate: string;
     expiryDate: string;
     remarks?: string;
   }>;
+}
+
+function calculateAge(isoDate: string | null): number | null {
+  if (!isoDate) {
+    return null;
+  }
+
+  const birthDate = new Date(isoDate);
+  if (Number.isNaN(birthDate.getTime())) {
+    return null;
+  }
+
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const hasHadBirthdayThisYear =
+    today.getMonth() > birthDate.getMonth() ||
+    (today.getMonth() === birthDate.getMonth() && today.getDate() >= birthDate.getDate());
+
+  if (!hasHadBirthdayThisYear) {
+    age -= 1;
+  }
+
+  return age >= 0 ? age : null;
 }
 
 export default function SeafarerBiodataPage() {
@@ -52,6 +87,8 @@ export default function SeafarerBiodataPage() {
 
   const [seafarer, setSeafarer] = useState<Seafarer | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
+  const actionMenuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (status === "loading") return;
@@ -59,6 +96,34 @@ export default function SeafarerBiodataPage() {
       router.push("/auth/signin");
     }
   }, [session, status, router]);
+
+  useEffect(() => {
+    if (!isActionMenuOpen) {
+      return;
+    }
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!actionMenuRef.current) {
+        return;
+      }
+      if (!actionMenuRef.current.contains(event.target as Node)) {
+        setIsActionMenuOpen(false);
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsActionMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isActionMenuOpen]);
 
   const fetchSeafarerBiodata = useCallback(async () => {
     try {
@@ -144,7 +209,7 @@ export default function SeafarerBiodataPage() {
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-center space-x-4">
               <Link
                 href="/crewing/seafarers"
@@ -157,16 +222,65 @@ export default function SeafarerBiodataPage() {
                 <p className="text-gray-800">Complete seafarer biodata and service history</p>
               </div>
             </div>
-            <div className="flex items-center space-x-4">
-              <Link
-                href={`/crewing/seafarers/${seafarer.id}`}
-                className="inline-flex items-center px-6 py-3 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors shadow-lg"
+            <div className="relative flex flex-wrap gap-2" ref={actionMenuRef}>
+              <button
+                type="button"
+                onClick={() => setIsActionMenuOpen((previous) => !previous)}
+                className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                aria-haspopup="menu"
+                aria-expanded={isActionMenuOpen}
               >
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                 </svg>
-                Edit Profile
-              </Link>
+                Kelola Data Kru
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {isActionMenuOpen && (
+                <div
+                  role="menu"
+                  className="absolute right-0 top-full z-20 mt-2 w-60 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl"
+                >
+                  <Link
+                    href={`/crewing/seafarers/${seafarer.id}`}
+                    onClick={() => setIsActionMenuOpen(false)}
+                    className="flex items-start gap-3 px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-indigo-50"
+                    role="menuitem"
+                  >
+                    <span className="mt-0.5 text-indigo-500">📝</span>
+                    <span>Edit biodata & kontak kru</span>
+                  </Link>
+                  <Link
+                    href={`/crewing/seafarers/${seafarer.id}/documents`}
+                    onClick={() => setIsActionMenuOpen(false)}
+                    className="flex items-start gap-3 px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-indigo-50"
+                    role="menuitem"
+                  >
+                    <span className="mt-0.5 text-indigo-500">📄</span>
+                    <span>Kelola dokumen & sertifikat</span>
+                  </Link>
+                  <Link
+                    href={`/crewing/assignments/new?seafarerId=${seafarer.id}`}
+                    onClick={() => setIsActionMenuOpen(false)}
+                    className="flex items-start gap-3 px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-indigo-50"
+                    role="menuitem"
+                  >
+                    <span className="mt-0.5 text-indigo-500">🚢</span>
+                    <span>Tambah assignment atau penugasan baru</span>
+                  </Link>
+                  <a
+                    href="#assignment-history"
+                    onClick={() => setIsActionMenuOpen(false)}
+                    className="flex items-start gap-3 px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-indigo-50"
+                    role="menuitem"
+                  >
+                    <span className="mt-0.5 text-indigo-500">📜</span>
+                    <span>Lihat riwayat assignment kru</span>
+                  </a>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -196,9 +310,21 @@ export default function SeafarerBiodataPage() {
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-700">Date of Birth</p>
-                  <p className="text-lg font-bold text-gray-900">
-                    {seafarer.dateOfBirth ? new Date(seafarer.dateOfBirth).toLocaleDateString() : 'Not specified'}
-                  </p>
+                  {seafarer.dateOfBirth ? (
+                    <>
+                      <p className="text-lg font-bold text-gray-900">
+                        {new Date(seafarer.dateOfBirth).toLocaleDateString()}
+                      </p>
+                      {(() => {
+                        const age = calculateAge(seafarer.dateOfBirth);
+                        return age !== null ? (
+                          <p className="text-sm text-gray-700">{age} years old</p>
+                        ) : null;
+                      })()}
+                    </>
+                  ) : (
+                    <p className="text-lg font-bold text-gray-900">Not specified</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -229,9 +355,69 @@ export default function SeafarerBiodataPage() {
           </div>
         </div>
 
+        <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
+          <h2 className="text-2xl font-semibold text-gray-900 mb-6 pb-2 border-b border-gray-300">
+            Profile & Contact Details
+          </h2>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Place of Birth</p>
+              <p className="text-base font-semibold text-gray-900">{seafarer.placeOfBirth || 'Not specified'}</p>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-600">Rank / Position</p>
+              <p className="text-base font-semibold text-gray-900">{seafarer.rank || 'Not specified'}</p>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-600">Mobile Phone</p>
+              <p className="text-base font-semibold text-gray-900">{seafarer.phone || 'Not specified'}</p>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-600">Email Address</p>
+              <p className="text-base font-semibold text-gray-900">{seafarer.email || 'Not specified'}</p>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-600">Height</p>
+              <p className="text-base font-semibold text-gray-900">
+                {seafarer.heightCm ? `${seafarer.heightCm} cm` : 'Not specified'}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-600">Weight</p>
+              <p className="text-base font-semibold text-gray-900">
+                {seafarer.weightKg ? `${seafarer.weightKg} kg` : 'Not specified'}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-600">Coverall Size</p>
+              <p className="text-base font-semibold text-gray-900">{seafarer.coverallSize || 'Not specified'}</p>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-600">Safety Shoe Size</p>
+              <p className="text-base font-semibold text-gray-900">{seafarer.shoeSize || 'Not specified'}</p>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-600">Waist Size</p>
+              <p className="text-base font-semibold text-gray-900">{seafarer.waistSize || 'Not specified'}</p>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-600">Emergency Contact</p>
+              <p className="text-base font-semibold text-gray-900">{seafarer.emergencyContactName || 'Not specified'}</p>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-600">Relationship</p>
+              <p className="text-base font-semibold text-gray-900">{seafarer.emergencyContactRelation || 'Not specified'}</p>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-600">Emergency Phone</p>
+              <p className="text-base font-semibold text-gray-900">{seafarer.emergencyContactPhone || 'Not specified'}</p>
+            </div>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Current Assignment */}
-          <div className="bg-white rounded-xl shadow-lg p-8">
+          <div id="assignment-history" className="bg-white rounded-xl shadow-lg p-8">
             <h2 className="text-2xl font-semibold text-gray-900 mb-6 pb-2 border-b border-gray-300">
               Current Assignment
             </h2>
@@ -344,9 +530,15 @@ export default function SeafarerBiodataPage() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {seafarer.documents.map((document) => {
-                    const isExpired = new Date(document.expiryDate) < new Date();
-                    const isExpiringSoon = new Date(document.expiryDate) < new Date(Date.now() + 90 * 24 * 60 * 60 * 1000); // 90 days
+                  {(() => {
+                    const now = new Date();
+                    const fourteenMonthsFromNow = new Date(now.getTime());
+                    fourteenMonthsFromNow.setMonth(fourteenMonthsFromNow.getMonth() + 14);
+
+                    return seafarer.documents.map((document) => {
+                      const expiryDate = document.expiryDate ? new Date(document.expiryDate) : null;
+                    const isExpired = expiryDate ? expiryDate < now : false;
+                    const isExpiringSoon = expiryDate ? !isExpired && expiryDate <= fourteenMonthsFromNow : false;
 
                     return (
                       <tr key={document.id} className="hover:bg-gray-100">
@@ -360,7 +552,7 @@ export default function SeafarerBiodataPage() {
                           {new Date(document.issueDate).toLocaleDateString()}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          {new Date(document.expiryDate).toLocaleDateString()}
+                          {expiryDate ? expiryDate.toLocaleDateString() : "—"}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`inline-flex px-4 py-2 text-xs font-semibold rounded-full ${
@@ -375,7 +567,8 @@ export default function SeafarerBiodataPage() {
                         </td>
                       </tr>
                     );
-                  })}
+                    });
+                  })()}
                 </tbody>
               </table>
             </div>

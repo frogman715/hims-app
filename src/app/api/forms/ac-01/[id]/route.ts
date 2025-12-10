@@ -2,9 +2,22 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { Prisma } from '@prisma/client';
+
+type PrincipalAgreementPayload = Prisma.PrincipalGetPayload<{
+  include: {
+    vessels: {
+      select: {
+        id: true;
+        name: true;
+        type: true;
+      };
+    };
+  };
+}>;
 
 // AC-01: Agency Agreement Form Template
-function generateAC01HTML(principal: any) {
+function generateAC01HTML(principal: PrincipalAgreementPayload) {
   const agreementDate = principal.agreementDate ? new Date(principal.agreementDate) : new Date();
   const agreementExpiry = principal.agreementExpiry ? new Date(principal.agreementExpiry) : null;
   

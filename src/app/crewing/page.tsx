@@ -1,25 +1,179 @@
 "use client";
 
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+
+interface OverviewCard {
+  label: string;
+  value: string;
+  description: string;
+  icon: string;
+  accent: string;
+}
+
+interface QuickAction {
+  href: string;
+  label: string;
+  description: string;
+  icon: string;
+  accent: string;
+}
+
+interface ModuleLink {
+  title: string;
+  description: string;
+  href: string;
+  icon: string;
+  color: string;
+  stats: string;
+}
+
+interface ModuleCategory {
+  category: string;
+  description: string;
+  modules: ModuleLink[];
+}
+
+interface CrewSearchResult {
+  id: string;
+  fullName: string;
+  rank: string;
+  status: string;
+  nationality?: string | null;
+  passportNumber?: string | null;
+  passportExpiry?: string | null;
+  seamanBookNumber?: string | null;
+  seamanBookExpiry?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  dateOfBirth?: string | null;
+  age?: number | null;
+  latestAssignment: {
+    rank: string | null;
+    vesselName: string | null;
+    principalName: string | null;
+    status: string;
+    startDate: string;
+    endDate: string | null;
+  } | null;
+  latestApplication: {
+    status: string;
+    appliedAt: string;
+    principalName: string | null;
+    vesselType: string | null;
+  } | null;
+  expiringDocuments: Array<{
+    id: string;
+    docType: string;
+    docNumber: string | null;
+    expiryDate: string | null;
+  }>;
+}
+
+const crewStatusAccent = (status: string) => {
+  switch (status) {
+    case "ONBOARD":
+      return "bg-emerald-500/10 text-emerald-600";
+    case "STANDBY":
+      return "bg-sky-500/10 text-sky-600";
+    case "OFF_SIGNED":
+      return "bg-slate-500/10 text-slate-600";
+    case "BLOCKED":
+      return "bg-rose-500/10 text-rose-600";
+    default:
+      return "bg-slate-500/10 text-slate-600";
+  }
+};
+
+const formatDate = (value?: string | null) => {
+  if (!value) {
+    return "—";
+  }
+
+  return new Date(value).toLocaleDateString("id-ID", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+};
+
+const formatDocumentLabel = (code: string) => code.replace(/_/g, " ");
 
 export default function Crewing() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<CrewSearchResult[]>([]);
+  const [searchError, setSearchError] = useState<string | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
-    if (status === "loading") return;
+    if (status === "loading") {
+      return;
+    }
+
     if (!session) {
       router.push("/auth/signin");
     }
-  }, [session, status, router]);
+  }, [router, session, status]);
+
+  useEffect(() => {
+    const trimmedQuery = searchQuery.trim();
+
+    if (trimmedQuery.length === 0) {
+      setSearchResults([]);
+      setSearchError(null);
+      setIsSearching(false);
+      return;
+    }
+
+    if (trimmedQuery.length < 2) {
+      setSearchResults([]);
+      setSearchError(null);
+      setIsSearching(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    setIsSearching(true);
+    setSearchError(null);
+
+    const timeout = setTimeout(async () => {
+      try {
+        const response = await fetch(
+          `/api/seafarers/search?q=${encodeURIComponent(trimmedQuery)}`,
+          { signal: controller.signal }
+        );
+
+        if (!response.ok) {
+          const payload = await response.json().catch(() => null);
+          throw new Error(payload?.error ?? "Failed to search crew");
+        }
+
+        const payload = await response.json();
+        setSearchResults(payload.results ?? []);
+      } catch (error) {
+        if ((error as Error).name !== "AbortError") {
+          console.error("Error searching crew:", error);
+          setSearchError(error instanceof Error ? error.message : "Failed to search crew");
+        }
+      } finally {
+        setIsSearching(false);
+      }
+    }, 300);
+
+    return () => {
+      controller.abort();
+      clearTimeout(timeout);
+    };
+  }, [searchQuery]);
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-emerald-50 flex items-center justify-center">
+        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-emerald-500" />
       </div>
     );
   }
@@ -28,8 +182,89 @@ export default function Crewing() {
     return null;
   }
 
-  // Organized by Maritime Workflow - Professional & Clean
-  const moduleCategories = [
+  const lastUpdated = new Date().toLocaleDateString("id-ID", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+
+  const overviewCards: OverviewCard[] = [
+    {
+      label: "Active Seafarers",
+      value: "245",
+      description: "Crew currently on assignment",
+      icon: "👥",
+      accent: "bg-blue-500/10 text-blue-600",
+    },
+    {
+      label: "Pending Applications",
+      value: "12",
+      description: "Awaiting recruitment review",
+      icon: "📝",
+      accent: "bg-emerald-500/10 text-emerald-600",
+    },
+    {
+      label: "Assignments In Progress",
+      value: "156",
+      description: "SEA & PKL contracts being tracked",
+      icon: "📋",
+      accent: "bg-indigo-500/10 text-indigo-600",
+    },
+    {
+      label: "Expiring Documents",
+      value: "8",
+      description: "Documents expiring within 14 months",
+      icon: "📄",
+      accent: "bg-amber-500/10 text-amber-600",
+    },
+  ];
+
+  const quickActions: QuickAction[] = [
+    {
+      href: "/crewing/seafarers/new",
+      label: "Add Seafarer",
+      description: "Registrasi awak kapal baru",
+      icon: "➕",
+      accent: "bg-blue-500/10 text-blue-600",
+    },
+    {
+      href: "/crewing/prepare-joining",
+      label: "Prepare Joining",
+      description: "Checklist keberangkatan & travel",
+      icon: "✈️",
+      accent: "bg-teal-500/10 text-teal-600",
+    },
+    {
+      href: "/crewing/crew-list",
+      label: "Crew List Onboard",
+      description: "Monitoring kru per vessel",
+      icon: "🚢",
+      accent: "bg-indigo-500/10 text-indigo-600",
+    },
+    {
+      href: "/crewing/document-receipts",
+      label: "Tanda Terima Dokumen",
+      description: "Catat penyerahan dokumen fisik crew",
+      icon: "📥",
+      accent: "bg-emerald-500/10 text-emerald-600",
+    },
+    {
+      href: "/crewing/documents?filter=expiring",
+      label: "Expiring Documents",
+      description: "Perpanjang paspor, medical & visa",
+      icon: "📄",
+      accent: "bg-amber-500/10 text-amber-600",
+    },
+  ];
+
+  const reminders = [
+    "Pastikan hasil medical check crew berlaku ≤ 12 bulan.",
+    "Upload scan paspor dan seaman book dengan resolusi tinggi.",
+    "Konfirmasi Letter Guarantee sebelum tiket dikeluarkan.",
+    "Update kontak darurat sebelum crew sign-on.",
+  ];
+
+  const moduleCategories: ModuleCategory[] = [
     {
       category: "📋 Recruitment & Selection",
       description: "From application to interview",
@@ -40,7 +275,7 @@ export default function Crewing() {
           href: "/crewing/seafarers",
           icon: "👨‍⚓",
           color: "from-blue-600 to-blue-700",
-          stats: "245 Active"
+          stats: "245 Active",
         },
         {
           title: "Applications",
@@ -48,7 +283,7 @@ export default function Crewing() {
           href: "/crewing/applications",
           icon: "📝",
           color: "from-green-600 to-green-700",
-          stats: "12 Pending"
+          stats: "12 Pending",
         },
         {
           title: "Application Workflow",
@@ -56,7 +291,7 @@ export default function Crewing() {
           href: "/crewing/workflow",
           icon: "🔄",
           color: "from-cyan-600 to-cyan-700",
-          stats: "15 In Progress"
+          stats: "15 In Progress",
         },
         {
           title: "Interviews",
@@ -64,9 +299,9 @@ export default function Crewing() {
           href: "/crewing/interviews",
           icon: "💼",
           color: "from-indigo-600 to-indigo-700",
-          stats: "5 Scheduled"
-        }
-      ]
+          stats: "5 Scheduled",
+        },
+      ],
     },
     {
       category: "🚢 Deployment & Operations",
@@ -78,7 +313,7 @@ export default function Crewing() {
           href: "/crewing/assignments",
           icon: "📋",
           color: "from-purple-600 to-purple-700",
-          stats: "156 Active"
+          stats: "156 Active",
         },
         {
           title: "Prepare Joining",
@@ -86,7 +321,7 @@ export default function Crewing() {
           href: "/crewing/prepare-joining",
           icon: "✈️",
           color: "from-emerald-600 to-teal-700",
-          stats: "8 Ready"
+          stats: "8 Ready",
         },
         {
           title: "Crew List (Onboard)",
@@ -94,7 +329,7 @@ export default function Crewing() {
           href: "/crewing/crew-list",
           icon: "🚢",
           color: "from-blue-700 to-indigo-700",
-          stats: "18 Vessels"
+          stats: "18 Vessels",
         },
         {
           title: "Crew Replacements",
@@ -102,9 +337,9 @@ export default function Crewing() {
           href: "/crewing/replacements",
           icon: "🔄",
           color: "from-orange-600 to-red-600",
-          stats: "5 Scheduled"
-        }
-      ]
+          stats: "5 Scheduled",
+        },
+      ],
     },
     {
       category: "📄 Compliance & Documentation",
@@ -116,7 +351,15 @@ export default function Crewing() {
           href: "/crewing/documents",
           icon: "📜",
           color: "from-amber-600 to-orange-700",
-          stats: "8 Expiring"
+          stats: "8 Expiring",
+        },
+        {
+          title: "Tanda Terima Dokumen",
+          description: "Generate & arsip tanda terima penyerahan dokumen crew",
+          href: "/crewing/document-receipts",
+          icon: "📥",
+          color: "from-emerald-600 to-teal-600",
+          stats: "Digital",
         },
         {
           title: "Form Management",
@@ -124,7 +367,7 @@ export default function Crewing() {
           href: "/crewing/forms",
           icon: "📋",
           color: "from-fuchsia-600 to-pink-700",
-          stats: "New!"
+          stats: "New!",
         },
         {
           title: "Training Records",
@@ -132,7 +375,7 @@ export default function Crewing() {
           href: "/crewing/training",
           icon: "🎓",
           color: "from-yellow-600 to-amber-700",
-          stats: "34 Active"
+          stats: "34 Active",
         },
         {
           title: "Monthly Checklist",
@@ -140,7 +383,7 @@ export default function Crewing() {
           href: "/crewing/checklist",
           icon: "✅",
           color: "from-teal-600 to-cyan-700",
-          stats: "23 This Month"
+          stats: "23 This Month",
         },
         {
           title: "External Compliance",
@@ -148,7 +391,7 @@ export default function Crewing() {
           href: "/compliance/external",
           icon: "🌐",
           color: "from-indigo-600 to-purple-700",
-          stats: "3 Systems"
+          stats: "3 Systems",
         },
         {
           title: "SIUPPAK Reports",
@@ -156,275 +399,286 @@ export default function Crewing() {
           href: "/compliance/siuppak",
           icon: "📊",
           color: "from-red-600 to-rose-700",
-          stats: "Auto Generate"
-        }
-      ]
-    }
+          stats: "Auto Generate",
+        },
+      ],
+    },
   ];
 
+  const sanitizedQuery = searchQuery.trim();
+  const hasMinimumSearch = sanitizedQuery.length >= 2;
+
   return (
-    <>
-      <style jsx>{`
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-      `}</style>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-cyan-50">
-      {/* Hero Header */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-blue-600 via-blue-700 to-cyan-700 shadow-2xl">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0" style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-          }}></div>
-        </div>
-
-        <div className="relative max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-6">
-              <div className="relative">
-                <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center backdrop-blur-md shadow-2xl animate-pulse">
-                  <span className="text-4xl">⚓</span>
-                </div>
-                <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-400 rounded-full border-4 border-white animate-bounce"></div>
-              </div>
+    <div className="min-h-screen bg-slate-50 pb-12">
+      <div className="page-shell px-6 py-10 space-y-8">
+        <div className="surface-card p-7">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex items-start gap-4">
+              <span className="badge-soft bg-emerald-500/15 text-emerald-600 text-2xl">⚓</span>
               <div>
-                <h1 className="text-5xl font-bold text-white mb-3 tracking-tight">Crewing Department</h1>
-                <p className="text-white text-xl font-medium opacity-95">Professional maritime crew operations & compliance</p>
-                <div className="mt-4 flex items-center space-x-4">
-                  <div className="flex items-center space-x-2 text-white opacity-90">
-                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                    <span className="text-sm font-medium">System Online</span>
-                  </div>
-                  <div className="flex items-center space-x-2 text-white opacity-90">
-                    <span className="text-sm">Last updated: Today</span>
-                  </div>
+                <h1 className="text-3xl font-bold text-slate-900">Crewing Department</h1>
+                <p className="mt-2 max-w-3xl text-base text-slate-600">
+                  Operasi perekrutan, assignment, dan compliance awak kapal dalam satu hub yang tenang dan profesional.
+                </p>
+                <div className="mt-4 flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-600">
+                  <span className="action-pill text-xs">System Online</span>
+                  <span className="action-pill text-xs">Last update: {lastUpdated}</span>
                 </div>
               </div>
             </div>
-            <div className="hidden md:block">
+            <div className="flex flex-wrap justify-end gap-3">
+              <Link href="/dashboard" className="action-pill text-sm">
+                ← Back to Dashboard
+              </Link>
+              <Link href="/crewing/reports" className="action-pill text-sm">
+                Crew Reports →
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        <div className="surface-card space-y-4 border border-emerald-100/60 bg-gradient-to-br from-emerald-50/40 via-white to-white p-6 shadow-sm">
+          <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+            <div>
+              <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-emerald-600">
+                <span className="badge-soft bg-emerald-500/20 text-emerald-600">🔎</span>
+                <span>Global Crew Search</span>
+              </div>
+              <h2 className="mt-2 text-xl font-semibold text-slate-900">Temukan kru lebih cepat</h2>
+              <p className="text-sm text-slate-600">
+                Cari kru lintas database dengan nama, dokumen, vessel, atau kontak.
+              </p>
+              <p className="text-xs text-slate-500">Contoh: Ricky paspor B123, Chief Officer Lundqvist, atau 0812...</p>
+            </div>
+          </div>
+          <div className="relative">
+            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-base text-slate-400">🔎</span>
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Masukkan kata kunci kru"
+              className="w-full rounded-xl border border-emerald-200 bg-white py-3 pl-10 pr-12 text-sm font-medium text-slate-800 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+            />
+            {searchQuery && (
               <button
-                onClick={() => router.push("/dashboard")}
-                className="group bg-white hover:bg-white text-white px-8 py-4 rounded-2xl backdrop-blur-md border border-white/20 transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-2xl"
+                type="button"
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-lg text-slate-400 transition hover:text-slate-600"
+                aria-label="Clear search"
               >
-                <div className="flex items-center space-x-3">
-                  <svg className="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                  </svg>
-                  <span className="font-semibold">Back to Dashboard</span>
-                </div>
+                ×
               </button>
-            </div>
+            )}
           </div>
+          <div className="space-y-3">
+            {searchError && (
+              <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+                {searchError}
+              </div>
+            )}
+            {!searchError && sanitizedQuery.length > 0 && sanitizedQuery.length < 2 && (
+              <p className="text-xs text-slate-500">Ketik minimal 2 karakter untuk mulai mencari.</p>
+            )}
+            {isSearching && (
+              <div className="flex items-center gap-2 text-sm text-slate-600">
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent" />
+                <span>Mencari kru...</span>
+              </div>
+            )}
+            {!isSearching && !searchError && hasMinimumSearch && (
+              searchResults.length > 0 ? (
+                <div className="divide-y divide-emerald-100 overflow-hidden rounded-lg border border-emerald-100">
+                  {searchResults.map((result) => {
+                    const contactParts = [result.phone, result.email].filter(Boolean);
+                    const metaSegments = [
+                      result.rank,
+                      result.nationality,
+                      typeof result.age === "number" ? `${result.age} y/o` : null,
+                      result.latestAssignment?.vesselName,
+                    ].filter(Boolean);
 
-          {/* Quick Stats */}
-          <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-6">
-            <div className="group bg-white backdrop-blur-md rounded-2xl p-6 border border-gray-200 hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer">
-              <div className="flex items-center justify-between mb-2">
-                <div className="text-3xl font-bold text-gray-900">245</div>
-                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <span className="text-2xl">👥</span>
+                    return (
+                      <Link
+                        key={result.id}
+                        href={`/crewing/seafarers/${result.id}/biodata`}
+                        className="block bg-white px-4 py-4 transition hover:bg-emerald-50/60"
+                      >
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                          <div>
+                            <p className="text-sm font-semibold text-slate-900">{result.fullName}</p>
+                            <p className="text-xs text-slate-500">{metaSegments.join(" • ")}</p>
+                          </div>
+                          <span className={`badge-soft text-xs font-semibold ${crewStatusAccent(result.status)}`}>
+                            {result.status}
+                          </span>
+                        </div>
+                        <div className="mt-3 grid gap-2 text-xs text-slate-600 sm:grid-cols-2">
+                          <div>
+                            <span className="font-semibold text-slate-700">Passport:</span>{" "}
+                            {result.passportNumber
+                              ? `${result.passportNumber} (${formatDate(result.passportExpiry)})`
+                              : "—"}
+                          </div>
+                          <div>
+                            <span className="font-semibold text-slate-700">Seaman Book:</span>{" "}
+                            {result.seamanBookNumber
+                              ? `${result.seamanBookNumber} (${formatDate(result.seamanBookExpiry)})`
+                              : "—"}
+                          </div>
+                          {result.latestAssignment && (
+                            <div className="sm:col-span-2">
+                              <span className="font-semibold text-slate-700">Assignment:</span>{" "}
+                              {[
+                                result.latestAssignment.rank,
+                                result.latestAssignment.vesselName,
+                                result.latestAssignment.principalName,
+                              ]
+                                .filter(Boolean)
+                                .join(" • ") || "—"}
+                              {result.latestAssignment.status ? ` (${result.latestAssignment.status})` : ""}
+                            </div>
+                          )}
+                          {result.latestApplication && (
+                            <div className="sm:col-span-2">
+                              <span className="font-semibold text-slate-700">Application:</span>{" "}
+                              {[
+                                result.latestApplication.status,
+                                result.latestApplication.principalName,
+                                result.latestApplication.vesselType,
+                                formatDate(result.latestApplication.appliedAt),
+                              ]
+                                .filter(Boolean)
+                                .join(" • ")}
+                            </div>
+                          )}
+                          {result.expiringDocuments.length > 0 && (
+                            <div className="sm:col-span-2">
+                              <span className="font-semibold text-slate-700">Expiring Docs:</span>{" "}
+                              {result.expiringDocuments
+                                .map((doc) =>
+                                  `${formatDocumentLabel(doc.docType)}${
+                                    doc.expiryDate ? ` (${formatDate(doc.expiryDate)})` : ""
+                                  }`
+                                )
+                                .join(", ")}
+                            </div>
+                          )}
+                          {contactParts.length > 0 && (
+                            <div className="sm:col-span-2">
+                              <span className="font-semibold text-slate-700">Contact:</span>{" "}
+                              {contactParts.join(" • ")}
+                            </div>
+                          )}
+                        </div>
+                      </Link>
+                    );
+                  })}
                 </div>
-              </div>
-              <div className="text-gray-700 text-sm font-semibold">Active Seafarers</div>
-              <div className="mt-3 w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-blue-600 h-2 rounded-full w-3/4"></div>
-              </div>
-            </div>
-            <div className="group bg-white backdrop-blur-md rounded-2xl p-6 border border-gray-200 hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer">
-              <div className="flex items-center justify-between mb-2">
-                <div className="text-3xl font-bold text-gray-900">6</div>
-                <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
-                  <span className="text-2xl">🏢</span>
-                </div>
-              </div>
-              <div className="text-gray-700 text-sm font-semibold">Principals (18 Vessels)</div>
-              <div className="mt-3 w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-indigo-600 h-2 rounded-full w-5/6"></div>
-              </div>
-            </div>
-            <div className="group bg-white backdrop-blur-md rounded-2xl p-6 border border-gray-200 hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer">
-              <div className="flex items-center justify-between mb-2">
-                <div className="text-3xl font-bold text-gray-900">156</div>
-                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                  <span className="text-2xl">📋</span>
-                </div>
-              </div>
-              <div className="text-gray-700 text-sm font-semibold">Active Assignments</div>
-              <div className="mt-3 w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-green-600 h-2 rounded-full w-4/5"></div>
-              </div>
-            </div>
-            <div className="group bg-white backdrop-blur-md rounded-2xl p-6 border border-gray-200 hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer">
-              <div className="flex items-center justify-between mb-2">
-                <div className="text-3xl font-bold text-gray-900">98%</div>
-                <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
-                  <span className="text-2xl">✅</span>
-                </div>
-              </div>
-              <div className="text-gray-700 text-sm font-semibold">Compliance Rate</div>
-              <div className="mt-3 w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-emerald-600 h-2 rounded-full w-full"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Wave Effect */}
-        <div className="absolute bottom-0 left-0 right-0">
-          <svg viewBox="0 0 1440 120" className="w-full h-16">
-            <path fill="#ffffff" fillOpacity="0.1" d="M0,32L48,37.3C96,43,192,53,288,58.7C384,64,480,64,576,58.7C672,53,768,43,864,48C960,53,1056,75,1152,80C1248,85,1344,75,1392,69.3L1440,64L1440,120L1392,120C1344,120,1248,120,1152,120C1056,120,960,120,864,120C768,120,672,120,576,120C480,120,384,120,288,120C192,120,96,120,48,120L0,120Z"></path>
-          </svg>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-        {/* Quick Actions & Recent Activity - MODERN MINIMALIST */}
-        <div className="mb-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Quick Actions - Ultra Clean */}
-          <div className="bg-white rounded-xl border border-gray-300 hover:border-gray-400 transition-all duration-300 overflow-hidden group">
-            <div className="p-5 border-b border-gray-100">
-              <div className="flex items-center gap-2">
-                <div className="w-1 h-6 bg-blue-600 rounded-full"></div>
-                <h3 className="text-base font-semibold text-gray-900">Quick Actions</h3>
-              </div>
-            </div>
-            <div className="p-5 space-y-2">
-              <Link
-                href="/crewing/seafarers/new"
-                className="flex items-center gap-3 p-3 rounded-lg hover:bg-blue-100 transition-colors group/item"
-              >
-                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center group-hover/item:bg-blue-600 transition-colors">
-                  <span className="text-blue-600 group-hover/item:text-white transition-colors text-lg">+</span>
-                </div>
-                <div className="flex-1">
-                  <div className="font-medium text-gray-900 text-sm">Add New Seafarer</div>
-                  <div className="text-sm text-gray-700">Register crew member</div>
-                </div>
-              </Link>
-              <Link
-                href="/crewing/principals"
-                className="flex items-center gap-3 p-3 rounded-lg hover:bg-green-50 transition-colors group/item"
-              >
-                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center group-hover/item:bg-green-600 transition-colors">
-                  <span className="text-green-600 group-hover/item:text-white transition-colors text-base">🚢</span>
-                </div>
-                <div className="flex-1">
-                  <div className="font-medium text-gray-900 text-sm">Fleet Management</div>
-                  <div className="text-sm text-gray-700">Principals & vessels</div>
-                </div>
-              </Link>
-            </div>
-          </div>
-
-          {/* Recent Activity - Minimalist Design */}
-          <div className="bg-white rounded-xl border border-gray-300 hover:border-gray-400 transition-all duration-300 overflow-hidden">
-            <div className="p-5 border-b border-gray-100">
-              <div className="flex items-center gap-2">
-                <div className="w-1 h-6 bg-purple-600 rounded-full"></div>
-                <h3 className="text-base font-semibold text-gray-900">Recent Activity</h3>
-              </div>
-            </div>
-            <div className="p-5 space-y-3">
-              <div className="flex items-start gap-3">
-                <div className="w-2 h-2 bg-green-500 rounded-full mt-1.5 flex-shrink-0"></div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">New seafarer onboard</p>
-                  <p className="text-sm text-gray-700 mt-0.5">John Smith • 2h ago</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="w-2 h-2 bg-blue-600 rounded-full mt-1.5 flex-shrink-0"></div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">Document renewed</p>
-                  <p className="text-sm text-gray-700 mt-0.5">STCW for 15 crew • 4h ago</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="w-2 h-2 bg-amber-500 rounded-full mt-1.5 flex-shrink-0"></div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">Certificates expiring</p>
-                  <p className="text-sm text-gray-700 mt-0.5">8 documents • 6h ago</p>
-                </div>
-              </div>
-            </div>
+              ) : (
+                <p className="text-sm text-slate-500">Tidak ada kru yang cocok dengan pencarian.</p>
+              )
+            )}
           </div>
         </div>
 
-        {/* Professional Workflow-Based Layout */}
-        <div className="space-y-8">
-          {moduleCategories.map((category, catIndex) => (
-            <div key={catIndex} className="relative">
-              {/* Category Header - Minimalist */}
-              <div className="mb-5 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-1 h-8 bg-gradient-to-b from-blue-600 to-blue-400 rounded-full"></div>
-                  <div>
-                    <h2 className="text-xl font-extrabold text-gray-900">{category.category}</h2>
-                    <p className="text-gray-500 text-xs mt-0.5">{category.description}</p>
+        <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {overviewCards.map((card) => (
+            <div key={card.label} className="surface-card flex items-center justify-between gap-4 p-6">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{card.label}</p>
+                <p className="mt-2 text-2xl font-extrabold text-slate-900">{card.value}</p>
+                <p className="mt-1 text-sm text-slate-600">{card.description}</p>
+              </div>
+              <span className={`badge-soft text-xl ${card.accent}`} aria-hidden="true">
+                {card.icon}
+              </span>
+            </div>
+          ))}
+        </section>
+
+        <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div className="surface-card p-6">
+            <div className="surface-card__header">
+              <h2 className="text-lg font-semibold text-slate-900">Quick Actions</h2>
+              <p className="mt-1 text-sm text-slate-600">Langkah cepat untuk tugas harian crewing.</p>
+            </div>
+            <div className="space-y-3">
+              {quickActions.map((action) => (
+                <Link
+                  key={action.href}
+                  href={action.href}
+                  className="flex items-center gap-3 rounded-lg border border-slate-200/60 px-4 py-3 transition hover:border-emerald-400 hover:bg-emerald-50/40"
+                >
+                  <span className={`badge-soft text-lg ${action.accent}`}>{action.icon}</span>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-slate-900">{action.label}</p>
+                    <p className="text-sm text-slate-600">{action.description}</p>
                   </div>
+                  <svg className="h-4 w-4 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          <div className="surface-card p-6">
+            <div className="surface-card__header">
+              <h2 className="text-lg font-semibold text-slate-900">Crew Ops Reminders</h2>
+              <p className="mt-1 text-sm text-slate-600">Checklist singkat sebelum crew berangkat.</p>
+            </div>
+            <ul className="space-y-3">
+              {reminders.map((item) => (
+                <li key={item} className="flex items-start gap-3 text-sm text-slate-600">
+                  <span className="badge-soft bg-emerald-500/10 text-emerald-600 mt-0.5">•</span>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+
+        <section className="space-y-8">
+          {moduleCategories.map((category) => (
+            <div key={category.category} className="space-y-4">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="text-xl font-semibold text-slate-900">{category.category}</h2>
+                  <p className="text-sm text-slate-600">{category.description}</p>
                 </div>
-                <div className="hidden md:flex items-center gap-2 text-xs font-medium text-gray-500 bg-gray-100 px-3 py-2.5 rounded-full border border-gray-300">
-                  <span className="w-1.5 h-1.5 bg-blue-600 rounded-full"></span>
-                  {category.modules.length} Modules
-                </div>
+                <span className="action-pill text-xs">{category.modules.length} modules</span>
               </div>
 
-              {/* Module Grid - Ultra Minimalist */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {category.modules.map((module, index) => (
-                  <Link
-                    key={module.href}
-                    href={module.href}
-                    className="group relative bg-white rounded-lg border border-gray-300 hover:border-blue-400 hover:shadow-md transition-all duration-200 overflow-hidden"
-                    style={{
-                      animationDelay: `${(catIndex * 4 + index) * 50}ms`,
-                      animationFillMode: 'both',
-                      animation: 'fadeInUp 0.4s ease-out forwards',
-                      opacity: 0
-                    }}
-                  >
-                    {/* Modern Card Layout */}
-                    <div className="p-4">
-                      <div className="flex items-start gap-3 mb-3">
-                        <div className={`w-10 h-10 bg-gradient-to-br ${module.color} rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform shadow-md`}>
-                          <span className="text-xl">{module.icon}</span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="text-sm font-semibold text-gray-900 mb-1 group-hover:text-blue-700 transition-colors leading-tight">
-                            {module.title}
-                          </h3>
-                          <p className="text-sm text-gray-700 line-clamp-2 leading-relaxed">{module.description}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-700 bg-gray-100 px-4 py-2 rounded">
-                          {module.stats}
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+                {category.modules.map((module) => (
+                  <Link key={module.href} href={module.href} className="surface-card group p-5 transition hover:-translate-y-1">
+                    <div className="flex items-start gap-3">
+                      <div className={`flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br ${module.color} text-white shadow-sm transition group-hover:scale-105`}>
+                        <span className="text-lg" aria-hidden="true">
+                          {module.icon}
                         </span>
-                        <svg className="w-4 h-4 text-gray-700 group-hover:text-blue-700 group-hover:translate-x-0.5 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-sm font-semibold text-slate-900 transition group-hover:text-emerald-600">
+                          {module.title}
+                        </h3>
+                        <p className="mt-1 text-sm text-slate-600 line-clamp-2">{module.description}</p>
                       </div>
                     </div>
-
-                    {/* Accent bar on hover */}
-                    <div className={`absolute left-0 top-0 w-1 h-full bg-gradient-to-b ${module.color} opacity-0 group-hover:opacity-100 transition-opacity`}></div>
+                    <div className="mt-4 flex items-center justify-between">
+                      <span className="badge-soft bg-slate-100 text-slate-700 text-xs font-semibold">{module.stats}</span>
+                      <svg className="h-4 w-4 text-slate-400 transition group-hover:text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
                   </Link>
                 ))}
               </div>
             </div>
           ))}
-        </div>
-      </main>
+        </section>
+      </div>
     </div>
-    </>
   );
 }

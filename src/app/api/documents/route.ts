@@ -85,16 +85,18 @@ export async function POST(request: NextRequest) {
     const buffer = Buffer.from(bytes);
     await writeFile(filePath, buffer);
 
+    const publicUrl = `/uploads/documents/${fileName}`;
+
     // Save to database
     const document = await prisma.crewDocument.create({
       data: {
-        crewId: crewId,
+        crewId,
         docType,
         docNumber,
         issueDate: new Date(issueDate),
         expiryDate: new Date(expiryDate),
         remarks: remarks || null,
-        // Note: In a real app, you'd store the file path or URL
+        fileUrl: publicUrl,
       },
     });
 

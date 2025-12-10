@@ -5,6 +5,84 @@ import { authOptions } from "@/lib/auth";
 import puppeteer from 'puppeteer';
 import { checkPermission, PermissionLevel } from "@/lib/permission-middleware";
 
+type DocumentRequestType = "pkl_contract" | "sea_agreement" | "crew_certificate" | "dispatch_letter";
+
+interface CrewCertificatePayload {
+  certificateType?: string | null;
+  certificateNumber?: string | null;
+  issueDate?: string | null;
+  expiryDate?: string | null;
+}
+
+type DocumentRequestPayload =
+  | { type: "pkl_contract"; id: string }
+  | { type: "sea_agreement"; id: string }
+  | { type: "dispatch_letter"; id: string }
+  | { type: "crew_certificate"; id: string; data?: CrewCertificatePayload };
+
+function normalizeOptionalString(value?: string | null): string | null {
+  if (value === undefined || value === null) {
+    return null;
+  }
+  const trimmed = value.trim();
+  return trimmed.length === 0 ? null : trimmed;
+}
+
+function isCrewCertificatePayload(value: unknown): value is CrewCertificatePayload {
+  if (value === undefined || value === null) {
+    return true;
+  }
+
+  if (typeof value !== "object") {
+    return false;
+  }
+
+  const payload = value as Record<string, unknown>;
+  const optionalStringKeys: Array<keyof CrewCertificatePayload> = [
+    "certificateType",
+    "certificateNumber",
+    "issueDate",
+    "expiryDate",
+  ];
+
+  return optionalStringKeys.every((key) => {
+    const entry = payload[key];
+    return entry === undefined || entry === null || typeof entry === "string";
+  });
+}
+
+function parseDocumentRequest(body: unknown): DocumentRequestPayload | null {
+  if (typeof body !== "object" || body === null) {
+    return null;
+  }
+
+  const value = body as Record<string, unknown>;
+  const type = value.type;
+  const id = value.id;
+
+  if (typeof type !== "string" || typeof id !== "string" || id.trim().length === 0) {
+    return null;
+  }
+
+  const normalizedType = type as DocumentRequestType;
+  if (!["pkl_contract", "sea_agreement", "crew_certificate", "dispatch_letter"].includes(normalizedType)) {
+    return null;
+  }
+
+  if (normalizedType === "crew_certificate") {
+    if (!isCrewCertificatePayload(value.data)) {
+      return null;
+    }
+    return {
+      type: normalizedType,
+      id,
+      data: value.data as CrewCertificatePayload | undefined,
+    };
+  }
+
+  return { type: normalizedType, id } as DocumentRequestPayload;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -17,32 +95,36 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Insufficient permissions to generate contracts" }, { status: 403 });
     }
 
-    const { type, id, data } = await request.json();
+    const parsedBody = parseDocumentRequest(await request.json());
+
+    if (!parsedBody) {
+      return NextResponse.json({ error: "Invalid document payload" }, { status: 400 });
+    }
 
     let htmlContent = '';
     let filename = '';
 
-    switch (type) {
+    switch (parsedBody.type) {
       case 'pkl_contract':
-        const pklData = await generatePKLContract(id);
+        const pklData = await generatePKLContract(parsedBody.id);
         htmlContent = pklData.html;
         filename = pklData.filename;
         break;
 
       case 'sea_agreement':
-        const seaData = await generateSEAContract(id);
+        const seaData = await generateSEAContract(parsedBody.id);
         htmlContent = seaData.html;
         filename = seaData.filename;
         break;
 
       case 'crew_certificate':
-        const certData = await generateCrewCertificate(id, data);
+        const certData = await generateCrewCertificate(parsedBody.id, parsedBody.data);
         htmlContent = certData.html;
         filename = certData.filename;
         break;
 
       case 'dispatch_letter':
-        const dispatchData = await generateDispatchLetter(id);
+        const dispatchData = await generateDispatchLetter(parsedBody.id);
         htmlContent = dispatchData.html;
         filename = dispatchData.filename;
         break;
@@ -347,7 +429,7 @@ async function generateSEAContract(pklId: string) {
   };
 }
 
-async function generateCrewCertificate(crewId: string, data: any) {
+async function generateCrewCertificate(crewId: string, data?: CrewCertificatePayload) {
   const crew = await prisma.crew.findUnique({
     where: { id: crewId },
     include: {
@@ -386,7 +468,7 @@ async function generateCrewCertificate(crewId: string, data: any) {
         </div>
 
         <div class="title">CERTIFICATE OF COMPETENCY</div>
-        <div class="subtitle">${data.certificateType || 'MARINE CERTIFICATE'}</div>
+        <div class="subtitle">${normalizeOptionalString(data?.certificateType) ?? 'MARINE CERTIFICATE'}</div>
 
         <div class="content">
           <p>This is to certify that:</p>
@@ -395,9 +477,9 @@ async function generateCrewCertificate(crewId: string, data: any) {
             <strong>${crew.fullName}</strong><br>
             <strong>Rank:</strong> ${crew.rank}<br>
             <strong>Nationality:</strong> ${crew.nationality || 'Indonesia'}<br>
-            <strong>Certificate Number:</strong> ${data.certificateNumber || 'N/A'}<br>
-            <strong>Issue Date:</strong> ${data.issueDate ? new Date(data.issueDate).toLocaleDateString() : 'N/A'}<br>
-            <strong>Expiry Date:</strong> ${data.expiryDate ? new Date(data.expiryDate).toLocaleDateString() : 'N/A'}
+            <strong>Certificate Number:</strong> ${normalizeOptionalString(data?.certificateNumber) ?? 'N/A'}<br>
+            <strong>Issue Date:</strong> ${data?.issueDate ? new Date(data.issueDate).toLocaleDateString() : 'N/A'}<br>
+            <strong>Expiry Date:</strong> ${data?.expiryDate ? new Date(data.expiryDate).toLocaleDateString() : 'N/A'}
           </div>
 
           <p>Has successfully completed the required training and assessment for the position of <strong>${crew.rank}</strong> and is certified competent to perform the duties associated with this rank in accordance with international maritime standards and regulations.</p>

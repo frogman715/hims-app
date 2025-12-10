@@ -2,7 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 
 interface SeafarerDocument {
@@ -17,6 +17,7 @@ interface SeafarerDocument {
   issueDate: string | null;
   expiryDate: string | null;
   remarks: string | null;
+  fileUrl?: string | null;
 }
 
 export default function Documents() {
@@ -25,6 +26,7 @@ export default function Documents() {
   const [documents, setDocuments] = useState<SeafarerDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all'); // all, expiring, expired
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Read filter from URL query params (manual parse to avoid useSearchParams issue)
   useEffect(() => {
@@ -63,25 +65,10 @@ export default function Documents() {
     }
   };
 
-  const getFilteredDocuments = () => {
-    const now = new Date();
-    const thirtyDaysFromNow = new Date();
-    thirtyDaysFromNow.setDate(now.getDate() + 30);
-
-    switch (filter) {
-      case 'expiring':
-        return documents.filter(doc =>
-          doc.expiryDate &&
-          new Date(doc.expiryDate) > now &&
-          new Date(doc.expiryDate) <= thirtyDaysFromNow
-        );
-      case 'expired':
-        return documents.filter(doc =>
-          doc.expiryDate && new Date(doc.expiryDate) <= now
-        );
-      default:
-        return documents;
-    }
+  const getExpiringThreshold = (reference: Date) => {
+    const threshold = new Date(reference.getTime());
+    threshold.setMonth(threshold.getMonth() + 14);
+    return threshold;
   };
 
   const getStatusColor = (expiryDate: string | null) => {
@@ -89,12 +76,11 @@ export default function Documents() {
 
     const now = new Date();
     const expiry = new Date(expiryDate);
-    const thirtyDaysFromNow = new Date();
-    thirtyDaysFromNow.setDate(now.getDate() + 30);
+    const expiringThreshold = getExpiringThreshold(now);
 
-    if (expiry <= now) return 'bg-red-100 text-red-800';
-    if (expiry <= thirtyDaysFromNow) return 'bg-yellow-100 text-yellow-800';
-    return 'bg-green-100 text-green-800';
+    if (expiry <= now) return 'bg-rose-100 text-rose-700';
+    if (expiry <= expiringThreshold) return 'bg-amber-100 text-amber-700';
+    return 'bg-emerald-100 text-emerald-700';
   };
 
   const getStatusText = (expiryDate: string | null) => {
@@ -102,175 +88,239 @@ export default function Documents() {
 
     const now = new Date();
     const expiry = new Date(expiryDate);
-    const thirtyDaysFromNow = new Date();
-    thirtyDaysFromNow.setDate(now.getDate() + 30);
+    const expiringThreshold = getExpiringThreshold(now);
 
     if (expiry <= now) return 'Expired';
-    if (expiry <= thirtyDaysFromNow) return 'Expiring Soon';
+    if (expiry <= expiringThreshold) return 'Expiring Soon';
     return 'Valid';
   };
 
+  const filteredDocuments = useMemo(() => {
+    const now = new Date();
+    const expiringThreshold = getExpiringThreshold(now);
+
+    const base = (() => {
+      switch (filter) {
+        case 'expiring':
+          return documents.filter((doc) => {
+            if (!doc.expiryDate) return false;
+            const expiry = new Date(doc.expiryDate);
+            return expiry > now && expiry <= expiringThreshold;
+          });
+        case 'expired':
+          return documents.filter((doc) => {
+            if (!doc.expiryDate) return false;
+            const expiry = new Date(doc.expiryDate);
+            return expiry <= now;
+          });
+        default:
+          return documents;
+      }
+    })();
+
+    const query = searchTerm.trim().toLowerCase();
+    if (!query) {
+      return base;
+    }
+
+    return base.filter((doc) => {
+      const values = [doc.crew.fullName, doc.docType, doc.docNumber, doc.remarks ?? ""];
+      return values.some((value) => value?.toLowerCase().includes(query));
+    });
+  }, [documents, filter, searchTerm]);
+
+  const expiringSoonCount = useMemo(() => {
+    const now = new Date();
+    const threshold = getExpiringThreshold(now);
+    return documents.filter((doc) => {
+      if (!doc.expiryDate) return false;
+      const expiry = new Date(doc.expiryDate);
+      return expiry > now && expiry <= threshold;
+    }).length;
+  }, [documents]);
+
+  const expiredCount = useMemo(
+    () =>
+      documents.filter((doc) => {
+        if (!doc.expiryDate) return false;
+        return new Date(doc.expiryDate) <= new Date();
+      }).length,
+    [documents]
+  );
+
   if (status === "loading" || loading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 flex flex-col items-center justify-center gap-4">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
+        <p className="text-sm font-semibold text-gray-700">Memuat data dokumen…</p>
+      </div>
+    );
   }
 
   if (!session) {
     return null;
   }
 
-  const filteredDocuments = getFilteredDocuments();
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      {/* Header */}
-      <header className="bg-white backdrop-blur-lg shadow-2xl border-b border-white/20">
-        <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">
-                Document Management
-              </h1>
-              <p className="text-lg text-gray-700 mt-2 font-medium">Track seafarer documents and expiry dates</p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Link
-                href="/crewing/documents/new"
-                className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
-              >
-                + Add New Document
-              </Link>
-              <Link
-                href="/crewing"
-                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
-              >
-                ← Back to Crewing
-              </Link>
-            </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
+      <header className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900">Document Management</h1>
+            <p className="text-base md:text-lg text-gray-700 mt-2">Pantau status dokumen STCW, paspor, medical, dan visa.</p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <Link
+              href="/crewing/documents/new"
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold shadow-sm transition"
+            >
+              <span className="text-lg leading-none">＋</span>
+              Tambah Dokumen
+            </Link>
+            <Link
+              href="/crewing"
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-xl border border-gray-300 text-sm font-semibold text-gray-800 hover:border-blue-500 hover:text-blue-600 transition"
+            >
+              ← Kembali ke Crewing
+            </Link>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto py-8 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          {/* Filter Buttons */}
-          <div className="bg-white backdrop-blur-md rounded-2xl shadow-lg border border-white p-6 mb-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-gray-900">Document Status Filter</h2>
-              <div className="flex space-x-2">
+      <main className="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8 space-y-8">
+        <section className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900">Filter Status Dokumen</h2>
+              <p className="text-sm text-gray-600">Pilih untuk menampilkan dokumen tertentu berdasarkan status kadaluarsa atau cari berdasarkan nama kru, tipe, atau nomor dokumen.</p>
+            </div>
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-end">
+              <div className="relative w-full md:w-72">
+                <input
+                  type="search"
+                  value={searchTerm}
+                  onChange={(event) => setSearchTerm(event.target.value)}
+                  placeholder="Cari dokumen..."
+                  className="w-full rounded-lg border border-gray-300 bg-white py-2.5 pl-10 pr-3 text-sm font-medium text-gray-800 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                />
+                <svg
+                  className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  aria-hidden="true"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6a4.5 4.5 0 013.773 7.036l3.346 3.346a.75.75 0 11-1.06 1.06l-3.346-3.345A4.5 4.5 0 1110.5 6z" />
+                </svg>
+              </div>
+              <div className="inline-flex flex-wrap gap-2 justify-end">
                 <button
                   onClick={() => setFilter('all')}
-                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${
                     filter === 'all'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      ? 'bg-blue-600 text-white shadow'
+                      : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
                   }`}
                 >
-                  All Documents ({documents.length})
+                  Semua ({documents.length})
                 </button>
                 <button
                   onClick={() => setFilter('expiring')}
-                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${
                     filter === 'expiring'
-                      ? 'bg-yellow-600 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      ? 'bg-amber-500 text-white shadow'
+                      : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
                   }`}
                 >
-                  Expiring Soon ({documents.filter(doc => {
-                    if (!doc.expiryDate) return false;
-                    const now = new Date();
-                    const expiry = new Date(doc.expiryDate);
-                    const thirtyDaysFromNow = new Date();
-                    thirtyDaysFromNow.setDate(now.getDate() + 30);
-                    return expiry > now && expiry <= thirtyDaysFromNow;
-                  }).length})
+                  Akan Kedaluwarsa ≤14 bln ({expiringSoonCount})
                 </button>
                 <button
                   onClick={() => setFilter('expired')}
-                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${
                     filter === 'expired'
-                      ? 'bg-red-600 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      ? 'bg-rose-500 text-white shadow'
+                      : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
                   }`}
                 >
-                  Expired ({documents.filter(doc => doc.expiryDate && new Date(doc.expiryDate) <= new Date()).length})
+                  Kedaluwarsa ({expiredCount})
                 </button>
               </div>
             </div>
           </div>
+        </section>
 
-          {/* Documents Table */}
-          <div className="bg-white backdrop-blur-md rounded-2xl shadow-lg border border-white overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-300">
-              <h2 className="text-xl font-semibold text-gray-900">
-                {filter === 'all' ? 'All Documents' : filter === 'expiring' ? 'Documents Expiring Soon' : 'Expired Documents'}
-              </h2>
+        <section className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-900">
+              {filter === 'all' ? 'Seluruh Dokumen' : filter === 'expiring' ? 'Dokumen Akan Kedaluwarsa' : 'Dokumen Kedaluwarsa' }
+            </h2>
+            <span className="text-sm font-medium text-gray-600">{formatSummaryLabel(filter, filteredDocuments.length)}</span>
+          </div>
+
+          {filteredDocuments.length === 0 ? (
+            <div className="px-6 py-12 text-center text-sm text-gray-600">
+              Tidak ada dokumen pada kategori ini.
             </div>
+          ) : (
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-300">
+              <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Seafarer
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Document Type
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Document Number
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Issue Date
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Expiry Date
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Seafarer</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Tipe Dokumen</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Nomor Dokumen</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Tanggal Terbit</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Tanggal Expired</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-white divide-y divide-gray-100">
                   {filteredDocuments.map((document) => (
-                    <tr key={document.id} className="hover:bg-gray-100">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{document.crew.fullName}</div>
+                    <tr key={document.id} className="hover:bg-blue-50/40 transition">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">{document.crew.fullName}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">{document.docType}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">{document.docNumber}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
+                        {document.issueDate ? new Date(document.issueDate).toLocaleDateString('id-ID') : '—'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {document.docType}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {document.docNumber}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {document.issueDate ? new Date(document.issueDate).toLocaleDateString() : 'N/A'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {document.expiryDate ? new Date(document.expiryDate).toLocaleDateString() : 'N/A'}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
+                        {document.expiryDate ? new Date(document.expiryDate).toLocaleDateString('id-ID') : '—'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-4 py-2 text-xs font-semibold rounded-full ${getStatusColor(document.expiryDate)}`}>
+                        <span className={`inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-full ${getStatusColor(document.expiryDate)}`}>
                           {getStatusText(document.expiryDate)}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <Link
-                          href={`/crewing/documents/${document.id}`}
-                          className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-2 rounded-lg font-medium transition-all duration-300 shadow-md hover:shadow-lg"
-                        >
-                          Edit
-                        </Link>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold">
+                        <div className="flex items-center">
+                          <Link
+                            href={`/crewing/documents/${document.id}/view`}
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 text-gray-800 hover:border-blue-500 hover:text-blue-600 transition"
+                          >
+                            View
+                          </Link>
+                        </div>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-          </div>
-        </div>
+          )}
+        </section>
       </main>
     </div>
   );
+}
+
+function formatSummaryLabel(filter: string, count: number) {
+  if (filter === 'all') {
+    return `${count} dokumen terdaftar`;
+  }
+  if (filter === 'expiring') {
+    return `${count} dokumen perlu diperbarui ≤14 bulan`;
+  }
+  return `${count} dokumen melewati masa berlaku`;
 }

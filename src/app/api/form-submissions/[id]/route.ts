@@ -3,6 +3,35 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { checkPermission, PermissionLevel } from "@/lib/permission-middleware";
+import { FormApprovalStatus, Prisma } from "@prisma/client";
+
+interface UpdateFormSubmissionPayload {
+  formData?: Prisma.JsonValue;
+  status?: FormApprovalStatus;
+}
+
+const FORM_STATUS_SET = new Set<FormApprovalStatus>([
+  FormApprovalStatus.DRAFT,
+  FormApprovalStatus.SUBMITTED,
+  FormApprovalStatus.UNDER_REVIEW,
+  FormApprovalStatus.CHANGES_REQUESTED,
+  FormApprovalStatus.APPROVED,
+  FormApprovalStatus.REJECTED,
+]);
+
+function isUpdateFormSubmissionPayload(value: unknown): value is UpdateFormSubmissionPayload {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  const payload = value as Partial<UpdateFormSubmissionPayload>;
+
+  if (payload.status !== undefined && !FORM_STATUS_SET.has(payload.status)) {
+    return false;
+  }
+
+  return true;
+}
 
 // GET /api/form-submissions/[id] - Get single form submission
 export async function GET(
@@ -100,23 +129,30 @@ export async function PUT(
       );
     }
 
-    const body = await req.json();
-    const { formData, status } = body;
+    const parsedBody = (await req.json()) as unknown;
 
-    const updateData: any = {};
-    if (formData) updateData.formData = formData;
+    if (!isUpdateFormSubmissionPayload(parsedBody)) {
+      return NextResponse.json({ error: "Invalid form submission payload" }, { status: 400 });
+    }
+
+    const { formData, status } = parsedBody;
+
+    const updateData: Prisma.PrepareJoiningFormUpdateInput = {};
+    if (formData !== undefined) {
+      updateData.formData = formData;
+    }
     
     // Status transitions
     if (status) {
       updateData.status = status;
-      
-      if (status === "SUBMITTED") {
+
+      if (status === FormApprovalStatus.SUBMITTED) {
         updateData.submittedBy = session?.user?.email || "Unknown";
         updateData.submittedAt = new Date();
-      } else if (status === "UNDER_REVIEW") {
+      } else if (status === FormApprovalStatus.UNDER_REVIEW) {
         updateData.reviewedBy = session?.user?.email || "Unknown";
         updateData.reviewedAt = new Date();
-      } else if (status === "APPROVED") {
+      } else if (status === FormApprovalStatus.APPROVED) {
         updateData.approvedBy = session?.user?.email || "Unknown";
         updateData.approvedAt = new Date();
       }

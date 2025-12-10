@@ -460,7 +460,7 @@ tail -f /var/log/nginx/error.log
 ### **3. Test Login**
 1. Buka browser: `https://app.hanmarine.co`
 2. Login dengan:
-   - **Email**: `admin@hims.com`
+   - **Email**: `admin@hanmarine.com`
    - **Password**: `admin123`
 3. Harusnya redirect ke `/dashboard` ✅
 
@@ -626,7 +626,7 @@ crontab -e
 
 - [ ] ✅ App accessible via `https://app.hanmarine.co`
 - [ ] ✅ SSL certificate installed (HTTPS working)
-- [ ] ✅ Admin login successful (`admin@hims.com` / `admin123`)
+- [ ] ✅ Admin login successful (`admin@hanmarine.com` / `admin123`)
 - [ ] ✅ Database migrations applied
 - [ ] ✅ PM2 running and auto-restart configured
 - [ ] ✅ Nginx reverse proxy working

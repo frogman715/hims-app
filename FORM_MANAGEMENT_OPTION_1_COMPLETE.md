@@ -322,7 +322,7 @@ enum FormApprovalStatus {
 
 ### 1. Seed Form Templates (Run once)
 ```bash
-# Login as admin@hims.com (DIRECTOR role)
+# Login as admin@hanmarine.com (DIRECTOR role)
 # Make POST request to:
 POST /api/admin/seed-form-templates
 
@@ -486,7 +486,7 @@ This will populate form templates for INTEGRIS and LUNDQVIST principals.
 **Dev Server:** http://localhost:3000
 
 **Test Login:**
-- Admin: `admin@hims.com` / `admin123` (DIRECTOR role)
+- Admin: `admin@hanmarine.com` / `admin123` (DIRECTOR role)
 
 **Start Testing:**
 1. Login as admin

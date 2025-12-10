@@ -4,15 +4,33 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 
+interface QMRStats {
+  pendingAudits: number;
+  openCAPAs: number;
+  pendingApprovals: number;
+  overdueItems: number;
+}
+
+interface QMRTaskItem {
+  id: string;
+  title: string;
+  description: string;
+  priority: string;
+  dueDate: string;
+  taskType: string;
+}
+
+const defaultStats: QMRStats = {
+  pendingAudits: 0,
+  openCAPAs: 0,
+  pendingApprovals: 0,
+  overdueItems: 0,
+};
+
 export default function QMRDashboard() {
   const { data: session } = useSession();
-  const [stats, setStats] = useState<any>({
-    pendingAudits: 0,
-    openCAPAs: 0,
-    pendingApprovals: 0,
-    overdueItems: 0
-  });
-  const [tasks, setTasks] = useState<any[]>([]);
+  const [stats, setStats] = useState<QMRStats>(defaultStats);
+  const [tasks, setTasks] = useState<QMRTaskItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -26,10 +44,21 @@ export default function QMRDashboard() {
         fetch("/api/quality/qmr/tasks")
       ]);
 
-      if (statsRes.ok) setStats(await statsRes.json());
+      if (statsRes.ok) {
+        const rawStats = await statsRes.json();
+        setStats({
+          pendingAudits: Number(rawStats.pendingAudits) || 0,
+          openCAPAs: Number(rawStats.openCAPAs) || 0,
+          pendingApprovals: Number(rawStats.pendingApprovals) || 0,
+          overdueItems: Number(rawStats.overdueItems) || 0,
+        });
+      }
       if (tasksRes.ok) {
         const data = await tasksRes.json();
-        setTasks(data.tasks || []);
+        const taskList = Array.isArray(data.tasks)
+          ? (data.tasks as QMRTaskItem[])
+          : [];
+        setTasks(taskList);
       }
     } catch (error) {
       console.error("Failed to fetch QMR data:", error);

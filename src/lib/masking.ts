@@ -32,8 +32,16 @@ export function maskSeamanCode(code: string): string {
  * Example: 5000 -> "****"
  * For display purposes, we hide the full amount when user lacks RED access
  */
-export function maskCurrency(_amount: number): string {
-  return '****';
+export function maskCurrency(amount: number): string {
+  if (typeof amount !== 'number' || Number.isNaN(amount)) {
+    return '****';
+  }
+
+  const normalized = Math.abs(amount).toFixed(2);
+  const lastDigits = normalized.replace('.', '').slice(-2).padStart(2, '0');
+  const sign = amount < 0 ? '-' : '';
+
+  return `${sign}****${lastDigits}`;
 }
 
 /**

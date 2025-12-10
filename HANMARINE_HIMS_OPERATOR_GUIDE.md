@@ -105,12 +105,12 @@ HANMARINE HIMS is a comprehensive maritime crew management system designed to ha
 
 | Role | Email | Password | Description |
 |------|-------|----------|-------------|
-| CDMO | cdmo@hims.com | cdmo123 | System Administrator |
-| Director | director@hims.com | director123 | Executive Management |
-| Accounting | accounting@hims.com | accounting123 | Finance Officer |
-| Operational | operational@hims.com | operational123 | Operations Manager |
-| HR | hr@hims.com | hr123 | HR Officer |
-| Crew Portal | crew@hims.com | crew123 | Crew Access |
+| CDMO | cdmo@hanmarine.com | cdmo123 | System Administrator |
+| Director | director@hanmarine.com | director123 | Executive Management |
+| Accounting | accounting@hanmarine.com | accounting123 | Finance Officer |
+| Operational | operational@hanmarine.com | operational123 | Operations Manager |
+| HR | hr@hanmarine.com | hr123 | HR Officer |
+| Crew Portal | crew@hanmarine.com | crew123 | Crew Access |
 
 ### Password Requirements
 - Minimum 8 characters
@@ -400,7 +400,7 @@ Notice Received → Replacement Search → Interview → Approval → Handover
 ## Contact Information
 
 ### System Administration
-- **CDMO Administrator**: cdmo@hims.com
+- **CDMO Administrator**: cdmo@hanmarine.com
 - **Technical Support**: support@hanmarine.com
 - **Emergency Hotline**: +62-21-1234-5678
 
@@ -408,10 +408,10 @@ Notice Received → Replacement Search → Interview → Approval → Handover
 
 | Department | Contact | Email |
 |------------|---------|-------|
-| Accounting | Finance Officer | accounting@hims.com |
-| Operations | Operations Manager | operational@hims.com |
-| HR | HR Officer | hr@hims.com |
-| IT Support | System Admin | cdmo@hims.com |
+| Accounting | Finance Officer | accounting@hanmarine.com |
+| Operations | Operations Manager | operational@hanmarine.com |
+| HR | HR Officer | hr@hanmarine.com |
+| IT Support | System Admin | cdmo@hanmarine.com |
 
 ### Business Hours
 - **Monday - Friday**: 08:00 - 17:00 WIB

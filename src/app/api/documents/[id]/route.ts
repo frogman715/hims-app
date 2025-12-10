@@ -97,9 +97,7 @@ export async function PUT(
       issueDate: Date;
       expiryDate: Date;
       remarks: string | null;
-      filePath?: string;
-      fileName?: string;
-      fileSize?: number;
+      fileUrl?: string | null;
     } = {
       docType,
       docNumber,
@@ -128,8 +126,7 @@ export async function PUT(
       const buffer = Buffer.from(bytes);
       await writeFile(filePath, buffer);
 
-      // In a real app, you'd store the file path or URL in the database
-      // For now, we'll just update the document
+      updateData.fileUrl = `/uploads/documents/${fileName}`;
     }
 
     // Update document

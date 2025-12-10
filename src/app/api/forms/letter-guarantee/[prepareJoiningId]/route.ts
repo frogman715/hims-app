@@ -4,6 +4,45 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { checkPermission, PermissionLevel } from "@/lib/permission-middleware";
 
+interface LetterGuaranteeHandlingAgent {
+  name: string;
+  address: string;
+  contact: string;
+  email: string;
+}
+
+interface LetterGuaranteeCrewRow {
+  no: number;
+  name: string;
+  dateOfBirth: string;
+  rank: string;
+  passportNo: string;
+  seamanBookNo: string;
+}
+
+interface LetterGuaranteeData {
+  companyName: string;
+  companyAddress: string;
+  companyPhone: string;
+  companyEmail: string;
+  date: string;
+  letterNumber: string;
+  recipients: string[];
+  principalName: string;
+  principalCompanyCode: string;
+  vesselName: string;
+  vesselImoNumber: string;
+  vesselFlag: string;
+  joinDate: string;
+  joinPort: string;
+  handlingAgent: LetterGuaranteeHandlingAgent;
+  crewTable: LetterGuaranteeCrewRow[];
+  purpose: string;
+  signedBy: string;
+  signedName: string;
+  signedDate: string;
+}
+
 // GET /api/forms/letter-guarantee/[prepareJoiningId] - Generate Letter Guarantee HTML
 export async function GET(
   req: NextRequest,
@@ -67,6 +106,13 @@ export async function GET(
       );
     }
 
+    if (!prepareJoining.crew) {
+      return NextResponse.json(
+        { error: "Crew data missing for prepare joining" },
+        { status: 404 }
+      );
+    }
+
     // Generate auto-filled data
     const today = new Date();
     const formattedDate = today.toLocaleDateString("en-US", {
@@ -75,7 +121,12 @@ export async function GET(
       day: "numeric",
     });
 
-    const letterData = {
+    const crew = prepareJoining.crew;
+    const principal = prepareJoining.principal;
+    const assignment = prepareJoining.assignment;
+    const vessel = assignment?.vessel;
+
+    const letterData: LetterGuaranteeData = {
       // Company info (PT HANMARINE)
       companyName: "PT HANMARINE INTERNATIONAL MARITIME SERVICE",
       companyAddress: "Jalan Raya Baru No. 123, Jakarta Pusat 10110, Indonesia",
@@ -95,23 +146,23 @@ export async function GET(
       ],
 
       // Principal info (auto-filled)
-      principalName: prepareJoining.principal.name,
-      principalCompanyCode: prepareJoining.principal.companyCode || "N/A",
+      principalName: principal?.name || "N/A",
+      principalCompanyCode: principal?.companyCode || "N/A",
 
       // Vessel info (auto-filled)
-      vesselName: prepareJoining.assignment?.vessel.name || "N/A",
-      vesselImoNumber: prepareJoining.assignment?.vessel.imoNumber || "N/A",
-      vesselFlag: prepareJoining.assignment?.vessel.flag || "N/A",
+      vesselName: vessel?.name || "N/A",
+      vesselImoNumber: vessel?.imoNumber || "N/A",
+      vesselFlag: vessel?.flag || "N/A",
 
       // Join details (auto-filled)
-      joinDate: prepareJoining.assignment?.joinDate
-        ? new Date(prepareJoining.assignment.joinDate).toLocaleDateString("en-US", {
+      joinDate: assignment?.joinDate
+        ? new Date(assignment.joinDate).toLocaleDateString("en-US", {
             year: "numeric",
             month: "long",
             day: "numeric",
           })
         : "N/A",
-      joinPort: prepareJoining.assignment?.port || "N/A",
+      joinPort: assignment?.port || "N/A",
 
       // Handling agent (editable)
       handlingAgent: {
@@ -125,11 +176,13 @@ export async function GET(
       crewTable: [
         {
           no: 1,
-          name: prepareJoining.crew.fullName,
-          dateOfBirth: new Date(prepareJoining.crew.dateOfBirth).toLocaleDateString("en-GB"),
-          rank: prepareJoining.crew.rank,
-          passportNo: prepareJoining.crew.passportNumber || "N/A",
-          seamanBookNo: prepareJoining.crew.seamanBookNumber || "N/A",
+          name: crew.fullName || "N/A",
+          dateOfBirth: crew.dateOfBirth
+            ? new Date(crew.dateOfBirth).toLocaleDateString("en-GB")
+            : "N/A",
+          rank: crew.rank || "N/A",
+          passportNo: crew.passportNumber || "N/A",
+          seamanBookNo: crew.seamanBookNumber || "N/A",
         },
       ],
 
@@ -161,7 +214,7 @@ export async function GET(
   }
 }
 
-function generateLetterGuaranteeHTML(data: any): string {
+function generateLetterGuaranteeHTML(data: LetterGuaranteeData): string {
   return `
 <!DOCTYPE html>
 <html>
@@ -245,7 +298,7 @@ function generateLetterGuaranteeHTML(data: any): string {
   </div>
 
   <div class="recipients">
-    ${data.recipients.map((r: string) => `<p>${r}</p>`).join("")}
+    ${data.recipients.map((r) => `<p>${r}</p>`).join("")}
   </div>
 
   <p class="subject">Subject: Letter of Guarantee for Seafarer Joining Vessel</p>
@@ -281,7 +334,7 @@ function generateLetterGuaranteeHTML(data: any): string {
     <tbody>
       ${data.crewTable
         .map(
-          (crew: any) => `
+          (crew: LetterGuaranteeCrewRow) => `
         <tr>
           <td>${crew.no}</td>
           <td>${crew.name}</td>

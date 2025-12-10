@@ -1,15 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Modal from "@/components/Modal";
+
+type FormFieldMap = Record<string, string>;
 
 interface FormSubmission {
   id: string;
   status: string;
   version: number;
-  formData: any;
+  formData: Record<string, unknown>;
   submittedBy: string | null;
   submittedAt: Date | null;
   reviewedBy: string | null;
@@ -61,19 +63,38 @@ export default function FormReviewPage() {
   const params = useParams();
   const router = useRouter();
   const { data: session } = useSession();
+  const formId = params.id as string;
   const [form, setForm] = useState<FormSubmission | null>(null);
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
-  const [formData, setFormData] = useState<any>({});
+  const [formData, setFormData] = useState<FormFieldMap>({});
   const [actionLoading, setActionLoading] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
   const [requestedChanges, setRequestedChanges] = useState("");
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [showChangesModal, setShowChangesModal] = useState(false);
 
+  const fetchFormDetails = useCallback(async () => {
+    if (!formId) {
+      return;
+    }
+    try {
+      const res = await fetch(`/api/form-submissions/${formId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setForm(data);
+        setFormData(sanitizeFormData(data.formData));
+      }
+    } catch (error) {
+      console.error("Error fetching form:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [formId]);
+
   useEffect(() => {
     fetchFormDetails();
-  }, [params.id]);
+  }, [fetchFormDetails]);
 
   const handleDownload = () => {
     // Create HTML content for download
@@ -214,25 +235,24 @@ export default function FormReviewPage() {
     }
   };
 
-  const fetchFormDetails = async () => {
-    try {
-      const res = await fetch(`/api/form-submissions/${params.id}`);
-      if (res.ok) {
-        const data = await res.json();
-        setForm(data);
-        setFormData(data.formData || {});
-      }
-    } catch (error) {
-      console.error("Error fetching form:", error);
-    } finally {
-      setLoading(false);
+  const sanitizeFormData = (raw: unknown): FormFieldMap => {
+    if (!raw || typeof raw !== "object") {
+      return {};
     }
+
+    return Object.entries(raw as Record<string, unknown>).reduce(
+      (acc, [key, value]) => {
+        acc[key] = value === null || value === undefined ? "" : String(value);
+        return acc;
+      },
+      {} as FormFieldMap
+    );
   };
 
   const handleSave = async () => {
     setActionLoading(true);
     try {
-      const res = await fetch(`/api/form-submissions/${params.id}`, {
+      const res = await fetch(`/api/form-submissions/${formId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ formData }),
@@ -252,7 +272,7 @@ export default function FormReviewPage() {
   const handleSubmitForReview = async () => {
     setActionLoading(true);
     try {
-      const res = await fetch(`/api/form-submissions/${params.id}`, {
+      const res = await fetch(`/api/form-submissions/${formId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: "SUBMITTED", formData }),
@@ -271,7 +291,7 @@ export default function FormReviewPage() {
   const handleApprove = async () => {
     setActionLoading(true);
     try {
-      const res = await fetch(`/api/form-submissions/${params.id}/approve`, {
+      const res = await fetch(`/api/form-submissions/${formId}/approve`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ notes: "" }),
@@ -295,7 +315,7 @@ export default function FormReviewPage() {
 
     setActionLoading(true);
     try {
-      const res = await fetch(`/api/form-submissions/${params.id}/reject`, {
+      const res = await fetch(`/api/form-submissions/${formId}/reject`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ reason: rejectionReason }),
@@ -322,7 +342,7 @@ export default function FormReviewPage() {
     setActionLoading(true);
     try {
       const res = await fetch(
-        `/api/form-submissions/${params.id}/request-changes`,
+        `/api/form-submissions/${formId}/request-changes`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -447,7 +467,7 @@ export default function FormReviewPage() {
                 <button
                   onClick={() => {
                     setEditMode(false);
-                    setFormData(form.formData);
+                    setFormData(sanitizeFormData(form.formData));
                   }}
                   className="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400"
                   disabled={actionLoading}

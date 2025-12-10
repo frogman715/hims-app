@@ -1,9 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 
 interface Crew {
   id: string;
@@ -41,8 +40,6 @@ interface EmploymentContract {
 }
 
 export default function CrewDetailPage() {
-  const { data: session } = useSession();
-  const router = useRouter();
   const params = useParams();
   const crewId = params.id as string;
 
@@ -51,14 +48,11 @@ export default function CrewDetailPage() {
   const [activeTab, setActiveTab] = useState<'overview' | 'contracts' | 'forms'>('overview');
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (crewId) {
-      fetchCrew();
-      fetchContracts();
+  const fetchCrew = useCallback(async () => {
+    if (!crewId) {
+      return;
     }
-  }, [crewId]);
-
-  const fetchCrew = async () => {
+    setLoading(true);
     try {
       const response = await fetch(`/api/crew/${crewId}`);
       if (response.ok) {
@@ -70,9 +64,12 @@ export default function CrewDetailPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [crewId]);
 
-  const fetchContracts = async () => {
+  const fetchContracts = useCallback(async () => {
+    if (!crewId) {
+      return;
+    }
     try {
       const response = await fetch(`/api/contracts?crewId=${crewId}`);
       if (response.ok) {
@@ -82,7 +79,14 @@ export default function CrewDetailPage() {
     } catch (error) {
       console.error('Error fetching contracts:', error);
     }
-  };
+  }, [crewId]);
+
+  useEffect(() => {
+    if (crewId) {
+      fetchCrew();
+      fetchContracts();
+    }
+  }, [crewId, fetchContracts, fetchCrew]);
 
   const getLatestSEAContract = () => {
     return contracts

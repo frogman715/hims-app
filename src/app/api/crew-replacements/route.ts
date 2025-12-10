@@ -13,9 +13,10 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const assignmentId = searchParams.get('assignmentId');
 
-    const whereClause = assignmentId ? { assignmentId } : {};
+    const whereClause = assignmentId ? { assignmentId } : undefined;
 
     const replacements = await prisma.crewReplacement.findMany({
+      where: whereClause,
       include: {
         crew: {
           select: {

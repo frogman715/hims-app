@@ -2,10 +2,25 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import type { Prisma } from '@prisma/client';
+
+type ApplicationWithRelations = Prisma.ApplicationGetPayload<{
+  include: {
+    crew: true;
+    principal: true;
+  };
+}>;
+
+type HydratedApplication = ApplicationWithRelations & {
+  crew: NonNullable<ApplicationWithRelations['crew']>;
+};
 
 // CR-02: Application Form Template
-function generateCR02HTML(application: any) {
-  const { crew, position, applicationDate, principal } = application;
+function generateCR02HTML(application: HydratedApplication) {
+  const { crew, position, principal, status } = application;
+  const applicationDate = application.applicationDate
+    ? new Date(application.applicationDate)
+    : new Date();
   
   return `
 <!DOCTYPE html>
@@ -112,7 +127,7 @@ function generateCR02HTML(application: any) {
     <table>
       <tr>
         <td class="label">Application Date</td>
-        <td class="value">${new Date(applicationDate).toLocaleDateString('id-ID', { 
+        <td class="value">${applicationDate.toLocaleDateString('id-ID', { 
           day: '2-digit', month: 'long', year: 'numeric' 
         })}</td>
       </tr>
@@ -126,7 +141,7 @@ function generateCR02HTML(application: any) {
       </tr>
       <tr>
         <td class="label">Application Status</td>
-        <td class="value">${application.status}</td>
+        <td class="value">${status}</td>
       </tr>
     </table>
   </div>
@@ -254,12 +269,20 @@ export async function GET(
       return NextResponse.json({ error: 'Application not found' }, { status: 404 });
     }
 
-    const html = generateCR02HTML(application);
+    if (!application.crew) {
+      return NextResponse.json({ error: 'Crew data missing for application' }, { status: 404 });
+    }
+
+    const html = generateCR02HTML({ ...application, crew: application.crew });
+
+    const crewNameSlug = application.crew.fullName
+      ? application.crew.fullName.replace(/\s+/g, '_')
+      : 'crew';
 
     return new NextResponse(html, {
       headers: {
         'Content-Type': 'text/html; charset=utf-8',
-        'Content-Disposition': `inline; filename="CR-02_${application.crew.fullName.replace(/\s+/g, '_')}_${application.id}.html"`,
+        'Content-Disposition': `inline; filename="CR-02_${crewNameSlug}_${application.id}.html"`,
       },
     });
 

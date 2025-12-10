@@ -3,6 +3,30 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { checkPermission, crewGuard, PermissionLevel } from "@/lib/permission-middleware";
+import { Prisma } from "@prisma/client";
+
+interface CreateCrewPayload {
+  fullName: string;
+  rank: string;
+  phone?: string | null;
+  email?: string | null;
+}
+
+function isCreateCrewPayload(value: unknown): value is CreateCrewPayload {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  const payload = value as Partial<CreateCrewPayload>;
+  return (
+    typeof payload.fullName === "string" &&
+    payload.fullName.trim().length > 0 &&
+    typeof payload.rank === "string" &&
+    payload.rank.trim().length > 0 &&
+    (payload.phone === undefined || payload.phone === null || typeof payload.phone === "string") &&
+    (payload.email === undefined || payload.email === null || typeof payload.email === "string")
+  );
+}
 
 export async function GET(req: NextRequest) {
   try {
@@ -22,7 +46,7 @@ export async function GET(req: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50');
     const offset = parseInt(searchParams.get('offset') || '0');
 
-    const where: any = {};
+    const where: Prisma.CrewWhereInput = {};
 
     // Filter by status if provided
     if (status && status !== 'all') {
@@ -96,14 +120,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Insufficient permissions to create crew records" }, { status: 403 });
     }
 
-    const data = await req.json();
+    const payload = (await req.json()) as unknown;
+
+    if (!isCreateCrewPayload(payload)) {
+      return NextResponse.json({ error: "Invalid crew payload" }, { status: 400 });
+    }
 
     const crew = await prisma.crew.create({
       data: {
-        fullName: data.fullName,
-        rank: data.rank,
-        phone: data.phone ?? null,
-        email: data.email ?? null,
+        fullName: payload.fullName,
+        rank: payload.rank,
+        phone: payload.phone ?? null,
+        email: payload.email ?? null,
       },
     });
 

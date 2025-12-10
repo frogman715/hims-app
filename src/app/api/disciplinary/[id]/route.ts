@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { checkPermission, disciplinaryGuard } from "@/lib/permission-middleware";
+import { disciplinaryGuard } from "@/lib/permission-middleware";
 
 interface RouteParams {
   params: Promise<{

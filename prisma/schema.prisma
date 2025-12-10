@@ -38,6 +38,11 @@ enum CrewStatus {
   BLOCKED
 }
 
+enum DocumentReceiptCrewStatus {
+  NEW
+  EX_CREW
+}
+
 enum ContractStatus {
   DRAFT
   ACTIVE
@@ -183,6 +188,7 @@ model User {
 
   // Audit relations
   documentReceivings DocumentReceiving[]
+  documentReceipts   DocumentReceipt[] @relation("documentReceiptsCreated")
   transportLogs      TransportLog[]
   activityLogs       ActivityLog[]
   officeExpenses     OfficeExpense[]
@@ -215,6 +221,14 @@ model Crew {
   address           String?
   emergencyContact  String?
   bloodType         String?
+  heightCm          Int?
+  weightKg          Int?
+  coverallSize      String?
+  shoeSize          String?
+  waistSize         String?
+  emergencyContactName      String?
+  emergencyContactRelation  String?
+  emergencyContactPhone     String?
   sensitivity       DataSensitivity @default(AMBER)
 
   // Relations
@@ -237,6 +251,7 @@ model Crew {
   contracts         EmploymentContract[]
   prepareJoinings   PrepareJoining[]
   exchangeExpenses  ExchangeExpense[]
+  documentReceipts   DocumentReceipt[]
   documentReceivings DocumentReceiving[]
   transportLogs     TransportLog[]
   externalCompliances ExternalCompliance[]
@@ -947,6 +962,48 @@ model NationalHoliday {
 // ==========================
 // AUDIT & LOGGING
 // ==========================
+
+model DocumentReceipt {
+  id               String                    @id @default(cuid())
+  crewId           String
+  crewName         String
+  crewRank         String?
+  phone            String?
+  email            String?
+  vesselName       String?
+  crewStatus       DocumentReceiptCrewStatus @default(NEW)
+  lastSignOffDate  DateTime?
+  lastSignOffPort  String?
+  wearpackSize     String?
+  shoeSize         String?
+  waistSize        String?
+  notes            String?
+  deliveryLocation String?
+  deliveryDate     DateTime?
+  handedOverByName String?
+  receivedByName   String?
+  createdById      String?
+
+  crew      Crew @relation(fields: [crewId], references: [id])
+  items     DocumentReceiptItem[]
+  createdBy User? @relation("documentReceiptsCreated", fields: [createdById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model DocumentReceiptItem {
+  id                String   @id @default(cuid())
+  receiptId         String
+  orderIndex        Int      @default(0)
+  certificateName   String
+  certificateNumber String?
+  issueDate         DateTime?
+  expiryDate        DateTime?
+  remarks           String?
+
+  receipt DocumentReceipt @relation(fields: [receiptId], references: [id], onDelete: Cascade)
+}
 
 model DocumentReceiving {
   id          String   @id @default(cuid())

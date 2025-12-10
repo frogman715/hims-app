@@ -3,6 +3,209 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import puppeteer from 'puppeteer';
 
+type BooleanFlagMap<Prefix extends string> = {
+  [Key in `${Prefix}_${number}`]?: boolean;
+};
+
+interface ShipExperienceData {
+  vesselName?: string;
+  rank?: string;
+  signOn?: string;
+  signOff?: string;
+  vesselType?: string;
+  grt?: string;
+  principal?: string;
+  reasonLeaving?: string;
+}
+
+interface QualityFormData extends BooleanFlagMap<"doc">, BooleanFlagMap<"checklist"> {
+  familyName?: string;
+  givenName?: string;
+  middleName?: string;
+  birthDate?: string;
+  position?: string;
+  pm?: string;
+  lastSchool?: string;
+  course?: string;
+  duration?: string;
+  heightWeight?: string;
+  telephone?: string;
+  civilStatus?: string;
+  jobThinking?: string;
+  adaptation?: string;
+  carrier?: string;
+  english?: string;
+  appearance?: string;
+  familyLife?: string;
+  socialLife?: string;
+  ambition?: string;
+  knowledge?: string;
+  sociality?: string;
+  lastCompany?: string;
+  lastRank?: string;
+  totalCarrier?: string;
+  lastCarrier?: string;
+  ownDisembark?: string;
+  rewardPunish?: string;
+  recommenderSection?: string;
+  recommenderRankName?: string;
+  educationDate?: string;
+  manualType?: string;
+  actualOnboardTime?: string;
+  onboardTimeInRank?: string;
+  onboardTimeCrude?: string;
+  onboardTimeAnyTankers?: string;
+  result13?: string;
+  finalResult?: string;
+  judgement?: string;
+  mainInterviewerName?: string;
+  mainInterviewerRank?: string;
+  subInterviewerName?: string;
+  subInterviewerRank?: string;
+  recommendedBy?: string;
+  suedInCourt?: string;
+  suedParticulars?: string;
+  confirmationDate?: string;
+  fullName?: string;
+  understandSMS?: boolean;
+  agreeToComply?: boolean;
+  lastVessel?: string;
+  rank?: string;
+  dateOfBirth?: string;
+  employeeName?: string;
+  relationship?: string;
+  contactNumber?: string;
+  address?: string;
+  nextOfKinName?: string;
+  startDate?: string;
+  contractDuration?: number;
+  salary?: number;
+  employeeSignature?: string;
+  contractDate?: string;
+  experience?: string;
+  expectedSalary?: number;
+  availableDate?: string;
+  crewName?: string;
+  vesselName?: string;
+  departureDate?: string;
+  finalComments?: string;
+  checkedBy?: string;
+  checkedByPosition?: string;
+  evaluationPeriod?: string;
+  technicalSkills?: string;
+  technicalSkillsComments?: string;
+  workAttitude?: string;
+  workAttitudeComments?: string;
+  safetyAwareness?: string;
+  safetyAwarenessComments?: string;
+  teamwork?: string;
+  teamworkComments?: string;
+  communication?: string;
+  communicationComments?: string;
+  leadership?: string;
+  leadershipComments?: string;
+  reliability?: string;
+  reliabilityComments?: string;
+  professionalism?: string;
+  professionalismComments?: string;
+  overallRating?: string;
+  strengths?: string;
+  improvements?: string;
+  recommendations?: string;
+  evaluatedBy?: string;
+  evaluatedByPosition?: string;
+  evaluationDate?: string;
+  employeePosition?: string;
+  employeeSalary?: number | string;
+  employeeContractDuration?: number;
+  workLocation?: string;
+  endDate?: string;
+  contractType?: string;
+  paymentPeriod?: string;
+  basicSalary?: number | string;
+  overtime?: number | string;
+  allowances?: number | string;
+  deductions?: number | string;
+  netSalary?: number | string;
+  paymentMethod?: string;
+  paymentDate?: string;
+  bankDetails?: string;
+  preparedBy?: string;
+  approvedBy?: string;
+  allotmentPeriod?: string;
+  allotmentAmount?: number | string;
+  allotmentPercentage?: number | string;
+  beneficiaryName?: string;
+  beneficiaryAddress?: string;
+  bankName?: string;
+  accountNumber?: string;
+  swiftCode?: string;
+  bankAddress?: string;
+  shipExperiences?: ShipExperienceData[];
+  [key: string]: string | number | boolean | ShipExperienceData[] | undefined;
+}
+
+type FormGeneratorInput = Partial<QualityFormData> | null | undefined;
+
+function normalizeFormData(input: FormGeneratorInput): QualityFormData {
+  const baseRecord = (input ?? {}) as Record<string, unknown>;
+  const normalized: QualityFormData = { ...(baseRecord as QualityFormData) };
+
+  const fullName = typeof baseRecord['fullName'] === 'string'
+    ? (baseRecord['fullName'] as string)
+    : typeof baseRecord['employeeName'] === 'string'
+      ? (baseRecord['employeeName'] as string)
+      : undefined;
+  if (fullName) {
+    normalized.fullName = normalized.fullName ?? fullName;
+    normalized.employeeName = normalized.employeeName ?? fullName;
+  }
+
+  const rank = typeof baseRecord['rank'] === 'string' ? (baseRecord['rank'] as string) : undefined;
+  const position = typeof baseRecord['position'] === 'string' ? (baseRecord['position'] as string) : undefined;
+  if (rank) {
+    normalized.rank = normalized.rank ?? rank;
+    normalized.position = normalized.position ?? rank;
+  }
+  if (position) {
+    normalized.position = normalized.position ?? position;
+  }
+
+  const nationality = typeof baseRecord['nationality'] === 'string' ? (baseRecord['nationality'] as string) : undefined;
+  if (nationality) {
+    normalized.nationality = normalized.nationality ?? nationality;
+  }
+
+  const contactNumber = typeof baseRecord['contactNumber'] === 'string' ? (baseRecord['contactNumber'] as string) : undefined;
+  if (contactNumber) {
+    normalized.contactNumber = normalized.contactNumber ?? contactNumber;
+  }
+
+  const email = typeof baseRecord['email'] === 'string' ? (baseRecord['email'] as string) : undefined;
+  if (email) {
+    normalized.email = normalized.email ?? email;
+  }
+
+  return normalized;
+}
+
+function formatUsd(value?: string | number): string {
+  if (value === undefined || value === null || value === '') {
+    return '';
+  }
+
+  if (typeof value === 'number') {
+    return `$${value.toFixed(2)}`;
+  }
+
+  const parsed = Number.parseFloat(String(value));
+  if (Number.isNaN(parsed)) {
+    return `$${value}`;
+  }
+
+  return `$${parsed.toFixed(2)}`;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -10,13 +213,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { formId, formName, crewId, formData } = await request.json();
+    const body = await request.json() as Partial<{
+      formId: string;
+      crewId: string;
+      formData: FormGeneratorInput;
+    }>;
+
+    const { formId, crewId, formData } = body;
+
+    if (!formId) {
+      return NextResponse.json({ error: "formId is required" }, { status: 400 });
+    }
 
     let htmlContent = '';
     let filename = '';
 
     // Get crew data if crewId is provided
-    let crewData = null;
+    let crewData: unknown = null;
     if (crewId) {
       const { prisma } = await import("@/lib/prisma");
       crewData = await prisma.crew.findUnique({
@@ -35,11 +248,13 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const generatorInput = (formData ?? crewData ?? null) as FormGeneratorInput;
+
     // Generate form based on formId
     switch (formId) {
       // AC FORMS - Accounting & Finance
       case 'ac-01':
-        const ac01 = await generateCrewWagePaymentRecord(formData || crewData);
+        const ac01 = await generateCrewWagePaymentRecord(generatorInput);
         htmlContent = ac01.html;
         filename = ac01.filename;
         break;
@@ -57,7 +272,7 @@ export async function POST(request: NextRequest) {
         break;
 
       case 'ac-04':
-        const ac04 = await generateAllotmentForm(formData || crewData);
+        const ac04 = await generateAllotmentForm(generatorInput);
         htmlContent = ac04.html;
         filename = ac04.filename;
         break;
@@ -125,25 +340,25 @@ export async function POST(request: NextRequest) {
 
       // CR FORMS - Crew Related
       case 'cr-02':
-        const cr02 = await generateApplicationForEmployment(formData || crewData);
+        const cr02 = await generateApplicationForEmployment(generatorInput);
         htmlContent = cr02.html;
         filename = cr02.filename;
         break;
 
       case 'cr-03':
-        const cr03 = await generateDepartingCrewChecklist(formData || crewData);
+        const cr03 = await generateDepartingCrewChecklist(generatorInput);
         htmlContent = cr03.html;
         filename = cr03.filename;
         break;
 
       case 'cr-08':
-        const cr08 = await generateCrewEvaluationReport(formData || crewData);
+        const cr08 = await generateCrewEvaluationReport(generatorInput);
         htmlContent = cr08.html;
         filename = cr08.filename;
         break;
 
       case 'cr-10':
-        const cr10 = await generateContractOfEmployment(formData || crewData);
+        const cr10 = await generateContractOfEmployment(generatorInput);
         htmlContent = cr10.html;
         filename = cr10.filename;
         break;
@@ -156,31 +371,31 @@ export async function POST(request: NextRequest) {
 
       // PRINCIPAL FORMS - Lundqvist Rederierna
       case 'lr-01':
-        const lr01 = await generateLundqvistApplication(formData || crewData);
+        const lr01 = await generateLundqvistApplication(generatorInput);
         htmlContent = lr01.html;
         filename = lr01.filename;
         break;
 
       case 'lr-02':
-        const lr02 = await generateOwnerSMSSConfirmation(formData || crewData);
+        const lr02 = await generateOwnerSMSSConfirmation(generatorInput);
         htmlContent = lr02.html;
         filename = lr02.filename;
         break;
 
       case 'lr-03':
-        const lr03 = await generateMedicalHistoryChecklist(formData || crewData);
+        const lr03 = await generateMedicalHistoryChecklist(generatorInput);
         htmlContent = lr03.html;
         filename = lr03.filename;
         break;
 
       case 'lr-04':
-        const lr04 = await generateNextOfKinDeclaration(formData || crewData);
+        const lr04 = await generateNextOfKinDeclaration(generatorInput);
         htmlContent = lr04.html;
         filename = lr04.filename;
         break;
 
       case 'lr-05':
-        const lr05 = await generateSeafarerEmploymentContract(formData || crewData);
+        const lr05 = await generateSeafarerEmploymentContract(generatorInput);
         htmlContent = lr05.html;
         filename = lr05.filename;
         break;
@@ -626,8 +841,11 @@ async function generateDisembarkationApplication() {
 }
 
 // PRINCIPAL FORMS - Lundqvist Rederierna Functions
-async function generateLundqvistApplication(data: any = null) {
-  const formData = data;
+async function generateLundqvistApplication(data?: QualityFormData | null) {
+  const formData = normalizeFormData(data);
+  const shipExperiences = Array.isArray(formData.shipExperiences)
+    ? (formData.shipExperiences as ShipExperienceData[])
+    : [];
   const html = `
     <!DOCTYPE html>
     <html>
@@ -725,7 +943,7 @@ async function generateLundqvistApplication(data: any = null) {
             <th style="width: 8%;">GRT</th>
             <th style="width: 13%;">Principal</th>
           </tr>
-          ${(formData?.shipExperiences || []).map((exp: any, index: number) => `
+          ${shipExperiences.map((exp: ShipExperienceData, index: number) => `
             <tr>
               <td>${index + 1}</td>
               <td>${exp.vesselName || ''}</td>
@@ -738,11 +956,11 @@ async function generateLundqvistApplication(data: any = null) {
             </tr>
           `).join('')}
         </table>
-        ${formData?.shipExperiences?.length > 0 ? `
+        ${shipExperiences.length > 0 ? `
         <div style="margin-top: 10px;">
           <strong>Reasons for Leaving:</strong>
           <ul style="margin: 5px 0; padding-left: 20px;">
-            ${(formData.shipExperiences || []).map((exp: any, index: number) => 
+            ${shipExperiences.map((exp: ShipExperienceData, index: number) => 
               exp.reasonLeaving ? `<li>Vessel ${index + 1}: ${exp.reasonLeaving}</li>` : ''
             ).filter((item: string) => item).join('')}
           </ul>
@@ -1031,8 +1249,8 @@ async function generateLundqvistApplication(data: any = null) {
   };
 }
 
-async function generateOwnerSMSSConfirmation(data: any = null) {
-  const formData = data;
+async function generateOwnerSMSSConfirmation(data?: QualityFormData | null) {
+  const formData = normalizeFormData(data);
   const html = `
     <!DOCTYPE html>
     <html>
@@ -1063,15 +1281,15 @@ async function generateOwnerSMSSConfirmation(data: any = null) {
       <div class="section">
         <div class="field">
           <span class="field-label">Crew Member Name:</span>
-          <span class="field-line">${formData?.fullName || data?.fullName || ''}</span>
+          <span class="field-line">${formData?.fullName || ''}</span>
         </div>
         <div class="field">
           <span class="field-label">Rank/Position:</span>
-          <span class="field-line">${formData?.position || data?.rank || ''}</span>
+          <span class="field-line">${formData?.position || formData?.rank || ''}</span>
         </div>
         <div class="field">
           <span class="field-label">Vessel:</span>
-          <span class="field-line">${data?.lastVessel || ''}</span>
+          <span class="field-line">${formData?.lastVessel || ''}</span>
         </div>
       </div>
 
@@ -1116,12 +1334,12 @@ async function generateOwnerSMSSConfirmation(data: any = null) {
 
   return {
     html,
-    filename: `Lundqvist_SMS_Confirmation_${formData?.fullName ? formData.fullName.replace(/\s+/g, '_') : data?.fullName ? data.fullName.replace(/\s+/g, '_') : 'Blank'}_${new Date().toISOString().split('T')[0]}.pdf`
+    filename: `Lundqvist_SMS_Confirmation_${formData?.fullName ? formData.fullName.replace(/\s+/g, '_') : 'Blank'}_${new Date().toISOString().split('T')[0]}.pdf`
   };
 }
 
-async function generateMedicalHistoryChecklist(data: any = null) {
-  const formData = data;
+async function generateMedicalHistoryChecklist(data?: QualityFormData | null) {
+  const formData = normalizeFormData(data);
   const html = `
     <!DOCTYPE html>
     <html>
@@ -1154,7 +1372,7 @@ async function generateMedicalHistoryChecklist(data: any = null) {
       <div class="section">
         <div class="field">
           <span class="field-label">Name:</span>
-          <span class="field-line">${formData?.fullName || data?.fullName || ''}</span>
+          <span class="field-line">${formData?.fullName || ''}</span>
         </div>
         <div class="field">
           <span class="field-label">Date of Birth:</span>
@@ -1164,7 +1382,7 @@ async function generateMedicalHistoryChecklist(data: any = null) {
         </div>
         <div class="field">
           <span class="field-label">Position Applied:</span>
-          <span class="field-line">${data?.rank || ''}</span>
+          <span class="field-line">${formData?.rank || formData?.position || ''}</span>
         </div>
       </div>
 
@@ -1240,12 +1458,12 @@ async function generateMedicalHistoryChecklist(data: any = null) {
 
   return {
     html,
-    filename: `Lundqvist_Medical_History_${formData?.fullName ? formData.fullName.replace(/\s+/g, '_') : data?.fullName ? data.fullName.replace(/\s+/g, '_') : 'Blank'}_${new Date().toISOString().split('T')[0]}.pdf`
+    filename: `Lundqvist_Medical_History_${formData?.fullName ? formData.fullName.replace(/\s+/g, '_') : 'Blank'}_${new Date().toISOString().split('T')[0]}.pdf`
   };
 }
 
-async function generateNextOfKinDeclaration(data: any = null) {
-  const formData = data;
+async function generateNextOfKinDeclaration(data?: FormGeneratorInput) {
+  const formData = normalizeFormData(data);
   const html = `
     <!DOCTYPE html>
     <html>
@@ -1275,11 +1493,11 @@ async function generateNextOfKinDeclaration(data: any = null) {
       <div class="section">
         <div class="field">
           <span class="field-label">Crew Member Name:</span>
-          <span class="field-line">${formData?.employeeName || data?.fullName || ''}</span>
+          <span class="field-line">${formData.employeeName || formData.fullName || ''}</span>
         </div>
         <div class="field">
           <span class="field-label">Rank/Position:</span>
-          <span class="field-line">${data?.rank || ''}</span>
+          <span class="field-line">${formData.rank || formData.position || ''}</span>
         </div>
         <div class="field">
           <span class="field-label">Next of Kin Name:</span>
@@ -1386,12 +1604,12 @@ async function generateNextOfKinDeclaration(data: any = null) {
 
   return {
     html,
-    filename: `Lundqvist_Next_of_Kin_${formData?.employeeName ? formData.employeeName.replace(/\s+/g, '_') : data?.fullName ? data.fullName.replace(/\s+/g, '_') : 'Blank'}_${new Date().toISOString().split('T')[0]}.pdf`
+    filename: `Lundqvist_Next_of_Kin_${(formData.employeeName || formData.fullName || 'Blank').replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`
   };
 }
 
-async function generateSeafarerEmploymentContract(data: any = null) {
-  const formData = data;
+async function generateSeafarerEmploymentContract(data?: FormGeneratorInput) {
+  const formData = normalizeFormData(data);
   const html = `
     <!DOCTYPE html>
     <html>
@@ -1423,22 +1641,22 @@ async function generateSeafarerEmploymentContract(data: any = null) {
       <div class="section">
         <strong>PARTIES TO THE CONTRACT:</strong><br><br>
         <strong>Employer:</strong> Lundqvist Rederierna AB, Finland<br>
-        <strong>Employee:</strong> ${formData?.employeeName || data?.fullName || '___________________________'}<br>
-        <strong>Position:</strong> ${formData?.position || data?.rank || '___________________________'}<br>
-        <strong>Nationality:</strong> ${data?.nationality || '___________________________'}
+        <strong>Employee:</strong> ${formData.employeeName || formData.fullName || '___________________________'}<br>
+        <strong>Position:</strong> ${formData.position || formData.rank || '___________________________'}<br>
+        <strong>Nationality:</strong> ${formData.nationality || '___________________________'}
       </div>
 
       <div class="section">
         <strong>EMPLOYMENT TERMS:</strong>
         <div class="field">
           <span class="field-label">Commencement Date:</span>
-          <span class="field-line">${formData?.startDate || ''}</span>
+          <span class="field-line">${formData.startDate || ''}</span>
           <span class="field-label" style="width: 120px; margin-left: 20px;">Contract Duration:</span>
-          <span class="field-line">${formData?.contractDuration ? formData.contractDuration + ' months' : ''}</span>
+          <span class="field-line">${typeof formData.contractDuration === 'number' ? `${formData.contractDuration} months` : ''}</span>
         </div>
         <div class="field">
           <span class="field-label">Basic Salary:</span>
-          <span class="field-line">${formData?.salary ? 'USD ' + formData.salary.toLocaleString() : ''}</span>
+          <span class="field-line">${typeof formData.salary === 'number' ? `USD ${formData.salary.toLocaleString()}` : formData.salary ? `USD ${formData.salary}` : ''}</span>
           <span class="field-label" style="width: 120px; margin-left: 20px;">Currency:</span>
           <span class="field-line">EUR</span>
         </div>
@@ -1486,7 +1704,7 @@ async function generateSeafarerEmploymentContract(data: any = null) {
         <div class="signature-box">
           <div>Employee Signature</div>
           <div style="margin-top: 40px;">___________________________</div>
-          <div style="margin-top: 5px;">${formData?.employeeName || data?.fullName || 'Name'}</div>
+          <div style="margin-top: 5px;">${formData.employeeName || formData.fullName || 'Name'}</div>
           <div style="margin-top: 5px;">Date: _______________</div>
         </div>
 
@@ -1506,13 +1724,13 @@ async function generateSeafarerEmploymentContract(data: any = null) {
 
   return {
     html,
-    filename: `Lundqvist_Employment_Contract_${formData?.employeeName ? formData.employeeName.replace(/\s+/g, '_') : data?.fullName ? data.fullName.replace(/\s+/g, '_') : 'Blank'}_${new Date().toISOString().split('T')[0]}.pdf`
+    filename: `Lundqvist_Employment_Contract_${(formData.employeeName || formData.fullName || 'Blank').replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`
   };
 }
 
 // CR-02: Application for Employment
-async function generateApplicationForEmployment(data: any = null) {
-  const formData = data;
+async function generateApplicationForEmployment(data?: FormGeneratorInput) {
+  const formData = normalizeFormData(data);
   const html = `
     <!DOCTYPE html>
     <html>
@@ -1545,33 +1763,33 @@ async function generateApplicationForEmployment(data: any = null) {
         <div class="section-title">PERSONAL INFORMATION</div>
         <div class="field">
           <span class="field-label">Full Name:</span>
-          <span class="field-line">${formData?.fullName || ''}</span>
+          <span class="field-line">${formData.fullName || ''}</span>
         </div>
         <div class="field">
           <span class="field-label">Date of Birth:</span>
-          <span class="field-line">${formData?.dateOfBirth ? new Date(formData.dateOfBirth).toLocaleDateString() : ''}</span>
+          <span class="field-line">${formData.dateOfBirth ? new Date(formData.dateOfBirth).toLocaleDateString() : ''}</span>
         </div>
         <div class="field">
           <span class="field-label">Position Applied For:</span>
-          <span class="field-line">${formData?.position || ''}</span>
+          <span class="field-line">${formData.position || ''}</span>
         </div>
         <div class="field">
           <span class="field-label">Contact Number:</span>
-          <span class="field-line">${formData?.contactNumber || ''}</span>
+          <span class="field-line">${formData.contactNumber || ''}</span>
         </div>
         <div class="field">
           <span class="field-label">Email Address:</span>
-          <span class="field-line">${formData?.email || ''}</span>
+          <span class="field-line">${formData.email || ''}</span>
         </div>
         <div class="field">
           <span class="field-label">Address:</span>
-          <span class="field-line" style="width: 400px;">${formData?.address || ''}</span>
+          <span class="field-line" style="width: 400px;">${formData.address || ''}</span>
         </div>
         <div class="field">
           <span class="field-label">Nationality:</span>
-          <span class="field-line">${formData?.nationality || ''}</span>
+          <span class="field-line">${formData.nationality || ''}</span>
           <span class="field-label" style="width: 80px; margin-left: 20px;">Marital Status:</span>
-          <span class="field-line">${formData?.maritalStatus || ''}</span>
+          <span class="field-line">${formData.maritalStatus || ''}</span>
         </div>
       </div>
 
@@ -1580,15 +1798,15 @@ async function generateApplicationForEmployment(data: any = null) {
         <div class="section-title">EMPLOYMENT DETAILS</div>
         <div class="field">
           <span class="field-label">Previous Experience:</span>
-          <span class="field-line" style="width: 400px;">${formData?.experience || ''}</span>
+          <span class="field-line" style="width: 400px;">${formData.experience || ''}</span>
         </div>
         <div class="field">
           <span class="field-label">Expected Salary (USD):</span>
-          <span class="field-line">${formData?.expectedSalary ? '$' + formData.expectedSalary : ''}</span>
+          <span class="field-line">${typeof formData.expectedSalary === 'number' ? `$${formData.expectedSalary}` : formData.expectedSalary ? `$${formData.expectedSalary}` : ''}</span>
         </div>
         <div class="field">
           <span class="field-label">Available Start Date:</span>
-          <span class="field-line">${formData?.availableDate ? new Date(formData.availableDate).toLocaleDateString() : ''}</span>
+          <span class="field-line">${formData.availableDate ? new Date(formData.availableDate).toLocaleDateString() : ''}</span>
         </div>
       </div>
 
@@ -1609,13 +1827,13 @@ async function generateApplicationForEmployment(data: any = null) {
 
   return {
     html,
-    filename: `Application_for_Employment_${formData?.fullName ? formData.fullName.replace(/\s+/g, '_') : data?.fullName ? data.fullName.replace(/\s+/g, '_') : 'Blank'}_${new Date().toISOString().split('T')[0]}.pdf`
+    filename: `Application_for_Employment_${(formData.fullName || 'Blank').replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`
   };
 }
 
 // CR-03: Checklist for Departing Crew
-async function generateDepartingCrewChecklist(data: any = null) {
-  const formData = data;
+async function generateDepartingCrewChecklist(data?: FormGeneratorInput) {
+  const formData = normalizeFormData(data);
   const html = `
     <!DOCTYPE html>
     <html>
@@ -1650,19 +1868,19 @@ async function generateDepartingCrewChecklist(data: any = null) {
         <div class="section-title">CREW INFORMATION</div>
         <div class="field">
           <span class="field-label">Crew Name:</span>
-          <span class="field-line">${formData?.crewName || ''}</span>
+          <span class="field-line">${formData.crewName || formData.fullName || ''}</span>
         </div>
         <div class="field">
           <span class="field-label">Position/Rank:</span>
-          <span class="field-line">${formData?.position || ''}</span>
+          <span class="field-line">${formData.position || formData.rank || ''}</span>
         </div>
         <div class="field">
           <span class="field-label">Vessel Name:</span>
-          <span class="field-line">${formData?.vesselName || ''}</span>
+          <span class="field-line">${formData.vesselName || ''}</span>
         </div>
         <div class="field">
           <span class="field-label">Departure Date:</span>
-          <span class="field-line">${formData?.departureDate ? new Date(formData.departureDate).toLocaleDateString() : ''}</span>
+          <span class="field-line">${formData.departureDate ? new Date(formData.departureDate).toLocaleDateString() : ''}</span>
         </div>
       </div>
 
@@ -1725,7 +1943,7 @@ async function generateDepartingCrewChecklist(data: any = null) {
       <div class="section">
         <div class="section-title">FINAL COMMENTS</div>
         <div style="border: 1px solid #000; padding: 10px; min-height: 60px;">
-          ${formData?.finalComments || ''}
+          ${formData.finalComments || ''}
         </div>
       </div>
 
@@ -1734,11 +1952,11 @@ async function generateDepartingCrewChecklist(data: any = null) {
         <div class="section-title">VERIFICATION</div>
         <div class="field">
           <span class="field-label">Checked By (Name):</span>
-          <span class="field-line">${formData?.checkedBy || ''}</span>
+          <span class="field-line">${formData.checkedBy || ''}</span>
         </div>
         <div class="field">
           <span class="field-label">Checked By (Position):</span>
-          <span class="field-line">${formData?.checkedByPosition || ''}</span>
+          <span class="field-line">${formData.checkedByPosition || ''}</span>
         </div>
         <div style="margin-top: 30px;">
           <div style="display: inline-block; margin-right: 100px;">
@@ -1752,13 +1970,13 @@ async function generateDepartingCrewChecklist(data: any = null) {
 
   return {
     html,
-    filename: `Departing_Crew_Checklist_${formData?.crewName ? formData.crewName.replace(/\s+/g, '_') : data?.fullName ? data.fullName.replace(/\s+/g, '_') : 'Blank'}_${new Date().toISOString().split('T')[0]}.pdf`
+    filename: `Departing_Crew_Checklist_${(formData.crewName || formData.fullName || 'Blank').replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`
   };
 }
 
 // CR-08: Crew Evaluation Report
-async function generateCrewEvaluationReport(data: any = null) {
-  const formData = data;
+async function generateCrewEvaluationReport(data?: FormGeneratorInput) {
+  const formData = normalizeFormData(data);
   const html = `
     <!DOCTYPE html>
     <html>
@@ -1794,19 +2012,19 @@ async function generateCrewEvaluationReport(data: any = null) {
         <div class="section-title">CREW INFORMATION</div>
         <div class="field">
           <span class="field-label">Crew Name:</span>
-          <span class="field-line">${formData?.crewName || ''}</span>
+          <span class="field-line">${formData.crewName || formData.fullName || ''}</span>
         </div>
         <div class="field">
           <span class="field-label">Position/Rank:</span>
-          <span class="field-line">${formData?.position || ''}</span>
+          <span class="field-line">${formData.position || formData.rank || ''}</span>
         </div>
         <div class="field">
           <span class="field-label">Vessel Name:</span>
-          <span class="field-line">${formData?.vesselName || ''}</span>
+          <span class="field-line">${formData.vesselName || ''}</span>
         </div>
         <div class="field">
           <span class="field-label">Evaluation Period:</span>
-          <span class="field-line">${formData?.evaluationPeriod || ''}</span>
+          <span class="field-line">${formData.evaluationPeriod || ''}</span>
         </div>
       </div>
 
@@ -1821,43 +2039,43 @@ async function generateCrewEvaluationReport(data: any = null) {
           </tr>
           <tr>
             <td>Technical Skills</td>
-            <td class="rating">${formData?.technicalSkills || ''}</td>
-            <td>${formData?.technicalSkillsComments || ''}</td>
+            <td class="rating">${formData.technicalSkills || ''}</td>
+            <td>${formData.technicalSkillsComments || ''}</td>
           </tr>
           <tr>
             <td>Work Attitude</td>
-            <td class="rating">${formData?.workAttitude || ''}</td>
-            <td>${formData?.workAttitudeComments || ''}</td>
+            <td class="rating">${formData.workAttitude || ''}</td>
+            <td>${formData.workAttitudeComments || ''}</td>
           </tr>
           <tr>
             <td>Safety Awareness</td>
-            <td class="rating">${formData?.safetyAwareness || ''}</td>
-            <td>${formData?.safetyAwarenessComments || ''}</td>
+            <td class="rating">${formData.safetyAwareness || ''}</td>
+            <td>${formData.safetyAwarenessComments || ''}</td>
           </tr>
           <tr>
             <td>Teamwork</td>
-            <td class="rating">${formData?.teamwork || ''}</td>
-            <td>${formData?.teamworkComments || ''}</td>
+            <td class="rating">${formData.teamwork || ''}</td>
+            <td>${formData.teamworkComments || ''}</td>
           </tr>
           <tr>
             <td>Communication</td>
-            <td class="rating">${formData?.communication || ''}</td>
-            <td>${formData?.communicationComments || ''}</td>
+            <td class="rating">${formData.communication || ''}</td>
+            <td>${formData.communicationComments || ''}</td>
           </tr>
           <tr>
             <td>Leadership (if applicable)</td>
-            <td class="rating">${formData?.leadership || ''}</td>
-            <td>${formData?.leadershipComments || ''}</td>
+            <td class="rating">${formData.leadership || ''}</td>
+            <td>${formData.leadershipComments || ''}</td>
           </tr>
           <tr>
             <td>Reliability</td>
-            <td class="rating">${formData?.reliability || ''}</td>
-            <td>${formData?.reliabilityComments || ''}</td>
+            <td class="rating">${formData.reliability || ''}</td>
+            <td>${formData.reliabilityComments || ''}</td>
           </tr>
           <tr>
             <td>Professionalism</td>
-            <td class="rating">${formData?.professionalism || ''}</td>
-            <td>${formData?.professionalismComments || ''}</td>
+            <td class="rating">${formData.professionalism || ''}</td>
+            <td>${formData.professionalismComments || ''}</td>
           </tr>
         </table>
       </div>
@@ -1867,19 +2085,19 @@ async function generateCrewEvaluationReport(data: any = null) {
         <div class="section-title">OVERALL ASSESSMENT</div>
         <div class="field">
           <span class="field-label">Overall Rating:</span>
-          <span class="field-line">${formData?.overallRating || ''}</span>
+          <span class="field-line">${formData.overallRating || ''}</span>
         </div>
         <div class="field">
           <span class="field-label">Strengths:</span>
-          <span class="field-line" style="width: 400px;">${formData?.strengths || ''}</span>
+          <span class="field-line" style="width: 400px;">${formData.strengths || ''}</span>
         </div>
         <div class="field">
           <span class="field-label">Areas for Improvement:</span>
-          <span class="field-line" style="width: 400px;">${formData?.improvements || ''}</span>
+          <span class="field-line" style="width: 400px;">${formData.improvements || ''}</span>
         </div>
         <div class="field">
           <span class="field-label">Recommendations:</span>
-          <span class="field-line" style="width: 400px;">${formData?.recommendations || ''}</span>
+          <span class="field-line" style="width: 400px;">${formData.recommendations || ''}</span>
         </div>
       </div>
 
@@ -1888,15 +2106,15 @@ async function generateCrewEvaluationReport(data: any = null) {
         <div class="section-title">EVALUATION DETAILS</div>
         <div class="field">
           <span class="field-label">Evaluated By (Name):</span>
-          <span class="field-line">${formData?.evaluatedBy || ''}</span>
+          <span class="field-line">${formData.evaluatedBy || ''}</span>
         </div>
         <div class="field">
           <span class="field-label">Evaluated By (Position):</span>
-          <span class="field-line">${formData?.evaluatedByPosition || ''}</span>
+          <span class="field-line">${formData.evaluatedByPosition || ''}</span>
         </div>
         <div class="field">
           <span class="field-label">Evaluation Date:</span>
-          <span class="field-line">${formData?.evaluationDate ? new Date(formData.evaluationDate).toLocaleDateString() : ''}</span>
+          <span class="field-line">${formData.evaluationDate ? new Date(formData.evaluationDate).toLocaleDateString() : ''}</span>
         </div>
       </div>
     </body>
@@ -1904,13 +2122,13 @@ async function generateCrewEvaluationReport(data: any = null) {
 
   return {
     html,
-    filename: `Crew_Evaluation_Report_${formData?.crewName ? formData.crewName.replace(/\s+/g, '_') : data?.fullName ? data.fullName.replace(/\s+/g, '_') : 'Blank'}_${new Date().toISOString().split('T')[0]}.pdf`
+    filename: `Crew_Evaluation_Report_${(formData.crewName || formData.fullName || 'Blank').replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`
   };
 }
 
 // CR-10: Contract of Employment
-async function generateContractOfEmployment(data: any = null) {
-  const formData = data;
+async function generateContractOfEmployment(data?: FormGeneratorInput) {
+  const formData = normalizeFormData(data);
   const html = `
     <!DOCTYPE html>
     <html>
@@ -1944,31 +2162,31 @@ async function generateContractOfEmployment(data: any = null) {
         <div class="section-title">EMPLOYMENT DETAILS</div>
         <div class="field">
           <span class="field-label">Employee Name:</span>
-          <span class="field-line">${formData?.employeeName || ''}</span>
+          <span class="field-line">${formData.employeeName || formData.fullName || ''}</span>
         </div>
         <div class="field">
           <span class="field-label">Position:</span>
-          <span class="field-line">${formData?.position || ''}</span>
+          <span class="field-line">${formData.position || formData.rank || ''}</span>
         </div>
         <div class="field">
           <span class="field-label">Monthly Salary (USD):</span>
-          <span class="field-line">${formData?.salary ? '$' + formData.salary : ''}</span>
+          <span class="field-line">${typeof formData.salary === 'number' ? `$${formData.salary}` : formData.salary ? `$${formData.salary}` : ''}</span>
         </div>
         <div class="field">
           <span class="field-label">Contract Duration:</span>
-          <span class="field-line">${formData?.contractDuration ? formData.contractDuration + ' months' : ''}</span>
+          <span class="field-line">${typeof formData.contractDuration === 'number' ? `${formData.contractDuration} months` : ''}</span>
         </div>
         <div class="field">
           <span class="field-label">Start Date:</span>
-          <span class="field-line">${formData?.startDate ? new Date(formData.startDate).toLocaleDateString() : ''}</span>
+          <span class="field-line">${formData.startDate ? new Date(formData.startDate).toLocaleDateString() : ''}</span>
         </div>
         <div class="field">
           <span class="field-label">End Date:</span>
-          <span class="field-line">${formData?.endDate ? new Date(formData.endDate).toLocaleDateString() : ''}</span>
+          <span class="field-line">${formData.endDate ? new Date(formData.endDate).toLocaleDateString() : ''}</span>
         </div>
         <div class="field">
           <span class="field-label">Work Location:</span>
-          <span class="field-line">${formData?.workLocation || ''}</span>
+          <span class="field-line">${formData.workLocation || ''}</span>
         </div>
       </div>
 
@@ -2010,11 +2228,11 @@ async function generateContractOfEmployment(data: any = null) {
         <div class="section-title">AGREEMENT</div>
         <div class="field">
           <span class="field-label">Employee Signature:</span>
-          <span class="field-line">${formData?.employeeSignature || ''}</span>
+          <span class="field-line">${formData.employeeSignature || ''}</span>
         </div>
         <div class="field">
           <span class="field-label">Date:</span>
-          <span class="field-line">${formData?.contractDate ? new Date(formData.contractDate).toLocaleDateString() : ''}</span>
+          <span class="field-line">${formData.contractDate ? new Date(formData.contractDate).toLocaleDateString() : ''}</span>
         </div>
       </div>
     </body>
@@ -2022,13 +2240,13 @@ async function generateContractOfEmployment(data: any = null) {
 
   return {
     html,
-    filename: `Contract_of_Employment_${formData?.employeeName ? formData.employeeName.replace(/\s+/g, '_') : data?.fullName ? data.fullName.replace(/\s+/g, '_') : 'Blank'}_${new Date().toISOString().split('T')[0]}.pdf`
+    filename: `Contract_of_Employment_${(formData.employeeName || formData.fullName || 'Blank').replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`
   };
 }
 
 // AC-01: Crew Wage Payment Record
-async function generateCrewWagePaymentRecord(data: any = null) {
-  const formData = data;
+async function generateCrewWagePaymentRecord(data?: FormGeneratorInput) {
+  const formData = normalizeFormData(data);
   const html = `
     <!DOCTYPE html>
     <html>
@@ -2064,19 +2282,19 @@ async function generateCrewWagePaymentRecord(data: any = null) {
         <div class="section-title">CREW INFORMATION</div>
         <div class="field">
           <span class="field-label">Crew Name:</span>
-          <span class="field-line">${formData?.crewName || ''}</span>
+          <span class="field-line">${formData.crewName || formData.fullName || ''}</span>
         </div>
         <div class="field">
           <span class="field-label">Position/Rank:</span>
-          <span class="field-line">${formData?.position || ''}</span>
+          <span class="field-line">${formData.position || formData.rank || ''}</span>
         </div>
         <div class="field">
           <span class="field-label">Vessel Name:</span>
-          <span class="field-line">${formData?.vesselName || ''}</span>
+          <span class="field-line">${formData.vesselName || ''}</span>
         </div>
         <div class="field">
           <span class="field-label">Payment Period:</span>
-          <span class="field-line">${formData?.paymentPeriod || ''}</span>
+          <span class="field-line">${formData.paymentPeriod || ''}</span>
         </div>
       </div>
 
@@ -2091,27 +2309,27 @@ async function generateCrewWagePaymentRecord(data: any = null) {
           </tr>
           <tr>
             <td>Basic Salary</td>
-            <td class="amount">${formData?.basicSalary ? '$' + parseFloat(formData.basicSalary).toFixed(2) : ''}</td>
+            <td class="amount">${formatUsd(formData.basicSalary)}</td>
             <td>Earning</td>
           </tr>
           <tr>
             <td>Overtime</td>
-            <td class="amount">${formData?.overtime ? '$' + parseFloat(formData.overtime).toFixed(2) : ''}</td>
+            <td class="amount">${formatUsd(formData.overtime)}</td>
             <td>Earning</td>
           </tr>
           <tr>
             <td>Allowances</td>
-            <td class="amount">${formData?.allowances ? '$' + parseFloat(formData.allowances).toFixed(2) : ''}</td>
+            <td class="amount">${formatUsd(formData.allowances)}</td>
             <td>Earning</td>
           </tr>
           <tr>
             <td>Deductions</td>
-            <td class="amount">${formData?.deductions ? '$' + parseFloat(formData.deductions).toFixed(2) : ''}</td>
+            <td class="amount">${formatUsd(formData.deductions)}</td>
             <td>Deduction</td>
           </tr>
           <tr style="font-weight: bold; background: #f0f0f0;">
             <td>Net Salary</td>
-            <td class="amount">${formData?.netSalary ? '$' + parseFloat(formData.netSalary).toFixed(2) : ''}</td>
+            <td class="amount">${formatUsd(formData.netSalary)}</td>
             <td>Total</td>
           </tr>
         </table>
@@ -2122,15 +2340,15 @@ async function generateCrewWagePaymentRecord(data: any = null) {
         <div class="section-title">PAYMENT DETAILS</div>
         <div class="field">
           <span class="field-label">Payment Method:</span>
-          <span class="field-line">${formData?.paymentMethod || ''}</span>
+          <span class="field-line">${formData.paymentMethod || ''}</span>
         </div>
         <div class="field">
           <span class="field-label">Payment Date:</span>
-          <span class="field-line">${formData?.paymentDate ? new Date(formData.paymentDate).toLocaleDateString() : ''}</span>
+          <span class="field-line">${formData.paymentDate ? new Date(formData.paymentDate).toLocaleDateString() : ''}</span>
         </div>
         <div class="field">
           <span class="field-label">Bank Details:</span>
-          <span class="field-line" style="width: 400px;">${formData?.bankDetails || ''}</span>
+          <span class="field-line" style="width: 400px;">${formData.bankDetails || ''}</span>
         </div>
       </div>
 
@@ -2139,11 +2357,11 @@ async function generateCrewWagePaymentRecord(data: any = null) {
         <div class="section-title">AUTHORIZATION</div>
         <div class="field">
           <span class="field-label">Prepared By:</span>
-          <span class="field-line">${formData?.preparedBy || ''}</span>
+          <span class="field-line">${formData.preparedBy || ''}</span>
         </div>
         <div class="field">
           <span class="field-label">Approved By:</span>
-          <span class="field-line">${formData?.approvedBy || ''}</span>
+          <span class="field-line">${formData.approvedBy || ''}</span>
         </div>
       </div>
     </body>
@@ -2151,13 +2369,13 @@ async function generateCrewWagePaymentRecord(data: any = null) {
 
   return {
     html,
-    filename: `Crew_Wage_Payment_Record_${formData?.crewName ? formData.crewName.replace(/\s+/g, '_') : data?.fullName ? data.fullName.replace(/\s+/g, '_') : 'Blank'}_${new Date().toISOString().split('T')[0]}.pdf`
+    filename: `Crew_Wage_Payment_Record_${(formData.crewName || formData.fullName || 'Blank').replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`
   };
 }
 
 // AC-04: Allotment Form
-async function generateAllotmentForm(data: any = null) {
-  const formData = data;
+async function generateAllotmentForm(data?: FormGeneratorInput) {
+  const formData = normalizeFormData(data);
   const html = `
     <!DOCTYPE html>
     <html>
@@ -2189,19 +2407,19 @@ async function generateAllotmentForm(data: any = null) {
         <div class="section-title">CREW INFORMATION</div>
         <div class="field">
           <span class="field-label">Crew Name:</span>
-          <span class="field-line">${formData?.crewName || ''}</span>
+          <span class="field-line">${formData.crewName || formData.fullName || ''}</span>
         </div>
         <div class="field">
           <span class="field-label">Position/Rank:</span>
-          <span class="field-line">${formData?.position || ''}</span>
+          <span class="field-line">${formData.position || formData.rank || ''}</span>
         </div>
         <div class="field">
           <span class="field-label">Vessel Name:</span>
-          <span class="field-line">${formData?.vesselName || ''}</span>
+          <span class="field-line">${formData.vesselName || ''}</span>
         </div>
         <div class="field">
           <span class="field-label">Allotment Period:</span>
-          <span class="field-line">${formData?.allotmentPeriod || ''}</span>
+          <span class="field-line">${formData.allotmentPeriod || ''}</span>
         </div>
       </div>
 
@@ -2210,11 +2428,11 @@ async function generateAllotmentForm(data: any = null) {
         <div class="section-title">ALLOTMENT DETAILS</div>
         <div class="field">
           <span class="field-label">Allotment Amount (USD):</span>
-          <span class="field-line">${formData?.allotmentAmount ? '$' + parseFloat(formData.allotmentAmount).toFixed(2) : ''}</span>
+          <span class="field-line">${formatUsd(formData.allotmentAmount)}</span>
         </div>
         <div class="field">
           <span class="field-label">Allotment Percentage:</span>
-          <span class="field-line">${formData?.allotmentPercentage ? formData.allotmentPercentage + '%' : ''}</span>
+          <span class="field-line">${typeof formData.allotmentPercentage === 'number' ? `${formData.allotmentPercentage}%` : formData.allotmentPercentage ? `${formData.allotmentPercentage}` : ''}</span>
         </div>
       </div>
 
@@ -2223,15 +2441,15 @@ async function generateAllotmentForm(data: any = null) {
         <div class="section-title">BENEFICIARY INFORMATION</div>
         <div class="field">
           <span class="field-label">Beneficiary Name:</span>
-          <span class="field-line">${formData?.beneficiaryName || ''}</span>
+          <span class="field-line">${formData.beneficiaryName || ''}</span>
         </div>
         <div class="field">
           <span class="field-label">Relationship:</span>
-          <span class="field-line">${formData?.relationship || ''}</span>
+          <span class="field-line">${formData.relationship || ''}</span>
         </div>
         <div class="field">
           <span class="field-label">Beneficiary Address:</span>
-          <span class="field-line" style="width: 400px;">${formData?.beneficiaryAddress || ''}</span>
+          <span class="field-line" style="width: 400px;">${formData.beneficiaryAddress || ''}</span>
         </div>
       </div>
 
@@ -2240,19 +2458,19 @@ async function generateAllotmentForm(data: any = null) {
         <div class="section-title">BANK TRANSFER DETAILS</div>
         <div class="field">
           <span class="field-label">Bank Name:</span>
-          <span class="field-line">${formData?.bankName || ''}</span>
+          <span class="field-line">${formData.bankName || ''}</span>
         </div>
         <div class="field">
           <span class="field-label">Account Number:</span>
-          <span class="field-line">${formData?.accountNumber || ''}</span>
+          <span class="field-line">${formData.accountNumber || ''}</span>
         </div>
         <div class="field">
           <span class="field-label">SWIFT/BIC Code:</span>
-          <span class="field-line">${formData?.swiftCode || ''}</span>
+          <span class="field-line">${formData.swiftCode || ''}</span>
         </div>
         <div class="field">
           <span class="field-label">Bank Address:</span>
-          <span class="field-line" style="width: 400px;">${formData?.bankAddress || ''}</span>
+          <span class="field-line" style="width: 400px;">${formData.bankAddress || ''}</span>
         </div>
       </div>
 
@@ -2261,11 +2479,11 @@ async function generateAllotmentForm(data: any = null) {
         <div class="section-title">AUTHORIZATION</div>
         <div class="field">
           <span class="field-label">Crew Signature:</span>
-          <span class="field-line">${formData?.crewSignature || ''}</span>
+          <span class="field-line">${formData.crewSignature || ''}</span>
         </div>
         <div class="field">
           <span class="field-label">Date:</span>
-          <span class="field-line">${formData?.allotmentDate ? new Date(formData.allotmentDate).toLocaleDateString() : ''}</span>
+          <span class="field-line">${formData.allotmentDate ? new Date(formData.allotmentDate).toLocaleDateString() : ''}</span>
         </div>
       </div>
     </body>
@@ -2273,6 +2491,6 @@ async function generateAllotmentForm(data: any = null) {
 
   return {
     html,
-    filename: `Allotment_Form_${formData?.crewName ? formData.crewName.replace(/\s+/g, '_') : data?.fullName ? data.fullName.replace(/\s+/g, '_') : 'Blank'}_${new Date().toISOString().split('T')[0]}.pdf`
+    filename: `Allotment_Form_${(formData.crewName || formData.fullName || 'Blank').replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`
   };
 }

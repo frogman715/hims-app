@@ -1,7 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useSession } from 'next-auth/react';
+import { useEffect, useState, useCallback } from 'react';
 import ExternalComplianceWidget from '@/components/compliance/ExternalComplianceWidget';
 
 interface ComplianceRecord {
@@ -21,16 +20,12 @@ interface ComplianceRecord {
 }
 
 export default function ExternalCompliancePage() {
-  const { data: session } = useSession();
   const [compliances, setCompliances] = useState<ComplianceRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'ALL' | 'KOSMA' | 'DEPHUB' | 'SCHENGEN'>('ALL');
 
-  useEffect(() => {
-    fetchCompliances();
-  }, [filter]);
-
-  const fetchCompliances = async () => {
+  const fetchCompliances = useCallback(async () => {
+    setLoading(true);
     try {
       let url = '/api/external-compliance';
       if (filter !== 'ALL') {
@@ -52,7 +47,11 @@ export default function ExternalCompliancePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filter]);
+
+  useEffect(() => {
+    fetchCompliances();
+  }, [fetchCompliances]);
 
   const getSystemTypeLabel = (type: string) => {
     switch (type) {

@@ -147,7 +147,7 @@ npm install                          # Install dependencies
 docker-compose up -d                 # Start PostgreSQL
 npx prisma migrate dev              # Run migrations
 npx prisma generate                 # Generate Prisma client
-npm run seed                        # Seed initial data (admin@hims.com / admin123)
+npm run seed                        # Seed initial data (admin@hanmarine.com / admin123)
 npm run dev                         # Start dev server on :3000
 ```
 
@@ -159,7 +159,7 @@ npm run dev                         # Start dev server on :3000
 
 ### Testing Access
 Default users from seed script:
-- Admin: `admin@hims.com` / `admin123` (DIRECTOR role)
+- Admin: `admin@hanmarine.com` / `admin123` (DIRECTOR role)
 - Test login at `http://localhost:3000/auth/signin`
 
 ## Common Gotchas

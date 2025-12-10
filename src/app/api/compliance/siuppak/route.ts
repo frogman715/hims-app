@@ -124,9 +124,6 @@ export const GET = withPermission("compliance", PermissionLevel.VIEW_ACCESS, asy
   }
 
   // Headers (Row 3-4)
-  const headerRow3 = sheet1.getRow(3);
-  const headerRow4 = sheet1.getRow(4);
-
   const headers = [
     { col: 1, text: 'NO', span: 1 },
     { col: 2, text: 'TANGGAL', span: 1 },

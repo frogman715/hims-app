@@ -21,4 +21,4 @@ DELETE FROM "FormTemplate";
 DELETE FROM "MonthlyChecklist";
 
 -- Keep only admin user
-DELETE FROM "User" WHERE email != 'admin@hims.com';
+DELETE FROM "User" WHERE email != 'admin@hanmarine.com';

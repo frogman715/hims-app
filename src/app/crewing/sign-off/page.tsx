@@ -1,18 +1,35 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 
+interface CrewSignOffSummary {
+  id: string;
+  status: string;
+  signOffDate: string;
+  arrivalDate?: string | null;
+  passportReceived?: boolean;
+  seamanBookReceived?: boolean;
+  debriefingCompleted?: boolean;
+  finalWageAmount?: number | null;
+  crew?: {
+    fullName?: string;
+    rank?: string;
+    phone?: string | null;
+  } | null;
+  assignment?: {
+    vessel?: {
+      name?: string | null;
+    } | null;
+  } | null;
+}
+
 export default function CrewSignOffPage() {
-  const [signOffs, setSignOffs] = useState<any[]>([]);
+  const [signOffs, setSignOffs] = useState<CrewSignOffSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("ALL");
 
-  useEffect(() => {
-    fetchSignOffs();
-  }, [filter]);
-
-  const fetchSignOffs = async () => {
+  const fetchSignOffs = useCallback(async () => {
     try {
       const url = filter === "ALL" 
         ? "/api/crewing/sign-off"
@@ -20,17 +37,24 @@ export default function CrewSignOffPage() {
       const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
-        setSignOffs(data.signOffs || []);
+        const signOffData = Array.isArray(data.signOffs)
+          ? (data.signOffs as CrewSignOffSummary[])
+          : [];
+        setSignOffs(signOffData);
       }
     } catch (error) {
       console.error("Failed to fetch sign-offs:", error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [filter]);
+
+  useEffect(() => {
+    fetchSignOffs();
+  }, [fetchSignOffs]);
 
   const getStatusColor = (status: string) => {
-    const colors: any = {
+    const colors: Record<string, string> = {
       PENDING: "bg-yellow-100 text-yellow-800",
       DOCUMENTS_RECEIVED: "bg-blue-100 text-blue-800",
       DEBRIEFING_DONE: "bg-purple-100 text-purple-800",

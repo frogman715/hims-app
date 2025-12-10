@@ -2,29 +2,82 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { Prisma } from "@prisma/client";
 
-export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+type CrewReplacementStatus = "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
+
+interface UpdateCrewReplacementPayload {
+  status: CrewReplacementStatus;
+  approvedBy?: string | null;
+  notes?: string | null;
+}
+
+function isValidStatus(value: string): value is CrewReplacementStatus {
+  return ["PENDING", "APPROVED", "REJECTED", "CANCELLED"].includes(value);
+}
+
+function normalizeOptionalString(value?: string | null): string | null {
+  if (value === undefined || value === null) {
+    return null;
+  }
+  const trimmed = value.trim();
+  return trimmed.length === 0 ? null : trimmed;
+}
+
+function isUpdateCrewReplacementPayload(value: unknown): value is UpdateCrewReplacementPayload {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  const payload = value as Partial<UpdateCrewReplacementPayload>;
+  if (typeof payload.status !== "string" || !isValidStatus(payload.status)) {
+    return false;
+  }
+
+  if (
+    payload.approvedBy !== undefined &&
+    payload.approvedBy !== null &&
+    typeof payload.approvedBy !== "string"
+  ) {
+    return false;
+  }
+
+  if (
+    payload.notes !== undefined &&
+    payload.notes !== null &&
+    typeof payload.notes !== "string"
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
+export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const session = await getServerSession(authOptions);
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { id } = await params;
-    const body = await request.json();
-    const { status, approvedBy, notes } = body;
+    const { id } = params;
+    const parsedBody = (await request.json()) as unknown;
 
-    if (!status) {
-      return NextResponse.json({ error: "Status is required" }, { status: 400 });
+    if (!isUpdateCrewReplacementPayload(parsedBody)) {
+      return NextResponse.json({ error: "Invalid crew replacement payload" }, { status: 400 });
     }
 
-    const updateData: any = {
+    const status = parsedBody.status;
+    const approvedBy = normalizeOptionalString(parsedBody.approvedBy ?? null);
+    const notes = normalizeOptionalString(parsedBody.notes ?? null);
+
+    const updateData: Prisma.CrewReplacementUpdateInput = {
       status,
       notes,
-      updatedAt: new Date()
+      updatedAt: new Date(),
     };
 
-    if (status === 'APPROVED' && approvedBy) {
+    if (status === "APPROVED" && approvedBy) {
       updateData.approvedBy = approvedBy;
       updateData.approvedAt = new Date();
     }
@@ -51,7 +104,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     });
 
     // If approved, create prepare joining checklist
-    if (status === 'APPROVED') {
+    if (status === "APPROVED") {
       // Note: PrepareJoining creation logic needs to be implemented
       // For now, just update the replacement status
     }

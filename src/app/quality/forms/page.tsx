@@ -267,12 +267,20 @@ export default function HGQSFormsPage() {
   }, []);
 
   useEffect(() => {
-    if (status === "loading") return;
+    if (status === "loading") {
+      return;
+    }
+
     if (!session) {
       router.push("/auth/signin");
-    } else {
-      loadForms();
+      return;
     }
+
+    const run = async () => {
+      await loadForms();
+    };
+
+    void run();
   }, [session, status, router, loadForms]);
 
   const generateForm = async (formId: string, formName: string) => {
@@ -290,7 +298,7 @@ export default function HGQSFormsPage() {
     }
   };
 
-  const generateFormWithData = async (formId: string, _formName: string, crewId: string | null) => {
+  const generateFormWithData = async (formId: string, formName: string, crewId: string | null) => {
     try {
       const response = await fetch("/api/quality/forms/generate", {
         method: "POST",
@@ -323,7 +331,7 @@ export default function HGQSFormsPage() {
     }
   };
 
-  const openOnlineForm = (formId: string, formName: string) => {
+  const openOnlineForm = (formId: string) => {
     setCurrentFormId(formId);
     setFormData({});
     setShowOnlineForm(true);
@@ -377,11 +385,9 @@ export default function HGQSFormsPage() {
 
   const handleCrewSelect = async (crew: Crew) => {
     if (selectedForm) {
-      setSelectedCrew(crew);
       await generateFormWithData(selectedForm.id, selectedForm.name, crew.id);
       setShowCrewSelector(false);
       setSelectedForm(null);
-      setSelectedCrew(null);
     }
   };
 
@@ -2544,16 +2550,18 @@ export default function HGQSFormsPage() {
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-slate-800">Filter by Category</h3>
               <div className="flex space-x-2">
-                {[
-                  { key: 'ALL', label: 'All Forms', color: 'slate' },
-                  { key: 'AC', label: 'AC Forms', color: 'blue' },
-                  { key: 'AD', label: 'AD Forms', color: 'green' },
-                  { key: 'CR', label: 'CR Forms', color: 'orange' },
-                  { key: 'PRINCIPAL', label: 'Principal Forms', color: 'purple' }
-                ].map(({ key, label, color }) => (
+                {(
+                  [
+                    { key: 'ALL' as const, label: 'All Forms', color: 'slate' },
+                    { key: 'AC' as const, label: 'AC Forms', color: 'blue' },
+                    { key: 'AD' as const, label: 'AD Forms', color: 'green' },
+                    { key: 'CR' as const, label: 'CR Forms', color: 'orange' },
+                    { key: 'PRINCIPAL' as const, label: 'Principal Forms', color: 'purple' }
+                  ]
+                ).map(({ key, label, color }) => (
                   <button
                     key={key}
-                    onClick={() => setSelectedCategory(key as any)}
+                    onClick={() => setSelectedCategory(key)}
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                       selectedCategory === key
                         ? `bg-${color}-600 text-white`
@@ -2613,7 +2621,7 @@ export default function HGQSFormsPage() {
 
                 <div className="flex space-x-2">
                   <button
-                    onClick={() => openOnlineForm(form.id, form.name)}
+                    onClick={() => openOnlineForm(form.id)}
                     className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all duration-300 ${
                       form.category === 'AC'
                         ? 'bg-green-600 hover:bg-green-700 text-white'

@@ -2,7 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { checkPermission, PermissionLevel } from "@/lib/permission-middleware";
+import { FormApprovalStatus, Prisma } from "@prisma/client";
+
+function mergeRequestedChanges(formData: Prisma.JsonValue | null | undefined, changes: string): Prisma.JsonValue {
+  if (formData && typeof formData === "object" && !Array.isArray(formData)) {
+    return { ...formData, requestedChanges: changes } as Prisma.JsonObject;
+  }
+  return { requestedChanges: changes } satisfies Prisma.JsonObject;
+}
 
 // POST /api/form-submissions/[id]/request-changes - Request changes to form submission
 export async function POST(
@@ -11,6 +18,10 @@ export async function POST(
 ) {
   try {
     const session = await getServerSession(authOptions);
+
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     
     // Only CDMO and DIRECTOR can request changes
     const role = session?.user?.role;
@@ -21,8 +32,9 @@ export async function POST(
       );
     }
 
-    const body = await req.json();
-    const { changes } = body;
+    const body = (await req.json()) as unknown;
+    const bodyRecord = typeof body === "object" && body !== null ? (body as Record<string, unknown>) : {};
+    const changes = typeof bodyRecord.changes === "string" ? bodyRecord.changes.trim() : "";
 
     if (!changes) {
       return NextResponse.json(
@@ -31,16 +43,22 @@ export async function POST(
       );
     }
 
+    const existingForm = await prisma.prepareJoiningForm.findUnique({
+      where: { id: params.id },
+      select: { formData: true },
+    });
+
+    if (!existingForm) {
+      return NextResponse.json({ error: "Form not found" }, { status: 404 });
+    }
+
     const form = await prisma.prepareJoiningForm.update({
       where: { id: params.id },
       data: {
-        status: "CHANGES_REQUESTED",
+        status: FormApprovalStatus.CHANGES_REQUESTED,
         reviewedBy: session?.user?.email || "Unknown",
         reviewedAt: new Date(),
-        formData: {
-          ...(typeof form === "object" && form !== null ? form : {}),
-          requestedChanges: changes,
-        } as any,
+        formData: mergeRequestedChanges(existingForm.formData, changes),
       },
       include: {
         template: true,

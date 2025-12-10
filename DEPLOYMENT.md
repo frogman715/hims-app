@@ -89,7 +89,7 @@ npm run seed
 ```
 
 **Default Admin Credentials** (CHANGE IMMEDIATELY after first login):
-- Email: `admin@hims.com`
+- Email: `admin@hanmarine.com`
 - Password: `admin123`
 
 ### 5. Start Application

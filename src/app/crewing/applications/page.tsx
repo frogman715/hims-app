@@ -2,7 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState, Suspense, useCallback } from "react";
 import Link from "next/link";
 
 interface Application {
@@ -35,16 +35,15 @@ function ApplicationsContent() {
   const [loading, setLoading] = useState(true);
   const [selectedStatus, setSelectedStatus] = useState<string>(searchParams.get('status') || 'ALL');
 
-  useEffect(() => {
-    if (status === "loading") return;
+  const fetchApplications = useCallback(async () => {
+    if (status === "loading") {
+      return;
+    }
     if (!session) {
       router.push("/auth/signin");
       return;
     }
-    fetchApplications();
-  }, [session, status, selectedStatus, router]);
-
-  const fetchApplications = async () => {
+    setLoading(true);
     try {
       const url = selectedStatus === 'ALL' 
         ? '/api/applications'
@@ -59,7 +58,11 @@ function ApplicationsContent() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [router, selectedStatus, session, status]);
+
+  useEffect(() => {
+    fetchApplications();
+  }, [fetchApplications]);
 
   const handleStatusChange = async (applicationId: string, newStatus: string) => {
     try {

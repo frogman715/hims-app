@@ -1,9 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
-import Link from 'next/link';
 
 interface EmploymentContract {
   id: string;
@@ -73,7 +71,8 @@ export default function ContractsPage() {
   });
   const router = useRouter();
 
-  const fetchContracts = async () => {
+  const fetchContracts = useCallback(async () => {
+    setIsLoading(true);
     try {
       const response = await fetch('/api/contracts');
       if (response.ok) {
@@ -85,11 +84,11 @@ export default function ContractsPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchContracts();
-  }, []);
+  }, [fetchContracts]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

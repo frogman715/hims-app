@@ -10,7 +10,7 @@
 ## 🎯 Test Plan
 
 ### Prerequisites
-1. **Login credentials:** `admin@hims.com` / `admin123` (DIRECTOR role)
+1. **Login credentials:** `admin@hanmarine.com` / `admin123` (DIRECTOR role)
 2. **Browser:** Open http://localhost:3000
 3. **Clear cache:** Ctrl+Shift+R (hard refresh)
 
@@ -291,7 +291,7 @@ curl -X POST http://localhost:3000/api/forms/letter-guarantee/[PREPARE_JOINING_I
 
 **Prerequisites:**
 - Must be logged in as DIRECTOR role
-- admin@hims.com / admin123
+- admin@hanmarine.com / admin123
 
 **Test Actions:**
 1. ✅ Login as admin

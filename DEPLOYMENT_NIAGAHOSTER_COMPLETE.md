@@ -274,7 +274,7 @@ Or add in navigation menu:
 
 **Login Credentials**:
 - URL: https://app.hanmarine.co
-- Email: admin@hims.com
+- Email: admin@hanmarine.com
 - Password: admin123
 - ⚠️ **CHANGE PASSWORD IMMEDIATELY!**
 
@@ -399,7 +399,7 @@ Script akan otomatis:
 ╚════════════════════════════════════════════════════════════╝
 
 ✓ Application URL: https://app.hanmarine.co
-✓ Admin Login: admin@hims.com / admin123
+✓ Admin Login: admin@hanmarine.com / admin123
 
 Database Credentials (SAVE THIS!):
   Database: hims_production
@@ -436,7 +436,7 @@ nslookup app.hanmarine.co
 
 **Access HIMS**:
 - Open browser: https://app.hanmarine.co
-- Login: admin@hims.com / admin123
+- Login: admin@hanmarine.com / admin123
 - ✅ **WORKING!**
 
 ---

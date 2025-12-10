@@ -57,7 +57,7 @@ npm run dev
 ### 4. Login & Test
 
 1. Open: http://localhost:3000
-2. Login: `admin@hims.com` / `admin123`
+2. Login: `admin@hanmarine.com` / `admin123`
 3. Go to Dashboard
 4. Scroll down to see "External Compliance Systems" widget
 5. Click "View All Compliance Records →"

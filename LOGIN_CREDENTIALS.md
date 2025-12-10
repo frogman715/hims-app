@@ -64,14 +64,14 @@ arief@hanmarine.co / admin123
 hr@hanmarine.co / admin123
 auditor@hanmarine.co / admin123
 ```
-**hr@hims.com** / hr123
+**hr@hanmarine.com** / hr123
 - Human resources management
 - Access: HR, Disciplinary, Orientation, National Holidays
 
 ---
 
 ### 6️⃣ CREW_PORTAL Role
-**crew@hims.com** / crew123
+**crew@hanmarine.com** / crew123
 - Limited crew member access
 - Access: View own profile, View own documents (read-only)
 
@@ -113,12 +113,12 @@ auditor@hanmarine.co / admin123
 
 ### Email yang BENAR:
 - ✅ **admin@hanmarine.com** (DIRECTOR - Main Admin)
-- ✅ cdmo@hims.com (CDMO)
-- ✅ director@hims.com (DIRECTOR)
-- ✅ operational@hims.com (OPERATIONAL)
-- ✅ accounting@hims.com (ACCOUNTING)
-- ✅ hr@hims.com (HR)
-- ✅ crew@hims.com (CREW_PORTAL)
+- ✅ cdmo@hanmarine.com (CDMO)
+- ✅ director@hanmarine.com (DIRECTOR)
+- ✅ operational@hanmarine.com (OPERATIONAL)
+- ✅ accounting@hanmarine.com (ACCOUNTING)
+- ✅ hr@hanmarine.com (HR)
+- ✅ crew@hanmarine.com (CREW_PORTAL)
 
 ---
 

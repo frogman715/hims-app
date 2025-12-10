@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+import { useState, useEffect, useCallback } from 'react';
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
 
 interface EmploymentContract {
@@ -56,16 +55,12 @@ interface EmploymentContract {
 
 export default function ContractDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const [contract, setContract] = useState<EmploymentContract | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchContract();
-  }, [params.id]);
-
-  const fetchContract = async () => {
+  const fetchContract = useCallback(async () => {
+    setLoading(true);
     try {
       const response = await fetch(`/api/contracts/${params.id}`);
       if (response.ok) {
@@ -76,12 +71,17 @@ export default function ContractDetailPage() {
       } else {
         setError('Failed to load contract');
       }
-    } catch (err) {
+    } catch (error) {
+      console.error('Failed to load contract:', error);
       setError('Failed to load contract');
     } finally {
       setLoading(false);
     }
-  };
+  }, [params.id]);
+
+  useEffect(() => {
+    fetchContract();
+  }, [fetchContract]);
 
   const handlePrint = () => {
     window.print();

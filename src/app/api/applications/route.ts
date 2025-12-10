@@ -3,6 +3,61 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { checkPermission, applicationsGuard, PermissionLevel } from "@/lib/permission-middleware";
+import { ApplicationStatus, Prisma } from "@prisma/client";
+
+interface CreateApplicationPayload {
+  crewId: string;
+  position: string;
+  vesselType?: string | null;
+  principalId?: string | null;
+  applicationDate?: string | null;
+  remarks?: string | null;
+}
+
+const APPLICATION_STATUS_VALUES = new Set<ApplicationStatus>([
+  ApplicationStatus.RECEIVED,
+  ApplicationStatus.REVIEWING,
+  ApplicationStatus.INTERVIEW,
+  ApplicationStatus.PASSED,
+  ApplicationStatus.OFFERED,
+  ApplicationStatus.ACCEPTED,
+  ApplicationStatus.REJECTED,
+  ApplicationStatus.CANCELLED,
+]);
+
+function parseDate(value: string | null | undefined): Date | undefined {
+  if (!value) {
+    return undefined;
+  }
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? undefined : date;
+}
+
+function normalizeOptionalString(value?: string | null): string | null {
+  if (value === undefined || value === null) {
+    return null;
+  }
+  const trimmed = value.trim();
+  return trimmed.length === 0 ? null : trimmed;
+}
+
+function isCreateApplicationPayload(value: unknown): value is CreateApplicationPayload {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  const payload = value as Partial<CreateApplicationPayload>;
+  return (
+    typeof payload.crewId === "string" &&
+    payload.crewId.trim().length > 0 &&
+    typeof payload.position === "string" &&
+    payload.position.trim().length > 0 &&
+    (payload.vesselType === undefined || payload.vesselType === null || typeof payload.vesselType === "string") &&
+    (payload.principalId === undefined || payload.principalId === null || typeof payload.principalId === "string") &&
+    (payload.applicationDate === undefined || payload.applicationDate === null || typeof payload.applicationDate === "string") &&
+    (payload.remarks === undefined || payload.remarks === null || typeof payload.remarks === "string")
+  );
+}
 
 export async function GET(req: NextRequest) {
   try {
@@ -17,13 +72,13 @@ export async function GET(req: NextRequest) {
     }
 
     const { searchParams } = new URL(req.url);
-    const status = searchParams.get('status');
-    const crewId = searchParams.get('crewId');
-    const principalId = searchParams.get('principalId');
+    const status = searchParams.get("status");
+    const crewId = searchParams.get("crewId");
+    const principalId = searchParams.get("principalId");
 
-    const where: any = {};
-    if (status && status !== 'ALL') {
-      where.status = status;
+    const where: Prisma.ApplicationWhereInput = {};
+    if (status && status !== "ALL" && APPLICATION_STATUS_VALUES.has(status as ApplicationStatus)) {
+      where.status = status as ApplicationStatus;
     }
     if (crewId) {
       where.crewId = crewId;
@@ -82,29 +137,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Insufficient permissions to create applications" }, { status: 403 });
     }
 
-    const body = await request.json();
-    const { 
-      crewId, 
-      position, 
-      vesselType,
-      principalId,
-      applicationDate,
-      remarks 
-    } = body;
+    const payload = (await request.json()) as unknown;
 
-    if (!crewId || !position) {
-      return NextResponse.json({ error: "Crew ID and position are required" }, { status: 400 });
+    if (!isCreateApplicationPayload(payload)) {
+      return NextResponse.json({ error: "Invalid application payload" }, { status: 400 });
     }
+
+    const normalizedDate = parseDate(payload.applicationDate) ?? new Date();
+    const normalizedVesselType = normalizeOptionalString(payload.vesselType ?? null);
+    const normalizedPrincipalId = normalizeOptionalString(payload.principalId ?? null);
+    const normalizedRemarks = normalizeOptionalString(payload.remarks ?? null);
 
     const application = await prisma.application.create({
       data: {
-        crewId,
-        position,
-        vesselType,
-        principalId,
-        applicationDate: applicationDate ? new Date(applicationDate) : new Date(),
-        status: 'RECEIVED',
-        remarks,
+        crewId: payload.crewId.trim(),
+        position: payload.position.trim(),
+        vesselType: normalizedVesselType,
+        principalId: normalizedPrincipalId,
+        applicationDate: normalizedDate,
+        status: ApplicationStatus.RECEIVED,
+        remarks: normalizedRemarks,
       },
       include: {
         crew: {

@@ -109,7 +109,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser.
 
 ### Default Login
 
-- **Email**: admin@hims.com
+- **Email**: admin@hanmarine.com
 - **Password**: admin123
 
 ⚠️ **IMPORTANT**: Change this password immediately after first login!

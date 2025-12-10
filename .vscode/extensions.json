@@ -1,0 +1,9 @@
+{
+    "recommendations": [
+        "github.copilot-chat",
+        "ms-python.debugpy",
+        "donjayamanne.python-extension-pack",
+        "visualstudioexptteam.intellicode-api-usage-examples",
+        "visualstudioexptteam.vscodeintellicode"
+    ]
+}

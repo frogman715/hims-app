@@ -147,7 +147,7 @@ export default function CrewManningWorkflow() {
               <h1 className="text-4xl font-bold text-gray-900 mb-2">
                 Crew Manning Workflow
               </h1>
-              <p className="text-gray-700">
+              <p className="text-gray-800 font-medium">
                 Alur lengkap dari aplikasi sampai seafarer siap berangkat ke kapal
               </p>
             </div>
@@ -166,7 +166,7 @@ export default function CrewManningWorkflow() {
             <Link
               key={step.id}
               href={step.link}
-              className={`${step.bgColor} border-2 ${step.borderColor} rounded-2xl p-6 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 relative overflow-hidden group`}
+              className={`${step.bgColor} border-2 ${step.borderColor} rounded-2xl p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 relative overflow-hidden group`}
             >
               {/* Badge Number */}
               <div className="absolute top-4 right-4">
@@ -189,14 +189,17 @@ export default function CrewManningWorkflow() {
               </h3>
 
               {/* Description */}
-              <p className="text-gray-700 text-sm">
+              <p className="text-gray-900 text-sm leading-relaxed">
                 {step.description}
               </p>
 
               {/* Hover Arrow */}
               <div className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                <span className={`text-transparent bg-clip-text bg-gradient-to-r ${step.color} font-semibold`}>
-                  View Details →
+                <span className="text-sm font-semibold text-gray-900 flex items-center gap-1">
+                  View Details
+                  <svg className="w-4 h-4 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
                 </span>
               </div>
             </Link>
@@ -218,7 +221,7 @@ export default function CrewManningWorkflow() {
                     {step.icon}
                   </div>
                   <div className="text-center">
-                    <div className="text-xs font-semibold text-gray-500 mb-1">
+                    <div className="text-xs font-semibold text-gray-600 mb-1">
                       Step {step.id}
                     </div>
                     <div className="text-sm font-bold text-gray-900">
@@ -249,7 +252,7 @@ export default function CrewManningWorkflow() {
           >
             <div className="text-4xl mb-3">➕</div>
             <h3 className="text-xl font-extrabold mb-2">New Application</h3>
-            <p className="text-white text-sm opacity-90">
+            <p className="text-white text-sm opacity-95">
               Input aplikasi baru dari seafarer
             </p>
           </Link>
@@ -260,7 +263,7 @@ export default function CrewManningWorkflow() {
           >
             <div className="text-4xl mb-3">📅</div>
             <h3 className="text-xl font-extrabold mb-2">Schedule Interview</h3>
-            <p className="text-white text-sm opacity-90">
+            <p className="text-white text-sm opacity-95">
               Jadwalkan interview untuk kandidat
             </p>
           </Link>
@@ -271,7 +274,7 @@ export default function CrewManningWorkflow() {
           >
             <div className="text-4xl mb-3">📊</div>
             <h3 className="text-xl font-extrabold mb-2">Reports</h3>
-            <p className="text-white text-sm opacity-90">
+            <p className="text-white text-sm opacity-95">
               Lihat laporan recruitment & manning
             </p>
           </Link>

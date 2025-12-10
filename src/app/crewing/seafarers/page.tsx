@@ -140,12 +140,6 @@ export default function Seafarers() {
                         )}
                         <div className="flex space-x-2">
                           <button
-                            onClick={() => router.push(`/crewing/seafarers/${seafarer.id}`)}
-                            className="text-indigo-600 hover:text-indigo-900"
-                          >
-                            Edit
-                          </button>
-                          <button
                             onClick={() => router.push(`/crewing/seafarers/${seafarer.id}/documents`)}
                             className="text-green-600 hover:text-green-900"
                           >

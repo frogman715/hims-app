@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 
 export default function CommunicationManagementPage() {
@@ -15,7 +15,6 @@ export default function CommunicationManagementPage() {
   }>>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("ALL");
-  const [showNewForm, setShowNewForm] = useState(false);
 
   const communicationTypes = [
     { value: "MEDIA_INTERVIEW", label: "Media Interview", icon: "📰", color: "blue" },
@@ -28,11 +27,8 @@ export default function CommunicationManagementPage() {
     { value: "GENERAL_INQUIRY", label: "General Inquiry", icon: "💬", color: "cyan" }
   ];
 
-  useEffect(() => {
-    fetchCommunications();
-  }, [filter]);
-
-  const fetchCommunications = async () => {
+  const fetchCommunications = useCallback(async () => {
+    setLoading(true);
     try {
       const url = filter === "ALL" 
         ? "/api/compliance/communication"
@@ -47,25 +43,33 @@ export default function CommunicationManagementPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filter]);
+
+  useEffect(() => {
+    fetchCommunications();
+  }, [fetchCommunications]);
+
+  const handleNewFormClick = useCallback(() => {
+    console.info("New communication form modal not yet implemented");
+  }, []);
 
   const getStatusBadge = (status: string) => {
-    const styles: any = {
+    const styles: Record<string, string> = {
       PENDING: "bg-yellow-100 text-yellow-800",
       IN_PROGRESS: "bg-blue-100 text-blue-800",
       RESOLVED: "bg-green-100 text-green-800",
       ESCALATED: "bg-red-100 text-red-800",
-      CLOSED: "bg-gray-100 text-gray-800"
+      CLOSED: "bg-gray-100 text-gray-800",
     };
     return styles[status] || "bg-gray-100 text-gray-800";
   };
 
   const getPriorityBadge = (priority: string) => {
-    const styles: any = {
+    const styles: Record<string, string> = {
       LOW: "bg-green-50 text-green-700 border-green-200",
       MEDIUM: "bg-yellow-50 text-yellow-700 border-yellow-200",
       HIGH: "bg-orange-50 text-orange-700 border-orange-200",
-      CRITICAL: "bg-red-50 text-red-700 border-red-200"
+      CRITICAL: "bg-red-50 text-red-700 border-red-200",
     };
     return styles[priority] || "bg-gray-100 text-gray-700";
   };
@@ -105,7 +109,7 @@ export default function CommunicationManagementPage() {
               <p className="text-gray-700 mt-1">HGQS Annex C - MLC 2006 Reg 5.1.5 Compliant</p>
             </div>
             <button
-              onClick={() => setShowNewForm(true)}
+              onClick={handleNewFormClick}
               className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg hover:from-blue-700 hover:to-cyan-700 font-medium shadow-lg"
             >
               + New Communication

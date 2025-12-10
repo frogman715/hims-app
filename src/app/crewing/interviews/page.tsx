@@ -2,7 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState, Suspense, useCallback } from "react";
 import Link from "next/link";
 
 interface Interview {
@@ -42,16 +42,15 @@ function InterviewsContent() {
   const [loading, setLoading] = useState(true);
   const selectedStatus = searchParams.get("status") || "ALL";
 
-  useEffect(() => {
-    if (status === "loading") return;
+  const fetchInterviews = useCallback(async () => {
+    if (status === "loading") {
+      return;
+    }
     if (!session) {
       router.push("/auth/signin");
       return;
     }
-    fetchInterviews();
-  }, [session, status, selectedStatus, router]);
-
-  const fetchInterviews = async () => {
+    setLoading(true);
     try {
       const url =
         selectedStatus === "ALL"
@@ -67,7 +66,11 @@ function InterviewsContent() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [router, selectedStatus, session, status]);
+
+  useEffect(() => {
+    fetchInterviews();
+  }, [fetchInterviews]);
 
   if (status === "loading" || loading) {
     return (

@@ -2,10 +2,95 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { ApplicationStatus, PrepareJoiningStatus, Prisma } from "@prisma/client";
+
+interface UpdateApplicationPayload {
+  position?: string;
+  status?: ApplicationStatus;
+  vesselType?: string | null;
+  principalId?: string | null;
+  remarks?: string | null;
+}
+
+const APPLICATION_STATUS_VALUES = new Set<ApplicationStatus>([
+  ApplicationStatus.RECEIVED,
+  ApplicationStatus.REVIEWING,
+  ApplicationStatus.INTERVIEW,
+  ApplicationStatus.PASSED,
+  ApplicationStatus.OFFERED,
+  ApplicationStatus.ACCEPTED,
+  ApplicationStatus.REJECTED,
+  ApplicationStatus.CANCELLED,
+]);
+
+const ACTIVE_PREPARE_JOINING_STATUSES: PrepareJoiningStatus[] = [
+  PrepareJoiningStatus.PENDING,
+  PrepareJoiningStatus.DOCUMENTS,
+  PrepareJoiningStatus.MEDICAL,
+  PrepareJoiningStatus.TRAINING,
+  PrepareJoiningStatus.TRAVEL,
+  PrepareJoiningStatus.READY,
+];
+
+function normalizeOptionalString(value?: string | null): string | null {
+  if (value === undefined || value === null) {
+    return null;
+  }
+  const trimmed = value.trim();
+  return trimmed.length === 0 ? null : trimmed;
+}
+
+function isUpdateApplicationPayload(value: unknown): value is UpdateApplicationPayload {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  const payload = value as Partial<UpdateApplicationPayload>;
+
+  if (
+    payload.status !== undefined &&
+    !APPLICATION_STATUS_VALUES.has(payload.status as ApplicationStatus)
+  ) {
+    return false;
+  }
+
+  if (
+    payload.position !== undefined &&
+    typeof payload.position !== "string"
+  ) {
+    return false;
+  }
+
+  if (
+    payload.vesselType !== undefined &&
+    payload.vesselType !== null &&
+    typeof payload.vesselType !== "string"
+  ) {
+    return false;
+  }
+
+  if (
+    payload.principalId !== undefined &&
+    payload.principalId !== null &&
+    typeof payload.principalId !== "string"
+  ) {
+    return false;
+  }
+
+  if (
+    payload.remarks !== undefined &&
+    payload.remarks !== null &&
+    typeof payload.remarks !== "string"
+  ) {
+    return false;
+  }
+
+  return true;
+}
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -13,7 +98,7 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { id } = await params;
+    const { id } = params;
     const applicationId = id; // Keep as string since id is cuid
 
     const application = await prisma.application.findUnique({
@@ -44,7 +129,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -52,31 +137,35 @@ export async function PUT(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { id } = await params;
+    const { id } = params;
     const applicationId = id;
 
-    const body = await request.json();
-    const { 
-      position, 
-      status, 
-      vesselType,
-      principalId,
-      remarks 
-    } = body;
+    const body = (await request.json()) as unknown;
+    if (!isUpdateApplicationPayload(body)) {
+      return NextResponse.json({ error: "Invalid application update payload" }, { status: 400 });
+    }
 
-    const updateData: any = {};
+    const updateData: Prisma.ApplicationUpdateInput = {};
     
-    if (status !== undefined) {
-      updateData.status = status;
-      if (status !== 'RECEIVED') {
+    if (body.status !== undefined) {
+      updateData.status = body.status;
+      if (body.status !== ApplicationStatus.RECEIVED && session.user?.id) {
         updateData.reviewedBy = session.user.id;
         updateData.reviewedAt = new Date();
       }
     }
-    if (position !== undefined) updateData.position = position;
-    if (vesselType !== undefined) updateData.vesselType = vesselType;
-    if (principalId !== undefined) updateData.principalId = principalId;
-    if (remarks !== undefined) updateData.remarks = remarks;
+    if (body.position !== undefined) {
+      updateData.position = body.position.trim();
+    }
+    if (body.vesselType !== undefined) {
+      updateData.vesselType = normalizeOptionalString(body.vesselType);
+    }
+    if (body.principalId !== undefined) {
+      updateData.principalId = normalizeOptionalString(body.principalId);
+    }
+    if (body.remarks !== undefined) {
+      updateData.remarks = normalizeOptionalString(body.remarks);
+    }
 
     const application = await prisma.application.update({
       where: { id: applicationId },
@@ -102,11 +191,11 @@ export async function PUT(
     });
 
     // Auto-create PrepareJoining record when application is ACCEPTED
-    if (status === 'ACCEPTED') {
+    if (body.status === ApplicationStatus.ACCEPTED) {
       const existingPrepare = await prisma.prepareJoining.findFirst({
         where: {
           crewId: application.crewId,
-          status: { in: ['PENDING', 'DOCUMENTS', 'MEDICAL', 'TRAINING', 'TRAVEL', 'READY'] }
+          status: { in: ACTIVE_PREPARE_JOINING_STATUSES },
         }
       });
 
@@ -116,7 +205,7 @@ export async function PUT(
             crewId: application.crewId,
             vesselId: null,
             principalId: application.principalId,
-            status: 'PENDING',
+            status: PrepareJoiningStatus.PENDING,
             passportValid: false,
             seamanBookValid: false,
             certificatesValid: false,

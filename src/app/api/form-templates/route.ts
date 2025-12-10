@@ -3,6 +3,38 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { checkPermission, PermissionLevel } from "@/lib/permission-middleware";
+import { Prisma } from "@prisma/client";
+
+interface CreateTemplatePayload {
+  principalId: string;
+  formName: string;
+  formCategory: string;
+  templatePath: string;
+  isRequired?: boolean;
+  displayOrder?: number;
+  description?: string | null;
+}
+
+function isCreateTemplatePayload(value: unknown): value is CreateTemplatePayload {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  const payload = value as Partial<CreateTemplatePayload>;
+  return (
+    typeof payload.principalId === "string" &&
+    payload.principalId.trim().length > 0 &&
+    typeof payload.formName === "string" &&
+    payload.formName.trim().length > 0 &&
+    typeof payload.formCategory === "string" &&
+    payload.formCategory.trim().length > 0 &&
+    typeof payload.templatePath === "string" &&
+    payload.templatePath.trim().length > 0 &&
+    (payload.isRequired === undefined || typeof payload.isRequired === "boolean") &&
+    (payload.displayOrder === undefined || typeof payload.displayOrder === "number") &&
+    (payload.description === undefined || payload.description === null || typeof payload.description === "string")
+  );
+}
 
 // GET /api/form-templates - Get all form templates
 export async function GET(req: NextRequest) {
@@ -18,7 +50,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const principalId = searchParams.get("principalId");
 
-    const where: any = {};
+    const where: Prisma.PrincipalFormTemplateWhereInput = {};
     if (principalId) {
       where.principalId = principalId;
     }
@@ -57,33 +89,24 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const body = await req.json();
-    const {
-      principalId,
-      formName,
-      formCategory,
-      templatePath,
-      isRequired,
-      displayOrder,
-      description,
-    } = body;
+    const payload = (await req.json()) as unknown;
 
-    if (!principalId || !formName || !formCategory || !templatePath) {
+    if (!isCreateTemplatePayload(payload)) {
       return NextResponse.json(
-        { error: "Missing required fields" },
+        { error: "Invalid form template payload" },
         { status: 400 }
       );
     }
 
     const template = await prisma.principalFormTemplate.create({
       data: {
-        principalId,
-        formName,
-        formCategory,
-        templatePath,
-        isRequired: isRequired !== undefined ? isRequired : true,
-        displayOrder: displayOrder || 0,
-        description,
+        principalId: payload.principalId,
+        formName: payload.formName,
+        formCategory: payload.formCategory,
+        templatePath: payload.templatePath,
+        isRequired: payload.isRequired ?? true,
+        displayOrder: payload.displayOrder ?? 0,
+        description: payload.description ?? null,
       },
       include: {
         principal: {

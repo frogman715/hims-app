@@ -16,9 +16,27 @@ async function main() {
 
   // Roles are enums, no need to create them in database
 
+  // Realign legacy demo accounts that previously used the hims.com domain
+  const legacyEmailMappings = [
+    { from: 'cdmo@hims.com', to: 'cdmo@hanmarine.com' },
+    { from: 'director@hims.com', to: 'director@hanmarine.com' },
+    { from: 'operational@hims.com', to: 'operational@hanmarine.com' },
+    { from: 'accounting@hims.com', to: 'accounting@hanmarine.com' },
+    { from: 'hr@hims.com', to: 'hr@hanmarine.com' },
+    { from: 'crew@hims.com', to: 'crew@hanmarine.com' },
+  ];
+  for (const mapping of legacyEmailMappings) {
+    await prisma.user
+      .update({
+        where: { email: mapping.from },
+        data: { email: mapping.to },
+      })
+      .catch(() => undefined);
+  }
+
   // Create main admin user (DIRECTOR role with full access)
   const adminPassword = await bcrypt.hash('admin123', 10);
-  const adminUser = await prisma.user.upsert({
+  await prisma.user.upsert({
     where: { email: 'admin@hanmarine.com' },
     update: {},
     create: {
@@ -32,10 +50,10 @@ async function main() {
   // Create system admin user (CDMO)
   const systemAdminPassword = await bcrypt.hash('cdmo123', 10);
   const systemAdminUser = await prisma.user.upsert({
-    where: { email: 'cdmo@hims.com' },
+    where: { email: 'cdmo@hanmarine.com' },
     update: {},
     create: {
-      email: 'cdmo@hims.com',
+      email: 'cdmo@hanmarine.com',
       name: 'CDMO Administrator',
       password: systemAdminPassword,
       role: 'CDMO',
@@ -45,11 +63,11 @@ async function main() {
 
   // Create Director user
   const directorPassword = await bcrypt.hash('director123', 10);
-  const directorUser = await prisma.user.upsert({
-    where: { email: 'director@hims.com' },
+  await prisma.user.upsert({
+    where: { email: 'director@hanmarine.com' },
     update: {},
     create: {
-      email: 'director@hims.com',
+      email: 'director@hanmarine.com',
       name: 'Director',
       password: directorPassword,
       role: 'DIRECTOR',
@@ -58,11 +76,11 @@ async function main() {
 
   // Create Accounting user
   const accountingPassword = await bcrypt.hash('accounting123', 10);
-  const accountingUser = await prisma.user.upsert({
-    where: { email: 'accounting@hims.com' },
+  await prisma.user.upsert({
+    where: { email: 'accounting@hanmarine.com' },
     update: {},
     create: {
-      email: 'accounting@hims.com',
+      email: 'accounting@hanmarine.com',
       name: 'Accounting Officer',
       password: accountingPassword,
       role: 'ACCOUNTING',
@@ -71,11 +89,11 @@ async function main() {
 
   // Create Operational user
   const operationalPassword = await bcrypt.hash('operational123', 10);
-  const operationalUser = await prisma.user.upsert({
-    where: { email: 'operational@hims.com' },
+  await prisma.user.upsert({
+    where: { email: 'operational@hanmarine.com' },
     update: {},
     create: {
-      email: 'operational@hims.com',
+      email: 'operational@hanmarine.com',
       name: 'Operational Manager',
       password: operationalPassword,
       role: 'OPERATIONAL',
@@ -84,11 +102,11 @@ async function main() {
 
   // Create HR user
   const hrPassword = await bcrypt.hash('hr123', 10);
-  const hrUser = await prisma.user.upsert({
-    where: { email: 'hr@hims.com' },
+  await prisma.user.upsert({
+    where: { email: 'hr@hanmarine.com' },
     update: {},
     create: {
-      email: 'hr@hims.com',
+      email: 'hr@hanmarine.com',
       name: 'HR Officer',
       password: hrPassword,
       role: 'HR',
@@ -97,11 +115,11 @@ async function main() {
 
   // Create Crew Portal user
   const crewPortalPassword = await bcrypt.hash('crew123', 10);
-  const crewPortalUser = await prisma.user.upsert({
-    where: { email: 'crew@hims.com' },
+  await prisma.user.upsert({
+    where: { email: 'crew@hanmarine.com' },
     update: {},
     create: {
-      email: 'crew@hims.com',
+      email: 'crew@hanmarine.com',
       name: 'Crew Portal User',
       password: crewPortalPassword,
       role: 'CREW_PORTAL',
@@ -193,7 +211,7 @@ async function main() {
   });
 
   // Create assignment that expires soon (within 30 days)
-  const expiringAssignment = await prisma.assignment.upsert({
+  await prisma.assignment.upsert({
     where: { id: 'assignment-3' },
     update: {},
     create: {
@@ -234,7 +252,7 @@ async function main() {
     },
   });
 
-  const application = await prisma.application.upsert({
+  await prisma.application.upsert({
     where: { id: 'application-1' },
     update: {},
     create: {
@@ -242,7 +260,7 @@ async function main() {
       crewId: newApplicant.id,
       position: 'Chief Officer',
       applicationDate: new Date('2024-11-01'),
-      status: 'PENDING',
+      status: 'RECEIVED',
     },
   });
 
@@ -358,32 +376,32 @@ async function main() {
   console.log('   Role: DIRECTOR (Full Access)');
   console.log('');
   console.log('🔑 CDMO (System Admin):');
-  console.log('   Email: cdmo@hims.com');
+  console.log('   Email: cdmo@hanmarine.com');
   console.log('   Password: cdmo123');
   console.log('   Role: CDMO (Technical Admin)');
   console.log('');
   console.log('🔑 DIRECTOR:');
-  console.log('   Email: director@hims.com');
+  console.log('   Email: director@hanmarine.com');
   console.log('   Password: director123');
   console.log('   Role: DIRECTOR');
   console.log('');
   console.log('🔑 OPERATIONAL:');
-  console.log('   Email: operational@hims.com');
+  console.log('   Email: operational@hanmarine.com');
   console.log('   Password: operational123');
   console.log('   Role: OPERATIONAL');
   console.log('');
   console.log('🔑 ACCOUNTING:');
-  console.log('   Email: accounting@hims.com');
+  console.log('   Email: accounting@hanmarine.com');
   console.log('   Password: accounting123');
   console.log('   Role: ACCOUNTING');
   console.log('');
   console.log('🔑 HR:');
-  console.log('   Email: hr@hims.com');
+  console.log('   Email: hr@hanmarine.com');
   console.log('   Password: hr123');
   console.log('   Role: HR');
   console.log('');
   console.log('🔑 CREW PORTAL:');
-  console.log('   Email: crew@hims.com');
+  console.log('   Email: crew@hanmarine.com');
   console.log('   Password: crew123');
   console.log('   Role: CREW_PORTAL');
   console.log('===========================================');

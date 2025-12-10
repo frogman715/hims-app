@@ -3,6 +3,61 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { checkPermission, PermissionLevel } from "@/lib/permission-middleware";
+import { PrepareJoiningStatus } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
+
+type UpdatePrepareJoiningPayload = {
+  status?: string;
+  passportValid?: boolean;
+  seamanBookValid?: boolean;
+  certificatesValid?: boolean;
+  medicalValid?: boolean;
+  visaValid?: boolean;
+  orientationCompleted?: boolean;
+  ticketBooked?: boolean;
+  hotelBooked?: boolean;
+  transportArranged?: boolean;
+  medicalCheckDate?: string | null;
+  medicalExpiry?: string | null;
+  orientationDate?: string | null;
+  departureDate?: string | null;
+  departurePort?: string | null;
+  arrivalPort?: string | null;
+  flightNumber?: string | null;
+  hotelName?: string | null;
+  remarks?: string | null;
+  vesselId?: string | null;
+  principalId?: string | null;
+};
+
+const prepareJoiningStatuses = new Set<PrepareJoiningStatus>([
+  ...Object.values(PrepareJoiningStatus),
+]);
+
+function parseDateOrNull(value?: string | null): Date | null {
+  if (!value) {
+    return null;
+  }
+
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function parseOptionalBoolean(value: unknown): boolean | undefined {
+  return typeof value === "boolean" ? value : undefined;
+}
+
+function parseStringOrNull(value: unknown): string | null | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (value === null) {
+    return null;
+  }
+
+  return typeof value === "string" ? value : undefined;
+}
 
 // GET /api/prepare-joining/[id] - Get single prepare joining record
 export async function GET(
@@ -91,68 +146,121 @@ export async function PUT(
       );
     }
 
-    const body = await req.json();
-    const {
-      status,
-      passportValid,
-      seamanBookValid,
-      certificatesValid,
-      medicalValid,
-      visaValid,
-      orientationCompleted,
-      ticketBooked,
-      hotelBooked,
-      transportArranged,
-      medicalCheckDate,
-      medicalExpiry,
-      orientationDate,
-      departureDate,
-      departurePort,
-      arrivalPort,
-      flightNumber,
-      hotelName,
-      remarks,
-      vesselId,
-      principalId,
-    } = body;
+    const body = (await req.json()) as UpdatePrepareJoiningPayload;
 
-    // Build update data object
-    const updateData: any = {};
+    const updateData: Prisma.PrepareJoiningUpdateInput = {};
 
-    if (status !== undefined) updateData.status = status;
-    if (passportValid !== undefined) updateData.passportValid = passportValid;
-    if (seamanBookValid !== undefined)
+    if (body.status !== undefined) {
+      const normalizedStatus = body.status?.trim();
+      if (
+        !normalizedStatus ||
+        !prepareJoiningStatuses.has(normalizedStatus as PrepareJoiningStatus)
+      ) {
+        return NextResponse.json(
+          { error: "Invalid prepare joining status" },
+          { status: 400 }
+        );
+      }
+      updateData.status = normalizedStatus as PrepareJoiningStatus;
+    }
+
+    const passportValid = parseOptionalBoolean(body.passportValid);
+    if (passportValid !== undefined) {
+      updateData.passportValid = passportValid;
+    }
+
+    const seamanBookValid = parseOptionalBoolean(body.seamanBookValid);
+    if (seamanBookValid !== undefined) {
       updateData.seamanBookValid = seamanBookValid;
-    if (certificatesValid !== undefined)
-      updateData.certificatesValid = certificatesValid;
-    if (medicalValid !== undefined) updateData.medicalValid = medicalValid;
-    if (visaValid !== undefined) updateData.visaValid = visaValid;
-    if (orientationCompleted !== undefined)
-      updateData.orientationCompleted = orientationCompleted;
-    if (ticketBooked !== undefined) updateData.ticketBooked = ticketBooked;
-    if (hotelBooked !== undefined) updateData.hotelBooked = hotelBooked;
-    if (transportArranged !== undefined)
-      updateData.transportArranged = transportArranged;
+    }
 
-    if (medicalCheckDate !== undefined)
-      updateData.medicalCheckDate = medicalCheckDate
-        ? new Date(medicalCheckDate)
-        : null;
-    if (medicalExpiry !== undefined)
-      updateData.medicalExpiry = medicalExpiry ? new Date(medicalExpiry) : null;
-    if (orientationDate !== undefined)
-      updateData.orientationDate = orientationDate
-        ? new Date(orientationDate)
-        : null;
-    if (departureDate !== undefined)
-      updateData.departureDate = departureDate ? new Date(departureDate) : null;
-    if (departurePort !== undefined) updateData.departurePort = departurePort;
-    if (arrivalPort !== undefined) updateData.arrivalPort = arrivalPort;
-    if (flightNumber !== undefined) updateData.flightNumber = flightNumber;
-    if (hotelName !== undefined) updateData.hotelName = hotelName;
-    if (remarks !== undefined) updateData.remarks = remarks;
-    if (vesselId !== undefined) updateData.vesselId = vesselId;
-    if (principalId !== undefined) updateData.principalId = principalId;
+    const certificatesValid = parseOptionalBoolean(body.certificatesValid);
+    if (certificatesValid !== undefined) {
+      updateData.certificatesValid = certificatesValid;
+    }
+
+    const medicalValid = parseOptionalBoolean(body.medicalValid);
+    if (medicalValid !== undefined) {
+      updateData.medicalValid = medicalValid;
+    }
+
+    const visaValid = parseOptionalBoolean(body.visaValid);
+    if (visaValid !== undefined) {
+      updateData.visaValid = visaValid;
+    }
+
+    const orientationCompleted = parseOptionalBoolean(
+      body.orientationCompleted
+    );
+    if (orientationCompleted !== undefined) {
+      updateData.orientationCompleted = orientationCompleted;
+    }
+
+    const ticketBooked = parseOptionalBoolean(body.ticketBooked);
+    if (ticketBooked !== undefined) {
+      updateData.ticketBooked = ticketBooked;
+    }
+
+    const hotelBooked = parseOptionalBoolean(body.hotelBooked);
+    if (hotelBooked !== undefined) {
+      updateData.hotelBooked = hotelBooked;
+    }
+
+    const transportArranged = parseOptionalBoolean(body.transportArranged);
+    if (transportArranged !== undefined) {
+      updateData.transportArranged = transportArranged;
+    }
+
+    if (body.medicalCheckDate !== undefined) {
+      updateData.medicalCheckDate = parseDateOrNull(body.medicalCheckDate);
+    }
+
+    if (body.medicalExpiry !== undefined) {
+      updateData.medicalExpiry = parseDateOrNull(body.medicalExpiry);
+    }
+
+    if (body.orientationDate !== undefined) {
+      updateData.orientationDate = parseDateOrNull(body.orientationDate);
+    }
+
+    if (body.departureDate !== undefined) {
+      updateData.departureDate = parseDateOrNull(body.departureDate);
+    }
+
+    const departurePort = parseStringOrNull(body.departurePort);
+    if (departurePort !== undefined) {
+      updateData.departurePort = departurePort;
+    }
+
+    const arrivalPort = parseStringOrNull(body.arrivalPort);
+    if (arrivalPort !== undefined) {
+      updateData.arrivalPort = arrivalPort;
+    }
+
+    const flightNumber = parseStringOrNull(body.flightNumber);
+    if (flightNumber !== undefined) {
+      updateData.flightNumber = flightNumber;
+    }
+
+    const hotelName = parseStringOrNull(body.hotelName);
+    if (hotelName !== undefined) {
+      updateData.hotelName = hotelName;
+    }
+
+    const remarks = parseStringOrNull(body.remarks);
+    if (remarks !== undefined) {
+      updateData.remarks = remarks;
+    }
+
+    const vesselId = parseStringOrNull(body.vesselId);
+    if (vesselId !== undefined) {
+      updateData.vesselId = vesselId;
+    }
+
+    const principalId = parseStringOrNull(body.principalId);
+    if (principalId !== undefined) {
+      updateData.principalId = principalId;
+    }
 
     const prepareJoining = await prisma.prepareJoining.update({
       where: { id: params.id },

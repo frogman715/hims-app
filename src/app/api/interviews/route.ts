@@ -3,6 +3,26 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { checkPermission, PermissionLevel } from "@/lib/permission-middleware";
+import { ApplicationStatus, InterviewStatus } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
+
+interface CreateInterviewPayload {
+  applicationId: string;
+  scheduledDate?: string | null;
+  interviewerName?: string | null;
+  notes?: string | null;
+}
+
+const validInterviewStatuses = new Set<InterviewStatus>([...Object.values(InterviewStatus)]);
+
+function parseIsoDate(value?: string | null): Date | null {
+  if (!value) {
+    return null;
+  }
+
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
 
 // GET /api/interviews - Get all interviews with optional filtering
 export async function GET(req: NextRequest) {
@@ -19,9 +39,13 @@ export async function GET(req: NextRequest) {
     const status = searchParams.get("status");
     const applicationId = searchParams.get("applicationId");
 
-    const where: any = {};
-    if (status && status !== "ALL") {
-      where.status = status;
+    const where: Prisma.InterviewWhereInput = {};
+    if (status && status.toUpperCase() !== "ALL") {
+      const normalizedStatus = status.toUpperCase() as InterviewStatus;
+      if (!validInterviewStatuses.has(normalizedStatus)) {
+        return NextResponse.json({ error: "Invalid interview status" }, { status: 400 });
+      }
+      where.status = normalizedStatus;
     }
     if (applicationId) {
       where.applicationId = applicationId;
@@ -74,33 +98,32 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const body = await req.json();
-    const {
-      applicationId,
-      scheduledDate,
-      interviewerName,
-      notes,
-    } = body;
+    const body = (await req.json()) as Partial<CreateInterviewPayload>;
+    const { applicationId, scheduledDate, interviewerName, notes } = body;
 
-    if (!applicationId) {
+    if (!applicationId || typeof applicationId !== "string") {
       return NextResponse.json(
         { error: "Application ID is required" },
         { status: 400 }
       );
     }
 
+    const scheduledAt = parseIsoDate(typeof scheduledDate === "string" ? scheduledDate : null);
+    const interviewer = typeof interviewerName === "string" ? interviewerName.trim() : null;
+    const sanitizedNotes = typeof notes === "string" ? notes.trim() : null;
+
     const interview = await prisma.interview.create({
       data: {
         applicationId,
-        scheduledDate: scheduledDate ? new Date(scheduledDate) : null,
+        scheduledDate: scheduledAt,
         conductedDate: null,
-        status: "SCHEDULED",
-        interviewerName,
+        status: InterviewStatus.SCHEDULED,
+        interviewerName: interviewer,
         technicalScore: null,
         attitudeScore: null,
         englishScore: null,
         recommendation: null,
-        notes,
+        notes: sanitizedNotes,
       },
       include: {
         application: {
@@ -120,7 +143,7 @@ export async function POST(req: NextRequest) {
     // Update application status to INTERVIEW
     await prisma.application.update({
       where: { id: applicationId },
-      data: { status: "INTERVIEW" },
+      data: { status: ApplicationStatus.INTERVIEW },
     });
 
     return NextResponse.json(interview, { status: 201 });
