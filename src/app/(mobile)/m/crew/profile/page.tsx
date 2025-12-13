@@ -2,6 +2,9 @@ import { prisma } from "@/lib/prisma";
 import { requireCrew } from "@/lib/authz";
 import MobileShell from "../MobileShell";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 const cardClass = "rounded-3xl border border-slate-800/50 bg-gradient-to-br from-slate-950/90 via-slate-900/75 to-slate-950/90 p-6 shadow-[0_20px_45px_-22px_rgba(16,185,129,0.55)] backdrop-blur";
 const sectionCardClass = "rounded-3xl border border-slate-800/40 bg-slate-950/65 p-6";
 
@@ -25,6 +28,11 @@ const fallbackProfile: CrewProfile = {
 
 async function getCrewProfile(userId: string | undefined): Promise<CrewProfile> {
   if (!userId) {
+    return fallbackProfile;
+  }
+
+  if (!process.env.DATABASE_URL) {
+    console.warn("DATABASE_URL not configured, falling back to static crew profile");
     return fallbackProfile;
   }
 
@@ -81,8 +89,30 @@ async function getCrewProfile(userId: string | undefined): Promise<CrewProfile> 
 }
 
 export default async function CrewProfilePage() {
-  const { user } = await requireCrew();
-  const profile = await getCrewProfile(user.id);
+  const { user, session } = await requireCrew();
+
+  const sessionFallback: CrewProfile = {
+    ...fallbackProfile,
+    name: session.user?.name ?? fallbackProfile.name,
+    email: session.user?.email ?? fallbackProfile.email,
+  };
+
+  let profile: CrewProfile = sessionFallback;
+
+  try {
+    profile = await Promise.race<CrewProfile>([
+      getCrewProfile(user.id),
+      new Promise<CrewProfile>((resolve) => {
+        setTimeout(() => {
+          console.warn("Crew profile query timed out, using session fallback");
+          resolve(sessionFallback);
+        }, 300);
+      }),
+    ]);
+  } catch (error) {
+    console.error("Failed to load crew profile", error);
+    profile = sessionFallback;
+  }
 
   const initials = profile.name
     .split(" ")

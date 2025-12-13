@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import Link from "next/link";
+import { useEffect, useState } from "react";
 
 interface ExternalComplianceStats {
   dephub: {
@@ -22,36 +22,63 @@ interface Props {
   className?: string;
 }
 
-export default function ExternalComplianceWidget({ className = '' }: Props) {
+const FALLBACK_STATS: ExternalComplianceStats = {
+  dephub: { total: 0, verified: 0, expired: 0, pending: 0 },
+  schengen: { total: 0, verified: 0, expired: 0, pending: 0 },
+};
+
+export default function ExternalComplianceWidget({ className = "" }: Props) {
   const [stats, setStats] = useState<ExternalComplianceStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchStats();
-  }, []);
+    const controller = new AbortController();
 
-  const fetchStats = async () => {
-    try {
-      const response = await fetch('/api/external-compliance/stats');
-      if (response.ok) {
-        const data = await response.json();
-        setStats(data);
+    const fetchStats = async () => {
+      try {
+        const response = await fetch("/api/external-compliance/stats", {
+          signal: controller.signal,
+          cache: "no-store",
+        });
+
+        if (!response.ok) {
+          throw new Error(`Request failed with status ${response.status}`);
+        }
+
+        const payload = (await response.json()) as ExternalComplianceStats;
+        setStats(payload);
+        setErrorMessage(null);
+      } catch (error) {
+        if ((error as Error).name === "AbortError") {
+          return;
+        }
+
+        setStats(FALLBACK_STATS);
+        setErrorMessage(
+          "Tidak dapat memuat status compliance eksternal saat ini. Data ditampilkan dalam mode offline."
+        );
+        console.warn("external-compliance stats fallback", error);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error('Error fetching compliance stats:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    fetchStats();
+
+    return () => {
+      controller.abort();
+    };
+  }, []);
 
   if (loading) {
     return (
       <div className={`surface-card p-6 ${className}`}>
         <h3 className="text-lg font-semibold text-slate-900 mb-4">External Compliance Systems</h3>
         <div className="animate-pulse space-y-3">
-          <div className="h-4 bg-slate-200/60 rounded w-3/4"></div>
-          <div className="h-4 bg-slate-200/60 rounded w-1/2"></div>
-          <div className="h-4 bg-slate-200/60 rounded w-2/3"></div>
+          <div className="h-4 bg-slate-200/60 rounded w-3/4" />
+          <div className="h-4 bg-slate-200/60 rounded w-1/2" />
+          <div className="h-4 bg-slate-200/60 rounded w-2/3" />
         </div>
       </div>
     );
@@ -69,6 +96,12 @@ export default function ExternalComplianceWidget({ className = '' }: Props) {
       </div>
 
       <div className="px-6 pb-6 space-y-6">
+        {errorMessage ? (
+          <div className="rounded-xl border border-amber-200 bg-amber-50/80 px-4 py-3 text-xs font-medium text-amber-800">
+            {errorMessage}
+          </div>
+        ) : null}
+
         {/* Note about KOSMA */}
         <div className="rounded-xl border border-blue-100 bg-blue-50/70 p-4 shadow-sm">
           <div className="flex items-start gap-3">

@@ -666,7 +666,7 @@ function QuickLinksSection() {
       <div className="grid gap-3 md:grid-cols-2">
         {links.map((link) => (
           <Link
-            key={link.href}
+            key={`${link.href}-${link.label}`}
             href={link.href}
             className="surface-card p-4 transition hover:-translate-y-0.5"
           >

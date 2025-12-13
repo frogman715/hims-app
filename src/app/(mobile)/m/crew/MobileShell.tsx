@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { signOut } from "next-auth/react";
 import type { ComponentType, ReactNode } from "react";
 
 type MobileTabKey = "home" | "documents" | "upload" | "profile";
@@ -92,15 +94,40 @@ const NAV_ITEMS: Array<{ key: MobileTabKey; href: string; label: string; icon: C
 ];
 
 export default function MobileShell({ title, subtitle, activeTab, children }: MobileShellProps) {
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    const result = await signOut({ redirect: false, callbackUrl: "/auth/signin" });
+    if (result?.url) {
+      router.replace(result.url);
+    } else {
+      router.replace("/auth/signin");
+    }
+  };
+
   return (
     <main className="flex min-h-screen flex-col bg-slate-950 text-slate-50">
       <header
-        className="mx-auto w-full max-w-md px-6 pb-4 pt-6"
+        className="mx-auto flex w-full max-w-md items-start justify-between gap-4 px-6 pb-4 pt-6"
         style={{ paddingTop: "calc(1.5rem + env(safe-area-inset-top, 0px))" }}
       >
-        <p className="text-xs font-semibold uppercase tracking-widest text-emerald-300/70">Crew Portal</p>
-        <h1 className="mt-2 text-2xl font-semibold text-slate-50">{title}</h1>
-        {subtitle ? <p className="mt-2 text-sm leading-snug text-slate-400">{subtitle}</p> : null}
+        <div className="flex-1">
+          <p className="text-xs font-semibold uppercase tracking-widest text-emerald-300/70">Crew Portal</p>
+          <h1 className="mt-2 text-2xl font-semibold text-slate-50">{title}</h1>
+          {subtitle ? <p className="mt-2 text-sm leading-snug text-slate-400">{subtitle}</p> : null}
+        </div>
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-800/60 bg-slate-900/60 text-slate-200 transition hover:border-emerald-400/60 hover:text-emerald-100"
+          aria-label="Logout"
+        >
+          <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+            <path d="M10 17 15 12 10 7" />
+            <path d="M15 12H3" />
+          </svg>
+        </button>
       </header>
 
       <section
