@@ -1,7 +1,7 @@
 'use client';
 
 import { useSession, signOut } from 'next-auth/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import type { AppRole } from '@/lib/roles';
@@ -156,20 +156,17 @@ export default function DashboardClient() {
     }
   }, [status]);
 
-  const rawRole = (session?.user?.role ?? session?.user?.roles?.[0] ?? '').toString().toUpperCase();
-  const normalizedRole = rawRole === APP_ROLES.CREW ? APP_ROLES.CREW_PORTAL : ((rawRole || null) as AppRole | null);
-  const userRole: AppRole = normalizedRole ?? APP_ROLES.CREW_PORTAL;
+  const userRole: AppRole = useMemo(() => {
+    const rawPrimary = (session?.user?.role ?? session?.user?.roles?.[0] ?? '').toString().toUpperCase();
+    if (!rawPrimary) {
+      return APP_ROLES.CREW_PORTAL;
+    }
+    if (rawPrimary === APP_ROLES.CREW) {
+      return APP_ROLES.CREW_PORTAL;
+    }
+    return rawPrimary as AppRole;
+  }, [session?.user?.role, session?.user?.roles]);
   const userName = session?.user?.name || 'Preview User';
-
-  useEffect(() => {
-    if (status !== 'authenticated') {
-      return;
-    }
-
-    if (userRole === APP_ROLES.CREW_PORTAL) {
-      router.replace('/m/crew');
-    }
-  }, [router, status, userRole]);
 
   if (status === 'loading' || loading) {
     return (

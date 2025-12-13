@@ -145,11 +145,24 @@ export const authOptions: NextAuthOptions = {
         const fallbackId = session.user.id ?? "";
         session.user.id = token.sub ?? fallbackId;
 
-        const normalizedRoles = uniqueRolesFrom(token.roles, token.role, session.user.role);
-        const primaryRole = normalizedRoles[0] ?? "CREW_PORTAL";
+        let normalizedRoles = uniqueRolesFrom(token.roles, token.role, session.user.role);
+
+        if (normalizedRoles.length === 0 && session.user.id) {
+          const dbUser = await prisma.user.findUnique({
+            where: { id: session.user.id },
+            select: { role: true },
+          });
+          normalizedRoles = uniqueRolesFrom(dbUser?.role);
+        }
+
+        if (normalizedRoles.length === 0) {
+          normalizedRoles = ["CREW_PORTAL"];
+        }
+
+        const primaryRole = normalizedRoles[0];
 
         session.user.role = primaryRole;
-        session.user.roles = normalizedRoles.length > 0 ? normalizedRoles : [primaryRole];
+        session.user.roles = normalizedRoles;
 
         console.info("[auth] session-callback", {
           userId: session.user.id,
