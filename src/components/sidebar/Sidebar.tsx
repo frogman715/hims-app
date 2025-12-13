@@ -1,6 +1,7 @@
 "use client";
 
 import { useSession, signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import SidebarHeader from "./SidebarHeader";
 import SidebarNav, { type NavItem } from "./SidebarNav";
 
@@ -10,6 +11,7 @@ interface SidebarProps {
 
 export default function Sidebar({ navigationItems }: SidebarProps) {
   const { data: session } = useSession();
+  const router = useRouter();
 
   const defaultNavItems: NavItem[] = [
     { href: "/crewing", label: "Crewing Department", icon: "⚓" },
@@ -22,8 +24,13 @@ export default function Sidebar({ navigationItems }: SidebarProps) {
 
   const navItems = navigationItems || defaultNavItems;
 
-  const handleLogout = () => {
-    signOut({ callbackUrl: "/auth/signin" });
+  const handleLogout = async () => {
+    const result = await signOut({ redirect: false, callbackUrl: "/auth/signin" });
+    if (result?.url) {
+      router.replace(result.url);
+    } else {
+      router.replace("/auth/signin");
+    }
   };
 
   return (

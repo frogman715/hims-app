@@ -12,7 +12,7 @@ export default function SignInClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const desiredTarget = searchParams.get("callbackUrl") ?? searchParams.get("redirect") ?? undefined;
-  const safeTarget = desiredTarget && desiredTarget.startsWith("/") ? desiredTarget : "/dashboard";
+  const safeTarget = desiredTarget && desiredTarget.startsWith("/") ? desiredTarget : "/";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -1,8 +1,9 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/Button";
 
 interface Seafarer {
   id: number;
@@ -16,6 +17,31 @@ interface Seafarer {
     vessel: { name: string };
   }>;
 }
+
+const formatDate = (value: string | null) => {
+  if (!value) {
+    return "—";
+  }
+
+  return new Date(value).toLocaleDateString("id-ID", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+};
+
+const assignmentStatusTone = (status: string) => {
+  switch (status.toUpperCase()) {
+    case "ONBOARD":
+      return "bg-emerald-100 text-emerald-700";
+    case "PLANNED":
+      return "bg-amber-100 text-amber-700";
+    case "STANDBY":
+      return "bg-sky-100 text-sky-700";
+    default:
+      return "bg-slate-100 text-slate-700";
+  }
+};
 
 export default function Seafarers() {
   const { data: session, status } = useSession();
@@ -50,6 +76,15 @@ export default function Seafarers() {
     }
   };
 
+  const tableRows = seafarers.map((seafarer) => {
+    const latestAssignment = seafarer.assignments[0];
+    return {
+      ...seafarer,
+      latestAssignment,
+      statusTone: latestAssignment ? assignmentStatusTone(latestAssignment.status ?? "") : "bg-slate-100 text-slate-700",
+    };
+  });
+
   if (status === "loading" || loading) {
     return <div>Loading...</div>;
   }
@@ -59,126 +94,121 @@ export default function Seafarers() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold text-gray-900">Seafarers</h1>
-            <button
-              onClick={() => router.push("/crewing")}
-              className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded"
-            >
-              Back to Crewing
-            </button>
+    <div className="min-h-screen bg-slate-50">
+      <header className="border-b border-slate-200 bg-white">
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-12 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-widest text-emerald-600">Crewing</p>
+            <h1 className="mt-3 text-3xl font-bold text-slate-900">Seafarers List</h1>
+            <p className="mt-2 text-sm text-slate-600">Manage seafarer profiles and information (CR-01)</p>
           </div>
-          <p className="text-sm text-gray-800">Manage seafarer profiles and information (CR-01)</p>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Button variant="ghost" onClick={() => router.push("/crewing")}>Back to Crewing</Button>
+            <Button onClick={() => router.push("/crewing/seafarers/new")}>New Seafarer</Button>
+          </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-extrabold text-gray-900">Seafarer List</h2>
-            <button
-              onClick={() => router.push("/crewing/seafarers/new")}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
-            >
-              Add New Seafarer
-            </button>
+      <main className="mx-auto w-full max-w-6xl px-6 py-10">
+        <section className="rounded-3xl border border-slate-200 bg-white shadow-sm">
+          <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+            <div>
+              <h2 className="text-lg font-semibold text-slate-900">Master Database</h2>
+              <p className="text-sm text-slate-500">Overview of all registered officers and ratings.</p>
+            </div>
+            <span className="text-sm font-semibold text-slate-400">Total: {seafarers.length}</span>
           </div>
-
-          <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-            <ul className="divide-y divide-gray-200">
-              {seafarers.map((seafarer) => (
-                <li key={seafarer.id}>
-                  <div className="px-4 py-4 sm:px-6">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10">
-                          <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
-                            <span className="text-sm font-semibold text-gray-900">
-                              {seafarer.fullName.charAt(0).toUpperCase()}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
-                            <button
-                              onClick={() => router.push(`/crewing/seafarers/${seafarer.id}/biodata`)}
-                              className="hover:text-indigo-600 transition-colors"
-                            >
-                              {seafarer.fullName}
-                            </button>
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {seafarer.nationality}
-                            {seafarer.dateOfBirth && (
-                              <span className="ml-2">
-                                • Born: {new Date(seafarer.dateOfBirth).toLocaleDateString()}
-                              </span>
-                            )}
-                          </div>
-                        </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-slate-200">
+              <thead className="bg-slate-50">
+                <tr>
+                  <th scope="col" className="whitespace-nowrap px-6 py-3 text-left text-xs font-semibold uppercase tracking-widest text-slate-500">Name</th>
+                  <th scope="col" className="whitespace-nowrap px-6 py-3 text-left text-xs font-semibold uppercase tracking-widest text-slate-500">Nationality</th>
+                  <th scope="col" className="whitespace-nowrap px-6 py-3 text-left text-xs font-semibold uppercase tracking-widest text-slate-500">Date of Birth</th>
+                  <th scope="col" className="whitespace-nowrap px-6 py-3 text-left text-xs font-semibold uppercase tracking-widest text-slate-500">Assignment</th>
+                  <th scope="col" className="whitespace-nowrap px-6 py-3 text-left text-xs font-semibold uppercase tracking-widest text-slate-500">Status</th>
+                  <th scope="col" className="whitespace-nowrap px-6 py-3 text-right text-xs font-semibold uppercase tracking-widest text-slate-500">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 bg-white">
+                {tableRows.map((seafarer) => (
+                  <tr key={seafarer.id} className="transition hover:bg-emerald-50/40">
+                    <td className="whitespace-nowrap px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-200 text-sm font-semibold text-slate-700">
+                          {seafarer.fullName.charAt(0).toUpperCase()}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => router.push(`/crewing/seafarers/${seafarer.id}/biodata`)}
+                          className="text-sm font-semibold text-slate-900 transition hover:text-emerald-600"
+                        >
+                          {seafarer.fullName}
+                        </button>
                       </div>
-                      <div className="flex items-center space-x-4">
-                        {seafarer.assignments.length > 0 && (
-                          <div className="text-sm text-gray-500">
-                            <div>Current Assignment:</div>
-                            <div className="font-medium">
-                              {seafarer.assignments[0].rank} on {seafarer.assignments[0].vessel.name}
-                            </div>
-                            <div className={`inline-flex items-center px-4.5 py-0.5 rounded-full text-xs font-medium ${
-                              seafarer.assignments[0].status === 'ONBOARD'
-                                ? 'bg-green-100 text-green-800'
-                                : seafarer.assignments[0].status === 'PLANNED'
-                                ? 'bg-yellow-100 text-yellow-800'
-                                : 'bg-gray-100 text-gray-800'
-                            }`}>
-                              {seafarer.assignments[0].status}
-                            </div>
-                          </div>
-                        )}
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={() => router.push(`/crewing/seafarers/${seafarer.id}/documents`)}
-                            className="text-green-600 hover:text-green-900"
-                          >
-                            Documents
-                          </button>
-                          <button
-                            onClick={() => router.push(`/crewing/seafarers/${seafarer.id}/trainings`)}
-                            className="text-purple-600 hover:text-purple-900"
-                          >
-                            Trainings
-                          </button>
-                          <button
-                            onClick={() => router.push(`/crewing/seafarers/${seafarer.id}/medical`)}
-                            className="text-red-600 hover:text-red-900"
-                          >
-                            Medical
-                          </button>
-                          <button
-                            onClick={() => router.push(`/crewing/seafarers/${seafarer.id}/biodata`)}
-                            className="text-gray-700 hover:text-gray-900"
-                          >
-                            View Details
-                          </button>
+                    </td>
+                    <td className="whitespace-nowrap px-6 py-4 text-sm text-slate-600">{seafarer.nationality}</td>
+                    <td className="whitespace-nowrap px-6 py-4 text-sm text-slate-600">{formatDate(seafarer.dateOfBirth)}</td>
+                    <td className="whitespace-nowrap px-6 py-4 text-sm text-slate-600">
+                      {seafarer.latestAssignment ? (
+                        <div className="space-y-1">
+                          <p className="font-semibold text-slate-900">{seafarer.latestAssignment.rank ?? "—"}</p>
+                          <p className="text-sm text-slate-500">{seafarer.latestAssignment.vessel.name}</p>
                         </div>
+                      ) : (
+                        <span className="text-slate-400">No assignment</span>
+                      )}
+                    </td>
+                    <td className="whitespace-nowrap px-6 py-4 text-sm">
+                      {seafarer.latestAssignment ? (
+                        <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${seafarer.statusTone}`}>
+                          {seafarer.latestAssignment.status}
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">UNASSIGNED</span>
+                      )}
+                    </td>
+                    <td className="whitespace-nowrap px-6 py-4 text-right text-sm">
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => router.push(`/crewing/seafarers/${seafarer.id}/documents`)}
+                          className="border-slate-300 text-slate-700"
+                        >
+                          Documents
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => router.push(`/crewing/seafarers/${seafarer.id}/trainings`)}
+                          className="border-slate-300 text-slate-700"
+                        >
+                          Trainings
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => router.push(`/crewing/seafarers/${seafarer.id}/medical`)}
+                          className="border-slate-300 text-slate-700"
+                        >
+                          Medical
+                        </Button>
                       </div>
-                    </div>
-                  </div>
-                </li>
-              ))}
-              {seafarers.length === 0 && (
-                <li>
-                  <div className="px-4 py-8 text-center text-gray-500">
-                    No seafarers found. Add your first seafarer to get started.
-                  </div>
-                </li>
-              )}
-            </ul>
+                    </td>
+                  </tr>
+                ))}
+                {tableRows.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-12 text-center text-sm text-slate-500">
+                      No seafarers found. Add your first seafarer to get started.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
-        </div>
+        </section>
       </main>
     </div>
   );

@@ -1,0 +1,17 @@
+# Build artifacts
+.next
+out
+build
+# Dependencies
+node_modules
+venv
+# Local tooling
+.env*
+!.env.docker
+!.env.docker.example
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store
+.git
+.vscode

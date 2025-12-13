@@ -189,7 +189,17 @@ npm run build
 npm start
 ```
 
-For Docker deployment, use the provided `docker-compose.yml`.
+### Docker Deployment
+
+1. Copy the template: `cp .env.docker.example .env.docker` and update the secrets.
+2. Build and start the stack: `docker compose up -d --build`.
+3. Apply migrations and seed accounts (inside the running container):
+	```bash
+	docker compose exec app node scripts/create-users.js
+	```
+4. Check health status: `docker compose ps` and `docker compose logs app`.
+
+The application will be available on [http://localhost:3000](http://localhost:3000). Adjust `NEXTAUTH_URL` in `.env.docker` when exposing the container behind a reverse proxy.
 
 ## Contributing
 

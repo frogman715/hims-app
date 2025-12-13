@@ -30,7 +30,7 @@ export default function HR() {
           <div className="flex justify-between items-center">
             <h1 className="text-3xl font-bold text-gray-900">Human Resources</h1>
             <button
-              onClick={() => router.push("/")}
+              onClick={() => router.push("/dashboard")}
               className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
             >
               Back to Dashboard

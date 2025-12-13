@@ -1,3 +1,20 @@
 {
-    "less.lint.argumentsInColorFunction": "ignore"
+    "less.lint.argumentsInColorFunction": "ignore",
+    "files.exclude": {
+        "*.pdf": true,
+        "HANMARINE_HIMS_*": true,
+        "HGQS_*": true,
+        "*_GUIDE.md": true,
+        "*CHECKLIST*.md": true,
+        "*_REPORT*.md": true,
+        "deploy*.sh": true,
+        "backup-database.sh": true,
+        "setup-*.sh": true,
+        "QUICK_*.md": true,
+        "DOCUMENTATION_INDEX.md": true,
+        "DOCUMENTATION_INDEX.pdf": true,
+        "build-output.log": true,
+        "cookies.txt": true,
+        "test_*.pdf": true
+    }
 }

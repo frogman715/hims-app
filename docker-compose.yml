@@ -5,6 +5,8 @@ services:
     image: postgres:16
     container_name: hims-db
     restart: unless-stopped
+    env_file:
+      - .env.docker
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -27,11 +29,8 @@ services:
     restart: unless-stopped
     ports:
       - "3000:3000"
-    environment:
-      DATABASE_URL: ${DATABASE_URL}
-      NEXTAUTH_URL: ${NEXTAUTH_URL}
-      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
-      HIMS_CRYPTO_KEY: ${HIMS_CRYPTO_KEY}
+    env_file:
+      - .env.docker
     depends_on:
       db:
         condition: service_healthy

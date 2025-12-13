@@ -1,56 +1,47 @@
-# Multi-stage Dockerfile for HANMARINE HIMS
-# Stage 1: Build the Next.js application
-FROM node:18-alpine AS builder
+# Multi-stage build for Next.js production image
+FROM node:20-alpine AS builder
 
-# Set working directory
+ENV NEXT_TELEMETRY_DISABLED=1
+
 WORKDIR /app
 
-# Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Install all dependencies for build (dev deps included)
+RUN npm ci
 
-# Copy source code
 COPY . .
 
-# Build the application
 RUN npm run build
 
-# Stage 2: Production runtime
-FROM node:18-alpine AS runner
+FROM node:20-alpine AS runner
 
-# Set working directory
+ENV NEXT_TELEMETRY_DISABLED=1
+
 WORKDIR /app
 
-# Create a non-root user
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+RUN addgroup --system --gid 1001 nodejs \
+  && adduser --system --uid 1001 --ingroup nodejs nextjs \
+  && apk add --no-cache curl libc6-compat openssl
 
-# Copy the built application from builder stage
 COPY --from=builder /app/public ./public
-
-# Set the correct permission for prerender cache
-RUN mkdir .next
-RUN chown nextjs:nodejs .next
-
-# Copy built application
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
+COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
+COPY --from=builder --chown=nextjs:nodejs /app/scripts ./scripts
+COPY docker/entrypoint.sh ./entrypoint.sh
 
-# Switch to non-root user
+RUN chmod 755 entrypoint.sh && chown nextjs:nodejs entrypoint.sh
+
 USER nextjs
 
-# Expose port
 EXPOSE 3000
 
-# Set environment variables
-ENV PORT=3000
-ENV NODE_ENV=production
+ENV PORT=3000 \
+    NODE_ENV=production
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD curl -f http://localhost:3000/api/health || exit 1
 
-# Start the application
-CMD ["node", "server.js"]
+ENTRYPOINT ["./entrypoint.sh"]

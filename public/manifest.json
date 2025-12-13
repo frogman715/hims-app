@@ -1,29 +1,23 @@
 {
-  "name": "HANMARINE Integrated Management System",
-  "short_name": "HANMARINE HIMS",
-  "description": "Maritime crew management system compliant with MLC 2006 & STCW 2010",
+  "name": "Hanmarine HIMS",
+  "short_name": "HIMS",
+  "description": "Hanmarine Integrated Management System for Crewing & Office Operations",
   "start_url": "/dashboard",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#1e40af",
+  "background_color": "#020617",
+  "theme_color": "#0f172a",
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/logo.png",
+      "src": "/icons/hims-192.png",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     },
     {
-      "src": "/logo.png",
+      "src": "/icons/hims-512.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     }
-  ],
-  "categories": ["business", "productivity"],
-  "scope": "/",
-  "dir": "ltr",
-  "lang": "en-US",
-  "prefer_related_applications": false
+  ]
 }
