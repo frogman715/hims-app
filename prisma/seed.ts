@@ -1,13 +1,9 @@
-// scripts/seed.js
-require('dotenv').config();
+import { PrismaClient, Role } from '@prisma/client';
+import bcrypt from 'bcrypt';
 
-const { Role } = require('@prisma/client');
-const { prisma } = require('./prismaClient');
-const bcrypt = require('bcryptjs');
+const prisma = new PrismaClient();
 
 async function main() {
-  console.log('Seeding HIMS users...');
-
   const users = [
     {
       name: 'Rinaldy (Director)',
@@ -20,7 +16,7 @@ async function main() {
       name: 'Arief',
       email: 'arief@hanmarine.co',
       password: 'admin2025',
-      role: Role.DIRECTOR,
+      role: Role.DIRECTOR, // kalau mau bikin role khusus admin, nanti bisa diubah
     },
     {
       name: 'Dino (Accounting)',
@@ -82,7 +78,7 @@ async function main() {
 
 main()
   .catch((e) => {
-    console.error('Seed error:', e);
+    console.error(e);
     process.exit(1);
   })
   .finally(async () => {
