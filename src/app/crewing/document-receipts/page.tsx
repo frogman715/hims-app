@@ -155,11 +155,20 @@ export default function DocumentReceiptDashboardPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-6">
       <div className="max-w-6xl mx-auto space-y-8">
         <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Tanda Terima Dokumen Crew</h1>
-            <p className="text-gray-700">
-              Buat bukti penyerahan dokumen fisik crew dan arsipkan secara digital.
-            </p>
+          <div className="space-y-4">
+            <button
+              type="button"
+              onClick={() => router.push('/crewing')}
+              className="inline-flex items-center gap-2 rounded-lg border border-gray-400 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+            >
+              Kembali ke Crewing
+            </button>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Tanda Terima Dokumen Crew</h1>
+              <p className="text-gray-700">
+                Buat bukti penyerahan dokumen fisik crew dan arsipkan secara digital.
+              </p>
+            </div>
           </div>
           <button
             type="button"
