@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import ExternalComplianceWidget from '@/components/compliance/ExternalComplianceWidget';
 
 interface ComplianceRecord {
@@ -20,6 +21,7 @@ interface ComplianceRecord {
 }
 
 export default function ExternalCompliancePage() {
+  const router = useRouter();
   const [compliances, setCompliances] = useState<ComplianceRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'ALL' | 'KOSMA' | 'DEPHUB' | 'SCHENGEN'>('ALL');
@@ -85,11 +87,20 @@ export default function ExternalCompliancePage() {
     <div className="min-h-screen bg-gray-100 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">External Compliance Systems</h1>
-          <p className="text-gray-700 mt-2">
-            Manage KOSMA, Dephub, and Schengen Visa compliance records
-          </p>
+        <div className="mb-6 space-y-4">
+          <button
+            type="button"
+            onClick={() => router.push('/compliance')}
+            className="inline-flex items-center gap-2 rounded-lg border border-gray-400 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+          >
+            Kembali ke Compliance
+          </button>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">External Compliance Systems</h1>
+            <p className="text-gray-700 mt-2">
+              Manage KOSMA, Dephub, and Schengen Visa compliance records
+            </p>
+          </div>
         </div>
 
         {/* Widget Overview */}
