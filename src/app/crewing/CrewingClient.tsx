@@ -72,6 +72,37 @@ interface CrewSearchResult {
   }>;
 }
 
+interface CrewingOverviewStats {
+  activeSeafarers: number;
+  principalCount: number;
+  vesselCount: number;
+  activeAssignments: number;
+  plannedAssignments: number;
+  pendingApplications: number;
+  applicationInProgress: number;
+  scheduledInterviews: number;
+  prepareJoiningInProgress: number;
+  crewReplacementPending: number;
+  documentsExpiringSoon: number;
+  complianceRate: number | null;
+  documentReceiptsTotal: number;
+  trainingInProgress: number;
+  signOffThisMonth: number;
+  externalComplianceActive: number;
+}
+
+interface CrewingOverviewResponse {
+  stats: CrewingOverviewStats;
+  recentActivities: Array<{
+    id: string;
+    userName: string;
+    action: string;
+    entityType: string;
+    entityId: string;
+    createdAt: string;
+  }>;
+}
+
 const crewStatusAccent = (status: string) => {
   switch (status) {
     case "ONBOARD":
@@ -108,6 +139,9 @@ export default function CrewingClient() {
   const [searchResults, setSearchResults] = useState<CrewSearchResult[]>([]);
   const [searchError, setSearchError] = useState<string | null>(null);
   const [isSearching, setIsSearching] = useState(false);
+  const [overviewData, setOverviewData] = useState<CrewingOverviewResponse | null>(null);
+  const [overviewError, setOverviewError] = useState<string | null>(null);
+  const [isOverviewLoading, setIsOverviewLoading] = useState(false);
 
   useEffect(() => {
     if (status === "loading") {
@@ -118,6 +152,50 @@ export default function CrewingClient() {
       router.push("/auth/signin");
     }
   }, [router, session, status]);
+
+  useEffect(() => {
+    if (status !== "authenticated") {
+      return;
+    }
+
+    let isMounted = true;
+
+    const loadOverview = async () => {
+      setIsOverviewLoading(true);
+      try {
+        const response = await fetch("/api/crewing/overview", { cache: "no-store" });
+        const payload = await response.json().catch(() => null);
+
+        if (!response.ok || !payload) {
+          throw new Error(payload?.error ?? "Gagal memuat data overview");
+        }
+
+        if (!isMounted) {
+          return;
+        }
+
+        setOverviewData(payload as CrewingOverviewResponse);
+        setOverviewError(null);
+      } catch (error) {
+        if (!isMounted) {
+          return;
+        }
+
+        console.error("Failed to load crewing overview:", error);
+        setOverviewError(error instanceof Error ? error.message : "Gagal memuat data overview");
+      } finally {
+        if (isMounted) {
+          setIsOverviewLoading(false);
+        }
+      }
+    };
+
+    loadOverview();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [status]);
 
   useEffect(() => {
     const trimmedQuery = searchQuery.trim();
@@ -182,6 +260,38 @@ export default function CrewingClient() {
     return null;
   }
 
+  const stats = overviewData?.stats;
+
+  const formatNumber = (value: number | null | undefined) => {
+    if (value === null || value === undefined) {
+      return isOverviewLoading ? "..." : "N/A";
+    }
+
+    return value.toLocaleString("id-ID");
+  };
+
+  const formatStat = (value: number | null | undefined, suffix: string, fallback = "N/A") => {
+    if (value === null || value === undefined) {
+      return isOverviewLoading ? "..." : fallback;
+    }
+
+    return `${value.toLocaleString("id-ID")} ${suffix}`;
+  };
+
+  const formatPercentage = (value: number | null | undefined) => {
+    if (value === null || value === undefined) {
+      return isOverviewLoading ? "..." : "N/A";
+    }
+
+    return `${value.toLocaleString("id-ID")}%`;
+  };
+
+  const complianceBadge = stats
+    ? stats.complianceRate === null
+      ? formatStat(stats.documentsExpiringSoon, "Expiring")
+      : formatPercentage(stats.complianceRate)
+    : formatStat(undefined, "Expiring");
+
   const lastUpdated = new Date().toLocaleDateString("id-ID", {
     day: "2-digit",
     month: "short",
@@ -191,28 +301,28 @@ export default function CrewingClient() {
   const overviewCards: OverviewCard[] = [
     {
       label: "Active Seafarers",
-      value: "0",
+      value: formatNumber(stats?.activeSeafarers),
       description: "Crew currently on assignment",
       icon: "👥",
       accent: "bg-blue-500/10 text-blue-600",
     },
     {
       label: "Pending Applications",
-      value: "0",
+      value: formatNumber(stats?.pendingApplications),
       description: "Awaiting recruitment review",
       icon: "📝",
       accent: "bg-emerald-500/10 text-emerald-600",
     },
     {
       label: "Assignments In Progress",
-      value: "0",
+      value: formatNumber(stats?.activeAssignments),
       description: "SEA & PKL contracts being tracked",
       icon: "📋",
       accent: "bg-indigo-500/10 text-indigo-600",
     },
     {
       label: "Expiring Documents",
-      value: "0",
+      value: formatNumber(stats?.documentsExpiringSoon),
       description: "Documents expiring within 14 months",
       icon: "📄",
       accent: "bg-amber-500/10 text-amber-600",
@@ -275,7 +385,7 @@ export default function CrewingClient() {
           href: "/crewing/seafarers",
           icon: "👨‍⚓",
           color: "from-blue-600 to-blue-700",
-          stats: "0 Active",
+          stats: formatStat(stats?.activeSeafarers, "Active"),
         },
         {
           title: "Applications",
@@ -283,7 +393,7 @@ export default function CrewingClient() {
           href: "/crewing/applications",
           icon: "📝",
           color: "from-green-600 to-green-700",
-          stats: "0 Pending",
+          stats: formatStat(stats?.pendingApplications, "Pending"),
         },
         {
           title: "Application Workflow",
@@ -291,7 +401,7 @@ export default function CrewingClient() {
           href: "/crewing/workflow",
           icon: "🔄",
           color: "from-cyan-600 to-cyan-700",
-          stats: "0 In Progress",
+          stats: formatStat(stats?.applicationInProgress, "In Progress"),
         },
         {
           title: "Interviews",
@@ -299,7 +409,7 @@ export default function CrewingClient() {
           href: "/crewing/interviews",
           icon: "💼",
           color: "from-indigo-600 to-indigo-700",
-          stats: "0 Scheduled",
+          stats: formatStat(stats?.scheduledInterviews, "Scheduled"),
         },
       ],
     },
@@ -313,7 +423,7 @@ export default function CrewingClient() {
           href: "/crewing/assignments",
           icon: "📋",
           color: "from-purple-600 to-purple-700",
-          stats: "0 Active",
+          stats: formatStat(stats?.activeAssignments, "Active"),
         },
         {
           title: "Prepare Joining",
@@ -321,7 +431,7 @@ export default function CrewingClient() {
           href: "/crewing/prepare-joining",
           icon: "✈️",
           color: "from-emerald-600 to-teal-700",
-          stats: "0 Ready",
+          stats: formatStat(stats?.prepareJoiningInProgress, "Ongoing"),
         },
         {
           title: "Crew List (Onboard)",
@@ -329,7 +439,7 @@ export default function CrewingClient() {
           href: "/crewing/crew-list",
           icon: "🚢",
           color: "from-blue-700 to-indigo-700",
-          stats: "0 Vessels",
+          stats: formatStat(stats?.vesselCount, "Vessels"),
         },
         {
           title: "Crew Replacements",
@@ -337,7 +447,7 @@ export default function CrewingClient() {
           href: "/crewing/replacements",
           icon: "🔄",
           color: "from-orange-600 to-red-600",
-          stats: "0 Scheduled",
+          stats: formatStat(stats?.crewReplacementPending, "Pending"),
         },
       ],
     },
@@ -351,7 +461,7 @@ export default function CrewingClient() {
           href: "/crewing/documents",
           icon: "📜",
           color: "from-amber-600 to-orange-700",
-          stats: "0 Expiring",
+          stats: complianceBadge,
         },
         {
           title: "Tanda Terima Dokumen",
@@ -359,7 +469,7 @@ export default function CrewingClient() {
           href: "/crewing/document-receipts",
           icon: "📥",
           color: "from-emerald-600 to-teal-600",
-          stats: "Digital",
+          stats: formatStat(stats?.documentReceiptsTotal, "Records"),
         },
         {
           title: "Form Management",
@@ -375,7 +485,7 @@ export default function CrewingClient() {
           href: "/crewing/training",
           icon: "🎓",
           color: "from-yellow-600 to-amber-700",
-          stats: "0 Active",
+          stats: formatStat(stats?.trainingInProgress, "Active"),
         },
         {
           title: "Monthly Checklist",
@@ -383,7 +493,7 @@ export default function CrewingClient() {
           href: "/crewing/checklist",
           icon: "✅",
           color: "from-teal-600 to-cyan-700",
-          stats: "0 This Month",
+          stats: formatStat(stats?.signOffThisMonth, "This Month"),
         },
         {
           title: "External Compliance",
@@ -391,7 +501,7 @@ export default function CrewingClient() {
           href: "/compliance/external",
           icon: "🌐",
           color: "from-indigo-600 to-purple-700",
-          stats: "0 Systems",
+          stats: formatStat(stats?.externalComplianceActive, "Active"),
         },
         {
           title: "SIUPPAK Reports",
@@ -436,6 +546,12 @@ export default function CrewingClient() {
             </div>
           </div>
         </div>
+
+        {overviewError && (
+          <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            {overviewError}
+          </div>
+        )}
 
         <div className="surface-card space-y-4 border border-emerald-100/60 bg-gradient-to-br from-emerald-50/40 via-white to-white p-6 shadow-sm">
           <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">

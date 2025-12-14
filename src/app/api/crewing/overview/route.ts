@@ -18,6 +18,10 @@ interface CrewingOverviewResponse {
     crewReplacementPending: number;
     documentsExpiringSoon: number;
     complianceRate: number | null;
+    documentReceiptsTotal: number;
+    trainingInProgress: number;
+    signOffThisMonth: number;
+    externalComplianceActive: number;
   };
   recentActivities: Array<{
     id: string;
@@ -43,15 +47,15 @@ export async function GET() {
     const now = new Date();
     const fourteenMonthsFromNow = new Date(now.getTime());
     fourteenMonthsFromNow.setMonth(fourteenMonthsFromNow.getMonth() + 14);
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfNextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
 
     const activeAssignmentStatuses = ["ONBOARD", "ASSIGNED", "ACTIVE"] as const;
     const plannedAssignmentStatuses = ["PLANNED", "ASSIGNED"] as const;
-    const [activeSeafarers, principalCount, vesselCount, activeAssignments, plannedAssignments, pendingApplications, applicationInProgress, scheduledInterviews, prepareJoiningInProgress, crewReplacementPending, documentsExpiringSoon, compliantDocuments, totalDocuments, recentActivitiesRaw] = await Promise.all([
+    const [activeSeafarers, principalCount, vesselCount, activeAssignments, plannedAssignments, pendingApplications, applicationInProgress, scheduledInterviews, prepareJoiningInProgress, crewReplacementPending, documentsExpiringSoon, compliantDocuments, totalDocuments, documentReceiptsTotal, trainingInProgress, signOffThisMonth, externalComplianceActive, recentActivitiesRaw] = await Promise.all([
       prisma.crew.count({
         where: {
-          status: {
-            in: ["ONBOARD", "STANDBY"],
-          },
+          status: "ONBOARD",
         },
       }),
       prisma.principal.count(),
@@ -109,6 +113,7 @@ export async function GET() {
             lte: fourteenMonthsFromNow,
             gte: now,
           },
+          isActive: true,
         },
       }),
       prisma.crewDocument.count({
@@ -124,6 +129,29 @@ export async function GET() {
         },
       }),
       prisma.crewDocument.count(),
+      prisma.documentReceipt.count(),
+      prisma.orientation.count({
+        where: {
+          status: {
+            not: "COMPLETED",
+          },
+        },
+      }),
+      prisma.crewSignOff.count({
+        where: {
+          signOffDate: {
+            gte: startOfMonth,
+            lt: startOfNextMonth,
+          },
+        },
+      }),
+      prisma.externalCompliance.count({
+        where: {
+          status: {
+            in: ["PENDING", "VERIFIED"],
+          },
+        },
+      }),
       prisma.activityLog.findMany({
         take: 6,
         orderBy: { createdAt: "desc" },
@@ -162,6 +190,10 @@ export async function GET() {
         crewReplacementPending,
         documentsExpiringSoon,
         complianceRate,
+        documentReceiptsTotal,
+        trainingInProgress,
+        signOffThisMonth,
+        externalComplianceActive,
       },
       recentActivities,
     };
