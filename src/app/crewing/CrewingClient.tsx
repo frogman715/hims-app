@@ -191,28 +191,28 @@ export default function CrewingClient() {
   const overviewCards: OverviewCard[] = [
     {
       label: "Active Seafarers",
-      value: "245",
+      value: "0",
       description: "Crew currently on assignment",
       icon: "👥",
       accent: "bg-blue-500/10 text-blue-600",
     },
     {
       label: "Pending Applications",
-      value: "12",
+      value: "0",
       description: "Awaiting recruitment review",
       icon: "📝",
       accent: "bg-emerald-500/10 text-emerald-600",
     },
     {
       label: "Assignments In Progress",
-      value: "156",
+      value: "0",
       description: "SEA & PKL contracts being tracked",
       icon: "📋",
       accent: "bg-indigo-500/10 text-indigo-600",
     },
     {
       label: "Expiring Documents",
-      value: "8",
+      value: "0",
       description: "Documents expiring within 14 months",
       icon: "📄",
       accent: "bg-amber-500/10 text-amber-600",
@@ -275,7 +275,7 @@ export default function CrewingClient() {
           href: "/crewing/seafarers",
           icon: "👨‍⚓",
           color: "from-blue-600 to-blue-700",
-          stats: "245 Active",
+          stats: "0 Active",
         },
         {
           title: "Applications",
@@ -283,7 +283,7 @@ export default function CrewingClient() {
           href: "/crewing/applications",
           icon: "📝",
           color: "from-green-600 to-green-700",
-          stats: "12 Pending",
+          stats: "0 Pending",
         },
         {
           title: "Application Workflow",
@@ -291,7 +291,7 @@ export default function CrewingClient() {
           href: "/crewing/workflow",
           icon: "🔄",
           color: "from-cyan-600 to-cyan-700",
-          stats: "15 In Progress",
+          stats: "0 In Progress",
         },
         {
           title: "Interviews",
@@ -299,7 +299,7 @@ export default function CrewingClient() {
           href: "/crewing/interviews",
           icon: "💼",
           color: "from-indigo-600 to-indigo-700",
-          stats: "5 Scheduled",
+          stats: "0 Scheduled",
         },
       ],
     },
@@ -313,7 +313,7 @@ export default function CrewingClient() {
           href: "/crewing/assignments",
           icon: "📋",
           color: "from-purple-600 to-purple-700",
-          stats: "156 Active",
+          stats: "0 Active",
         },
         {
           title: "Prepare Joining",
@@ -321,7 +321,7 @@ export default function CrewingClient() {
           href: "/crewing/prepare-joining",
           icon: "✈️",
           color: "from-emerald-600 to-teal-700",
-          stats: "8 Ready",
+          stats: "0 Ready",
         },
         {
           title: "Crew List (Onboard)",
@@ -329,7 +329,7 @@ export default function CrewingClient() {
           href: "/crewing/crew-list",
           icon: "🚢",
           color: "from-blue-700 to-indigo-700",
-          stats: "18 Vessels",
+          stats: "0 Vessels",
         },
         {
           title: "Crew Replacements",
@@ -337,7 +337,7 @@ export default function CrewingClient() {
           href: "/crewing/replacements",
           icon: "🔄",
           color: "from-orange-600 to-red-600",
-          stats: "5 Scheduled",
+          stats: "0 Scheduled",
         },
       ],
     },
@@ -351,7 +351,7 @@ export default function CrewingClient() {
           href: "/crewing/documents",
           icon: "📜",
           color: "from-amber-600 to-orange-700",
-          stats: "8 Expiring",
+          stats: "0 Expiring",
         },
         {
           title: "Tanda Terima Dokumen",
@@ -375,7 +375,7 @@ export default function CrewingClient() {
           href: "/crewing/training",
           icon: "🎓",
           color: "from-yellow-600 to-amber-700",
-          stats: "34 Active",
+          stats: "0 Active",
         },
         {
           title: "Monthly Checklist",
@@ -383,7 +383,7 @@ export default function CrewingClient() {
           href: "/crewing/checklist",
           icon: "✅",
           color: "from-teal-600 to-cyan-700",
-          stats: "23 This Month",
+          stats: "0 This Month",
         },
         {
           title: "External Compliance",
@@ -391,7 +391,7 @@ export default function CrewingClient() {
           href: "/compliance/external",
           icon: "🌐",
           color: "from-indigo-600 to-purple-700",
-          stats: "3 Systems",
+          stats: "0 Systems",
         },
         {
           title: "SIUPPAK Reports",
