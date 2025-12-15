@@ -71,6 +71,10 @@ export default function DocumentReceiptDashboardPage() {
   const [filter, setFilter] = useState('');
   const [refreshing, setRefreshing] = useState(false);
 
+  const handleBackToDashboard = () => {
+    router.push('/dashboard');
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -170,14 +174,23 @@ export default function DocumentReceiptDashboardPage() {
               </p>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={handleRefresh}
-            disabled={refreshing}
-            className="px-5 py-2 rounded-lg border border-gray-400 text-gray-700 hover:bg-gray-100 disabled:opacity-50"
-          >
-            {refreshing ? 'Memuat…' : 'Refresh Data'}
-          </button>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button
+              type="button"
+              onClick={handleBackToDashboard}
+              className="px-5 py-2 rounded-lg border border-gray-400 text-gray-700 hover:bg-gray-100"
+            >
+              Kembali ke Dashboard
+            </button>
+            <button
+              type="button"
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="px-5 py-2 rounded-lg border border-gray-400 text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+            >
+              {refreshing ? 'Memuat…' : 'Refresh Data'}
+            </button>
+          </div>
         </header>
 
         <section className="bg-white shadow-xl rounded-2xl p-8">
