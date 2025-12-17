@@ -2376,6 +2376,11 @@ async function generateCrewWagePaymentRecord(data?: FormGeneratorInput) {
 // AC-04: Allotment Form
 async function generateAllotmentForm(data?: FormGeneratorInput) {
   const formData = normalizeFormData(data);
+  const allotmentDateValue = formData.allotmentDate;
+  const formattedAllotmentDate =
+    typeof allotmentDateValue === "string" || typeof allotmentDateValue === "number"
+      ? new Date(allotmentDateValue).toLocaleDateString()
+      : "";
   const html = `
     <!DOCTYPE html>
     <html>
@@ -2483,7 +2488,7 @@ async function generateAllotmentForm(data?: FormGeneratorInput) {
         </div>
         <div class="field">
           <span class="field-label">Date:</span>
-          <span class="field-line">${formData.allotmentDate ? new Date(formData.allotmentDate).toLocaleDateString() : ''}</span>
+          <span class="field-line">${formattedAllotmentDate}</span>
         </div>
       </div>
     </body>

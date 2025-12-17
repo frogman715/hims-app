@@ -54,17 +54,36 @@ export async function GET(req: NextRequest) {
     const interviews = await prisma.interview.findMany({
       where,
       include: {
-        application: {
-          include: {
-            crew: {
-              select: {
-                id: true,
-                fullName: true,
-                rank: true,
-                nationality: true,
-                phone: true,
-              },
-            },
+        crew: {
+          select: {
+            id: true,
+            fullName: true,
+            rank: true,
+            nationality: true,
+            phone: true,
+          },
+        },
+        interviewer: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+      orderBy: { scheduledDate: "desc" },
+    });
+
+    const applicationIds = interviews
+      .map((interview) => interview.applicationId)
+      .filter((value): value is string => typeof value === "string" && value.length > 0);
+
+    const applications = applicationIds.length
+      ? await prisma.application.findMany({
+          where: { id: { in: applicationIds } },
+          select: {
+            id: true,
+            position: true,
+            status: true,
             principal: {
               select: {
                 id: true,
@@ -72,12 +91,17 @@ export async function GET(req: NextRequest) {
               },
             },
           },
-        },
-      },
-      orderBy: { scheduledDate: "desc" },
-    });
+        })
+      : [];
 
-    return NextResponse.json({ data: interviews, total: interviews.length });
+    const applicationMap = new Map(applications.map((app) => [app.id, app]));
+
+    const result = interviews.map((interview) => ({
+      ...interview,
+      application: interview.applicationId ? applicationMap.get(interview.applicationId) ?? null : null,
+    }));
+
+    return NextResponse.json({ data: result, total: result.length });
   } catch (error) {
     console.error("Error fetching interviews:", error);
     return NextResponse.json(
@@ -99,7 +123,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = (await req.json()) as Partial<CreateInterviewPayload>;
-    const { applicationId, scheduledDate, interviewerName, notes } = body;
+    const { applicationId, scheduledDate, notes } = body;
 
     if (!applicationId || typeof applicationId !== "string") {
       return NextResponse.json(
@@ -109,32 +133,60 @@ export async function POST(req: NextRequest) {
     }
 
     const scheduledAt = parseIsoDate(typeof scheduledDate === "string" ? scheduledDate : null);
-    const interviewer = typeof interviewerName === "string" ? interviewerName.trim() : null;
     const sanitizedNotes = typeof notes === "string" ? notes.trim() : null;
+
+    const application = await prisma.application.findUnique({
+      where: { id: applicationId },
+      select: {
+        id: true,
+        status: true,
+        position: true,
+        crewId: true,
+        principal: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    if (!application) {
+      return NextResponse.json({ error: "Application not found" }, { status: 404 });
+    }
+
+    const interviewerId = session.user?.id;
+    if (!interviewerId) {
+      return NextResponse.json({ error: "Unable to determine interviewer" }, { status: 400 });
+    }
 
     const interview = await prisma.interview.create({
       data: {
+        crewId: application.crewId,
         applicationId,
-        scheduledDate: scheduledAt,
+        interviewerId,
+        scheduledDate: scheduledAt ?? new Date(),
         conductedDate: null,
         status: InterviewStatus.SCHEDULED,
-        interviewerName: interviewer,
         technicalScore: null,
         attitudeScore: null,
         englishScore: null,
+        remarks: sanitizedNotes,
         recommendation: null,
-        notes: sanitizedNotes,
+        score: null,
       },
       include: {
-        application: {
-          include: {
-            crew: {
-              select: {
-                id: true,
-                fullName: true,
-                rank: true,
-              },
-            },
+        crew: {
+          select: {
+            id: true,
+            fullName: true,
+            rank: true,
+          },
+        },
+        interviewer: {
+          select: {
+            id: true,
+            name: true,
           },
         },
       },
@@ -146,7 +198,17 @@ export async function POST(req: NextRequest) {
       data: { status: ApplicationStatus.INTERVIEW },
     });
 
-    return NextResponse.json(interview, { status: 201 });
+    const enrichedInterview = {
+      ...interview,
+      application: {
+        id: application.id,
+        status: application.status,
+        position: application.position,
+        principal: application.principal,
+      },
+    };
+
+    return NextResponse.json(enrichedInterview, { status: 201 });
   } catch (error) {
     console.error("Error creating interview:", error);
     return NextResponse.json(

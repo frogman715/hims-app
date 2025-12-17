@@ -24,9 +24,10 @@ function parseOptionalDate(value: unknown): Date | undefined {
  */
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const params = await context.params;
     return await withPermission<ComplianceHandlerContext>("compliance", PermissionLevel.VIEW_ACCESS, async (req, session, context) => {
       const compliance = await prisma.externalCompliance.findUnique({
         where: { id: context.params.id },
@@ -52,9 +53,10 @@ export async function GET(
  */
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const params = await context.params;
     return await withPermission<ComplianceHandlerContext>("compliance", PermissionLevel.EDIT_ACCESS, async (req, session, context) => {
       const body = await req.json();
       const { certificateId, issueDate, expiryDate, status, verificationUrl, notes } = body as Record<string, unknown>;
@@ -103,9 +105,10 @@ export async function PUT(
  */
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const params = await context.params;
     return await withPermission<ComplianceHandlerContext>("compliance", PermissionLevel.FULL_ACCESS, async (req, session, context) => {
       await prisma.externalCompliance.delete({
         where: { id: context.params.id },

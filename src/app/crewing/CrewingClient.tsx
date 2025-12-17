@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { CREWING_DOCUMENT_RECEIPTS_ROUTE } from "@/lib/routes";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 
@@ -352,7 +353,7 @@ export default function CrewingClient() {
       accent: "bg-indigo-500/10 text-indigo-600",
     },
     {
-      href: "/crewing/document-receipts",
+      href: CREWING_DOCUMENT_RECEIPTS_ROUTE,
       label: "Tanda Terima Dokumen",
       description: "Catat penyerahan dokumen fisik crew",
       icon: "📥",
@@ -466,7 +467,7 @@ export default function CrewingClient() {
         {
           title: "Tanda Terima Dokumen",
           description: "Generate & arsip tanda terima penyerahan dokumen crew",
-          href: "/crewing/document-receipts",
+          href: CREWING_DOCUMENT_RECEIPTS_ROUTE,
           icon: "📥",
           color: "from-emerald-600 to-teal-600",
           stats: formatStat(stats?.documentReceiptsTotal, "Records"),

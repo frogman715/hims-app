@@ -2,6 +2,11 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
+import type { AppRole } from '@/lib/roles';
+import { OFFICE_ROLES } from '@/lib/roles';
+import { Breadcrumbs, type BreadcrumbItem } from '@/components/layout/Breadcrumbs';
+import { PageHeader } from '@/components/layout/PageHeader';
 
 interface ReceiptListItem {
   id: string;
@@ -63,6 +68,15 @@ function mapSeafarerOptions(data: unknown): SeafarerOption[] {
 
 export default function DocumentReceiptDashboardPage() {
   const router = useRouter();
+  const { data: session, status } = useSession();
+  const userRoles = session?.user?.roles;
+  const roles = useMemo<AppRole[]>(() => {
+    return Array.isArray(userRoles) ? (userRoles as AppRole[]) : [];
+  }, [userRoles]);
+  const hasOfficeAccess = useMemo(() => {
+    return roles.some((role) => (OFFICE_ROLES as readonly AppRole[]).includes(role));
+  }, [roles]);
+  const [isAuthorized, setIsAuthorized] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [receipts, setReceipts] = useState<ReceiptListItem[]>([]);
@@ -76,6 +90,30 @@ export default function DocumentReceiptDashboardPage() {
   };
 
   useEffect(() => {
+    if (status === 'loading') {
+      return;
+    }
+
+    if (!session) {
+      router.replace('/auth/signin');
+      setIsAuthorized(false);
+      return;
+    }
+
+    if (!hasOfficeAccess) {
+      router.replace('/dashboard');
+      setIsAuthorized(false);
+      return;
+    }
+
+    setIsAuthorized(true);
+  }, [status, session, hasOfficeAccess, router]);
+
+  useEffect(() => {
+    if (!isAuthorized) {
+      return;
+    }
+
     const fetchData = async () => {
       try {
         setLoading(true);
@@ -107,7 +145,7 @@ export default function DocumentReceiptDashboardPage() {
     };
 
     fetchData();
-  }, []);
+  }, [isAuthorized]);
 
   const filteredReceipts = useMemo(() => {
     if (!filter.trim()) {
@@ -121,6 +159,15 @@ export default function DocumentReceiptDashboardPage() {
     });
   }, [filter, receipts]);
 
+  const breadcrumbItems = useMemo<BreadcrumbItem[]>(() => {
+    return [
+      { label: 'Crewing', href: hasOfficeAccess ? '/crewing' : undefined },
+      { label: 'Seafarers', href: hasOfficeAccess ? '/crewing/seafarers' : undefined },
+      { label: 'Documents', href: hasOfficeAccess ? '/crewing/documents' : undefined },
+      { label: 'Receipts' },
+    ];
+  }, [hasOfficeAccess]);
+
   const handleCreate = () => {
     if (!selectedCrewId) {
       setError('Pilih crew terlebih dahulu sebelum membuat tanda terima.');
@@ -130,6 +177,9 @@ export default function DocumentReceiptDashboardPage() {
   };
 
   const handleRefresh = async () => {
+    if (!isAuthorized) {
+      return;
+    }
     try {
       setRefreshing(true);
       const response = await fetch('/api/document-receipts');
@@ -155,43 +205,55 @@ export default function DocumentReceiptDashboardPage() {
     return parsed.toLocaleDateString();
   };
 
+  if (status === 'loading' || (session && !isAuthorized)) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-6">
+        <div className="mx-auto max-w-4xl rounded-2xl border border-gray-200 bg-white p-10 text-center shadow-md">
+          Memuat...
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthorized) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-6">
       <div className="max-w-6xl mx-auto space-y-8">
-        <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-          <div className="space-y-4">
-            <button
-              type="button"
-              onClick={() => router.push('/crewing')}
-              className="inline-flex items-center gap-2 rounded-lg border border-gray-400 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
-            >
-              Kembali ke Crewing
-            </button>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Tanda Terima Dokumen Crew</h1>
-              <p className="text-gray-700">
-                Buat bukti penyerahan dokumen fisik crew dan arsipkan secara digital.
-              </p>
+        {/* Reference layout: reuse Breadcrumbs + PageHeader combo across Crewing, Accounting, and HGQS. */}
+        <Breadcrumbs items={breadcrumbItems} />
+        <PageHeader
+          title="Tanda Terima Dokumen Crew"
+          subtitle="Buat bukti penyerahan dokumen fisik dan arsip digital"
+          actions={(
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => router.push('/crewing')}
+                className="inline-flex items-center gap-2 rounded-lg border border-gray-400 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+              >
+                Kembali ke Crewing
+              </button>
+              <button
+                type="button"
+                onClick={handleBackToDashboard}
+                className="inline-flex items-center gap-2 rounded-lg border border-gray-400 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+              >
+                Kembali ke Dashboard
+              </button>
+              <button
+                type="button"
+                onClick={handleRefresh}
+                disabled={refreshing}
+                className="inline-flex items-center gap-2 rounded-lg border border-gray-400 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+              >
+                {refreshing ? 'Memuat…' : 'Refresh Data'}
+              </button>
             </div>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-3">
-            <button
-              type="button"
-              onClick={handleBackToDashboard}
-              className="px-5 py-2 rounded-lg border border-gray-400 text-gray-700 hover:bg-gray-100"
-            >
-              Kembali ke Dashboard
-            </button>
-            <button
-              type="button"
-              onClick={handleRefresh}
-              disabled={refreshing}
-              className="px-5 py-2 rounded-lg border border-gray-400 text-gray-700 hover:bg-gray-100 disabled:opacity-50"
-            >
-              {refreshing ? 'Memuat…' : 'Refresh Data'}
-            </button>
-          </div>
-        </header>
+          )}
+        />
 
         <section className="bg-white shadow-xl rounded-2xl p-8">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Buat Tanda Terima Baru</h2>

@@ -1,15 +1,3 @@
-module.exports = {
-  apps: [
-    {
-      name: "hims-app",
-      script: "node",
-      args: ".next/standalone/server.js",
-      cwd: "/var/www/hims-app",
-      env_file: ".env",
-      env: {
-        NODE_ENV: "production",
-        PORT: 3000,
-      },
-    },
-  ],
-};
+// PM2 tetap membaca berkas root ini, sementara konfigurasi utama dipusatkan di deploy/config
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+module.exports = require('./deploy/config/pm2/ecosystem.config.js');

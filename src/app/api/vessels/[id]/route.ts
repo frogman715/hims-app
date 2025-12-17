@@ -20,9 +20,10 @@ const allowedVesselStatuses = new Set(['ACTIVE', 'INACTIVE', 'UNDER_REPAIR']);
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await context.params;
     const session = await getServerSession(authOptions);
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -33,7 +34,7 @@ export async function GET(
     }
 
     const vessel = await prisma.vessel.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         principal: {
           select: {
@@ -61,9 +62,10 @@ export async function GET(
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await context.params;
     const session = await getServerSession(authOptions);
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -168,16 +170,16 @@ export async function PUT(
 
     if (principalId !== undefined) {
       if (principalId === null) {
-        updateData.principalId = null;
+        updateData.principal = { disconnect: true };
       } else if (typeof principalId === 'string' && principalId.trim()) {
-        updateData.principalId = principalId.trim();
+        updateData.principal = { connect: { id: principalId.trim() } };
       } else {
         return NextResponse.json({ error: 'Invalid principal ID' }, { status: 400 });
       }
     }
 
     const vessel = await prisma.vessel.update({
-      where: { id: params.id },
+      where: { id },
       data: updateData,
       include: {
         principal: {
@@ -201,9 +203,10 @@ export async function PUT(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await context.params;
     const session = await getServerSession(authOptions);
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -215,7 +218,7 @@ export async function DELETE(
 
     // Check if vessel has any assignments
     const vessel = await prisma.vessel.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         _count: {
           select: {
@@ -237,7 +240,7 @@ export async function DELETE(
     }
 
     await prisma.vessel.delete({
-      where: { id: params.id }
+      where: { id },
     });
 
     return NextResponse.json({ message: 'Vessel deleted successfully' });

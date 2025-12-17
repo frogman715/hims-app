@@ -4,11 +4,11 @@ const nextConfig: NextConfig = {
   output: 'standalone',
   eslint: {
     // Ignore ESLint errors during production build (warnings only)
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: false,
   },
   typescript: {
     // Ignore TypeScript errors during production build (for deployment)
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
   async headers() {
     return [
@@ -38,6 +38,20 @@ const nextConfig: NextConfig = {
           {
             key: 'Strict-Transport-Security',
             value: 'max-age=31536000; includeSubDomains',
+          },
+          {
+            key: 'Content-Security-Policy',
+            value: [
+              "default-src 'self'",
+              "base-uri 'self'",
+              "frame-ancestors 'none'",
+              "form-action 'self'",
+              "img-src 'self' data: blob:",
+              "script-src 'self'",
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+              "font-src 'self' https://fonts.gstatic.com",
+              "connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com",
+            ].join('; '),
           },
         ],
       },

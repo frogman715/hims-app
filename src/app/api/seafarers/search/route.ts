@@ -3,12 +3,13 @@ import { prisma } from "@/lib/prisma";
 import { withPermission } from "@/lib/api-middleware";
 import { PermissionLevel } from "@/lib/permission-middleware";
 import { ApiError } from "@/lib/error-handler";
+import type { Prisma } from "@prisma/client";
 
 const MAX_RESULTS = 15;
 const EXPIRY_WINDOW_MONTHS = 14;
 const AGE_KEYWORDS = new Set(["umur", "usia", "tahun", "th", "thn", "yo", "yrs"]);
 
-function createAgeRangeCondition(token: string) {
+function createAgeRangeCondition(token: string): Prisma.CrewWhereInput | null {
   if (!/^\d{1,2}$/.test(token)) {
     return null;
   }
@@ -34,7 +35,7 @@ function createAgeRangeCondition(token: string) {
       gte: lowerBound,
       lte: upperBound,
     },
-  } as const;
+  };
 }
 
 function calculateAge(date: Date | null): number | null {
@@ -56,7 +57,7 @@ function calculateAge(date: Date | null): number | null {
   return age >= 0 ? age : null;
 }
 
-function buildSearchFilters(query: string) {
+function buildSearchFilters(query: string): Prisma.CrewWhereInput {
   const tokens = query
     .split(/\s+/)
     .map((token) => token.trim())
@@ -68,22 +69,22 @@ function buildSearchFilters(query: string) {
   }
 
   return {
-    AND: tokens.map((token) => ({
-      OR: (() => {
-        const conditions = [
-        { fullName: { contains: token, mode: "insensitive" } },
-        { rank: { contains: token, mode: "insensitive" } },
-        { nationality: { contains: token, mode: "insensitive" } },
-        { passportNumber: { contains: token, mode: "insensitive" } },
-        { seamanBookNumber: { contains: token, mode: "insensitive" } },
-        { email: { contains: token, mode: "insensitive" } },
-        { phone: { contains: token, mode: "insensitive" } },
+    AND: tokens.map((token) => {
+      const insensitive = "insensitive" as const;
+      const conditions: Prisma.CrewWhereInput[] = [
+        { fullName: { contains: token, mode: insensitive } },
+        { rank: { contains: token, mode: insensitive } },
+        { nationality: { contains: token, mode: insensitive } },
+        { passportNumber: { contains: token, mode: insensitive } },
+        { seamanBookNumber: { contains: token, mode: insensitive } },
+        { email: { contains: token, mode: insensitive } },
+        { phone: { contains: token, mode: insensitive } },
         {
           applications: {
             some: {
               OR: [
-                { position: { contains: token, mode: "insensitive" } },
-                { vesselType: { contains: token, mode: "insensitive" } },
+                { position: { contains: token, mode: insensitive } },
+                { vesselType: { contains: token, mode: insensitive } },
               ],
             },
           },
@@ -92,8 +93,8 @@ function buildSearchFilters(query: string) {
           assignments: {
             some: {
               OR: [
-                { rank: { contains: token, mode: "insensitive" } },
-                { vessel: { name: { contains: token, mode: "insensitive" } } },
+                { rank: { contains: token, mode: insensitive } },
+                { vessel: { name: { contains: token, mode: insensitive } } },
               ],
             },
           },
@@ -101,20 +102,19 @@ function buildSearchFilters(query: string) {
         {
           documents: {
             some: {
-              docNumber: { contains: token, mode: "insensitive" },
+              docNumber: { contains: token, mode: insensitive },
             },
           },
         },
       ];
 
-        const ageCondition = createAgeRangeCondition(token);
-        if (ageCondition) {
-          conditions.push(ageCondition);
-        }
+      const ageCondition = createAgeRangeCondition(token);
+      if (ageCondition) {
+        conditions.push(ageCondition);
+      }
 
-        return conditions;
-      })(),
-    })),
+      return { OR: conditions };
+    }),
   };
 }
 

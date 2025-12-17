@@ -6,9 +6,10 @@ import { prisma } from "@/lib/prisma";
 // POST /api/form-submissions/[id]/reject - Reject form submission
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await context.params;
     const session = await getServerSession(authOptions);
     
     // Only CDMO and DIRECTOR can reject
@@ -31,7 +32,7 @@ export async function POST(
     }
 
     const form = await prisma.prepareJoiningForm.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         status: "REJECTED",
         rejectionReason: reason,

@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 export async function POST(req: NextRequest) {
   const auth = await requireUserApi(["CREW", "CREW_PORTAL"]);
   if (!auth.ok) {
-    return NextResponse.json({ error: auth.message }, { status: auth.status });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const formData = await req.formData();

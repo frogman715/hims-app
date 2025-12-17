@@ -47,17 +47,34 @@ export const GET = withPermission("compliance", PermissionLevel.VIEW_ACCESS, asy
  * POST /api/external-compliance
  * Create new external compliance record
  */
-export const POST = withPermission("compliance", PermissionLevel.EDIT_ACCESS, async (req) => {
-  const body = await req.json();
+interface CreateExternalCompliancePayload {
+  crewId?: string;
+  systemType?: string;
+  certificateId?: string | null;
+  issueDate?: string | null;
+  expiryDate?: string | null;
+  verificationUrl?: string | null;
+  notes?: string | null;
+}
 
-  const { crewId, systemType, certificateId, issueDate, expiryDate, verificationUrl, notes } = body;
+export const POST = withPermission("compliance", PermissionLevel.EDIT_ACCESS, async (req) => {
+  const body = (await req.json()) as CreateExternalCompliancePayload;
+
+  const crewId = body.crewId;
+  const systemTypeRaw = body.systemType;
+  const certificateId = body.certificateId ?? null;
+  const issueDate = body.issueDate ? new Date(body.issueDate) : null;
+  const expiryDate = body.expiryDate ? new Date(body.expiryDate) : null;
+  const verificationUrl = body.verificationUrl ?? null;
+  const notes = body.notes ?? null;
 
   // Validation
   validateRequired(crewId, "crewId");
-  validateRequired(systemType, "systemType");
+  validateRequired(systemTypeRaw, "systemType");
 
   // Validate system type
-  if (!Object.values(ComplianceSystemType).includes(systemType)) {
+  const systemType = typeof systemTypeRaw === "string" ? (systemTypeRaw as ComplianceSystemType) : undefined;
+  if (!systemType || !Object.values(ComplianceSystemType).includes(systemType)) {
     throw new ApiError(400, "Invalid system type", "INVALID_SYSTEM_TYPE");
   }
 
@@ -69,14 +86,14 @@ export const POST = withPermission("compliance", PermissionLevel.EDIT_ACCESS, as
 
   const compliance = await prisma.externalCompliance.create({
     data: {
-      crewId,
+      crewId: crewId!,
       systemType,
-      certificateId: certificateId || null,
-      issueDate: issueDate ? new Date(issueDate) : null,
-      expiryDate: expiryDate ? new Date(expiryDate) : null,
+      certificateId,
+      issueDate,
+      expiryDate,
       status: ComplianceStatus.PENDING,
-      verificationUrl: verificationUrl || null,
-      notes: notes || null,
+      verificationUrl,
+      notes,
     },
     include: {
       crew: {

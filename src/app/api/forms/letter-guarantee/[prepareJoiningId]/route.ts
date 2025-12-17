@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { checkPermission, PermissionLevel } from "@/lib/permission-middleware";
+import { Prisma } from "@prisma/client";
 
 interface LetterGuaranteeHandlingAgent {
   name: string;
@@ -46,8 +47,9 @@ interface LetterGuaranteeData {
 // GET /api/forms/letter-guarantee/[prepareJoiningId] - Generate Letter Guarantee HTML
 export async function GET(
   req: NextRequest,
-  { params }: { params: { prepareJoiningId: string } }
+  context: { params: Promise<{ prepareJoiningId: string }> }
 ) {
+  const { prepareJoiningId } = await context.params;
   try {
     const session = await getServerSession(authOptions);
     if (!checkPermission(session, "crew", PermissionLevel.VIEW_ACCESS)) {
@@ -58,7 +60,7 @@ export async function GET(
     }
 
     const prepareJoining = await prisma.prepareJoining.findUnique({
-      where: { id: params.prepareJoiningId },
+      where: { id: prepareJoiningId },
       include: {
         crew: {
           select: {
@@ -74,27 +76,19 @@ export async function GET(
           select: {
             id: true,
             name: true,
-            companyCode: true,
+            registrationNumber: true,
             address: true,
             contactPerson: true,
             email: true,
             phone: true,
           },
         },
-        assignment: {
+        forms: {
           select: {
             id: true,
-            vessel: {
-              select: {
-                id: true,
-                name: true,
-                imoNumber: true,
-                flag: true,
-              },
-            },
-            joinDate: true,
-            port: true,
+            status: true,
           },
+          take: 1,
         },
       },
     });
@@ -123,8 +117,6 @@ export async function GET(
 
     const crew = prepareJoining.crew;
     const principal = prepareJoining.principal;
-    const assignment = prepareJoining.assignment;
-    const vessel = assignment?.vessel;
 
     const letterData: LetterGuaranteeData = {
       // Company info (PT HANMARINE)
@@ -147,22 +139,22 @@ export async function GET(
 
       // Principal info (auto-filled)
       principalName: principal?.name || "N/A",
-      principalCompanyCode: principal?.companyCode || "N/A",
+      principalCompanyCode: principal?.registrationNumber || "N/A",
 
-      // Vessel info (auto-filled)
-      vesselName: vessel?.name || "N/A",
-      vesselImoNumber: vessel?.imoNumber || "N/A",
-      vesselFlag: vessel?.flag || "N/A",
+      // Vessel info (auto-filled) - prepareJoining has vesselId, so fetch it if needed
+      vesselName: "N/A",
+      vesselImoNumber: "N/A",
+      vesselFlag: "N/A",
 
       // Join details (auto-filled)
-      joinDate: assignment?.joinDate
-        ? new Date(assignment.joinDate).toLocaleDateString("en-US", {
+      joinDate: prepareJoining.departureDate
+        ? new Date(prepareJoining.departureDate).toLocaleDateString("en-US", {
             year: "numeric",
             month: "long",
             day: "numeric",
           })
         : "N/A",
-      joinPort: assignment?.port || "N/A",
+      joinPort: prepareJoining.departurePort || "N/A",
 
       // Handling agent (editable)
       handlingAgent: {
@@ -379,9 +371,10 @@ function generateLetterGuaranteeHTML(data: LetterGuaranteeData): string {
 // POST /api/forms/letter-guarantee/[prepareJoiningId] - Save Letter Guarantee as form submission
 export async function POST(
   req: NextRequest,
-  { params }: { params: { prepareJoiningId: string } }
+  context: { params: Promise<{ prepareJoiningId: string }> }
 ) {
   try {
+    const { prepareJoiningId } = await context.params;
     const session = await getServerSession(authOptions);
     if (!checkPermission(session, "crew", PermissionLevel.EDIT_ACCESS)) {
       return NextResponse.json(
@@ -391,12 +384,20 @@ export async function POST(
     }
 
     const body = await req.json();
-    const { formData } = body;
+    const { formData } = body as { formData?: Prisma.JsonValue };
 
-    // Find or create Letter Guarantee template
+    if (formData === undefined) {
+      return NextResponse.json(
+        { error: "Form data is required" },
+        { status: 400 }
+      );
+    }
+
     const prepareJoining = await prisma.prepareJoining.findUnique({
-      where: { id: params.prepareJoiningId },
-      select: { principalId: true },
+      where: { id: prepareJoiningId },
+      select: {
+        principalId: true,
+      },
     });
 
     if (!prepareJoining) {
@@ -414,7 +415,6 @@ export async function POST(
     });
 
     if (!template) {
-      // Create template if doesn't exist
       template = await prisma.principalFormTemplate.create({
         data: {
           principalId: prepareJoining.principalId,
@@ -428,10 +428,9 @@ export async function POST(
       });
     }
 
-    // Create form submission
     const form = await prisma.prepareJoiningForm.create({
       data: {
-        prepareJoiningId: params.prepareJoiningId,
+        prepareJoiningId,
         templateId: template.id,
         formData,
         status: "DRAFT",

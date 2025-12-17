@@ -57,25 +57,43 @@ function normalizeItems(items: unknown): DocumentReceiptItemPayload[] {
     return [];
   }
 
-  return items
-    .map((item, index) => {
-      if (typeof item !== "object" || item === null) {
-        return null;
-      }
-      const candidate = item as Partial<DocumentReceiptItemPayload>;
-      if (!candidate.certificateName || typeof candidate.certificateName !== "string") {
-        return null;
-      }
-      return {
-        certificateName: candidate.certificateName.trim(),
-        certificateNumber: optionalString(candidate.certificateNumber ?? null),
-        issueDate: candidate.issueDate ?? null,
-        expiryDate: candidate.expiryDate ?? null,
-        remarks: optionalString(candidate.remarks ?? null),
-        orderIndex: typeof candidate.orderIndex === "number" ? candidate.orderIndex : index,
-      } satisfies DocumentReceiptItemPayload;
-    })
-    .filter((item): item is DocumentReceiptItemPayload => Boolean(item));
+  return items.reduce<DocumentReceiptItemPayload[]>((acc, item, index) => {
+    if (typeof item !== "object" || item === null) {
+      return acc;
+    }
+
+    const candidate = item as Partial<DocumentReceiptItemPayload>;
+    if (!candidate.certificateName || typeof candidate.certificateName !== "string") {
+      return acc;
+    }
+
+    const normalized: DocumentReceiptItemPayload = {
+      certificateName: candidate.certificateName.trim(),
+    };
+
+    const normalizedCertificateNumber = optionalString(candidate.certificateNumber ?? null);
+    if (normalizedCertificateNumber !== null) {
+      normalized.certificateNumber = normalizedCertificateNumber;
+    }
+
+    if (candidate.issueDate !== undefined) {
+      normalized.issueDate = candidate.issueDate ?? null;
+    }
+
+    if (candidate.expiryDate !== undefined) {
+      normalized.expiryDate = candidate.expiryDate ?? null;
+    }
+
+    const normalizedRemarks = optionalString(candidate.remarks ?? null);
+    if (normalizedRemarks !== null) {
+      normalized.remarks = normalizedRemarks;
+    }
+
+    normalized.orderIndex = typeof candidate.orderIndex === "number" ? candidate.orderIndex : index;
+
+    acc.push(normalized);
+    return acc;
+  }, []);
 }
 
 function isValidCrewStatus(status: unknown): status is DocumentReceiptCrewStatus {

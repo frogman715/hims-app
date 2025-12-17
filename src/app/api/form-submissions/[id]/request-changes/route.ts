@@ -14,8 +14,9 @@ function mergeRequestedChanges(formData: Prisma.JsonValue | null | undefined, ch
 // POST /api/form-submissions/[id]/request-changes - Request changes to form submission
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await context.params;
   try {
     const session = await getServerSession(authOptions);
 
@@ -44,7 +45,7 @@ export async function POST(
     }
 
     const existingForm = await prisma.prepareJoiningForm.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: { formData: true },
     });
 
@@ -53,7 +54,7 @@ export async function POST(
     }
 
     const form = await prisma.prepareJoiningForm.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         status: FormApprovalStatus.CHANGES_REQUESTED,
         reviewedBy: session?.user?.email || "Unknown",

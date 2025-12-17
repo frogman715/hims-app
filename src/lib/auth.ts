@@ -1,12 +1,16 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
+import { rateLimit } from "@/lib/rate-limit";
 import bcrypt from "bcryptjs";
+import { Role as PrismaRole } from "@prisma/client";
+import type { RolePermissionOverride } from "@/lib/permissions";
 
 declare module "next-auth" {
   interface User {
     role: string;
     roles: string[];
+    permissionOverrides?: RolePermissionOverride[];
   }
   interface Session {
     user: {
@@ -15,6 +19,7 @@ declare module "next-auth" {
       name: string;
       role: string;
       roles: string[];
+      permissionOverrides?: RolePermissionOverride[];
     };
   }
 }
@@ -23,8 +28,19 @@ declare module "next-auth/jwt" {
   interface JWT {
     role: string;
     roles: string[];
+    permissionOverrides?: RolePermissionOverride[];
+    user?: {
+      id: string;
+      email?: string | null;
+      name?: string | null;
+      role: string;
+      roles: string[];
+      permissionOverrides?: RolePermissionOverride[];
+    };
   }
 }
+
+const shouldLogAuth = process.env.NODE_ENV !== "production";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -37,6 +53,11 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
           return null;
+        }
+
+        const identifier = `login:${credentials.email.toLowerCase()}`;
+        if (!rateLimit(identifier, 5, 60_000)) {
+          throw new Error("Too many login attempts. Please try again later.");
         }
 
         const user = await prisma.user.findUnique({
@@ -68,7 +89,7 @@ export const authOptions: NextAuthOptions = {
         const role = normalizedRoles[0];
 
         return {
-          id: user.id.toString(),
+          id: typeof user.id === "string" ? user.id : String(user.id),
           email: user.email,
           name: user.name,
           role,
@@ -82,11 +103,15 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async jwt({ token, user, trigger }) {
+      const previousRoles = Array.isArray(token.roles) ? [...token.roles] : [];
       let resolvedRoles = uniqueRolesFrom(token.roles, token.role);
       let primaryRole = resolvedRoles[0];
+      let userIdFromSource: string | undefined;
 
       if (user) {
-        const userId = typeof user.id === "string" ? user.id : user.id?.toString();
+        const rawId = (user as { id?: unknown }).id;
+        const userId = typeof rawId === "string" ? rawId : typeof rawId === "number" ? rawId.toString() : undefined;
+        userIdFromSource = userId ?? undefined;
         let dbRole: string | undefined;
         if (userId) {
           const dbUser = await prisma.user.findUnique({
@@ -103,9 +128,11 @@ export const authOptions: NextAuthOptions = {
         primaryRole = resolvedRoles[0];
       }
 
-      if ((!primaryRole || resolvedRoles.length === 0) && token.sub) {
+      const tokenSubject = token.sub ?? userIdFromSource;
+
+      if ((!primaryRole || resolvedRoles.length === 0) && tokenSubject) {
         const dbUser = await prisma.user.findUnique({
-          where: { id: token.sub },
+          where: { id: tokenSubject },
           select: { role: true },
         });
         const dbRoles = uniqueRolesFrom(dbUser?.role);
@@ -127,25 +154,65 @@ export const authOptions: NextAuthOptions = {
         resolvedRoles = [primaryRole];
       }
 
+      const rolesChanged =
+        resolvedRoles.length !== previousRoles.length ||
+        resolvedRoles.some((role, index) => role !== previousRoles[index]);
+
+      let permissionOverrides = Array.isArray(token.permissionOverrides)
+        ? token.permissionOverrides
+        : [];
+
+      if (user || rolesChanged || permissionOverrides.length === 0) {
+        permissionOverrides = await loadPermissionOverrides(resolvedRoles);
+      }
+
       token.role = primaryRole;
       token.roles = resolvedRoles;
+      token.permissionOverrides = permissionOverrides;
 
-      console.info("[auth] jwt-callback", {
-        trigger: trigger ?? null,
-        tokenSub: token.sub ?? null,
-        hasUser: Boolean(user),
-        role: token.role,
-        roles: token.roles,
-      });
+      const tokenUser = {
+        id: tokenSubject ?? "",
+        email: user?.email ?? token.email ?? null,
+        name: user?.name ?? token.name ?? null,
+        role: primaryRole,
+        roles: resolvedRoles,
+        permissionOverrides,
+      };
+
+      token.user = tokenUser;
+
+      if (shouldLogAuth) {
+        console.info("[auth] jwt-callback", {
+          trigger: trigger ?? null,
+          tokenSub: tokenSubject ?? null,
+          hasUser: Boolean(user),
+          hasTokenUser: Boolean(token.user),
+          role: token.role,
+          roles: token.roles,
+        });
+      }
 
       return token;
     },
     async session({ session, token }) {
       if (token && session.user) {
         const fallbackId = session.user.id ?? "";
-        session.user.id = token.sub ?? fallbackId;
+        const tokenUser = token.user;
+        session.user.id = tokenUser?.id ?? token.sub ?? fallbackId;
 
-        let normalizedRoles = uniqueRolesFrom(token.roles, token.role, session.user.role);
+        if (tokenUser?.email && !session.user.email) {
+          session.user.email = tokenUser.email;
+        }
+        if (tokenUser?.name && !session.user.name) {
+          session.user.name = tokenUser.name;
+        }
+
+        let normalizedRoles = uniqueRolesFrom(
+          tokenUser?.roles,
+          token.roles,
+          token.role,
+          session.user.role
+        );
 
         if (normalizedRoles.length === 0 && session.user.id) {
           const dbUser = await prisma.user.findUnique({
@@ -159,18 +226,21 @@ export const authOptions: NextAuthOptions = {
           normalizedRoles = ["CREW_PORTAL"];
         }
 
-        const primaryRole = normalizedRoles[0];
+        const primaryRole = tokenUser?.role ?? normalizedRoles[0];
 
         session.user.role = primaryRole;
         session.user.roles = normalizedRoles;
+        session.user.permissionOverrides = token.permissionOverrides ?? [];
 
-        console.info("[auth] session-callback", {
-          userId: session.user.id,
-          role: session.user.role,
-          roles: session.user.roles,
-          tokenRole: token.role ?? null,
-          tokenRoles: token.roles ?? null,
-        });
+        if (shouldLogAuth) {
+          console.info("[auth] session-callback", {
+            userId: session.user.id,
+            role: session.user.role,
+            roles: session.user.roles,
+            tokenRole: token.role ?? null,
+            tokenRoles: token.roles ?? null,
+          });
+        }
       }
       return session;
     },
@@ -204,4 +274,41 @@ function uniqueRolesFrom(...sources: (string | string[] | null | undefined)[]): 
 
   const deduped = Array.from(new Set(collected));
   return deduped;
+}
+
+async function loadPermissionOverrides(roles: string[]): Promise<RolePermissionOverride[]> {
+  if (roles.length === 0) {
+    return [];
+  }
+
+  const normalizedRoles = Array.from(
+    new Set(
+      roles
+        .map((role) => role.toUpperCase())
+        .filter((role): role is PrismaRole => (Object.values(PrismaRole) as string[]).includes(role))
+    )
+  );
+
+  if (normalizedRoles.length === 0) {
+    return [];
+  }
+
+  const overrides = await prisma.roleModulePermission.findMany({
+    where: {
+      role: {
+        in: normalizedRoles,
+      },
+    },
+    select: {
+      role: true,
+      moduleKey: true,
+      level: true,
+    },
+  });
+
+  return overrides.map((entry) => ({
+    role: entry.role,
+    moduleKey: entry.moduleKey,
+    level: entry.level as RolePermissionOverride['level'],
+  }));
 }

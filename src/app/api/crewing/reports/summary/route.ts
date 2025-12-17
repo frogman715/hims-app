@@ -47,7 +47,7 @@ const PREPARE_JOINING_ORDER = [
   "CANCELLED",
 ];
 
-const ACTIVE_ASSIGNMENT_STATUSES = ["ONBOARD", "ASSIGNED", "PLANNED", "ACTIVE"] as const;
+const ACTIVE_ASSIGNMENT_STATUSES = ["ONBOARD", "ASSIGNED", "PLANNED", "ACTIVE"];
 
 export const GET = withPermission("crewing", PermissionLevel.VIEW_ACCESS, async () => {
   try {

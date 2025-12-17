@@ -473,17 +473,24 @@ export default function SeafarerBiodataPage() {
             </h2>
             {seafarer.applications.length > 0 ? (
               <div className="space-y-3">
-                {seafarer.applications.slice(0, 5).map((application) => (
-                  <div key={application.id} className="flex items-center justify-between p-3 bg-gray-100 rounded-lg">
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">Applied for: {application.appliedRank}</p>
-                      <p className="text-xs text-gray-700">Applied on: {new Date(application.appliedOn).toLocaleDateString()}</p>
+                {seafarer.applications.slice(0, 5).map((application) => {
+                  const appliedFor = application.position ?? "Not specified";
+                  const appliedOn = application.applicationDate
+                    ? new Date(application.applicationDate).toLocaleDateString()
+                    : "Not specified";
+
+                  return (
+                    <div key={application.id} className="flex items-center justify-between p-3 bg-gray-100 rounded-lg">
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">Applied for: {appliedFor}</p>
+                        <p className="text-xs text-gray-700">Applied on: {appliedOn}</p>
+                      </div>
+                      <span className={`inline-flex px-4 py-2 text-xs font-semibold rounded-full ${getStatusColor(application.status)}`}>
+                        {getStatusText(application.status)}
+                      </span>
                     </div>
-                    <span className={`inline-flex px-4 py-2 text-xs font-semibold rounded-full ${getStatusColor(application.status)}`}>
-                      {getStatusText(application.status)}
-                    </span>
-                  </div>
-                ))}
+                  );
+                })}
                 {seafarer.applications.length > 5 && (
                   <p className="text-sm text-gray-800 text-center pt-2">
                     And {seafarer.applications.length - 5} more applications...

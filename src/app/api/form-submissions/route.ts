@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { checkPermission, PermissionLevel } from "@/lib/permission-middleware";
-import { Prisma } from "@prisma/client";
+import { Prisma, FormApprovalStatus } from "@prisma/client";
 
 // GET /api/form-submissions - Get all form submissions
 export async function GET(req: NextRequest) {
@@ -21,8 +21,8 @@ export async function GET(req: NextRequest) {
     const prepareJoiningId = searchParams.get("prepareJoiningId");
 
     const where: Prisma.PrepareJoiningFormWhereInput = {};
-    if (status && status !== "ALL") {
-      where.status = status;
+    if (status && status !== "ALL" && Object.values(FormApprovalStatus).includes(status as FormApprovalStatus)) {
+      where.status = status as FormApprovalStatus;
     }
     if (prepareJoiningId) {
       where.prepareJoiningId = prepareJoiningId;

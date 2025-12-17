@@ -14,14 +14,7 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const complianceId = parseInt(id);
-
-    if (isNaN(complianceId)) {
-      return NextResponse.json(
-        { error: 'Invalid compliance ID' },
-        { status: 400 }
-      );
-    }
+    const complianceId = id;
 
     // Get the compliance record
     const compliance = await prisma.externalCompliance.findUnique({
@@ -30,9 +23,8 @@ export async function POST(
         crew: {
           select: {
             id: true,
-            firstName: true,
-            lastName: true,
-            seamanCode: true,
+            fullName: true,
+            rank: true,
           },
         },
       },
@@ -107,7 +99,7 @@ export async function POST(
     }
 
     // Update compliance status based on verification
-    const newStatus = verificationResult.isValid ? 'VERIFIED' : 'FAILED';
+    const newStatus = verificationResult.isValid ? 'VERIFIED' : 'REJECTED';
 
     const updatedCompliance = await prisma.externalCompliance.update({
       where: { id: complianceId },
@@ -119,9 +111,9 @@ export async function POST(
         crew: {
           select: {
             id: true,
-            firstName: true,
-            lastName: true,
-            seamanCode: true,
+            fullName: true,
+            rank: true,
+            status: true,
           },
         },
       },

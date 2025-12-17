@@ -1,7 +1,15 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
+import { useSession } from 'next-auth/react';
+import type { AppRole } from '@/lib/roles';
+import { OFFICE_ROLES } from '@/lib/roles';
+import { CREWING_DOCUMENT_RECEIPTS_ROUTE } from '@/lib/routes';
+import { PageHeader } from '@/components/layout/PageHeader';
+import { Breadcrumbs, type BreadcrumbItem } from '@/components/layout/Breadcrumbs';
+import { FeatureUnavailableAlert } from '@/components/feedback/FeatureUnavailableAlert';
 
 interface SeafarerDocument {
   id: string;
@@ -41,6 +49,8 @@ export default function SeafarerDocumentsPage() {
   const router = useRouter();
   const params = useParams();
   const seafarerId = params.id as string;
+  const { data: session } = useSession();
+  const userRoles = session?.user?.roles;
 
   const [seafarer, setSeafarer] = useState<Seafarer | null>(null);
   const [documents, setDocuments] = useState<SeafarerDocument[]>([]);
@@ -48,11 +58,56 @@ export default function SeafarerDocumentsPage() {
   const [uploading, setUploading] = useState(false);
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [receipts, setReceipts] = useState<DocumentReceiptSummary[]>([]);
+  const [receiptsRouteAvailable, setReceiptsRouteAvailable] = useState(true);
   const formRef = useRef<HTMLFormElement | null>(null);
+
+  const roles = useMemo<AppRole[]>(() => {
+    return Array.isArray(userRoles) ? (userRoles as AppRole[]) : [];
+  }, [userRoles]);
+
+  const hasOfficeAccess = useMemo(() => {
+    return roles.some((role) => (OFFICE_ROLES as readonly AppRole[]).includes(role));
+  }, [roles]);
+
+  useEffect(() => {
+    if (!hasOfficeAccess) {
+      setReceiptsRouteAvailable(false);
+      return;
+    }
+
+    let cancelled = false;
+    const verifyRouteAvailability = async () => {
+      try {
+        const response = await fetch(CREWING_DOCUMENT_RECEIPTS_ROUTE, { method: 'HEAD', cache: 'no-store' });
+        if (cancelled) {
+          return;
+        }
+        setReceiptsRouteAvailable(response.ok || response.status === 405);
+      } catch {
+        if (!cancelled) {
+          setReceiptsRouteAvailable(false);
+        }
+      }
+    };
+
+    verifyRouteAvailability();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [hasOfficeAccess]);
 
   const sortedReceipts = useMemo(() => {
     return [...receipts].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }, [receipts]);
+  const breadcrumbItems = useMemo<BreadcrumbItem[]>(() => {
+    return [
+      { label: 'Crewing', href: hasOfficeAccess ? '/crewing' : undefined },
+      { label: 'Seafarers', href: hasOfficeAccess ? '/crewing/seafarers' : undefined },
+      { label: 'Documents', href: hasOfficeAccess ? `/crewing/seafarers/${seafarerId}/documents` : undefined },
+      { label: 'Receipts' },
+    ];
+  }, [hasOfficeAccess, seafarerId]);
 
   const fetchSeafarer = useCallback(async () => {
     try {
@@ -163,28 +218,43 @@ export default function SeafarerDocumentsPage() {
 
   return (
     <div className="max-w-4xl mx-auto p-6">
-      <div className="mb-6">
+      {/* Reference layout: Breadcrumbs + PageHeader pattern for Crewing, Accounting, and HGQS modules. */}
+      <Breadcrumbs items={breadcrumbItems} />
+      <PageHeader
+        title={`Documents for ${seafarer.fullName}`}
+        subtitle={`Seafarer ID: ${seafarerId}`}
+        actions={(
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href={`/crewing/seafarers/${seafarerId}/biodata`}
+              className="inline-flex items-center gap-2 rounded-lg border border-gray-400 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+            >
+              ← Back to Seafarer
+            </Link>
+            {hasOfficeAccess ? (
+              <Link
+                href={CREWING_DOCUMENT_RECEIPTS_ROUTE}
+                className="inline-flex items-center gap-2 rounded-lg border border-gray-400 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+              >
+                Lihat Semua Tanda Terima
+              </Link>
+            ) : null}
+          </div>
+        )}
+      />
+      <div className="mt-3 flex flex-wrap gap-3">
         <button
-          onClick={() => router.back()}
-          className="text-blue-600 hover:text-blue-800 mb-4 inline-block"
+          onClick={() => setShowUploadForm(true)}
+          className="bg-blue-600 text-white font-semibold px-5 py-2 rounded-lg shadow hover:bg-blue-700"
         >
-          ← Back to Seafarer
+          + Upload Document
         </button>
-        <h1 className="text-2xl font-extrabold">Documents for {seafarer.fullName}</h1>
-        <div className="mt-3 flex flex-wrap gap-3">
-          <button
-            onClick={() => setShowUploadForm(true)}
-            className="bg-blue-600 text-white font-semibold px-5 py-2 rounded-lg shadow hover:bg-blue-700"
-          >
-            + Upload Document
-          </button>
-          <button
-            onClick={() => router.push(`/crewing/seafarers/${seafarerId}/document-receipts/new`)}
-            className="bg-emerald-600 text-white font-semibold px-5 py-2 rounded-lg shadow hover:bg-emerald-700"
-          >
-            + Tanda Terima Dokumen
-          </button>
-        </div>
+        <button
+          onClick={() => router.push(`/crewing/seafarers/${seafarerId}/document-receipts/new`)}
+          className="bg-emerald-600 text-white font-semibold px-5 py-2 rounded-lg shadow hover:bg-emerald-700"
+        >
+          + Tanda Terima Dokumen
+        </button>
       </div>
 
       {/* Upload Form */}
@@ -370,12 +440,30 @@ export default function SeafarerDocumentsPage() {
       </div>
 
       <div className="bg-white rounded-lg shadow-lg border border-gray-300 p-8 mt-8">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold">Riwayat Tanda Terima Dokumen</h2>
-          {sortedReceipts.length > 0 && (
-            <span className="text-sm text-gray-600">{sortedReceipts.length} catatan</span>
+        <div className="flex flex-col gap-3 mb-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+            <h2 className="text-xl font-semibold">Riwayat Tanda Terima Dokumen</h2>
+            {sortedReceipts.length > 0 && (
+              <span className="text-sm text-gray-600">{sortedReceipts.length} catatan</span>
+            )}
+          </div>
+          {hasOfficeAccess && (
+            <button
+              type="button"
+              onClick={() => router.push(CREWING_DOCUMENT_RECEIPTS_ROUTE)}
+              className="inline-flex items-center gap-2 rounded-lg border border-gray-400 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
+              disabled={!receiptsRouteAvailable}
+            >
+              ← Back to Receipts
+            </button>
           )}
         </div>
+        {hasOfficeAccess && !receiptsRouteAvailable ? (
+          <FeatureUnavailableAlert
+            message="Sistem tidak dapat membuka halaman daftar tanda terima saat ini."
+            details="Silakan hubungi administrator jika masalah ini berlanjut."
+          />
+        ) : null}
         {sortedReceipts.length === 0 ? (
           <div className="text-gray-500">Belum ada tanda terima dokumen yang tercatat.</div>
         ) : (

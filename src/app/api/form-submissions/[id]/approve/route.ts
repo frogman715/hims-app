@@ -14,9 +14,10 @@ function mergeApprovalNotes(formData: Prisma.JsonValue | null | undefined, notes
 // POST /api/form-submissions/[id]/approve - Approve form submission
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await context.params;
     const session = await getServerSession(authOptions);
 
     if (!session) {
@@ -37,7 +38,7 @@ export async function POST(
     const notes = typeof bodyRecord.notes === "string" ? bodyRecord.notes : "";
 
     const existingForm = await prisma.prepareJoiningForm.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: { formData: true },
     });
 
@@ -46,7 +47,7 @@ export async function POST(
     }
 
     const form = await prisma.prepareJoiningForm.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         status: FormApprovalStatus.APPROVED,
         approvedBy: session?.user?.email || "Unknown",

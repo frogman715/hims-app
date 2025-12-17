@@ -53,14 +53,14 @@ function isUpdateCrewReplacementPayload(value: unknown): value is UpdateCrewRepl
   return true;
 }
 
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions);
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { id } = params;
+    const { id } = await context.params;
     const parsedBody = (await request.json()) as unknown;
 
     if (!isUpdateCrewReplacementPayload(parsedBody)) {
@@ -73,13 +73,18 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
 
     const updateData: Prisma.CrewReplacementUpdateInput = {
       status,
-      notes,
+      remarks: notes,
       updatedAt: new Date(),
     };
 
-    if (status === "APPROVED" && approvedBy) {
-      updateData.approvedBy = approvedBy;
+    if (status === "APPROVED") {
       updateData.approvedAt = new Date();
+      updateData.approver = approvedBy
+        ? { connect: { id: approvedBy } }
+        : { disconnect: true };
+    } else {
+      updateData.approvedAt = null;
+      updateData.approver = { disconnect: true };
     }
 
     const replacement = await prisma.crewReplacement.update({

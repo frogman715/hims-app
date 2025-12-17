@@ -54,13 +54,13 @@ export const GET = withPermission("compliance", PermissionLevel.VIEW_ACCESS, asy
     where: {
       OR: [
         {
-          signOnDate: {
+          startDate: {
             gte: startDate,
             lte: endDate,
           },
         },
         {
-          signOffDate: {
+          endDate: {
             gte: startDate,
             lte: endDate,
           },
@@ -81,7 +81,7 @@ export const GET = withPermission("compliance", PermissionLevel.VIEW_ACCESS, asy
       },
     },
     orderBy: {
-      signOnDate: 'asc',
+      startDate: 'asc',
     },
   });
 
@@ -229,27 +229,27 @@ export const GET = withPermission("compliance", PermissionLevel.VIEW_ACCESS, asy
     const principal = vessel?.principal;
 
     // Find seaman book and passport
-    const seamanBook = crew.documents?.find((d) => d.documentType === 'SEAMAN_BOOK');
-    const passport = crew.documents?.find((d) => d.documentType === 'PASSPORT');
-    const pklContract = crew.contracts?.find((c) => c.kind === 'OFFICE_PKL');
+    const seamanBook = crew.documents?.find((d) => d.docType === 'SEAMAN_BOOK');
+    const passport = crew.documents?.find((d) => d.docType === 'PASSPORT');
+    const pklContract = crew.contracts?.find((c) => c.contractKind === 'OFFICE_PKL');
 
     // Decrypt sensitive data if encrypted
     let passportNumber = '';
     try {
-      if (passport?.documentNumber) {
-        passportNumber = decrypt(passport.documentNumber);
+      if (passport?.docNumber) {
+        passportNumber = decrypt(passport.docNumber);
       }
     } catch {
-      passportNumber = passport?.documentNumber || '';
+      passportNumber = passport?.docNumber || '';
     }
 
     let seamanCode = '';
     try {
-      if (crew.seamanCode) {
-        seamanCode = decrypt(crew.seamanCode);
+      if (crew.seamanBookNumber) {
+        seamanCode = decrypt(crew.seamanBookNumber);
       }
     } catch {
-      seamanCode = crew.seamanCode || '';
+      seamanCode = crew.seamanBookNumber || '';
     }
 
     const row = sheet1.getRow(rowNum);
@@ -266,17 +266,17 @@ export const GET = withPermission("compliance", PermissionLevel.VIEW_ACCESS, asy
       companyInfo.phone, // TELEPON
       companyInfo.email, // EMAIL
       companyInfo.lastAudit, // AUDIT TERAKHIR
-      crew.name, // NAMA PELAUT
+      crew.fullName, // NAMA PELAUT
       crew.nationality || 'INA', // KEWARGANEGARAAN
       seamanCode, // KODE PELAUT
-      seamanBook?.documentNumber || '', // BUKU PELAUT
+      seamanBook?.docNumber || '', // BUKU PELAUT
       pklContract?.contractNumber || '', // NO PKL
-      seamanBook?.issuingAuthority || 'Tanjung Priok', // SYAHBANDAR
+      'Tanjung Priok', // SYAHBANDAR
       passportNumber, // PASPOR
       assignment.rank || '', // JABATAN
-      principal?.cbaNumber || '', // NOMOR CBA
+      principal?.registrationNumber || '', // NOMOR CBA
       vessel?.name || '', // NAMA KAPAL
-      vessel?.imoNumber || vessel?.mmsi || '', // IMO/MMSI
+      vessel?.imoNumber || '', // IMO/MMSI
       vessel?.flag || '', // BENDERA
       vessel?.type || '', // JENIS KAPAL
       principal?.name || '', // PEMILIK KAPAL
@@ -284,12 +284,12 @@ export const GET = withPermission("compliance", PermissionLevel.VIEW_ACCESS, asy
       principal?.name || '', // NAMA OPERATOR
       '', // ASURANSI
       'ASIA', // DAERAH PELAYARAN
-      assignment.signOnDate ? new Date(assignment.signOnDate).toLocaleDateString('id-ID') : '', // SIGN ON
-      assignment.signOnPort || '', // PELABUHAN SIGN ON
-      assignment.signOffDate ? new Date(assignment.signOffDate).toLocaleDateString('id-ID') : '', // SIGN OFF
-      assignment.signOffPort || '', // PELABUHAN SIGN OFF
+      assignment.startDate ? new Date(assignment.startDate).toLocaleDateString('id-ID') : '', // SIGN ON
+      assignment.remarks || '', // PELABUHAN SIGN ON
+      assignment.endDate ? new Date(assignment.endDate).toLocaleDateString('id-ID') : '', // SIGN OFF
+      '', // PELABUHAN SIGN OFF
       'LN', // DN/LN
-      crew.gender === 'MALE' ? 'L' : 'P', // JENIS KELAMIN
+      'N/A', // JENIS KELAMIN
       crew.emergencyContactName || '', // KELUARGA
       crew.emergencyContactPhone || '', // TELP KELUARGA
       '', // KATEGORI SIGN OFF

@@ -230,6 +230,30 @@ npm install
 npx prisma generate
 ```
 
+### Prisma Shadow Database Permission Error
+
+If `npx prisma migrate dev` fails with `Error: P3014` stating that the shadow database cannot be created, the connected PostgreSQL role lacks `CREATE DATABASE` privileges. Generate the migration manually and apply it with `prisma migrate deploy`:
+
+1. Create a manual SQL script from the current schema diff:
+
+  ```bash
+  TIMESTAMP=$(date +%Y%m%d%H%M%S)
+  npx prisma migrate diff \
+    --from-migrations prisma/migrations \
+    --to-schema-datamodel prisma/schema.prisma \
+    --script > prisma/migrations/${TIMESTAMP}_manual/migration.sql
+  ```
+
+2. Review the SQL and apply migrations without a shadow database:
+
+  ```bash
+  npx prisma migrate deploy
+  ```
+
+3. Commit the new migration folder. Other environments can replay it with `prisma migrate deploy` without elevated permissions.
+
+Optionally, configure `PRISMA_MIGRATE_SHADOW_DATABASE_URL` to point at a separate Postgres instance that allows temporary database creation when running `prisma migrate dev` locally.
+
 ### Authentication Issues
 
 ```bash

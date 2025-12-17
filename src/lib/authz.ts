@@ -31,10 +31,14 @@ const ROLE_HOME_MAP: Record<AppRole, string> = {
   [APP_ROLES.OPERATIONAL]: "/dashboard",
   [APP_ROLES.ACCOUNTING]: "/dashboard",
   [APP_ROLES.HR]: "/dashboard",
+  [APP_ROLES.HR_ADMIN]: "/dashboard",
+  [APP_ROLES.QMR]: "/dashboard",
+  [APP_ROLES.SECTION_HEAD]: "/dashboard",
+  [APP_ROLES.STAFF]: "/dashboard",
 };
 
 function logAuthEvent(event: string, details: Record<string, unknown>) {
-  if (process.env.NODE_ENV === "test") {
+  if (process.env.NODE_ENV === "test" || process.env.NODE_ENV === "production") {
     return;
   }
 

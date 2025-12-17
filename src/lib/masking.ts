@@ -18,6 +18,26 @@ export function maskPassport(passport: string): string {
 }
 
 /**
+ * Masks a generic document number while leaving minimal context for verification
+ */
+export function maskDocumentNumber(documentNumber: string): string {
+  if (!documentNumber) {
+    return '****';
+  }
+
+  const normalized = documentNumber.trim();
+  if (normalized.length <= 4) {
+    return '*'.repeat(normalized.length || 4);
+  }
+
+  const visiblePrefix = normalized.slice(0, 2);
+  const visibleSuffix = normalized.slice(-2);
+  const hiddenLength = Math.max(0, normalized.length - (visiblePrefix.length + visibleSuffix.length));
+
+  return `${visiblePrefix}${'*'.repeat(hiddenLength)}${visibleSuffix}`;
+}
+
+/**
  * Masks a seaman code (10-digit Indonesian seafarer code)
  * Example: "1234567890" -> "1234****90"
  */

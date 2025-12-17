@@ -141,24 +141,31 @@ HIMS integrates with three maritime regulatory systems:
 
 ```
 src/
-├── app/
-│   ├── api/auth/[...nextauth]/    # Authentication API
-│   ├── auth/signin/               # Sign-in page
-│   ├── dashboard/                 # Main dashboard
-│   ├── crewing/                   # Crewing module
-│   ├── hr/                        # HR module
-│   ├── accounting/                # Accounting module
-│   ├── quality/                   # Quality/ISO module
-│   ├── layout.tsx                 # Root layout
-│   └── page.tsx                   # Home page
-├── components/                    # Reusable components
-├── lib/
-│   ├── auth.ts                    # NextAuth configuration
-│   └── prisma.ts                  # Prisma client
+├── app/                           # Next.js App Router pages & APIs
+├── components/                    # Reusable UI components
+├── lib/                           # Auth, RBAC, utilities
+├── styles/                        # Global styling (Tailwind)
+└── ...
 prisma/
-├── schema.prisma                 # Database schema
-└── migrations/                   # Database migrations
+├── schema.prisma                  # Database schema
+└── migrations/                    # Prisma migration history
+deploy/
+├── config/
+│   ├── docker/                    # Dockerfile & compose stack
+│   ├── nginx/                     # Reverse proxy templates
+│   └── pm2/                       # PM2 ecosystem config
+└── scripts/                       # Deployment & maintenance scripts
+docs/
+├── manuals/                       # Product manuals & role guides
+├── deployment/                    # Deployment runbooks & checklists
+├── reports/                       # Audits & status reports
+├── reference/                     # ERDs, matrices, SOP references
+└── ...
+tests/
+└── samples/                       # Fixture PDFs for QA/manual testing
 ```
+
+Refer to `docs/reports/RESTRUCTURE_PLAN.md` for the latest file relocation map.
 
 ## Database Schema
 

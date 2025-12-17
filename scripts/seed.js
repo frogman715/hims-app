@@ -1,4 +1,4 @@
-/ scripts/seed.js
+// scripts/seed.js
 require('dotenv').config();
 
 const { Role } = require('@prisma/client');

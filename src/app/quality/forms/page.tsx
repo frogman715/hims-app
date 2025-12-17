@@ -23,6 +23,144 @@ interface Crew {
   status: string;
 }
 
+interface ShipExperience {
+  vesselName: string;
+  rank: string;
+  signOn: string;
+  signOff: string;
+  vesselType: string;
+  grt: string;
+  principal: string;
+  reasonLeaving: string;
+}
+
+// Field definitions for form (kept for documentation purposes)
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const BOOLEAN_FIELD_KEYS = [
+  "certifyInformation",
+  "understandSMS",
+  "agreeToComply",
+  "agreeToTerms",
+  "understandDuties",
+  "agreeToSafety",
+] as const;
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const TEXT_FIELD_KEYS = [
+  "accountNumber",
+  "actualOnboardTime",
+  "adaptation",
+  "address",
+  "allotmentAmount",
+  "allotmentDate",
+  "allotmentPercentage",
+  "allotmentPeriod",
+  "allowances",
+  "ambition",
+  "approvedBy",
+  "availableDate",
+  "bankAddress",
+  "bankDetails",
+  "bankName",
+  "basicSalary",
+  "beneficiaryAddress",
+  "beneficiaryName",
+  "birthDate",
+  "carrier",
+  "checkedBy",
+  "checkedByPosition",
+  "civilStatus",
+  "confirmationDate",
+  "contactNumber",
+  "contractDate",
+  "contractDuration",
+  "course",
+  "crewName",
+  "crewSignature",
+  "dateOfBirth",
+  "deductions",
+  "departureDate",
+  "duration",
+  "educationDate",
+  "email",
+  "employeeName",
+  "employeeSignature",
+  "endDate",
+  "english",
+  "evaluatedBy",
+  "evaluatedByPosition",
+  "evaluationDate",
+  "evaluationPeriod",
+  "expectedSalary",
+  "experience",
+  "familyLife",
+  "familyName",
+  "finalComments",
+  "finalResult",
+  "fullName",
+  "givenName",
+  "heightWeight",
+  "improvements",
+  "jobThinking",
+  "judgement",
+  "knowledge",
+  "lastCarrier",
+  "lastCompany",
+  "lastRank",
+  "lastSchool",
+  "mainInterviewerName",
+  "mainInterviewerRank",
+  "manualType",
+  "maritalStatus",
+  "middleName",
+  "nationality",
+  "netSalary",
+  "nextOfKinName",
+  "onboardTimeAnyTankers",
+  "onboardTimeCrude",
+  "onboardTimeInRank",
+  "overallRating",
+  "overtime",
+  "ownDisembark",
+  "paymentDate",
+  "paymentMethod",
+  "paymentPeriod",
+  "pm",
+  "position",
+  "preparedBy",
+  "recommendations",
+  "recommendedBy",
+  "recommenderRankName",
+  "recommenderSection",
+  "relationship",
+  "result13",
+  "rewardPunish",
+  "salary",
+  "socialLife",
+  "sociality",
+  "startDate",
+  "strengths",
+  "subInterviewerName",
+  "subInterviewerRank",
+  "suedInCourt",
+  "suedParticulars",
+  "swiftCode",
+  "telephone",
+  "totalCarrier",
+  "vesselName",
+  "workLocation",
+] as const;
+
+type BooleanField = (typeof BOOLEAN_FIELD_KEYS)[number];
+type TextField = (typeof TEXT_FIELD_KEYS)[number];
+
+type HGQSFormData = {
+  shipExperiences?: ShipExperience[];
+  [key: string]: string | boolean | ShipExperience[] | undefined;
+} &
+  Partial<Record<TextField, string>> &
+  Partial<Record<BooleanField, boolean>>;
+
 export default function HGQSFormsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -33,7 +171,7 @@ export default function HGQSFormsPage() {
   const [showCrewSelector, setShowCrewSelector] = useState(false);
   const [selectedForm, setSelectedForm] = useState<HGQSForm | null>(null);
   const [showOnlineForm, setShowOnlineForm] = useState(false);
-  const [formData, setFormData] = useState<Record<string, unknown>>({});
+  const [formData, setFormData] = useState<HGQSFormData>({});
   const [currentFormId, setCurrentFormId] = useState<string>('');
 
   const loadForms = useCallback(async () => {
@@ -253,7 +391,7 @@ export default function HGQSFormsPage() {
       if (crewResponse.ok) {
         const crewData = await crewResponse.json();
         setCrews(crewData.map((crew: { id: number; fullName: string; rank: string; status: string }) => ({
-          id: crew.id,
+          id: String(crew.id),
           fullName: crew.fullName,
           rank: crew.rank,
           status: crew.status
@@ -396,7 +534,22 @@ export default function HGQSFormsPage() {
     : forms.filter(form => form.category === selectedCategory);
 
   const renderFormFields = (formId: string) => {
-    const updateFormData = (field: string, value: string | number | boolean) => {
+    // Helper to safely get string values from form data
+    const getStringValue = (field: string): string => {
+      const value = formData[field];
+      if (typeof value === 'string') return value;
+      if (typeof value === 'boolean' || Array.isArray(value)) return '';
+      return String(value ?? '');
+    };
+
+    // Helper to safely get boolean values from form data
+    const getBooleanValue = (field: string): boolean => {
+      const value = formData[field];
+      if (typeof value === 'boolean') return value;
+      return false;
+    };
+
+    const updateFormData = (field: string, value: string | boolean | ShipExperience[]) => {
       setFormData((prev) => ({ ...prev, [field]: value }));
     };
 
@@ -413,7 +566,7 @@ export default function HGQSFormsPage() {
                   <input
                     type="text"
                     className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    value={formData.familyName || ''}
+                    value={getStringValue('familyName')}
                     onChange={(e) => updateFormData('familyName', e.target.value)}
                     required
                   />
@@ -562,16 +715,16 @@ export default function HGQSFormsPage() {
             <div className="border-b pb-4">
               <h4 className="font-medium text-gray-800 mb-3">Ship Experience</h4>
               <div className="space-y-3">
-                {(formData.shipExperiences as unknown[] || []).map((experience: unknown, index: number) => (
+                {(formData.shipExperiences ?? []).map((experience, index) => (
                   <div key={index} className="border rounded-lg p-4 bg-gray-50">
                     <div className="flex justify-between items-center mb-3">
                       <h5 className="font-medium text-sm text-gray-700">Experience {index + 1}</h5>
                       <button
                         type="button"
                         onClick={() => {
-                          const experiences = formData.shipExperiences || [];
+                          const experiences = [...(formData.shipExperiences ?? [])];
                           experiences.splice(index, 1);
-                          updateFormData('shipExperiences', [...experiences]);
+                          updateFormData('shipExperiences', experiences);
                         }}
                         className="text-red-600 hover:text-red-800 text-sm font-medium"
                       >
@@ -584,11 +737,11 @@ export default function HGQSFormsPage() {
                         <input
                           type="text"
                           className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                          value={experience.vesselName || ''}
+                          value={experience?.vesselName || ''}
                           onChange={(e) => {
-                            const experiences = formData.shipExperiences || [];
+                            const experiences = [...(formData.shipExperiences ?? [])];
                             experiences[index] = { ...experiences[index], vesselName: e.target.value };
-                            updateFormData('shipExperiences', [...experiences]);
+                            updateFormData('shipExperiences', experiences);
                           }}
                         />
                       </div>
@@ -597,11 +750,11 @@ export default function HGQSFormsPage() {
                         <input
                           type="text"
                           className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                          value={experience.rank || ''}
+                          value={experience?.rank || ''}
                           onChange={(e) => {
-                            const experiences = formData.shipExperiences || [];
+                            const experiences = [...(formData.shipExperiences ?? [])];
                             experiences[index] = { ...experiences[index], rank: e.target.value };
-                            updateFormData('shipExperiences', [...experiences]);
+                            updateFormData('shipExperiences', experiences);
                           }}
                         />
                       </div>
@@ -610,11 +763,11 @@ export default function HGQSFormsPage() {
                         <input
                           type="date"
                           className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                          value={experience.signOn || ''}
+                          value={experience?.signOn || ''}
                           onChange={(e) => {
-                            const experiences = formData.shipExperiences || [];
+                            const experiences = [...(formData.shipExperiences ?? [])];
                             experiences[index] = { ...experiences[index], signOn: e.target.value };
-                            updateFormData('shipExperiences', [...experiences]);
+                            updateFormData('shipExperiences', experiences);
                           }}
                         />
                       </div>
@@ -623,11 +776,11 @@ export default function HGQSFormsPage() {
                         <input
                           type="date"
                           className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                          value={experience.signOff || ''}
+                          value={experience?.signOff || ''}
                           onChange={(e) => {
-                            const experiences = formData.shipExperiences || [];
+                            const experiences = [...(formData.shipExperiences ?? [])];
                             experiences[index] = { ...experiences[index], signOff: e.target.value };
-                            updateFormData('shipExperiences', [...experiences]);
+                            updateFormData('shipExperiences', experiences);
                           }}
                         />
                       </div>
@@ -637,11 +790,11 @@ export default function HGQSFormsPage() {
                         <label className="block text-xs font-medium text-gray-700 mb-1">Vessel Type</label>
                         <select
                           className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                          value={experience.vesselType || ''}
+                          value={experience?.vesselType || ''}
                           onChange={(e) => {
-                            const experiences = formData.shipExperiences || [];
+                            const experiences = [...(formData.shipExperiences ?? [])];
                             experiences[index] = { ...experiences[index], vesselType: e.target.value };
-                            updateFormData('shipExperiences', [...experiences]);
+                            updateFormData('shipExperiences', experiences);
                           }}
                         >
                           <option value="">Select type</option>
@@ -668,11 +821,11 @@ export default function HGQSFormsPage() {
                         <input
                           type="number"
                           className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                          value={experience.grt || ''}
+                          value={experience?.grt || ''}
                           onChange={(e) => {
-                            const experiences = formData.shipExperiences || [];
+                            const experiences = [...(formData.shipExperiences ?? [])];
                             experiences[index] = { ...experiences[index], grt: e.target.value };
-                            updateFormData('shipExperiences', [...experiences]);
+                            updateFormData('shipExperiences', experiences);
                           }}
                         />
                       </div>
@@ -681,11 +834,11 @@ export default function HGQSFormsPage() {
                         <input
                           type="text"
                           className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                          value={experience.principal || ''}
+                          value={experience?.principal || ''}
                           onChange={(e) => {
-                            const experiences = formData.shipExperiences || [];
+                            const experiences = [...(formData.shipExperiences ?? [])];
                             experiences[index] = { ...experiences[index], principal: e.target.value };
-                            updateFormData('shipExperiences', [...experiences]);
+                            updateFormData('shipExperiences', experiences);
                           }}
                         />
                       </div>
@@ -695,11 +848,11 @@ export default function HGQSFormsPage() {
                       <input
                         type="text"
                         className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                        value={experience.reasonLeaving || ''}
+                        value={experience?.reasonLeaving || ''}
                         onChange={(e) => {
-                          const experiences = formData.shipExperiences || [];
+                          const experiences = [...(formData.shipExperiences ?? [])];
                           experiences[index] = { ...experiences[index], reasonLeaving: e.target.value };
-                          updateFormData('shipExperiences', [...experiences]);
+                          updateFormData('shipExperiences', experiences);
                         }}
                         placeholder="e.g., Contract completed, Better opportunity, etc."
                       />
@@ -709,7 +862,7 @@ export default function HGQSFormsPage() {
                 <button
                   type="button"
                   onClick={() => {
-                    const experiences = formData.shipExperiences || [];
+                    const experiences = [...(formData.shipExperiences ?? [])];
                     experiences.push({
                       vesselName: '',
                       rank: '',
@@ -720,7 +873,7 @@ export default function HGQSFormsPage() {
                       principal: '',
                       reasonLeaving: ''
                     });
-                    updateFormData('shipExperiences', [...experiences]);
+                    updateFormData('shipExperiences', experiences);
                   }}
                   className="w-full py-2 px-4 border border-dashed border-gray-400 rounded-lg text-gray-700 hover:bg-gray-100 hover:border-gray-400 transition-colors"
                 >
@@ -804,7 +957,7 @@ export default function HGQSFormsPage() {
                   <label className="block text-sm font-semibold text-gray-900 mb-2">Appearance (Posture, Expression)</label>
                   <select
                     className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    value={formData.appearance || ''}
+                    value={getStringValue('appearance')}
                     onChange={(e) => updateFormData('appearance', e.target.value)}
                   >
                     <option value="">Select evaluation</option>
@@ -1107,7 +1260,7 @@ export default function HGQSFormsPage() {
                     <input
                       type="checkbox"
                       className="mr-2"
-                      checked={formData[`doc_${index}`] || false}
+                      checked={getBooleanValue(`doc_${index}`)}
                       onChange={(e) => updateFormData(`doc_${index}`, e.target.checked)}
                     />
                     <span className="text-sm text-gray-700">{doc}</span>
@@ -1359,17 +1512,17 @@ export default function HGQSFormsPage() {
                     <input
                       type="checkbox"
                       className="mr-2"
-                      checked={formData[`condition_${index}`] || false}
+                      checked={getBooleanValue(`condition_${index}`)}
                       onChange={(e) => updateFormData(`condition_${index}`, e.target.checked)}
                     />
                     <span className="text-sm text-gray-700">{condition}</span>
                   </label>
-                  {condition.includes('specify') && formData[`condition_${index}`] && (
+                  {condition.includes('specify') && getBooleanValue(`condition_${index}`) && (
                     <input
                       type="text"
                       placeholder="Please specify"
                       className="ml-6 mt-1 w-full px-3 py-2 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                      value={formData[`condition_${index}_details`] || ''}
+                      value={getStringValue(`condition_${index}_details`)}
                       onChange={(e) => updateFormData(`condition_${index}_details`, e.target.value)}
                     />
                   )}
@@ -1747,7 +1900,7 @@ export default function HGQSFormsPage() {
                     <input
                       type="checkbox"
                       className="mr-2"
-                      checked={formData[`checklist_${index}`] || false}
+                      checked={getBooleanValue(`checklist_${index}`)}
                       onChange={(e) => updateFormData(`checklist_${index}`, e.target.checked)}
                     />
                     <span className="text-sm text-gray-700">{item}</span>
@@ -1854,7 +2007,7 @@ export default function HGQSFormsPage() {
                       <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">{item.label}</label>
                       <select
                         className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        value={formData[item.key] || ''}
+                        value={getStringValue(item.key)}
                         onChange={(e) => updateFormData(item.key, e.target.value)}
                       >
                         <option value="">Select rating</option>
@@ -1870,7 +2023,7 @@ export default function HGQSFormsPage() {
                       <input
                         type="text"
                         className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        value={formData[`${item.key}Comments`] || ''}
+                        value={getStringValue(`${item.key}Comments`)}
                         onChange={(e) => updateFormData(`${item.key}Comments`, e.target.value)}
                         placeholder="Additional comments..."
                       />

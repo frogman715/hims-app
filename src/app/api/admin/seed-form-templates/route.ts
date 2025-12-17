@@ -32,14 +32,14 @@ export async function POST() {
       integrisPrincipal = await prisma.principal.create({
         data: {
           name: "INTEGRIS CO.,LTD",
-          companyCode: "INTEGRIS",
           country: "Singapore",
           address: "Singapore",
           contactPerson: "N/A",
           email: "info@integris.com.sg",
           phone: "+65 0000 0000",
-          contractStart: new Date(),
-          contractEnd: new Date(new Date().setFullYear(new Date().getFullYear() + 2)),
+          registrationNumber: "INTEGRIS",
+          agreementDate: new Date(),
+          agreementExpiry: new Date(new Date().setFullYear(new Date().getFullYear() + 2)),
           status: "ACTIVE",
         },
       });
@@ -123,14 +123,14 @@ export async function POST() {
       lundqvistPrincipal = await prisma.principal.create({
         data: {
           name: "LUNDQVIST REDERIERNA",
-          companyCode: "LUNDQVIST",
           country: "Sweden",
           address: "Sweden",
           contactPerson: "N/A",
           email: "info@lundqvist.se",
           phone: "+46 0000 0000",
-          contractStart: new Date(),
-          contractEnd: new Date(new Date().setFullYear(new Date().getFullYear() + 2)),
+          registrationNumber: "LUNDQVIST",
+          agreementDate: new Date(),
+          agreementExpiry: new Date(new Date().setFullYear(new Date().getFullYear() + 2)),
           status: "ACTIVE",
         },
       });

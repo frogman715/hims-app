@@ -1,7 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { ComplianceSystemType } from '@prisma/client';
+
+const SYSTEM_TYPES = ['KOSMA_CERTIFICATE', 'DEPHUB_CERTIFICATE', 'SCHENGEN_VISA_NL'] as const;
+type ExternalComplianceSystem = typeof SYSTEM_TYPES[number];
+type ExternalComplianceStatus = 'PENDING' | 'VERIFIED' | 'EXPIRED' | 'REJECTED';
 
 interface ComplianceStats {
   total: number;
@@ -12,15 +15,19 @@ interface ComplianceStats {
 }
 
 interface ComplianceStatusWidgetProps {
-  crewId?: number;
+  crewId?: string;
 }
 
+const EMPTY_STATS: ComplianceStats = { total: 0, verified: 0, pending: 0, failed: 0, expired: 0 };
+
+const createEmptyStatsMap = () =>
+  SYSTEM_TYPES.reduce<Record<ExternalComplianceSystem, ComplianceStats>>((accumulator, system) => {
+    accumulator[system] = { ...EMPTY_STATS };
+    return accumulator;
+  }, {} as Record<ExternalComplianceSystem, ComplianceStats>);
+
 export default function ComplianceStatusWidget({ crewId }: ComplianceStatusWidgetProps) {
-  const [stats, setStats] = useState<Record<ComplianceSystemType, ComplianceStats>>({
-    KOSMA_CERTIFICATE: { total: 0, verified: 0, pending: 0, failed: 0, expired: 0 },
-    DEPHUB_CERTIFICATE: { total: 0, verified: 0, pending: 0, failed: 0, expired: 0 },
-    SCHENGEN_VISA_NL: { total: 0, verified: 0, pending: 0, failed: 0, expired: 0 },
-  });
+  const [stats, setStats] = useState<Record<ExternalComplianceSystem, ComplianceStats>>(() => createEmptyStatsMap());
   const [loading, setLoading] = useState(true);
 
   const fetchComplianceStats = useCallback(async () => {
@@ -30,30 +37,27 @@ export default function ComplianceStatusWidget({ crewId }: ComplianceStatusWidge
 
       const response = await fetch(`/api/external-compliance?${params}`);
       if (response.ok) {
-        const compliances = await response.json();
+        const result: { data: Array<{ systemType: ExternalComplianceSystem; status: ExternalComplianceStatus }> } = await response.json();
+        const compliances = result.data ?? [];
 
-        const newStats: Record<ComplianceSystemType, ComplianceStats> = {
-          KOSMA_CERTIFICATE: { total: 0, verified: 0, pending: 0, failed: 0, expired: 0 },
-          DEPHUB_CERTIFICATE: { total: 0, verified: 0, pending: 0, failed: 0, expired: 0 },
-          SCHENGEN_VISA_NL: { total: 0, verified: 0, pending: 0, failed: 0, expired: 0 },
-        };
+        const newStats = createEmptyStatsMap();
 
-        compliances.forEach((compliance: { systemType: ComplianceSystemType; status: string }) => {
-          const systemType = compliance.systemType as ComplianceSystemType;
+        compliances.forEach((compliance: { systemType: ExternalComplianceSystem; status: ExternalComplianceStatus }) => {
+          const systemType = compliance.systemType;
           if (newStats[systemType]) {
-            newStats[systemType].total++;
+            newStats[systemType].total += 1;
             switch (compliance.status) {
               case 'VERIFIED':
-                newStats[systemType].verified++;
+                newStats[systemType].verified += 1;
                 break;
               case 'PENDING':
-                newStats[systemType].pending++;
+                newStats[systemType].pending += 1;
                 break;
-              case 'FAILED':
-                newStats[systemType].failed++;
+              case 'REJECTED':
+                newStats[systemType].failed += 1;
                 break;
               case 'EXPIRED':
-                newStats[systemType].expired++;
+                newStats[systemType].expired += 1;
                 break;
             }
           }
@@ -72,7 +76,7 @@ export default function ComplianceStatusWidget({ crewId }: ComplianceStatusWidge
     fetchComplianceStats();
   }, [fetchComplianceStats]);
 
-  const getSystemTypeLabel = (type: ComplianceSystemType) => {
+  const getSystemTypeLabel = (type: ExternalComplianceSystem) => {
     switch (type) {
       case 'KOSMA_CERTIFICATE':
         return 'KOSMA';
@@ -124,7 +128,7 @@ export default function ComplianceStatusWidget({ crewId }: ComplianceStatusWidge
             <div key={systemType} className="border rounded-lg p-4">
               <div className="flex justify-between items-center mb-2">
                 <h4 className="text-sm font-medium text-gray-900">
-                  {getSystemTypeLabel(systemType as ComplianceSystemType)}
+                  {getSystemTypeLabel(systemType as ExternalComplianceSystem)}
                 </h4>
                 <span className={`text-sm font-semibold ${getStatusColor(rate)}`}>
                   {rate}%

@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { checkPermission, crewGuard, PermissionLevel } from "@/lib/permission-middleware";
-import { Prisma } from "@prisma/client";
+import { Prisma, CrewStatus } from "@prisma/client";
 
 interface CreateCrewPayload {
   fullName: string;
@@ -49,8 +49,8 @@ export async function GET(req: NextRequest) {
     const where: Prisma.CrewWhereInput = {};
 
     // Filter by status if provided
-    if (status && status !== 'all') {
-      where.status = status;
+    if (status && status !== 'all' && Object.values(CrewStatus).includes(status as CrewStatus)) {
+      where.status = status as CrewStatus;
     }
 
     // Filter by search term if provided
@@ -58,7 +58,8 @@ export async function GET(req: NextRequest) {
       where.OR = [
         { fullName: { contains: search, mode: 'insensitive' } },
         { rank: { contains: search, mode: 'insensitive' } },
-        { vesselName: { contains: search, mode: 'insensitive' } }
+        { phone: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } }
       ];
     }
 

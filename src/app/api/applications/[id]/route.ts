@@ -90,7 +90,7 @@ function isUpdateApplicationPayload(value: unknown): value is UpdateApplicationP
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -98,7 +98,7 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { id } = params;
+    const { id } = await context.params;
     const applicationId = id; // Keep as string since id is cuid
 
     const application = await prisma.application.findUnique({
@@ -129,7 +129,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -137,7 +137,7 @@ export async function PUT(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { id } = params;
+    const { id } = await context.params;
     const applicationId = id;
 
     const body = (await request.json()) as unknown;
@@ -161,7 +161,10 @@ export async function PUT(
       updateData.vesselType = normalizeOptionalString(body.vesselType);
     }
     if (body.principalId !== undefined) {
-      updateData.principalId = normalizeOptionalString(body.principalId);
+      const normalizedPrincipalId = normalizeOptionalString(body.principalId);
+      updateData.principal = normalizedPrincipalId
+        ? { connect: { id: normalizedPrincipalId } }
+        : { disconnect: true };
     }
     if (body.remarks !== undefined) {
       updateData.remarks = normalizeOptionalString(body.remarks);

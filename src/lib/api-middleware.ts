@@ -3,6 +3,7 @@ import { getServerSession, Session } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { handleApiError, ApiError } from "@/lib/error-handler";
 import { checkPermission, PermissionLevel } from "@/lib/permission-middleware";
+import { rateLimit } from "@/lib/rate-limit";
 
 /**
  * Higher-order function to wrap API routes with authentication
@@ -62,34 +63,6 @@ export function withPermission<T = unknown>(
  * Rate limiting helper (simple in-memory implementation)
  * For production, use Redis-based solution
  */
-const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
-
-export function rateLimit(identifier: string, maxRequests = 60, windowMs = 60000): boolean {
-  const now = Date.now();
-  const record = rateLimitMap.get(identifier);
-
-  // Clean up old entries periodically
-  if (rateLimitMap.size > 10000) {
-    for (const [key, value] of rateLimitMap.entries()) {
-      if (value.resetTime < now) {
-        rateLimitMap.delete(key);
-      }
-    }
-  }
-
-  if (!record || record.resetTime < now) {
-    rateLimitMap.set(identifier, { count: 1, resetTime: now + windowMs });
-    return true;
-  }
-
-  if (record.count >= maxRequests) {
-    return false;
-  }
-
-  record.count++;
-  return true;
-}
-
 /**
  * Apply rate limiting middleware
  */

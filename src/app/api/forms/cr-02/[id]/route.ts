@@ -249,8 +249,9 @@ function generateCR02HTML(application: HydratedApplication) {
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await context.params;
   try {
     const session = await getServerSession(authOptions);
     if (!session) {
@@ -258,7 +259,7 @@ export async function GET(
     }
 
     const application = await prisma.application.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         crew: true,
         principal: true

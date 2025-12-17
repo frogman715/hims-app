@@ -62,8 +62,9 @@ function parseStringOrNull(value: unknown): string | null | undefined {
 // GET /api/prepare-joining/[id] - Get single prepare joining record
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await context.params;
   try {
     const session = await getServerSession(authOptions);
     if (!checkPermission(session, "crew", PermissionLevel.VIEW_ACCESS)) {
@@ -74,7 +75,7 @@ export async function GET(
     }
 
     const prepareJoining = await prisma.prepareJoining.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         crew: {
           select: {
@@ -86,11 +87,9 @@ export async function GET(
             email: true,
             dateOfBirth: true,
             passportNumber: true,
-            passportIssueDate: true,
-            passportExpiryDate: true,
+            passportExpiry: true,
             seamanBookNumber: true,
-            seamanBookIssueDate: true,
-            seamanBookExpiryDate: true,
+            seamanBookExpiry: true,
           },
         },
         vessel: {
@@ -108,8 +107,8 @@ export async function GET(
             name: true,
             country: true,
             contactPerson: true,
-            contactEmail: true,
-            contactPhone: true,
+            email: true,
+            phone: true,
           },
         },
       },
@@ -135,8 +134,9 @@ export async function GET(
 // PUT /api/prepare-joining/[id] - Update prepare joining record
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await context.params;
   try {
     const session = await getServerSession(authOptions);
     if (!checkPermission(session, "crew", PermissionLevel.EDIT_ACCESS)) {
@@ -254,16 +254,16 @@ export async function PUT(
 
     const vesselId = parseStringOrNull(body.vesselId);
     if (vesselId !== undefined) {
-      updateData.vesselId = vesselId;
+      updateData.vessel = vesselId ? { connect: { id: vesselId } } : { disconnect: true };
     }
 
     const principalId = parseStringOrNull(body.principalId);
     if (principalId !== undefined) {
-      updateData.principalId = principalId;
+      updateData.principal = principalId ? { connect: { id: principalId } } : { disconnect: true };
     }
 
     const prepareJoining = await prisma.prepareJoining.update({
-      where: { id: params.id },
+      where: { id },
       data: updateData,
       include: {
         crew: {
@@ -304,9 +304,10 @@ export async function PUT(
 // DELETE /api/prepare-joining/[id] - Delete prepare joining record
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await context.params;
     const session = await getServerSession(authOptions);
     if (!checkPermission(session, "crew", PermissionLevel.FULL_ACCESS)) {
       return NextResponse.json(
@@ -316,7 +317,7 @@ export async function DELETE(
     }
 
     await prisma.prepareJoining.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     return NextResponse.json({ message: "Prepare joining deleted" });

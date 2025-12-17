@@ -29,7 +29,7 @@ interface ChecklistItem {
 interface ExternalCompliance {
   id: number;
   systemType: 'KOSMA_CERTIFICATE' | 'DEPHUB_CERTIFICATE' | 'SCHENGEN_VISA_NL';
-  status: 'PENDING' | 'VERIFIED' | 'FAILED' | 'EXPIRED';
+  status: 'PENDING' | 'VERIFIED' | 'REJECTED' | 'EXPIRED';
   expiryDate?: string;
   verificationUrl?: string;
 }
@@ -351,7 +351,7 @@ export default function ChecklistDetailPage() {
                           <span className={`inline-flex px-4 py-2 text-xs font-semibold rounded-full ${
                             compliance.status === 'VERIFIED' ? 'bg-green-100 text-green-800' :
                             compliance.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
-                            compliance.status === 'FAILED' ? 'bg-red-100 text-red-800' :
+                            compliance.status === 'REJECTED' ? 'bg-red-100 text-red-800' :
                             'bg-gray-100 text-gray-700'
                           }`}>
                             {compliance.status}

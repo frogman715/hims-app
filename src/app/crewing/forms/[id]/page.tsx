@@ -19,6 +19,7 @@ interface FormSubmission {
   approvedBy: string | null;
   approvedAt: Date | null;
   rejectionReason: string | null;
+  finalPdfPath: string | null;
   createdAt: Date;
   template: {
     id: string;

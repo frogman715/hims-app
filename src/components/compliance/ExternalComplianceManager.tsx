@@ -1,21 +1,37 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ExternalCompliance, ComplianceSystemType, ComplianceStatus } from '@prisma/client';
 
-interface Crew {
-  id: number;
-  firstName: string;
-  lastName: string;
-  seamanCode: string;
+type ExternalComplianceSystem = 'KOSMA_CERTIFICATE' | 'DEPHUB_CERTIFICATE' | 'SCHENGEN_VISA_NL';
+type ExternalComplianceStatus = 'PENDING' | 'VERIFIED' | 'EXPIRED' | 'REJECTED';
+
+interface ExternalComplianceRecord {
+  id: string;
+  crewId: string;
+  systemType: ExternalComplianceSystem;
+  certificateId?: string | null;
+  issueDate?: string | Date | null;
+  expiryDate?: string | Date | null;
+  status: ExternalComplianceStatus;
+  verificationUrl?: string | null;
+  notes?: string | null;
+  createdAt: string | Date;
+  updatedAt: string | Date;
 }
 
-interface ExternalComplianceWithCrew extends ExternalCompliance {
+interface Crew {
+  id: string;
+  fullName: string;
+  rank: string;
+  status: string;
+}
+
+interface ExternalComplianceWithCrew extends ExternalComplianceRecord {
   crew: Crew;
 }
 
 interface ExternalComplianceManagerProps {
-  crewId?: number;
+  crewId?: string;
 }
 
 export default function ExternalComplianceManager({ crewId }: ExternalComplianceManagerProps) {
@@ -25,12 +41,12 @@ export default function ExternalComplianceManager({ crewId }: ExternalCompliance
   const [editingCompliance, setEditingCompliance] = useState<ExternalComplianceWithCrew | null>(null);
   const [formData, setFormData] = useState({
     crewId: crewId || '',
-    systemType: 'KOSMA_CERTIFICATE' as ComplianceSystemType,
-    certificateNumber: '',
+    systemType: 'KOSMA_CERTIFICATE' as ExternalComplianceSystem,
+    certificateId: '',
     issueDate: '',
     expiryDate: '',
     verificationUrl: '',
-    status: 'PENDING' as ComplianceStatus,
+    status: 'PENDING' as ExternalComplianceStatus,
     notes: '',
   });
 
@@ -41,8 +57,8 @@ export default function ExternalComplianceManager({ crewId }: ExternalCompliance
 
       const response = await fetch(`/api/external-compliance?${params}`);
       if (response.ok) {
-        const data = await response.json();
-        setCompliances(data);
+        const result: { data: ExternalComplianceWithCrew[] } = await response.json();
+        setCompliances(result.data ?? []);
       }
     } catch (error) {
       console.error('Error fetching compliances:', error);
@@ -60,18 +76,33 @@ export default function ExternalComplianceManager({ crewId }: ExternalCompliance
 
     try {
       const url = editingCompliance
-        ? '/api/external-compliance'
+        ? `/api/external-compliance/${editingCompliance.id}`
         : '/api/external-compliance';
 
       const method = editingCompliance ? 'PUT' : 'POST';
-      const body = editingCompliance
-        ? { ...formData, id: editingCompliance.id }
-        : formData;
+      const payload = editingCompliance
+        ? {
+          certificateId: formData.certificateId || null,
+          issueDate: formData.issueDate || null,
+          expiryDate: formData.expiryDate || null,
+          verificationUrl: formData.verificationUrl || null,
+          status: formData.status,
+          notes: formData.notes || null,
+        }
+        : {
+          crewId: formData.crewId,
+          systemType: formData.systemType,
+          certificateId: formData.certificateId || null,
+          issueDate: formData.issueDate || null,
+          expiryDate: formData.expiryDate || null,
+          verificationUrl: formData.verificationUrl || null,
+          notes: formData.notes || null,
+        };
 
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+        body: JSON.stringify(payload),
       });
 
       if (response.ok) {
@@ -85,14 +116,27 @@ export default function ExternalComplianceManager({ crewId }: ExternalCompliance
     }
   };
 
+  const formatDateInput = (value?: string | Date | null) => {
+    if (!value) {
+      return '';
+    }
+
+    const dateValue = typeof value === 'string' ? new Date(value) : value;
+    if (Number.isNaN(dateValue.getTime())) {
+      return '';
+    }
+
+    return dateValue.toISOString().split('T')[0];
+  };
+
   const handleEdit = (compliance: ExternalComplianceWithCrew) => {
     setEditingCompliance(compliance);
     setFormData({
-      crewId: compliance.crewId.toString(),
+      crewId: compliance.crewId,
       systemType: compliance.systemType,
-      certificateNumber: compliance.certificateNumber || '',
-      issueDate: compliance.issueDate ? compliance.issueDate.split('T')[0] : '',
-      expiryDate: compliance.expiryDate ? compliance.expiryDate.split('T')[0] : '',
+      certificateId: compliance.certificateId || '',
+      issueDate: formatDateInput(compliance.issueDate),
+      expiryDate: formatDateInput(compliance.expiryDate),
       verificationUrl: compliance.verificationUrl || '',
       status: compliance.status,
       notes: compliance.notes || '',
@@ -100,11 +144,11 @@ export default function ExternalComplianceManager({ crewId }: ExternalCompliance
     setShowForm(true);
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this compliance record?')) return;
 
     try {
-      const response = await fetch(`/api/external-compliance?id=${id}`, {
+      const response = await fetch(`/api/external-compliance/${id}`, {
         method: 'DELETE',
       });
 
@@ -116,7 +160,7 @@ export default function ExternalComplianceManager({ crewId }: ExternalCompliance
     }
   };
 
-  const handleVerify = async (id: number) => {
+  const handleVerify = async (id: string) => {
     try {
       const response = await fetch(`/api/external-compliance/${id}/verify`, {
         method: 'POST',
@@ -134,7 +178,7 @@ export default function ExternalComplianceManager({ crewId }: ExternalCompliance
     setFormData({
       crewId: crewId || '',
       systemType: 'KOSMA_CERTIFICATE',
-      certificateNumber: '',
+      certificateId: '',
       issueDate: '',
       expiryDate: '',
       verificationUrl: '',
@@ -143,7 +187,7 @@ export default function ExternalComplianceManager({ crewId }: ExternalCompliance
     });
   };
 
-  const getSystemTypeLabel = (type: ComplianceSystemType) => {
+  const getSystemTypeLabel = (type: ExternalComplianceSystem) => {
     switch (type) {
       case 'KOSMA_CERTIFICATE':
         return 'KOSMA Certificate';
@@ -156,13 +200,13 @@ export default function ExternalComplianceManager({ crewId }: ExternalCompliance
     }
   };
 
-  const getStatusColor = (status: ComplianceStatus) => {
+  const getStatusColor = (status: ExternalComplianceStatus) => {
     switch (status) {
       case 'VERIFIED':
         return 'text-green-600 bg-green-100';
       case 'PENDING':
         return 'text-yellow-600 bg-yellow-100';
-      case 'FAILED':
+      case 'REJECTED':
         return 'text-red-600 bg-red-100';
       case 'EXPIRED':
         return 'text-gray-600 bg-gray-100';
@@ -205,7 +249,7 @@ export default function ExternalComplianceManager({ crewId }: ExternalCompliance
                   Crew Member
                 </label>
                 <input
-                  type="number"
+                  type="text"
                   value={formData.crewId}
                   onChange={(e) => setFormData({ ...formData, crewId: e.target.value })}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
@@ -220,7 +264,7 @@ export default function ExternalComplianceManager({ crewId }: ExternalCompliance
               </label>
               <select
                 value={formData.systemType}
-                onChange={(e) => setFormData({ ...formData, systemType: e.target.value as ComplianceSystemType })}
+                onChange={(e) => setFormData({ ...formData, systemType: e.target.value as ExternalComplianceSystem })}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 required
               >
@@ -232,12 +276,12 @@ export default function ExternalComplianceManager({ crewId }: ExternalCompliance
 
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                Certificate Number
+                Certificate / Reference ID
               </label>
               <input
                 type="text"
-                value={formData.certificateNumber}
-                onChange={(e) => setFormData({ ...formData, certificateNumber: e.target.value })}
+                value={formData.certificateId}
+                onChange={(e) => setFormData({ ...formData, certificateId: e.target.value })}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               />
             </div>
@@ -287,12 +331,12 @@ export default function ExternalComplianceManager({ crewId }: ExternalCompliance
               </label>
               <select
                 value={formData.status}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value as ComplianceStatus })}
+                onChange={(e) => setFormData({ ...formData, status: e.target.value as ExternalComplianceStatus })}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               >
                 <option value="PENDING">Pending</option>
                 <option value="VERIFIED">Verified</option>
-                <option value="FAILED">Failed</option>
+                <option value="REJECTED">Rejected</option>
                 <option value="EXPIRED">Expired</option>
               </select>
             </div>
@@ -347,12 +391,12 @@ export default function ExternalComplianceManager({ crewId }: ExternalCompliance
                   </div>
                   {!crewId && (
                     <p className="text-sm text-gray-500">
-                      {compliance.crew.firstName} {compliance.crew.lastName} ({compliance.crew.seamanCode})
+                      {compliance.crew.fullName} – {compliance.crew.rank} ({compliance.crew.status})
                     </p>
                   )}
-                  {compliance.certificateNumber && (
+                  {compliance.certificateId && (
                     <p className="text-sm text-gray-500">
-                      Certificate: {compliance.certificateNumber}
+                      Certificate: {compliance.certificateId}
                     </p>
                   )}
                   {compliance.expiryDate && (

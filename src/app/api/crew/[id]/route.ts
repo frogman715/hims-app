@@ -5,6 +5,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { canAccessRedData, encrypt, decrypt } from "@/lib/crypto";
 import { maskPassport } from "@/lib/masking";
+import { Prisma, CrewStatus } from "@prisma/client";
 
 interface Params {
   id: string;
@@ -106,29 +107,34 @@ export async function PATCH(
     const { id } = await params;
     const data = await req.json();
 
-    // Prepare update data
-    const updateData: {
-      fullName?: string;
-      rank?: string;
-      phone?: string;
-      email?: string;
-      status?: string;
-      passportNumber?: string;
-    } = {
-      fullName: data.fullName,
-      rank: data.rank,
-      phone: data.phone,
-      email: data.email,
-      status: data.status
-    };
+    const updateData: Prisma.CrewUpdateInput = {};
 
-    // Encrypt passport number if provided
-    if (data.passportNumber !== undefined) {
-      if (data.passportNumber) {
-        updateData.passportNumber = encrypt(data.passportNumber);
-      } else {
-        updateData.passportNumber = null;
+    if (typeof data.fullName === "string" && data.fullName.trim()) {
+      updateData.fullName = data.fullName.trim();
+    }
+
+    if (typeof data.rank === "string" && data.rank.trim()) {
+      updateData.rank = data.rank.trim();
+    }
+
+    if (typeof data.phone === "string") {
+      updateData.phone = data.phone.trim();
+    }
+
+    if (typeof data.email === "string") {
+      updateData.email = data.email.trim();
+    }
+
+    if (data.status !== undefined) {
+      if (typeof data.status === "string" && Object.values(CrewStatus).includes(data.status as CrewStatus)) {
+        updateData.status = data.status as CrewStatus;
       }
+    }
+
+    if (data.passportNumber !== undefined) {
+      updateData.passportNumber = data.passportNumber
+        ? encrypt(String(data.passportNumber))
+        : null;
     }
 
     const crew = await prisma.crew.update({

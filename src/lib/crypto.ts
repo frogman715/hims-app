@@ -61,28 +61,25 @@ export function decrypt(cipherText: string): string {
   decipher.setAAD(Buffer.from('HANMARINE_HIMS'));
   decipher.setAuthTag(authTag);
 
-  let decrypted = decipher.update(encrypted);
-  decrypted += decipher.final('utf8');
-
-  return decrypted;
+  const decryptedBuffers = [decipher.update(encrypted), decipher.final()];
+  return Buffer.concat(decryptedBuffers).toString('utf8');
 }
 
-/**
- * Checks if a user has RED sensitivity access for a specific data type
- * @param userRoles - Array of user roles
- * @param dataType - Type of data being accessed ('medical', 'salary', 'identity')
- * @returns boolean indicating if user can access decrypted RED data
- */
-import { hasSensitivityAccess } from '@/lib/permissions';
-import { DataSensitivity } from '@prisma/client';
+import { hasSensitivityAccess, DataSensitivity, UserRole } from '@/lib/permissions';
 
-const sensitivityMap: Record<'medical' | 'salary' | 'identity', DataSensitivity> = {
-  medical: DataSensitivity.RED,
-  salary: DataSensitivity.RED,
-  identity: DataSensitivity.RED
-};
+function normalizeRole(value: string | UserRole): UserRole | null {
+  const candidate = value.toString().trim().toUpperCase();
+  return (Object.values(UserRole) as string[]).includes(candidate)
+    ? (candidate as UserRole)
+    : null;
+}
 
-export function canAccessRedData(userRoles: string[], dataType: 'medical' | 'salary' | 'identity'): boolean {
-  const requiredSensitivity = sensitivityMap[dataType];
-  return hasSensitivityAccess(userRoles, requiredSensitivity);
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function canAccessRedData(userRoles: (string | UserRole)[], _dataType: 'medical' | 'salary' | 'identity'): boolean {
+  const requiredSensitivity = DataSensitivity.RED;
+  const normalizedRoles = userRoles
+    .map((role) => normalizeRole(role))
+    .filter((role): role is UserRole => role !== null);
+
+  return hasSensitivityAccess(normalizedRoles, requiredSensitivity);
 }

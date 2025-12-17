@@ -16,6 +16,10 @@ export enum UserRole {
   OPERATIONAL = 'OPERATIONAL',  // Operational staff - limited access
   ACCOUNTING = 'ACCOUNTING',    // Accounting department
   HR = 'HR',                    // HR department
+  HR_ADMIN = 'HR_ADMIN',        // HR administrator
+  QMR = 'QMR',                  // Quality management representative
+  SECTION_HEAD = 'SECTION_HEAD',// Department section head
+  STAFF = 'STAFF',              // General staff
   CREW_PORTAL = 'CREW_PORTAL'   // Crew self-service
 }
 
@@ -60,6 +64,88 @@ export enum DataSensitivity {
   RED = 'RED',      // Highly Sensitive (medical, full SEA, salary breakdown)
   AMBER = 'AMBER',  // Sensitive (personal data, disciplinary cases)
   GREEN = 'GREEN'   // Internal/Normal (public vessel info, procedures)
+}
+
+export interface RolePermissionOverride {
+  role: string;
+  moduleKey: string;
+  level: PermissionLevel | `${PermissionLevel}`;
+}
+
+const PERMISSION_ORDER: PermissionLevel[] = [
+  PermissionLevel.NO_ACCESS,
+  PermissionLevel.VIEW_ACCESS,
+  PermissionLevel.EDIT_ACCESS,
+  PermissionLevel.FULL_ACCESS
+];
+
+function normalizeModuleKey(moduleKey: string): ModuleName | null {
+  const normalized = moduleKey as ModuleName;
+  if ((Object.values(ModuleName) as string[]).includes(normalized)) {
+    return normalized;
+  }
+
+  const lowerKey = moduleKey.toLowerCase();
+  const matched = (Object.values(ModuleName) as string[]).find(
+    (value) => value.toLowerCase() === lowerKey
+  );
+
+  return (matched as ModuleName | undefined) ?? null;
+}
+
+function normalizePermissionLevel(value: unknown): PermissionLevel | null {
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  const upper = value.toUpperCase() as PermissionLevel;
+  return PERMISSION_ORDER.includes(upper) ? upper : null;
+}
+
+function comparePermissionLevels(a: PermissionLevel, b: PermissionLevel): number {
+  return PERMISSION_ORDER.indexOf(a) - PERMISSION_ORDER.indexOf(b);
+}
+
+function resolveRolePermission(
+  role: UserRole,
+  module: string,
+  overrides?: RolePermissionOverride[] | null
+): PermissionLevel {
+  const normalizedModule = normalizeModuleKey(module) ?? (module as ModuleName);
+  const fallbackLevel =
+    PERMISSION_MATRIX[role]?.[normalizedModule as ModuleName] ?? PermissionLevel.NO_ACCESS;
+
+  if (!overrides || overrides.length === 0) {
+    return fallbackLevel;
+  }
+
+  const lowerModuleKey = module.toLowerCase();
+  const overrideEntry = overrides.find(
+    (entry) =>
+      entry.role.toUpperCase() === role && entry.moduleKey.toLowerCase() === lowerModuleKey
+  );
+
+  const overrideLevel = normalizePermissionLevel(overrideEntry?.level);
+  return overrideLevel ?? fallbackLevel;
+}
+
+export function getEffectivePermissionLevel(
+  userRoles: UserRole | UserRole[],
+  module: string,
+  overrides?: RolePermissionOverride[] | null
+): PermissionLevel {
+  const roles = Array.isArray(userRoles) ? userRoles : [userRoles];
+
+  let highest = PermissionLevel.NO_ACCESS;
+
+  for (const role of roles) {
+    const candidate = resolveRolePermission(role, module, overrides);
+    if (comparePermissionLevels(candidate, highest) > 0) {
+      highest = candidate;
+    }
+  }
+
+  return highest;
 }
 
 // ==========================================
@@ -119,6 +205,56 @@ export const PERMISSION_MATRIX: Record<UserRole, Record<ModuleName, PermissionLe
     pkl: PermissionLevel.FULL_ACCESS
   },
 
+  [UserRole.QMR]: {
+    dashboard: PermissionLevel.FULL_ACCESS,
+    crew: PermissionLevel.VIEW_ACCESS,
+    principals: PermissionLevel.VIEW_ACCESS,
+    contracts: PermissionLevel.VIEW_ACCESS,
+    applications: PermissionLevel.VIEW_ACCESS,
+    assignments: PermissionLevel.VIEW_ACCESS,
+    vessels: PermissionLevel.VIEW_ACCESS,
+    documents: PermissionLevel.EDIT_ACCESS,
+    medical: PermissionLevel.VIEW_ACCESS,
+    visas: PermissionLevel.VIEW_ACCESS,
+    agencyFees: PermissionLevel.NO_ACCESS,
+    accounting: PermissionLevel.NO_ACCESS,
+    wageScales: PermissionLevel.VIEW_ACCESS,
+    agencyAgreements: PermissionLevel.VIEW_ACCESS,
+    disciplinary: PermissionLevel.EDIT_ACCESS,
+    quality: PermissionLevel.FULL_ACCESS,
+    nationalHolidays: PermissionLevel.VIEW_ACCESS,
+    compliance: PermissionLevel.FULL_ACCESS,
+    crewing: PermissionLevel.VIEW_ACCESS,
+    insurance: PermissionLevel.VIEW_ACCESS,
+    dispatches: PermissionLevel.VIEW_ACCESS,
+    pkl: PermissionLevel.VIEW_ACCESS
+  },
+
+  [UserRole.HR_ADMIN]: {
+    dashboard: PermissionLevel.FULL_ACCESS,
+    crew: PermissionLevel.FULL_ACCESS,
+    principals: PermissionLevel.VIEW_ACCESS,
+    contracts: PermissionLevel.EDIT_ACCESS,
+    applications: PermissionLevel.FULL_ACCESS,
+    assignments: PermissionLevel.FULL_ACCESS,
+    vessels: PermissionLevel.VIEW_ACCESS,
+    documents: PermissionLevel.FULL_ACCESS,
+    medical: PermissionLevel.FULL_ACCESS,
+    visas: PermissionLevel.EDIT_ACCESS,
+    agencyFees: PermissionLevel.NO_ACCESS,
+    accounting: PermissionLevel.NO_ACCESS,
+    wageScales: PermissionLevel.VIEW_ACCESS,
+    agencyAgreements: PermissionLevel.VIEW_ACCESS,
+    disciplinary: PermissionLevel.FULL_ACCESS,
+    quality: PermissionLevel.EDIT_ACCESS,
+    nationalHolidays: PermissionLevel.FULL_ACCESS,
+    compliance: PermissionLevel.EDIT_ACCESS,
+    crewing: PermissionLevel.FULL_ACCESS,
+    insurance: PermissionLevel.EDIT_ACCESS,
+    dispatches: PermissionLevel.VIEW_ACCESS,
+    pkl: PermissionLevel.FULL_ACCESS
+  },
+
   [UserRole.OPERATIONAL]: {
     // Fleet operations, dispatches, basic crew info
     dashboard: PermissionLevel.FULL_ACCESS,
@@ -169,6 +305,56 @@ export const PERMISSION_MATRIX: Record<UserRole, Record<ModuleName, PermissionLe
     insurance: PermissionLevel.VIEW_ACCESS,
     dispatches: PermissionLevel.VIEW_ACCESS,
     pkl: PermissionLevel.VIEW_ACCESS
+  },
+
+  [UserRole.SECTION_HEAD]: {
+    dashboard: PermissionLevel.VIEW_ACCESS,
+    crew: PermissionLevel.VIEW_ACCESS,
+    principals: PermissionLevel.NO_ACCESS,
+    contracts: PermissionLevel.NO_ACCESS,
+    applications: PermissionLevel.NO_ACCESS,
+    assignments: PermissionLevel.VIEW_ACCESS,
+    vessels: PermissionLevel.VIEW_ACCESS,
+    documents: PermissionLevel.VIEW_ACCESS,
+    medical: PermissionLevel.NO_ACCESS,
+    visas: PermissionLevel.NO_ACCESS,
+    agencyFees: PermissionLevel.NO_ACCESS,
+    accounting: PermissionLevel.NO_ACCESS,
+    wageScales: PermissionLevel.NO_ACCESS,
+    agencyAgreements: PermissionLevel.NO_ACCESS,
+    disciplinary: PermissionLevel.VIEW_ACCESS,
+    quality: PermissionLevel.EDIT_ACCESS,
+    nationalHolidays: PermissionLevel.VIEW_ACCESS,
+    compliance: PermissionLevel.EDIT_ACCESS,
+    crewing: PermissionLevel.VIEW_ACCESS,
+    insurance: PermissionLevel.NO_ACCESS,
+    dispatches: PermissionLevel.VIEW_ACCESS,
+    pkl: PermissionLevel.VIEW_ACCESS
+  },
+
+  [UserRole.STAFF]: {
+    dashboard: PermissionLevel.VIEW_ACCESS,
+    crew: PermissionLevel.VIEW_ACCESS,
+    principals: PermissionLevel.NO_ACCESS,
+    contracts: PermissionLevel.NO_ACCESS,
+    applications: PermissionLevel.NO_ACCESS,
+    assignments: PermissionLevel.NO_ACCESS,
+    vessels: PermissionLevel.NO_ACCESS,
+    documents: PermissionLevel.VIEW_ACCESS,
+    medical: PermissionLevel.NO_ACCESS,
+    visas: PermissionLevel.NO_ACCESS,
+    agencyFees: PermissionLevel.NO_ACCESS,
+    accounting: PermissionLevel.NO_ACCESS,
+    wageScales: PermissionLevel.NO_ACCESS,
+    agencyAgreements: PermissionLevel.NO_ACCESS,
+    disciplinary: PermissionLevel.NO_ACCESS,
+    quality: PermissionLevel.VIEW_ACCESS,
+    nationalHolidays: PermissionLevel.VIEW_ACCESS,
+    compliance: PermissionLevel.VIEW_ACCESS,
+    crewing: PermissionLevel.NO_ACCESS,
+    insurance: PermissionLevel.NO_ACCESS,
+    dispatches: PermissionLevel.NO_ACCESS,
+    pkl: PermissionLevel.NO_ACCESS
   },
 
   [UserRole.HR]: {
@@ -263,6 +449,30 @@ export const SENSITIVITY_ACCESS_MATRIX: Record<UserRole, Record<DataSensitivity,
     [DataSensitivity.RED]: true,    // Can access own RED data only
     [DataSensitivity.AMBER]: true,  // Can access own AMBER data only
     [DataSensitivity.GREEN]: true   // Can access GREEN data
+  },
+
+  [UserRole.QMR]: {
+    [DataSensitivity.RED]: true,
+    [DataSensitivity.AMBER]: true,
+    [DataSensitivity.GREEN]: true
+  },
+
+  [UserRole.HR_ADMIN]: {
+    [DataSensitivity.RED]: true,
+    [DataSensitivity.AMBER]: true,
+    [DataSensitivity.GREEN]: true
+  },
+
+  [UserRole.SECTION_HEAD]: {
+    [DataSensitivity.RED]: false,
+    [DataSensitivity.AMBER]: true,
+    [DataSensitivity.GREEN]: true
+  },
+
+  [UserRole.STAFF]: {
+    [DataSensitivity.RED]: false,
+    [DataSensitivity.AMBER]: false,
+    [DataSensitivity.GREEN]: true
   }
 };
 
@@ -273,26 +483,11 @@ export const SENSITIVITY_ACCESS_MATRIX: Record<UserRole, Record<DataSensitivity,
 export function hasPermission(
   userRoles: UserRole | UserRole[],
   module: string,
-  requiredLevel: PermissionLevel
+  requiredLevel: PermissionLevel,
+  overrides?: RolePermissionOverride[] | null
 ): boolean {
-  // Convert single role to array for consistent handling
-  const roles = Array.isArray(userRoles) ? userRoles : [userRoles];
-
-  // Check if any of the user's roles has the required permission
-  return roles.some(role => {
-    const userPermissions = PERMISSION_MATRIX[role];
-    if (!userPermissions) return false;
-
-    const userLevel = userPermissions[module as ModuleName];
-    if (!userLevel) return false;
-
-    // Permission hierarchy: NO_ACCESS < VIEW_ACCESS < EDIT_ACCESS < FULL_ACCESS
-    const hierarchy = ['NO_ACCESS', 'VIEW_ACCESS', 'EDIT_ACCESS', 'FULL_ACCESS'];
-    const userIndex = hierarchy.indexOf(userLevel);
-    const requiredIndex = hierarchy.indexOf(requiredLevel);
-
-    return userIndex >= requiredIndex;
-  });
+  const effectiveLevel = getEffectivePermissionLevel(userRoles, module, overrides);
+  return comparePermissionLevels(effectiveLevel, requiredLevel) >= 0;
 }
 
 export function hasSensitivityAccess(
@@ -312,10 +507,11 @@ export function canAccessData(
   userRole: UserRole,
   module: ModuleName,
   sensitivity: DataSensitivity,
-  requiredLevel: PermissionLevel = PermissionLevel.VIEW_ACCESS
+  requiredLevel: PermissionLevel = PermissionLevel.VIEW_ACCESS,
+  overrides?: RolePermissionOverride[] | null
 ): boolean {
   // Check module permission
-  if (!hasPermission(userRole, module, requiredLevel)) {
+  if (!hasPermission(userRole, module, requiredLevel, overrides)) {
     return false;
   }
 
@@ -345,13 +541,17 @@ export function validateCrewPortalAccess(
   return true;
 }
 
-export function getAccessibleModules(userRole: UserRole): ModuleName[] {
+export function getAccessibleModules(
+  userRole: UserRole,
+  overrides?: RolePermissionOverride[] | null
+): ModuleName[] {
   const modules: ModuleName[] = [];
   const permissions = PERMISSION_MATRIX[userRole];
 
-  for (const [module, level] of Object.entries(permissions)) {
-    if (level !== PermissionLevel.NO_ACCESS) {
-      modules.push(module as ModuleName);
+  for (const moduleKey of Object.keys(permissions) as ModuleName[]) {
+    const effective = getEffectivePermissionLevel(userRole, moduleKey, overrides);
+    if (effective !== PermissionLevel.NO_ACCESS) {
+      modules.push(moduleKey);
     }
   }
 
@@ -360,7 +560,8 @@ export function getAccessibleModules(userRole: UserRole): ModuleName[] {
 
 export function getModulePermission(
   userRole: UserRole,
-  module: ModuleName
+  module: ModuleName,
+  overrides?: RolePermissionOverride[] | null
 ): PermissionLevel {
-  return PERMISSION_MATRIX[userRole]?.[module] || PermissionLevel.NO_ACCESS;
+  return getEffectivePermissionLevel(userRole, module, overrides);
 }

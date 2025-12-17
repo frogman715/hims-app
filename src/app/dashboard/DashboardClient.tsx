@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import type { AppRole } from '@/lib/roles';
 import { APP_ROLES } from '@/lib/roles';
+import { hasPermission, ModuleName, PermissionLevel, UserRole } from '@/lib/permissions';
 import SidebarHeader from '@/components/sidebar/SidebarHeader';
 import ComplianceStatusWidget from '@/components/compliance/ComplianceStatusWidget';
 import ExternalComplianceWidget from '@/components/compliance/ExternalComplianceWidget';
@@ -69,6 +70,78 @@ interface SummaryCardConfig {
   href: string;
   icon: string;
 }
+
+interface OfficeNavigationItem {
+  module: ModuleName;
+  href: string;
+  label: string;
+  icon: string;
+  requiredLevel?: PermissionLevel;
+}
+
+const OFFICE_NAV_ITEMS: OfficeNavigationItem[] = [
+  {
+    module: ModuleName.crewing,
+    href: '/crewing',
+    label: 'Crewing Department',
+    icon: '⚓',
+  },
+  {
+    module: ModuleName.contracts,
+    href: '/contracts',
+    label: 'Contracts',
+    icon: '📋',
+  },
+  {
+    module: ModuleName.documents,
+    href: '/crewing/documents',
+    label: 'Documents',
+    icon: '📁',
+  },
+  {
+    module: ModuleName.insurance,
+    href: '/insurance',
+    label: 'Insurance',
+    icon: '⚡',
+  },
+  {
+    module: ModuleName.principals,
+    href: '/crewing/principals',
+    label: 'Fleet Management',
+    icon: '🚢',
+  },
+  {
+    module: ModuleName.accounting,
+    href: '/accounting',
+    label: 'Accounting',
+    icon: '💵',
+  },
+  {
+    module: ModuleName.agencyFees,
+    href: '/agency-fees',
+    label: 'Agency Fees',
+    icon: '💲',
+  },
+  {
+    module: ModuleName.crew,
+    href: '/hr',
+    label: 'HR',
+    icon: '👔',
+  },
+  {
+    module: ModuleName.disciplinary,
+    href: '/disciplinary',
+    label: 'Disciplinary',
+    icon: '⚖️',
+  },
+];
+
+const CREW_PORTAL_NAV_ITEMS: Array<{ href: string; label: string; icon: string }> = [
+  { href: '/m/crew', label: 'Crew Home', icon: '🏠' },
+  { href: '/m/crew/documents', label: 'My Documents', icon: '📄' },
+  { href: '/m/crew/upload', label: 'Upload Documents', icon: '⬆️' },
+  { href: '/m/crew/profile', label: 'Profile', icon: '👤' },
+];
 
 const SUMMARY_CARDS: SummaryCardConfig[] = [
   {
@@ -167,6 +240,32 @@ export default function DashboardClient() {
     return rawPrimary as AppRole;
   }, [session?.user?.role, session?.user?.roles]);
   const userName = session?.user?.name || 'Preview User';
+  const permissionOverrides = session?.user?.permissionOverrides ?? null;
+  const allUserRoles = useMemo(() => {
+    const reportedRoles = Array.isArray(session?.user?.roles)
+      ? (session?.user?.roles ?? [])
+      : [];
+    const validRoles = new Set(Object.values(UserRole) as string[]);
+    const aggregated = new Set<UserRole>();
+
+    for (const role of reportedRoles) {
+      const upper = role?.toUpperCase();
+      if (upper && validRoles.has(upper)) {
+        aggregated.add(upper as UserRole);
+      }
+    }
+
+    const normalizedPrimary = userRole?.toUpperCase();
+    if (normalizedPrimary && validRoles.has(normalizedPrimary)) {
+      aggregated.add(normalizedPrimary as UserRole);
+    }
+
+    if (aggregated.size === 0) {
+      aggregated.add(UserRole.CREW_PORTAL);
+    }
+
+    return Array.from(aggregated);
+  }, [session?.user?.roles, userRole]);
 
   if (status === 'loading' || loading) {
     return (
@@ -216,47 +315,29 @@ export default function DashboardClient() {
   };
 
   const renderRoleBasedNavigation = () => {
-    const navigationItems: Array<{ href: string; label: string; icon: string }> = [];
-
-    if (userRole === APP_ROLES.DIRECTOR || userRole === APP_ROLES.CDMO) {
-      navigationItems.push(
-        { href: '/crewing', label: 'Crewing Department', icon: '⚓' },
-        { href: '/contracts', label: 'Contracts', icon: '📋' },
-        { href: '/crewing/documents', label: 'Documents', icon: '📁' },
-        { href: '/insurance', label: 'Insurance', icon: '⚡' }
-      );
-    }
-
-    if (userRole === APP_ROLES.DIRECTOR || userRole === APP_ROLES.OPERATIONAL) {
-      navigationItems.push(
-        { href: '/crewing/principals', label: 'Fleet Management', icon: '🚢' }
-      );
-    }
-
-    if (userRole === APP_ROLES.DIRECTOR || userRole === APP_ROLES.ACCOUNTING) {
-      navigationItems.push(
-        { href: '/accounting', label: 'Accounting', icon: '💵' },
-        { href: '/agency-fees', label: 'Agency Fees', icon: '💲' }
-      );
-    }
-
-    if (userRole === APP_ROLES.DIRECTOR || userRole === APP_ROLES.HR) {
-      navigationItems.push(
-        { href: '/hr', label: 'HR', icon: '👔' },
-        { href: '/disciplinary', label: 'Disciplinary', icon: '⚖️' }
-      );
-    }
-
     if (userRole === APP_ROLES.CREW_PORTAL) {
-      navigationItems.push(
-        { href: '/m/crew', label: 'Crew Home', icon: '🏠' },
-        { href: '/m/crew/documents', label: 'My Documents', icon: '📄' },
-        { href: '/m/crew/upload', label: 'Upload Documents', icon: '⬆️' },
-        { href: '/m/crew/profile', label: 'Profile', icon: '👤' }
-      );
+      return CREW_PORTAL_NAV_ITEMS.map((item) => (
+        <Link
+          key={item.href}
+          href={item.href}
+          className="flex items-center gap-3 rounded-xl border border-transparent bg-white/75 px-4 py-3 font-medium text-slate-800 shadow-sm transition-all duration-200 hover:border-blue-200 hover:bg-white"
+        >
+          <span className="text-xl text-current" aria-hidden="true">{item.icon}</span>
+          <span className="text-current">{item.label}</span>
+        </Link>
+      ));
     }
 
-    return navigationItems.map((item) => (
+    const items = OFFICE_NAV_ITEMS.filter((item) =>
+      hasPermission(
+        allUserRoles,
+        item.module,
+        item.requiredLevel ?? PermissionLevel.VIEW_ACCESS,
+        permissionOverrides ?? undefined
+      )
+    );
+
+    return items.map((item) => (
       <Link
         key={item.href}
         href={item.href}

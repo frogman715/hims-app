@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { checkPermission, PermissionLevel } from "@/lib/permission-middleware";
+import { Prisma } from "@prisma/client";
 
 export async function GET(req: NextRequest) {
   try {
@@ -19,7 +20,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const crewId = searchParams.get('crewId');
 
-    const whereClause: { crewId?: string; kind?: string } = {};
+    const whereClause: Prisma.EmploymentContractWhereInput = {};
 
     // If crewId is provided, filter contracts for that crew
     if (crewId) {

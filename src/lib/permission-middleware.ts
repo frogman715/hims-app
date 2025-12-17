@@ -1,14 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
-import { UserRole, hasPermission, PermissionLevel } from '@/lib/permissions';
+import { UserRole, hasPermission, PermissionLevel, RolePermissionOverride } from '@/lib/permissions';
 
 export { PermissionLevel };
 
 interface AuthenticatedUser {
   id: string;
-  email: string;
+  email?: string | null;
   roles: string[];
+  role?: string;
   name?: string;
+  permissionOverrides?: RolePermissionOverride[];
 }
 
 // Middleware untuk mengecek permission
@@ -31,7 +33,27 @@ export function withPermission(
         );
       }
 
-      const user = token.user as AuthenticatedUser;
+      const tokenUser = token.user as AuthenticatedUser | undefined;
+      const overrideList = Array.isArray(token.permissionOverrides)
+        ? (token.permissionOverrides as RolePermissionOverride[])
+        : undefined;
+      const roleFallbacks = [
+        ...(Array.isArray(token.roles) ? (token.roles as string[]) : []),
+        typeof token.role === 'string' ? token.role : undefined,
+      ].filter((value): value is string => Boolean(value));
+
+      const user: AuthenticatedUser | undefined = tokenUser ?? (
+        token.sub
+          ? {
+              id: String(token.sub),
+              email: typeof token.email === 'string' ? token.email : '',
+              roles: roleFallbacks.length > 0 ? roleFallbacks : [],
+              role: typeof token.role === 'string' ? token.role : undefined,
+              name: typeof token.name === 'string' ? token.name : undefined,
+              permissionOverrides: overrideList,
+            }
+          : undefined
+      );
 
       if (!user || !user.roles || user.roles.length === 0) {
         return NextResponse.json(
@@ -41,7 +63,12 @@ export function withPermission(
       }
 
       // Check permission - pass all user roles
-      const hasAccess = hasPermission(user.roles as UserRole[], module, requiredPermission);
+      const hasAccess = hasPermission(
+        user.roles as UserRole[],
+        module,
+        requiredPermission,
+        user.permissionOverrides ?? overrideList
+      );
 
       if (!hasAccess) {
         return NextResponse.json(
@@ -92,14 +119,39 @@ export async function checkUserPermission(
       return { allowed: false, error: 'Authentication required' };
     }
 
-    const user = token.user as AuthenticatedUser;
+      const tokenUser = token.user as AuthenticatedUser | undefined;
+      const overrideList = Array.isArray(token.permissionOverrides)
+        ? (token.permissionOverrides as RolePermissionOverride[])
+        : undefined;
+      const roleFallbacks = [
+        ...(Array.isArray(token.roles) ? (token.roles as string[]) : []),
+        typeof token.role === 'string' ? token.role : undefined,
+      ].filter((value): value is string => Boolean(value));
 
-    if (!user || !user.roles || user.roles.length === 0) {
+      const user: AuthenticatedUser | undefined = tokenUser ?? (
+        token.sub
+          ? {
+              id: String(token.sub),
+              email: typeof token.email === 'string' ? token.email : '',
+              roles: roleFallbacks.length > 0 ? roleFallbacks : [],
+              role: typeof token.role === 'string' ? token.role : undefined,
+              name: typeof token.name === 'string' ? token.name : undefined,
+              permissionOverrides: overrideList,
+            }
+          : undefined
+      );
+
+      if (!user || !user.roles || user.roles.length === 0) {
       return { allowed: false, error: 'Invalid user session' };
     }
 
     // Check permission using all user roles
-    const hasAccess = hasPermission(user.roles as UserRole[], module, requiredPermission);
+    const hasAccess = hasPermission(
+      user.roles as UserRole[],
+      module,
+      requiredPermission,
+      user.permissionOverrides ?? overrideList
+    );
 
     return {
       allowed: hasAccess,
@@ -132,6 +184,7 @@ interface SessionUser {
   email: string;
   roles: string[];
   name?: string;
+  permissionOverrides?: RolePermissionOverride[];
 }
 
 interface Session {
@@ -143,7 +196,8 @@ export function checkPermission(session: Session | null, module: string, require
   if (!session?.user?.roles || session.user.roles.length === 0) return false;
 
   // Check permission using all user roles
-  return hasPermission(session.user.roles as UserRole[], module, requiredLevel);
+  const overrides = session.user.permissionOverrides;
+  return hasPermission(session.user.roles as UserRole[], module, requiredLevel, overrides);
 }
 
 // Module-specific guard functions

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 
 interface Crew {
   id: string;
@@ -41,6 +42,8 @@ interface EmploymentContract {
 
 export default function CrewDetailPage() {
   const params = useParams();
+  const { data: sessionData } = useSession();
+  const session = sessionData;
   const crewId = params.id as string;
 
   const [crew, setCrew] = useState<Crew | null>(null);

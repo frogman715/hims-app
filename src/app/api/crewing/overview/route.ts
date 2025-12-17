@@ -50,8 +50,8 @@ export async function GET() {
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const startOfNextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
 
-    const activeAssignmentStatuses = ["ONBOARD", "ASSIGNED", "ACTIVE"] as const;
-    const plannedAssignmentStatuses = ["PLANNED", "ASSIGNED"] as const;
+    const activeAssignmentStatuses = ["ONBOARD", "ASSIGNED", "ACTIVE"];
+    const plannedAssignmentStatuses = ["PLANNED", "ASSIGNED"];
     const [activeSeafarers, principalCount, vesselCount, activeAssignments, plannedAssignments, pendingApplications, applicationInProgress, scheduledInterviews, prepareJoiningInProgress, crewReplacementPending, documentsExpiringSoon, compliantDocuments, totalDocuments, documentReceiptsTotal, trainingInProgress, signOffThisMonth, externalComplianceActive, recentActivitiesRaw] = await Promise.all([
       prisma.crew.count({
         where: {

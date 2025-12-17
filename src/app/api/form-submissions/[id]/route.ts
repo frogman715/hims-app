@@ -36,8 +36,9 @@ function isUpdateFormSubmissionPayload(value: unknown): value is UpdateFormSubmi
 // GET /api/form-submissions/[id] - Get single form submission
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await context.params;
   try {
     const session = await getServerSession(authOptions);
     if (!checkPermission(session, "crew", PermissionLevel.VIEW_ACCESS)) {
@@ -48,7 +49,7 @@ export async function GET(
     }
 
     const form = await prisma.prepareJoiningForm.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         template: {
           include: {
@@ -56,7 +57,7 @@ export async function GET(
               select: {
                 id: true,
                 name: true,
-                companyCode: true,
+                registrationNumber: true,
               },
             },
           },
@@ -79,21 +80,15 @@ export async function GET(
               select: {
                 id: true,
                 name: true,
-                companyCode: true,
+                registrationNumber: true,
               },
             },
-            assignment: {
+            vessel: {
               select: {
                 id: true,
-                vessel: {
-                  select: {
-                    id: true,
-                    name: true,
-                    imoNumber: true,
-                  },
-                },
-                joinDate: true,
-                port: true,
+                name: true,
+                imoNumber: true,
+                flag: true,
               },
             },
           },
@@ -105,7 +100,71 @@ export async function GET(
       return NextResponse.json({ error: "Form not found" }, { status: 404 });
     }
 
-    return NextResponse.json(form);
+    let assignmentData: {
+      id: string;
+      startDate: Date;
+      endDate: Date | null;
+      status: string;
+      remarks: string | null;
+      vessel: { id: string; name: string; imoNumber: string | null; flag: string | null } | null;
+    } | null = null;
+
+    const assignmentId = form.prepareJoining?.assignmentId;
+    if (assignmentId) {
+      assignmentData = await prisma.assignment.findUnique({
+        where: { id: assignmentId },
+        select: {
+          id: true,
+          startDate: true,
+          endDate: true,
+          status: true,
+          remarks: true,
+          vessel: {
+            select: {
+              id: true,
+              name: true,
+              imoNumber: true,
+              flag: true,
+            },
+          },
+        },
+      });
+    }
+
+    const normalizePrincipal = (principal: { id: string; name: string; registrationNumber: string | null } | null | undefined) => {
+      if (!principal) {
+        return principal;
+      }
+      return {
+        ...principal,
+        companyCode: principal.registrationNumber ?? null,
+      };
+    };
+
+    const normalizedForm = {
+      ...form,
+      template: form.template
+        ? {
+            ...form.template,
+            principal: normalizePrincipal(form.template.principal),
+          }
+        : form.template,
+      prepareJoining: form.prepareJoining
+        ? {
+            ...form.prepareJoining,
+            principal: normalizePrincipal(form.prepareJoining.principal),
+            assignment: assignmentData
+              ? {
+                  ...assignmentData,
+                  joinDate: assignmentData.startDate,
+                  port: assignmentData.remarks ?? null,
+                }
+              : null,
+          }
+        : form.prepareJoining,
+    };
+
+    return NextResponse.json(normalizedForm);
   } catch (error) {
     console.error("Error fetching form submission:", error);
     return NextResponse.json(
@@ -118,8 +177,9 @@ export async function GET(
 // PUT /api/form-submissions/[id] - Update form submission
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await context.params;
   try {
     const session = await getServerSession(authOptions);
     if (!checkPermission(session, "crew", PermissionLevel.EDIT_ACCESS)) {
@@ -159,7 +219,7 @@ export async function PUT(
     }
 
     const form = await prisma.prepareJoiningForm.update({
-      where: { id: params.id },
+      where: { id },
       data: updateData,
       include: {
         template: true,
@@ -185,8 +245,9 @@ export async function PUT(
 // DELETE /api/form-submissions/[id] - Delete form submission
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await context.params;
   try {
     const session = await getServerSession(authOptions);
     if (!checkPermission(session, "crew", PermissionLevel.FULL_ACCESS)) {
@@ -197,7 +258,7 @@ export async function DELETE(
     }
 
     await prisma.prepareJoiningForm.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     return NextResponse.json({ message: "Form submission deleted successfully" });
