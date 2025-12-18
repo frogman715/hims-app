@@ -193,7 +193,7 @@ npm run build
 
 2. Start production server:
 ```bash
-npm start
+node .next/standalone/server.js
 ```
 
 ### Docker Deployment
@@ -207,6 +207,8 @@ npm start
 4. Check health status: `docker compose ps` and `docker compose logs app`.
 
 The application will be available on [http://localhost:3000](http://localhost:3000). Adjust `NEXTAUTH_URL` in `.env.docker` when exposing the container behind a reverse proxy.
+
+> **Note**: Set `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` (32-byte base64) in every environment before building. Reuse the same key across deployments so server actions stay valid between restarts.
 
 ## Contributing
 

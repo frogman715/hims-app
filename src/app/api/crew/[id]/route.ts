@@ -1,31 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireRole } from "@/lib/auth-helpers";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { canAccessRedData, encrypt, decrypt } from "@/lib/crypto";
 import { maskPassport } from "@/lib/masking";
 import { Prisma, CrewStatus } from "@prisma/client";
+import { withPermission } from "@/lib/api-middleware";
+import { PermissionLevel } from "@/lib/permission-middleware";
 
-interface Params {
-  id: string;
+interface RouteContext {
+  params: Promise<{ id: string }>;
 }
 
-interface Params {
-  id: string;
-}
-
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<Params> }
-) {
+export const GET = withPermission<RouteContext>(
+  "crew",
+  PermissionLevel.VIEW_ACCESS,
+  async (_req: NextRequest, session, { params }) => {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const { id } = await params;
+      const { id } = await params;
 
     const crew = await prisma.crew.findUnique({
       where: { id },
@@ -92,100 +82,99 @@ export async function GET(
       { status: 500 }
     );
   }
-}
+  }
+);
 
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: Promise<Params> }
-) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+export const PATCH = withPermission<RouteContext>(
+  "crew",
+  PermissionLevel.EDIT_ACCESS,
+  async (req: NextRequest, session, { params }) => {
+    try {
+      const { id } = await params;
+      const data = await req.json();
 
-    const { id } = await params;
-    const data = await req.json();
+      const updateData: Prisma.CrewUpdateInput = {};
 
-    const updateData: Prisma.CrewUpdateInput = {};
-
-    if (typeof data.fullName === "string" && data.fullName.trim()) {
-      updateData.fullName = data.fullName.trim();
-    }
-
-    if (typeof data.rank === "string" && data.rank.trim()) {
-      updateData.rank = data.rank.trim();
-    }
-
-    if (typeof data.phone === "string") {
-      updateData.phone = data.phone.trim();
-    }
-
-    if (typeof data.email === "string") {
-      updateData.email = data.email.trim();
-    }
-
-    if (data.status !== undefined) {
-      if (typeof data.status === "string" && Object.values(CrewStatus).includes(data.status as CrewStatus)) {
-        updateData.status = data.status as CrewStatus;
+      if (typeof data.fullName === "string" && data.fullName.trim()) {
+        updateData.fullName = data.fullName.trim();
       }
-    }
 
-    if (data.passportNumber !== undefined) {
-      updateData.passportNumber = data.passportNumber
-        ? encrypt(String(data.passportNumber))
-        : null;
-    }
+      if (typeof data.rank === "string" && data.rank.trim()) {
+        updateData.rank = data.rank.trim();
+      }
 
-    const crew = await prisma.crew.update({
-      where: { id },
-      data: updateData
-    });
+      if (typeof data.phone === "string") {
+        updateData.phone = data.phone.trim();
+      }
 
-    // Return the crew with decrypted passport for the response
-    const userRoles = session.user.roles || [];
-    const hasRedAccess = canAccessRedData(userRoles, 'identity');
+      if (typeof data.email === "string") {
+        updateData.email = data.email.trim();
+      }
 
-    const responseCrew = { ...crew };
-    if (crew.passportNumber && hasRedAccess) {
-      try {
-        responseCrew.passportNumber = decrypt(crew.passportNumber);
-      } catch {
+      if (data.status !== undefined) {
+        if (
+          typeof data.status === "string" &&
+          Object.values(CrewStatus).includes(data.status as CrewStatus)
+        ) {
+          updateData.status = data.status as CrewStatus;
+        }
+      }
+
+      if (data.passportNumber !== undefined) {
+        updateData.passportNumber = data.passportNumber
+          ? encrypt(String(data.passportNumber))
+          : null;
+      }
+
+      const crew = await prisma.crew.update({
+        where: { id },
+        data: updateData
+      });
+
+      // Return the crew with decrypted passport for the response
+      const userRoles = session.user.roles || [];
+      const hasRedAccess = canAccessRedData(userRoles, 'identity');
+
+      const responseCrew = { ...crew };
+      if (crew.passportNumber && hasRedAccess) {
+        try {
+          responseCrew.passportNumber = decrypt(crew.passportNumber);
+        } catch {
+          responseCrew.passportNumber = maskPassport(crew.passportNumber);
+        }
+      } else if (crew.passportNumber) {
         responseCrew.passportNumber = maskPassport(crew.passportNumber);
       }
-    } else if (crew.passportNumber) {
-      responseCrew.passportNumber = maskPassport(crew.passportNumber);
+
+      return NextResponse.json(responseCrew);
+    } catch (error) {
+      console.error("Error updating crew:", error);
+      return NextResponse.json(
+        { error: "Internal server error" },
+        { status: 500 }
+      );
     }
-
-    return NextResponse.json(responseCrew);
-  } catch (error) {
-    console.error("Error updating crew:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
   }
-}
+);
 
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: Promise<Params> }
-) {
-  try {
-    await requireRole(req, ["DIRECTOR", "CDMO"]);
+export const DELETE = withPermission<RouteContext>(
+  "crew",
+  PermissionLevel.FULL_ACCESS,
+  async (_req: NextRequest, _session, { params }) => {
+    try {
+      const { id } = await params;
 
-    const { id } = await params;
+      await prisma.crew.delete({
+        where: { id }
+      });
 
-    await prisma.crew.delete({
-      where: { id }
-    });
-
-    return NextResponse.json({ message: "Crew deleted successfully" });
-  } catch (error) {
-    console.error("Error deleting crew:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+      return NextResponse.json({ message: "Crew deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting crew:", error);
+      return NextResponse.json(
+        { error: "Internal server error" },
+        { status: 500 }
+      );
+    }
   }
-}
+);

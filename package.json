@@ -7,7 +7,7 @@
     "build": "next build",
     "postbuild": "mkdir -p .next/standalone/public && cp -a public/. .next/standalone/public/",
     "start": "next start",
-    "lint": "eslint",
+    "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "seed": "node scripts/seed.js"
   },

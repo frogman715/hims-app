@@ -38,24 +38,47 @@ CREATE TYPE "PermissionAccessLevel" AS ENUM ('NO_ACCESS', 'VIEW_ACCESS', 'EDIT_A
 -- CreateTable
 CREATE TABLE "Workflow" (
     "id" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-    "slug" TEXT NOT NULL,
-    "category" TEXT,
-    "description" TEXT,
-    "status" "WorkflowStatus" NOT NULL DEFAULT 'DRAFT',
-    "createdById" TEXT NOT NULL,
+    "resourceType" TEXT NOT NULL,
+    "resourceId" TEXT NOT NULL,
+    "currentStatus" "WorkflowStatus" NOT NULL DEFAULT 'DRAFT',
+    "createdBy" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT "Workflow_pkey" PRIMARY KEY ("id")
 );
 
--- CreateIndex
-CREATE UNIQUE INDEX "Workflow_slug_key" ON "Workflow"("slug");
+CREATE INDEX "Workflow_resourceType_resourceId_idx" ON "Workflow"("resourceType", "resourceId");
 
--- AddForeignKey
 ALTER TABLE "Workflow"
-ADD CONSTRAINT "Workflow_createdById_fkey"
-FOREIGN KEY ("createdById") REFERENCES "User"("id")
+ADD CONSTRAINT "Workflow_createdBy_fkey"
+FOREIGN KEY ("createdBy") REFERENCES "User"("id")
+ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- CreateTable
+CREATE TABLE "WorkflowTransition" (
+    "id" TEXT NOT NULL,
+    "workflowId" TEXT NOT NULL,
+    "actorId" TEXT NOT NULL,
+    "fromStatus" "WorkflowStatus",
+    "toStatus" "WorkflowStatus" NOT NULL,
+    "notes" TEXT,
+    "metadata" JSONB,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "WorkflowTransition_pkey" PRIMARY KEY ("id")
+);
+
+CREATE INDEX "WorkflowTransition_workflowId_idx" ON "WorkflowTransition"("workflowId");
+
+CREATE INDEX "WorkflowTransition_actorId_idx" ON "WorkflowTransition"("actorId");
+
+ALTER TABLE "WorkflowTransition"
+ADD CONSTRAINT "WorkflowTransition_workflowId_fkey"
+FOREIGN KEY ("workflowId") REFERENCES "Workflow"("id")
+ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE "WorkflowTransition"
+ADD CONSTRAINT "WorkflowTransition_actorId_fkey"
+FOREIGN KEY ("actorId") REFERENCES "User"("id")
 ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- CreateTable

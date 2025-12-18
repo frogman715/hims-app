@@ -1,28 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { writeFile, mkdir } from "fs/promises";
 import { join, extname } from "path";
 import { randomUUID } from "crypto";
-import { checkPermission, PermissionLevel } from "@/lib/permission-middleware";
+import { withPermission } from "@/lib/api-middleware";
+import { PermissionLevel } from "@/lib/permission-middleware";
 import { DataSensitivity as PrismaDataSensitivity, Prisma } from "@prisma/client";
 import { hasSensitivityAccess, UserRole, DataSensitivity } from "@/lib/permissions";
 import { maskDocumentNumber } from "@/lib/masking";
 
-export async function GET() {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Check documents permission
-    if (!checkPermission(session, 'documents', PermissionLevel.VIEW_ACCESS)) {
-      return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 });
-    }
-
-    const userRoles = session.user.roles ?? [];
+export const GET = withPermission(
+  "documents",
+  PermissionLevel.VIEW_ACCESS,
+  async (_req, session) => {
+    try {
+      const userRoles = session.user.roles ?? [];
     const normalizedRoles = normalizeRoles(userRoles);
     const isCrewPortalOnly = normalizedRoles.length === 1 && normalizedRoles[0] === UserRole.CREW_PORTAL;
 
@@ -70,29 +62,23 @@ export async function GET() {
       };
     });
 
-    return NextResponse.json(sanitizedDocuments);
-  } catch (error) {
-    console.error("Error fetching documents:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch documents" },
-      { status: 500 }
-    );
+      return NextResponse.json(sanitizedDocuments);
+    } catch (error) {
+      console.error("Error fetching documents:", error);
+      return NextResponse.json(
+        { error: "Failed to fetch documents" },
+        { status: 500 }
+      );
+    }
   }
-}
+);
 
-export async function POST(request: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Check documents permission for editing
-    if (!checkPermission(session, 'documents', PermissionLevel.EDIT_ACCESS)) {
-      return NextResponse.json({ error: "Insufficient permissions to upload documents" }, { status: 403 });
-    }
-
-    const userRoles = session.user.roles ?? [];
+export const POST = withPermission(
+  "documents",
+  PermissionLevel.EDIT_ACCESS,
+  async (request: NextRequest, session) => {
+    try {
+      const userRoles = session.user.roles ?? [];
     const normalizedRoles = normalizeRoles(userRoles);
     const isCrewPortalOnly = normalizedRoles.length === 1 && normalizedRoles[0] === UserRole.CREW_PORTAL;
 
@@ -184,15 +170,16 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json(document, { status: 201 });
-  } catch (error) {
-    console.error("Error uploading document:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+      return NextResponse.json(document, { status: 201 });
+    } catch (error) {
+      console.error("Error uploading document:", error);
+      return NextResponse.json(
+        { error: "Internal server error" },
+        { status: 500 }
+      );
+    }
   }
-}
+);
 
 function normalizeRoles(roles: string[] | undefined): UserRole[] {
   if (!roles || roles.length === 0) {
