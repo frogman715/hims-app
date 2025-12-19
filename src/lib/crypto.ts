@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { env } from '@/lib/env';
 
 // AES-256-GCM encryption/decryption helper
 // Uses environment variable HIMS_CRYPTO_KEY for the encryption key
@@ -10,12 +11,13 @@ const TAG_LENGTH = 16; // 128 bits
 
 // Get encryption key from environment variable
 function getEncryptionKey(): Buffer {
-  const key = process.env.HIMS_CRYPTO_KEY;
-  if (!key) {
-    throw new Error('HIMS_CRYPTO_KEY environment variable is not set');
-  }
-  if (key.length < KEY_LENGTH) {
-    throw new Error('HIMS_CRYPTO_KEY must be at least 32 characters long');
+  const key = env.HIMS_CRYPTO_KEY;
+  if (!env.hasCryptoKey || !key) {
+    console.error('[crypto] invalid HIMS_CRYPTO_KEY', {
+      present: Boolean(key),
+      length: typeof key === 'string' ? key.length : 0,
+    });
+    throw new Error('Encryption key misconfigured');
   }
   return Buffer.from(key.slice(0, KEY_LENGTH), 'utf8');
 }

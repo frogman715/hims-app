@@ -3,8 +3,9 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
 import { rateLimit } from "@/lib/rate-limit";
 import bcrypt from "bcryptjs";
-import { Role as PrismaRole } from "@prisma/client";
+import { Prisma, Role as PrismaRole } from "@prisma/client";
 import type { RolePermissionOverride } from "@/lib/permissions";
+import { env } from "@/lib/env";
 
 declare module "next-auth" {
   interface User {
@@ -42,7 +43,41 @@ declare module "next-auth/jwt" {
 
 const shouldLogAuth = process.env.NODE_ENV !== "production";
 
+function assertDatabaseConfigured(context: string): void {
+  if (!env.hasDatabaseUrl) {
+    console.error("[auth] DATABASE_URL missing", { context });
+    throw new Error("Authentication storage misconfigured");
+  }
+}
+
+async function safePrismaCall<T>(context: string, action: () => Promise<T>): Promise<T> {
+  try {
+    return await action();
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientInitializationError) {
+      console.error("[auth] prisma-initialization-failed", {
+        context,
+        message: error.message,
+      });
+      throw new Error("Authentication storage unavailable");
+    }
+    throw error;
+  }
+}
+
+async function fetchUserRole(userId: string, context: string): Promise<string | undefined> {
+  assertDatabaseConfigured(context);
+  const result = await safePrismaCall(context, () =>
+    prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true },
+    })
+  );
+  return result?.role ?? undefined;
+}
+
 export const authOptions: NextAuthOptions = {
+  secret: env.NEXTAUTH_SECRET ?? undefined,
   providers: [
     CredentialsProvider({
       name: "credentials",
@@ -60,9 +95,12 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Too many login attempts. Please try again later.");
         }
 
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
-        });
+        assertDatabaseConfigured("authorize:user");
+        const user = await safePrismaCall("authorize:user.findUnique", () =>
+          prisma.user.findUnique({
+            where: { email: credentials.email },
+          })
+        );
 
         if (!user || !user.password) {
           return null;
@@ -114,11 +152,7 @@ export const authOptions: NextAuthOptions = {
         userIdFromSource = userId ?? undefined;
         let dbRole: string | undefined;
         if (userId) {
-          const dbUser = await prisma.user.findUnique({
-            where: { id: userId },
-            select: { role: true },
-          });
-          dbRole = dbUser?.role ?? undefined;
+          dbRole = await fetchUserRole(userId, "jwt:user-role");
         }
 
         resolvedRoles = uniqueRolesFrom(user.roles, user.role, dbRole);
@@ -131,11 +165,8 @@ export const authOptions: NextAuthOptions = {
       const tokenSubject = token.sub ?? userIdFromSource;
 
       if ((!primaryRole || resolvedRoles.length === 0) && tokenSubject) {
-        const dbUser = await prisma.user.findUnique({
-          where: { id: tokenSubject },
-          select: { role: true },
-        });
-        const dbRoles = uniqueRolesFrom(dbUser?.role);
+        const dbRole = await fetchUserRole(tokenSubject, "jwt:token-subject");
+        const dbRoles = uniqueRolesFrom(dbRole);
         if (dbRoles.length > 0) {
           resolvedRoles = dbRoles;
           primaryRole = dbRoles[0];
@@ -215,11 +246,8 @@ export const authOptions: NextAuthOptions = {
         );
 
         if (normalizedRoles.length === 0 && session.user.id) {
-          const dbUser = await prisma.user.findUnique({
-            where: { id: session.user.id },
-            select: { role: true },
-          });
-          normalizedRoles = uniqueRolesFrom(dbUser?.role);
+          const dbRole = await fetchUserRole(session.user.id, "session:user-role");
+          normalizedRoles = uniqueRolesFrom(dbRole);
         }
 
         if (normalizedRoles.length === 0) {
@@ -293,18 +321,25 @@ async function loadPermissionOverrides(roles: string[]): Promise<RolePermissionO
     return [];
   }
 
-  const overrides = await prisma.roleModulePermission.findMany({
-    where: {
-      role: {
-        in: normalizedRoles,
+  if (!env.hasDatabaseUrl) {
+    console.error("[auth] DATABASE_URL missing", { context: "loadPermissionOverrides" });
+    return [];
+  }
+
+  const overrides = await safePrismaCall("loadPermissionOverrides:findMany", () =>
+    prisma.roleModulePermission.findMany({
+      where: {
+        role: {
+          in: normalizedRoles,
+        },
       },
-    },
-    select: {
-      role: true,
-      moduleKey: true,
-      level: true,
-    },
-  });
+      select: {
+        role: true,
+        moduleKey: true,
+        level: true,
+      },
+    })
+  );
 
   return overrides.map((entry) => ({
     role: entry.role,

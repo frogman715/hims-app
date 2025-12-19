@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { handleApiError, ApiError } from "@/lib/error-handler";
 import { checkPermission, PermissionLevel } from "@/lib/permission-middleware";
 import { rateLimit } from "@/lib/rate-limit";
+import { env } from "@/lib/env";
 
 /**
  * Higher-order function to wrap API routes with authentication
@@ -16,22 +17,30 @@ export function withAuth<T = unknown>(
     context: T
   ) => Promise<NextResponse>
 ) {
-  return async (req: NextRequest, context: T): Promise<NextResponse> => {
-    try {
-      const session = await getServerSession(authOptions);
+    return async (req: NextRequest, context: T): Promise<NextResponse> => {
+      try {
+        if (!env.hasNextAuthSecret) {
+          console.error("[api-middleware] NEXTAUTH_SECRET missing");
+          return NextResponse.json(
+            { error: "Authentication service temporarily unavailable", code: "CONFIG_ERROR" },
+            { status: 503 }
+          );
+        }
 
-      if (!session || !session.user) {
-        return NextResponse.json(
-          { error: "Authentication required", code: "UNAUTHORIZED" },
-          { status: 401 }
-        );
+        const session = await getServerSession({ ...authOptions, secret: env.NEXTAUTH_SECRET ?? undefined });
+
+        if (!session || !session.user) {
+          return NextResponse.json(
+            { error: "Authentication required", code: "UNAUTHORIZED" },
+            { status: 401 }
+          );
+        }
+
+        return await handler(req, session, context);
+      } catch (error) {
+        return handleApiError(error);
       }
-
-      return await handler(req, session, context);
-    } catch (error) {
-      return handleApiError(error);
-    }
-  };
+    };
 }
 
 /**

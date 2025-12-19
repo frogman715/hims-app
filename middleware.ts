@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
+import { env } from "@/lib/env";
 
 const PUBLIC_PREFIXES = ["/auth", "/_next", "/favicon.ico", "/icons", "/manifest.json", "/sw.js"];
 
@@ -15,7 +16,21 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+  if (!env.hasNextAuthSecret) {
+    console.error("[middleware] NEXTAUTH_SECRET missing");
+    const signInUrl = new URL("/auth/signin", request.url);
+    signInUrl.searchParams.set("error", "AuthenticationUnavailable");
+    return NextResponse.redirect(signInUrl);
+  }
+
+  const secret = env.NEXTAUTH_SECRET!;
+  type TokenResult = Awaited<ReturnType<typeof getToken>>;
+  let token: TokenResult = null;
+  try {
+    token = await getToken({ req: request, secret });
+  } catch (error) {
+    console.error("[middleware] token-resolve-failed", { error });
+  }
 
   if (!token) {
     const signInUrl = new URL("/auth/signin", request.url);
