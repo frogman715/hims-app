@@ -16,9 +16,11 @@ interface AuditSchedule {
   report: { status: string } | null;
 }
 
-type AuditListProps = Record<string, never>;
+type AuditListProps = {
+  canEdit?: boolean;
+};
 
-export default function AuditListContent({}: AuditListProps) {
+export default function AuditListContent({ canEdit }: AuditListProps) {
   const [audits, setAudits] = useState<AuditSchedule[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 
 interface AuditSchedule {
@@ -55,7 +55,7 @@ export default function AuditDetailContent({ auditId, canEdit }: AuditDetailProp
     findings: { majorNC: 0, minorNC: 0, observations: 0 },
   });
 
-  const fetchAudit = async () => {
+  const fetchAudit = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch(`/api/audits/${auditId}`, { credentials: "include" });
@@ -67,11 +67,11 @@ export default function AuditDetailContent({ auditId, canEdit }: AuditDetailProp
     } finally {
       setLoading(false);
     }
-  };
+  }, [auditId]);
 
   useEffect(() => {
     fetchAudit();
-  }, [auditId]);
+  }, [auditId, fetchAudit]);
 
   async function handleAddFinding(e: React.FormEvent) {
     e.preventDefault();
