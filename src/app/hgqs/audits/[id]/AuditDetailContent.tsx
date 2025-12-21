@@ -56,21 +56,20 @@ export default function AuditDetailContent({ auditId, canEdit }: AuditDetailProp
   });
 
   useEffect(() => {
-    fetchAudit();
-  }, []);
-
-  async function fetchAudit() {
-    try {
-      const res = await fetch(`/api/audits/${auditId}`, { credentials: "include" });
-      if (!res.ok) throw new Error("Failed to fetch audit");
+    const fetchAudit = async () => {
+      try {
+        const res = await fetch(`/api/audits/${auditId}`, { credentials: "include" });
+        if (!res.ok) throw new Error("Failed to fetch audit");
       const data = await res.json();
       setAudit(data.data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Error loading audit");
-    } finally {
-      setLoading(false);
-    }
-  }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Error loading audit");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAudit();
+  }, [auditId]);
 
   async function handleAddFinding(e: React.FormEvent) {
     e.preventDefault();
