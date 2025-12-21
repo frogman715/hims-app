@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 import Link from "next/link";
 
@@ -17,10 +17,10 @@ interface AuditSchedule {
 }
 
 interface AuditListProps {
-  canEdit: boolean;
+  // canEdit: boolean; - unused
 }
 
-export default function AuditListContent({ canEdit }: AuditListProps) {
+export default function AuditListContent({}: AuditListProps) {
   const [audits, setAudits] = useState<AuditSchedule[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

@@ -166,9 +166,6 @@ export async function PUT(
         ? { connect: { id: normalizedPrincipalId } }
         : { disconnect: true };
     }
-    if (body.remarks !== undefined) {
-      updateData.remarks = normalizeOptionalString(body.remarks);
-    }
 
     const application = await prisma.application.update({
       where: { id: applicationId },

@@ -14,7 +14,7 @@ interface AuditFormProps {
   auditId?: string;
 }
 
-export default function AuditFormContent({ initialData, auditId }: AuditFormProps) {
+export default function AuditFormContent({ }: AuditFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
