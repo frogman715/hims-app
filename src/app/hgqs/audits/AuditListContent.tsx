@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 
 import Link from "next/link";
 
@@ -16,9 +16,7 @@ interface AuditSchedule {
   report: { status: string } | null;
 }
 
-interface AuditListProps {
-  // canEdit: boolean; - unused
-}
+type AuditListProps = Record<string, never>;
 
 export default function AuditListContent({}: AuditListProps) {
   const [audits, setAudits] = useState<AuditSchedule[]>([]);
@@ -28,6 +26,7 @@ export default function AuditListContent({}: AuditListProps) {
 
   useEffect(() => {
     fetchAudits();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter]);
 
   async function fetchAudits() {

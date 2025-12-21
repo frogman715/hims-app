@@ -61,7 +61,7 @@ export default function AuditDetailContent({ auditId, canEdit }: AuditDetailProp
         const res = await fetch(`/api/audits/${auditId}`, { credentials: "include" });
         if (!res.ok) throw new Error("Failed to fetch audit");
       const data = await res.json();
-      setAudit(data.data);
+        setAudit(data.data);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Error loading audit");
       } finally {
@@ -69,6 +69,7 @@ export default function AuditDetailContent({ auditId, canEdit }: AuditDetailProp
       }
     };
     fetchAudit();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [auditId]);
 
   async function handleAddFinding(e: React.FormEvent) {
