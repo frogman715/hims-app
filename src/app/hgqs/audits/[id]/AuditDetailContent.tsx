@@ -55,19 +55,21 @@ export default function AuditDetailContent({ auditId, canEdit }: AuditDetailProp
     findings: { majorNC: 0, minorNC: 0, observations: 0 },
   });
 
-  useEffect(() => {
-    const fetchAudit = async () => {
-      try {
-        const res = await fetch(`/api/audits/${auditId}`, { credentials: "include" });
-        if (!res.ok) throw new Error("Failed to fetch audit");
+  const fetchAudit = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/audits/${auditId}`, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch audit");
       const data = await res.json();
-        setAudit(data.data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Error loading audit");
-      } finally {
-        setLoading(false);
-      }
-    };
+      setAudit(data.data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error loading audit");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchAudit();
   }, [auditId]);
 
