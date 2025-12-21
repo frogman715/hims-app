@@ -44,3 +44,8 @@ next-env.d.ts
 
 # local backups
 backup/
+*.md
+_legacy/
+_tools/
+scripts/seed-*.ts
+scripts/seed-test.mjs
