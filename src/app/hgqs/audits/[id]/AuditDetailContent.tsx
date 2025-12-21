@@ -69,7 +69,6 @@ export default function AuditDetailContent({ auditId, canEdit }: AuditDetailProp
       }
     };
     fetchAudit();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [auditId]);
 
   async function handleAddFinding(e: React.FormEvent) {
