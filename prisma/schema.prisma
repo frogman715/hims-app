@@ -296,6 +296,15 @@ model User {
   disciplinaryCasesClosed        HgqsDisciplinaryCase[]      @relation("DisciplinaryClosedBy")
   rolePermissionsCreated         RoleModulePermission[]      @relation("RolePermissionCreatedBy")
 
+  // Phase 1: Risk Management (ISO 9001 Clause 6.1)
+  risksCreated         Risk[]         @relation("RiskCreatedBy")
+  riskActionsOwned     RiskAction[]   @relation("RiskActionOwner")
+  riskReviewsPerformed RiskReview[]   @relation("RiskReviewedBy")
+  riskAuditLogs        RiskAuditLog[] @relation("RiskAuditLogBy")
+
+  // Phase 1: Internal Audit (ISO 9001 Clause 9.2)
+  auditReportsApproved AuditReport[] @relation("AuditReportApprovedBy")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -1921,4 +1930,241 @@ model HgqsDisciplinaryCase {
   @@index([createdById])
   @@index([workflowId])
   @@index([reportedAgainstId])
+}
+
+// ============================================================================
+// PHASE 1: RISK & AUDIT MANAGEMENT MODELS
+// ============================================================================
+// ISO 9001:2015 Clause 6.1 (Risk Management)
+// ISO 9001:2015 Clause 9.2 (Internal Audit)
+// MLC 2006 Regulation 1.4 (Seafarer Placement)
+// ============================================================================
+
+// Risk source classification
+enum RiskSource {
+  REGULATORY // Government / maritime regulations (SOLAS, STCW, MLC)
+  OPERATIONAL // Internal processes, crew management, procedures
+  STRATEGIC // Business continuity, market shifts, competition
+  FINANCIAL // Budget, cash flow, currency, insurance
+  ENVIRONMENTAL // Weather, seas, pollution, climate
+}
+
+// Risk mitigation strategy selection
+enum RiskTreatmentStrategy {
+  MITIGATE // Reduce probability or impact through controls
+  ACCEPT // Accept the risk, monitor and review
+  TRANSFER // Insurance, outsource, or delegate
+  AVOID // Don't do the activity, eliminate the risk
+}
+
+// Audit finding severity levels
+enum FindingSeverity {
+  OBSERVATION // Good practice note, no nonconformance
+  MINOR_NC // Minor nonconformance (one system not working)
+  MAJOR_NC // Major nonconformance (system ineffective)
+}
+
+// ============================================================================
+// Risk Management Models (ISO 9001 Clause 6.1)
+// ============================================================================
+
+model Risk {
+  id          String     @id @default(cuid())
+  title       String // e.g., "Key Personnel Dependency"
+  description String     @db.Text
+  source      RiskSource // REGULATORY, OPERATIONAL, STRATEGIC, FINANCIAL, ENVIRONMENTAL
+
+  // Risk Assessment (ISO 9001:2015 Clause 6.1.1)
+  probability Int // 1-5 scale (1=very unlikely, 5=almost certain)
+  impact      Int // 1-5 scale (1=negligible, 5=catastrophic)
+  riskScore   Int // probability × impact (computed, 1-25)
+
+  // Risk Treatment (ISO 9001:2015 Clause 6.1.2)
+  treatmentStrategy RiskTreatmentStrategy // MITIGATE, ACCEPT, TRANSFER, AVOID
+  treatmentPlan     String                @db.Text
+
+  // Status & Lifecycle
+  status     String    @default("ACTIVE") // ACTIVE, MITIGATED, TRANSFERRED, ACCEPTED, CLOSED
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  reviewedAt DateTime?
+
+  // Relations (Additive - no existing models affected)
+  actions  RiskAction[]
+  reviews  RiskReview[]
+  auditLog RiskAuditLog[]
+
+  // Metadata
+  createdById String // User ID
+  createdBy   User   @relation("RiskCreatedBy", fields: [createdById], references: [id])
+
+  @@index([source])
+  @@index([status])
+  @@index([riskScore])
+  @@index([createdById])
+  @@index([createdAt])
+}
+
+// Risk Mitigation Actions (ISO 9001:2015 Clause 6.1.2)
+model RiskAction {
+  id     String @id @default(cuid())
+  riskId String
+  risk   Risk   @relation(fields: [riskId], references: [id], onDelete: Cascade)
+
+  description String @db.Text
+  owner       String // User ID
+  ownedBy     User   @relation("RiskActionOwner", fields: [owner], references: [id])
+
+  dueDate     DateTime
+  completedAt DateTime?
+  status      String    @default("OPEN") // OPEN, COMPLETED, OVERDUE, CANCELLED
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([riskId])
+  @@index([status])
+  @@index([dueDate])
+  @@index([owner])
+}
+
+// Risk Effectiveness Review (ISO 9001:2015 Clause 6.1.3)
+model RiskReview {
+  id     String @id @default(cuid())
+  riskId String
+  risk   Risk   @relation(fields: [riskId], references: [id], onDelete: Cascade)
+
+  reviewDate     DateTime @default(now())
+  newProbability Int? // 1-5 scale (updated after mitigation)
+  newImpact      Int? // 1-5 scale (updated after mitigation)
+  newRiskScore   Int? // probability × impact (recalculated)
+  effectiveness  Int // 1-5 (1=ineffective, 5=fully effective)
+  notes          String   @db.Text
+
+  reviewedById String // User ID
+  reviewedBy   User   @relation("RiskReviewedBy", fields: [reviewedById], references: [id])
+
+  @@index([riskId])
+  @@index([reviewDate])
+  @@index([reviewedById])
+}
+
+// Risk Audit Log (ISO 9001:2015 Clause 8.5.2 - Immutable Record)
+model RiskAuditLog {
+  id     String @id @default(cuid())
+  riskId String
+  risk   Risk   @relation(fields: [riskId], references: [id], onDelete: Cascade)
+
+  action        String // "CREATED", "UPDATED", "REVIEWED", "LINKED_NONCONFORMANCE", etc.
+  changedFields Json // Immutable JSON record of what changed
+  changedById   String // User ID
+  changedBy     User     @relation("RiskAuditLogBy", fields: [changedById], references: [id])
+  changedAt     DateTime @default(now())
+
+  @@index([riskId])
+  @@index([changedAt])
+  @@index([action])
+  @@index([changedById])
+}
+
+// ============================================================================
+// Internal Audit Models (ISO 9001 Clause 9.2, MLC 2006 Reg 1.4)
+// ============================================================================
+
+// Audit Schedule & Planning
+model AuditSchedule {
+  id          String @id @default(cuid())
+  title       String
+  description String @db.Text
+
+  auditType AuditType // INTERNAL, MANAGEMENT_REVIEW, SURVEILLANCE
+  frequency String // "QUARTERLY", "SEMI-ANNUAL", "ANNUAL", "ON_DEMAND"
+
+  startDate DateTime
+  endDate   DateTime?
+
+  // JSON arrays of user IDs (auditors and auditees)
+  auditees String[] // User IDs (crew to be audited)
+  auditors String[] // User IDs (who conducts audit)
+
+  status String @default("SCHEDULED") // SCHEDULED, IN_PROGRESS, COMPLETED, CANCELLED
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  findings AuditFinding[]
+  report   AuditReport?
+
+  @@index([auditType])
+  @@index([status])
+  @@index([startDate])
+}
+
+// Audit Checklist Template (Reusable across audits)
+model AuditChecklist {
+  id    String @id @default(cuid())
+  title String
+
+  // ISO 9001 & MLC 2006 clause references
+  clauses String[] // e.g., ["6.1", "9.2", "1.4"]
+
+  // Checklist items as JSON (immutable template)
+  checkpoints Json // Array of {id, clause, question, scoring}
+
+  status  String @default("ACTIVE") // ACTIVE, ARCHIVED, DRAFT, DEPRECATED
+  version String @default("1.0")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([version])
+}
+
+// Individual Audit Finding
+model AuditFinding {
+  id         String        @id @default(cuid())
+  scheduleId String
+  schedule   AuditSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+
+  findingNumber String // AUTO: AUD-2025-001 format
+  clause        String // ISO 9001 or MLC reference, e.g., "6.1", "1.4"
+  description   String @db.Text
+
+  severity FindingSeverity // OBSERVATION, MINOR_NC, MAJOR_NC
+  evidence String[] // Notes, findings, supporting documentation
+
+  status     String    @default("OPEN") // OPEN, RESOLVED, CLOSED, SUPERSEDED
+  createdAt  DateTime  @default(now())
+  resolvedAt DateTime?
+
+  @@unique([scheduleId, findingNumber])
+  @@index([scheduleId])
+  @@index([severity])
+  @@index([status])
+}
+
+// Audit Report (Aggregated findings & recommendations)
+model AuditReport {
+  id         String        @id @default(cuid())
+  scheduleId String        @unique
+  schedule   AuditSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+
+  reportNumber String   @unique // AUTO: AUD-RPT-2025-001
+  reportDate   DateTime @default(now())
+
+  summary         String @db.Text
+  findings        Json // Aggregated: {total, observations, minorNC, majorNC}
+  recommendations String @db.Text
+
+  approvedById String? // QMR User ID
+  approvedBy   User?     @relation("AuditReportApprovedBy", fields: [approvedById], references: [id])
+  approvedAt   DateTime?
+
+  status String @default("DRAFT") // DRAFT, FINALIZED, APPROVED
+
+  @@index([scheduleId])
+  @@index([status])
+  @@index([reportDate])
 }

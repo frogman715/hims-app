@@ -9,6 +9,7 @@ export default function SignInClient() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
   const desiredTarget = searchParams.get("callbackUrl") ?? searchParams.get("redirect") ?? undefined;
@@ -16,80 +17,65 @@ export default function SignInClient() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const result = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-      callbackUrl: safeTarget,
-    });
+    setError("");
+    setIsLoading(true);
 
-    if (result?.error) {
-      setError("Invalid credentials");
-    } else {
-      router.push(safeTarget);
+    try {
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+        callbackUrl: safeTarget,
+      });
+
+      if (result?.error) {
+        setError("Invalid email or password");
+      } else {
+        router.push(safeTarget);
+      }
+    } catch {
+      setError("An error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const maritimeSvg = encodeURIComponent(`
-    <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1600 900' preserveAspectRatio='xMidYMid slice'>
-      <defs>
-        <linearGradient id='wave' x1='0' y1='0' x2='0' y2='1'>
-          <stop offset='0%' stop-color='%230ea5e9' stop-opacity='0.55'/>
-          <stop offset='100%' stop-color='%230f172a' stop-opacity='0'/>
-        </linearGradient>
-      </defs>
-      <rect width='1600' height='900' fill='%2307142b'/>
-      <path d='M0 580 Q200 520 400 560 T800 560 T1200 540 T1600 560 V900 H0 Z' fill='url(%23wave)'/>
-      <path d='M0 640 Q240 600 480 640 T960 640 T1440 620' stroke='%2338bdf8' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.35'/>
-      <g opacity='0.35'>
-        <path d='M960 360 H1080 L1120 420 H880 Z' fill='%23134e4a'/>
-        <path d='M920 420 H1140 L1100 440 H880 Z' fill='%23225664' opacity='0.85'/>
-      </g>
-    </svg>
-  `);
-
-  const maritimeBackground = {
-    backgroundImage: `radial-gradient(circle at 20% 20%, rgba(59,130,246,0.35), transparent 62%), radial-gradient(circle at 78% 8%, rgba(14,165,233,0.28), transparent 58%), url("data:image/svg+xml,${maritimeSvg}")`,
-    backgroundSize: "cover",
-    backgroundPosition: "center",
-    backgroundRepeat: "no-repeat",
-  } as const;
-
   return (
-    <div className="relative min-h-screen py-12 px-4 sm:px-6 lg:px-8 overflow-hidden">
-      <div className="absolute inset-0 -z-10" style={maritimeBackground} />
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 px-4 py-12 sm:px-6 lg:px-8">
+      {/* Subtle background decorative element */}
+      <div className="absolute inset-0 -z-10 overflow-hidden">
+        <div className="absolute top-0 left-0 w-96 h-96 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-10" />
+        <div className="absolute -bottom-8 right-0 w-96 h-96 bg-indigo-200 rounded-full mix-blend-multiply filter blur-3xl opacity-10" />
+      </div>
 
-      <div className="max-w-md w-full mx-auto space-y-10 bg-white/92 backdrop-blur-2xl border border-white/40 shadow-[0_35px_90px_rgba(8,47,73,0.25)] rounded-[34px] p-12">
-        <div>
-          <div className="relative mx-auto mb-8 h-36 w-36">
-            <div className="absolute inset-0 rounded-[32px] bg-gradient-to-br from-white/80 via-white/40 to-white/10 blur-xl" />
-            <div className="absolute inset-1 rounded-[30px] border border-white/60 bg-white/80 shadow-[0_20px_45px_rgba(2,6,23,0.18)]" />
-            <div className="relative flex h-full w-full items-center justify-center rounded-[28px] bg-white">
-              <Image
-                src="/hanmarinereal.png"
-                alt="HANMARINE Global Indonesia"
-                width={148}
-                height={148}
-                priority
-                unoptimized
-                className="h-28 w-auto object-contain"
-              />
+      {/* Sign-in card */}
+      <div className="w-full max-w-md">
+        <div className="bg-white rounded-2xl shadow-lg border border-slate-200/50 p-8 space-y-8">
+          {/* Logo section */}
+          <div className="text-center space-y-4">
+            <div className="flex justify-center">
+              <div className="relative h-20 w-20 flex-shrink-0">
+                <Image
+                  src="/hanmarinereal.png"
+                  alt="HANMARINE Global Indonesia"
+                  fill
+                  priority
+                  className="object-contain"
+                />
+              </div>
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">HANMARINE HIMS</h1>
+              <p className="mt-1 text-sm font-medium text-slate-600">Maritime Crew Management Platform</p>
+              <p className="mt-2 text-xs text-slate-500">MLC 2006 • STCW 2010 • ISM Code Compliant</p>
             </div>
           </div>
-          <h2 className="text-center text-3xl font-bold tracking-tight text-slate-900">
-            HANMARINE HIMS
-          </h2>
-          <p className="mt-3 text-center text-sm font-medium uppercase tracking-[0.24em] text-slate-500">
-            Maritime Crew Management Platform
-          </p>
-          <p className="mt-3 text-center text-sm text-slate-500">
-            MLC 2006 • STCW 2010 • ISM Code Compliant
-          </p>
-        </div>
-        <form className="space-y-7" onSubmit={handleSubmit}>
-          <div className="space-y-5">
-            <div>
-              <label htmlFor="email" className="block text-sm font-semibold text-slate-900 mb-2">
+
+          {/* Form section */}
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            {/* Email field */}
+            <div className="space-y-2">
+              <label htmlFor="email" className="block text-sm font-semibold text-slate-900">
                 Email Address
               </label>
               <input
@@ -98,14 +84,18 @@ export default function SignInClient() {
                 type="email"
                 autoComplete="email"
                 required
-                className="block w-full rounded-xl border border-slate-200 bg-white/70 px-4 py-3 text-slate-900 placeholder-slate-400 shadow-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/25 focus:outline-none transition"
+                disabled={isLoading}
+                aria-invalid={error ? "true" : "false"}
+                className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500"
                 placeholder="admin@hanmarine.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
-            <div>
-              <label htmlFor="password" className="block text-sm font-semibold text-slate-900 mb-2">
+
+            {/* Password field */}
+            <div className="space-y-2">
+              <label htmlFor="password" className="block text-sm font-semibold text-slate-900">
                 Password
               </label>
               <input
@@ -115,46 +105,63 @@ export default function SignInClient() {
                 autoComplete="current-password"
                 required
                 minLength={6}
-                className="block w-full rounded-xl border border-slate-200 bg-white/70 px-4 py-3 text-slate-900 placeholder-slate-400 shadow-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/25 focus:outline-none transition"
+                disabled={isLoading}
+                aria-invalid={error ? "true" : "false"}
+                className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500"
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
-          </div>
 
-          {error && (
-            <div className="flex items-center gap-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 shadow-sm">
-              <svg className="h-5 w-5 flex-none" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fillRule="evenodd"
-                  d="M18 10A8 8 0 11.001 9.999 8 8 0 0118 10zm-9-3a1 1 0 112 0v3a1 1 0 11-2 0V7zm0 6a1 1 0 102 0 1 1 0 00-2 0z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              {error}
-            </div>
-          )}
+            {/* Error message */}
+            {error && (
+              <div className="flex gap-3 rounded-lg border border-red-300 bg-red-50 p-4 text-sm text-red-700">
+                <svg className="h-5 w-5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <div>{error}</div>
+              </div>
+            )}
 
-          <div>
+            {/* Submit button */}
             <button
               type="submit"
-              className="group relative w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 via-blue-600 to-cyan-500 px-4 py-3 text-sm font-semibold text-white shadow-[0_10px_30px_rgba(37,99,235,0.3)] transition hover:scale-[1.02] hover:shadow-[0_18px_40px_rgba(37,99,235,0.35)] focus:outline-none focus:ring-4 focus:ring-indigo-500/40"
+              disabled={isLoading}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-indigo-600 text-white font-semibold transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:ring-offset-2 disabled:bg-slate-400 disabled:cursor-not-allowed disabled:hover:bg-slate-400"
             >
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-              </svg>
-              Sign In to Dashboard
+              {isLoading ? (
+                <>
+                  <svg className="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
+                  </svg>
+                  Signing in...
+                </>
+              ) : (
+                <>
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  Sign In
+                </>
+              )}
             </button>
+          </form>
+
+          {/* Footer */}
+          <div className="border-t border-slate-200 pt-6 text-center space-y-2">
+            <p className="text-xs text-slate-600">Protected by enterprise-grade security</p>
+            <p className="text-xs text-slate-500">© {new Date().getFullYear()} PT. Hanmarine Global Indonesia</p>
           </div>
-        </form>
-        <div className="text-center">
-          <p className="text-sm text-slate-500">
-            Protected by enterprise-grade security
-          </p>
-          <p className="mt-2 text-xs font-medium text-slate-500">
-            © {new Date().getFullYear()} PT. Hanmarine Global Indonesia. All rights reserved.
-          </p>
         </div>
       </div>
     </div>
