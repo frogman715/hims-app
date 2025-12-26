@@ -52,7 +52,7 @@ export default function Sidebar({ navigationItems }: SidebarProps) {
               {session?.user?.name || "User"}
             </div>
             <div className="text-xs text-white/70">
-              {session?.user?.roles?.[0] || "Role"}
+              {(session?.user as any)?.isSystemAdmin ? "SUPER_ADMIN" : (session?.user?.roles?.[0] || "Role")}
             </div>
           </div>
         </div>
