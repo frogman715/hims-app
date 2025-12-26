@@ -121,7 +121,7 @@ export async function GET(
     const letterData: LetterGuaranteeData = {
       // Company info (PT HANMARINE)
       companyName: "PT HANMARINE INTERNATIONAL MARITIME SERVICE",
-      companyAddress: "Jalan Raya Baru No. 123, Jakarta Pusat 10110, Indonesia",
+      companyAddress: "Jalan Raya New No. 123, Jakarta Pusat 10110, Indonesia",
       companyPhone: "+62 21 1234 5678",
       companyEmail: "office@hanmarine.com",
 

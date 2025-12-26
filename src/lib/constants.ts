@@ -178,7 +178,7 @@ export const EXCEL_GENERATION_TIMEOUT_MS = 30000;
 export const COMPANY_NAME = process.env.COMPANY_NAME || 'PT HANMARINE INTERNATIONAL MARITIME SERVICE';
 
 /** Company address */
-export const COMPANY_ADDRESS = process.env.COMPANY_ADDRESS || 'Jalan Raya Baru No. 123, Jakarta Pusat 10110, Indonesia';
+export const COMPANY_ADDRESS = process.env.COMPANY_ADDRESS || 'Jalan Raya New No. 123, Jakarta Pusat 10110, Indonesia';
 
 /** Company phone */
 export const COMPANY_PHONE = process.env.COMPANY_PHONE || '+62 21 1234 5678';

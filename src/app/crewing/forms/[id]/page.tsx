@@ -133,7 +133,7 @@ export default function FormReviewPage() {
 <body>
   <div class="header">
     <h1>PT HANMARINE INTERNATIONAL MARITIME SERVICE</h1>
-    <p>Jalan Raya Baru No. 123, Jakarta Pusat 10110, Indonesia</p>
+    <p>Jalan Raya New No. 123, Jakarta Pusat 10110, Indonesia</p>
     <p>Phone: +62 21 1234 5678 | Email: office@hanmarine.com</p>
   </div>
 

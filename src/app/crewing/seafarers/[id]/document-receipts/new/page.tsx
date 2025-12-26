@@ -121,7 +121,7 @@ export default function NewDocumentReceiptPage() {
 
   const crewStatusOptions: Array<{ value: CrewStatusOption; label: string }> = useMemo(() => (
     [
-      { value: 'NEW', label: 'Crew Baru' },
+      { value: 'NEW', label: 'Crew New' },
       { value: 'EX_CREW', label: 'Ex Crew' },
     ]
   ), []);
@@ -244,7 +244,7 @@ export default function NewDocumentReceiptPage() {
       <div className="max-w-5xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Tanda Terima Dokumen</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Document Receipt</h1>
             <p className="text-gray-700">{crew.fullName}</p>
           </div>
           <div className="flex gap-3">
@@ -531,7 +531,7 @@ export default function NewDocumentReceiptPage() {
               className="px-6 py-3 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-50"
               disabled={submitting}
             >
-              {submitting ? 'Menyimpan…' : 'Save Tanda Terima'}
+              {submitting ? 'Saving...' : 'Save Document Receipt'}
             </button>
           </div>
         </form>

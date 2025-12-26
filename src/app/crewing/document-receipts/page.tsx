@@ -225,8 +225,8 @@ export default function DocumentReceiptDashboardPage() {
         {/* Reference layout: reuse Breadcrumbs + PageHeader combo across Crewing, Accounting, and HGQS. */}
         <Breadcrumbs items={breadcrumbItems} />
         <PageHeader
-          title="Tanda Terima Dokumen Crew"
-          subtitle="Create bukti penyerahan dokumen fisik dan arsip digital"
+        title="Crew Document Receipt"
+        subtitle="Create proof of physical document handover and digital archive"
           actions={(
             <div className="flex flex-wrap gap-3">
               <button
@@ -256,7 +256,7 @@ export default function DocumentReceiptDashboardPage() {
         />
 
         <section className="bg-white shadow-xl rounded-2xl p-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Create Tanda Terima Baru</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Create New Document Receipt</h2>
           <div className="grid grid-cols-1 md:grid-cols-[3fr_1fr] gap-4">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2" htmlFor="crewSelector">
@@ -293,7 +293,7 @@ export default function DocumentReceiptDashboardPage() {
 
         <section className="bg-white shadow-xl rounded-2xl p-8">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">Riwayat Tanda Terima</h2>
+            <h2 className="text-xl font-semibold text-gray-900">Document Receipt History</h2>
             <input
               type="search"
               placeholder="Cari crew atau kapal"
@@ -345,7 +345,7 @@ export default function DocumentReceiptDashboardPage() {
                       <td className="px-4 py-3 text-sm text-gray-900">
                         <div>{receipt.vesselName ?? '-'}</div>
                         <div className="text-xs text-gray-600">
-                          {receipt.crewStatus === 'NEW' ? 'Crew Baru' : 'Ex Crew'}
+                          {receipt.crewStatus === 'NEW' ? 'Crew New' : 'Ex Crew'}
                         </div>
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-900">

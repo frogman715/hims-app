@@ -465,8 +465,8 @@ export default function CrewingClient() {
           stats: complianceBadge,
         },
         {
-          title: "Tanda Terima Dokumen",
-          description: "Generate & arsip receipt penyerahan dokumen crew",
+          title: "Document Receipt",
+          description: "Generate & archive crew document handover receipt",
           href: CREWING_DOCUMENT_RECEIPTS_ROUTE,
           icon: "📥",
           color: "from-emerald-600 to-teal-600",
@@ -506,7 +506,7 @@ export default function CrewingClient() {
         },
         {
           title: "SIUPPAK Reports",
-          description: "Report semester perekrutan untuk audit Perhubungan",
+          description: "Crew recruitment semester report for Transportation audit",
           href: "/compliance/siuppak",
           icon: "📊",
           color: "from-red-600 to-rose-700",

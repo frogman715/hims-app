@@ -7,7 +7,7 @@ import { decrypt } from "@/lib/crypto";
 
 /**
  * GET /api/compliance/siuppak
- * Generate SIUPPAK Report Excel for Perhubungan Audit
+ * Generate SIUPPAK Report Excel for Transportation Audit
  * 
  * Query params:
  * - type: 'bulanan' | 'semester' | 'tahunan'

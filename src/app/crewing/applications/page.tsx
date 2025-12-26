@@ -94,7 +94,7 @@ function ApplicationsContent() {
 
   const statusOptions = [
     { value: 'ALL', label: 'Semua Status', color: 'gray', icon: '📋' },
-    { value: 'RECEIVED', label: 'Baru Sign In', color: 'blue', icon: '📝' },
+    { value: 'RECEIVED', label: 'New Sign In', color: 'blue', icon: '📝' },
     { value: 'REVIEWING', label: 'Di-Review', color: 'yellow', icon: '🔍' },
     { value: 'INTERVIEW', label: 'Interview', color: 'purple', icon: '🎤' },
     { value: 'PASSED', label: 'Lulus', color: 'green', icon: '✅' },
@@ -105,7 +105,7 @@ function ApplicationsContent() {
 
   const getStatusBadge = (status: string) => {
     const statusConfig: Record<string, { color: string; text: string }> = {
-      RECEIVED: { color: 'bg-blue-100 text-blue-800', text: 'Baru Sign In' },
+      RECEIVED: { color: 'bg-blue-100 text-blue-800', text: 'New Sign In' },
       REVIEWING: { color: 'bg-yellow-100 text-yellow-800', text: 'Di-Review' },
       INTERVIEW: { color: 'bg-purple-100 text-purple-800', text: 'Interview' },
       PASSED: { color: 'bg-green-100 text-green-800', text: 'Lulus' },
@@ -189,7 +189,7 @@ function ApplicationsContent() {
               href="/crewing/applications/new"
               className="inline-block px-6 py-3 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-200"
             >
-              + Tambah Aplikasi Baru
+              + Tambah Aplikasi New
             </Link>
           </div>
         ) : (

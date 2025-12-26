@@ -58,7 +58,7 @@ export default function SiuppakReportsPage() {
           </div>
           <h1 className="text-3xl font-bold text-gray-900">Report SIUPPAK</h1>
           <p className="text-gray-700 mt-2">
-            Report Kegiatan Perekrutan dan Penempatan Awak Kapal untuk Audit Perhubungan
+            Crew Recruitment and Placement Activity Report for Transportation Audit
           </p>
         </div>
 
@@ -72,7 +72,7 @@ export default function SiuppakReportsPage() {
               <h3 className="font-semibold text-blue-900 mb-1">Tentang Report SIUPPAK</h3>
               <p className="text-sm text-blue-700">
                 Report ini digenerate otomatis dari data crew movements (sign on/off), vessel assignments, dan principal agreements. 
-                File Excel mengikuti format resmi Perhubungan dengan 40 kolom data untuk audit SIUPAK.
+                Excel file follows official Transportation Ministry format with 40 data columns for SIUPPAK audit.
               </p>
             </div>
           </div>
@@ -261,7 +261,7 @@ export default function SiuppakReportsPage() {
             <div className="text-sm text-gray-800">
               <strong>Format Reference:</strong> LAPORAN SEMESTER KEGIATAN PEREKRUTAN DAN PENEMPATAN AWAK KAPAL-DEPERLA.xlsx
               <br />
-              <span className="text-xs">Generated report follows official Perhubungan format for SIUPPAK audit compliance</span>
+              <span className="text-xs">Generated report follows official Transportation format for SIUPPAK audit compliance</span>
             </div>
           </div>
         </div>
