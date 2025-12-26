@@ -39,6 +39,7 @@
   "exclude": [
     "node_modules",
     "REFACTORED_EXAMPLE_contracts_route.ts",
-    "**/*EXAMPLE*"
+    "**/*EXAMPLE*",
+    "scripts/**/*"
   ]
 }

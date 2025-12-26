@@ -1,7 +1,7 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
@@ -28,6 +28,7 @@ interface Vessel {
 export default function NewCrewMemberPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [vessels, setVessels] = useState<Vessel[]>([]);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<CrewMemberFormData>({
@@ -44,6 +45,30 @@ export default function NewCrewMemberPage() {
     medicalInfo: '',
     status: 'ONBOARD',
   });
+
+  // Pre-populate form from URL search params
+  useEffect(() => {
+    const seafarerName = searchParams.get('seafarerName') || searchParams.get('fullName');
+    const rank = searchParams.get('rank');
+    const nationality = searchParams.get('nationality');
+    const dateOfBirth = searchParams.get('dateOfBirth');
+    const emergencyContact = searchParams.get('emergencyContact') || searchParams.get('emergencyContactName');
+    const vesselId = searchParams.get('vesselId');
+    const status = searchParams.get('status') as 'ONBOARD' | 'DEPARTED' | 'PLANNED' | null;
+
+    if (seafarerName || rank || nationality || dateOfBirth) {
+      setFormData(prev => ({
+        ...prev,
+        seafarerName: seafarerName || prev.seafarerName,
+        rank: rank || prev.rank,
+        nationality: nationality || prev.nationality,
+        dateOfBirth: dateOfBirth || prev.dateOfBirth,
+        emergencyContact: emergencyContact || prev.emergencyContact,
+        vesselId: vesselId || prev.vesselId,
+        status: status || prev.status,
+      }));
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (status === "loading") return;
