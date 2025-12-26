@@ -16,13 +16,22 @@ interface FormCategory {
   forms: Form[];
 }
 
+interface Crew {
+  id: string;
+  fullName: string;
+  rank: string;
+  passportNumber?: string;
+}
+
 export default function FormReferencePage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [categories, setCategories] = useState<FormCategory[]>([]);
+  const [crews, setCrews] = useState<Crew[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("hgf-cr");
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCrewId, setSelectedCrewId] = useState<string>("");
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -44,6 +53,7 @@ export default function FormReferencePage() {
       }
 
       fetchForms();
+      fetchCrews();
     }
   }, [status, session, router]);
 
@@ -62,7 +72,59 @@ export default function FormReferencePage() {
     }
   };
 
-  const handleDownload = async (categoryCode: string, filename: string) => {
+  const fetchCrews = async () => {
+    try {
+      const response = await fetch("/api/crew?limit=1000");
+      if (!response.ok) {
+        throw new Error("Failed to fetch crews");
+      }
+      const data = await response.json();
+      setCrews(data.data || []);
+      // Auto-select first crew if available
+      if (data.data && data.data.length > 0) {
+        setSelectedCrewId(data.data[0].id);
+      }
+    } catch (error) {
+      console.error("Error fetching crews:", error);
+    }
+  };
+
+  const handleDownloadWithCrewData = async (categoryCode: string, filename: string) => {
+    if (!selectedCrewId) {
+      alert("Please select a crew member first");
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `/api/crewing/form-reference/generate?category=${categoryCode}&filename=${filename}&crewId=${selectedCrewId}`
+      );
+
+      if (!response.ok) {
+        throw new Error("Download failed");
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      // Get filename from content-disposition header
+      const contentDisposition = response.headers.get("content-disposition");
+      const downloadFilename = contentDisposition
+        ? contentDisposition.split("filename=")[1].replace(/"/g, "")
+        : filename;
+      a.download = downloadFilename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error("Download error:", error);
+      alert("Failed to download form");
+    }
+  };
+
+  const handleDownloadBlank = async (categoryCode: string, filename: string) => {
     try {
       const response = await fetch(
         `/api/crewing/form-reference/download?category=${categoryCode}&filename=${filename}`
@@ -103,11 +165,11 @@ export default function FormReferencePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
       <div className="max-w-7xl mx-auto">
-        {/* Header with Back Button */}
+        {/* Header */}
         <div className="mb-8 flex items-center justify-between">
           <div>
             <h1 className="text-4xl font-bold text-slate-900 mb-2">Form References</h1>
-            <p className="text-lg text-slate-600">Download official blank form templates to fill with crew data</p>
+            <p className="text-lg text-slate-600">Download official form templates - blank or pre-filled with crew data</p>
           </div>
           <a
             href="/crewing"
@@ -118,11 +180,36 @@ export default function FormReferencePage() {
           </a>
         </div>
 
-        {/* Important Notice - These are BLANK templates */}
+        {/* Crew Selector */}
+        <div className="bg-green-50 border-l-4 border-green-500 rounded-lg p-4 mb-6">
+          <label className="block text-sm font-bold text-slate-700 mb-2">
+            📋 Select Crew Member (Optional - for pre-filled forms):
+          </label>
+          <select
+            value={selectedCrewId}
+            onChange={(e) => setSelectedCrewId(e.target.value)}
+            className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none font-medium bg-white"
+          >
+            <option value="">-- Download Blank Form (No Crew Data) --</option>
+            {crews.map((crew) => (
+              <option key={crew.id} value={crew.id}>
+                {crew.fullName} ({crew.rank}) {crew.passportNumber ? `- ${crew.passportNumber}` : ""}
+              </option>
+            ))}
+          </select>
+          {selectedCrewId && (
+            <p className="text-green-700 text-sm mt-2">
+              ✅ Selected crew will auto-fill: Name, Rank, Passport, Email, Phone, Contact Info
+            </p>
+          )}
+        </div>
+
+        {/* Important Notice */}
         <div className="bg-amber-50 border-l-4 border-amber-500 rounded-lg p-4 mb-6">
-          <p className="text-amber-900 font-bold mb-1">⚠️ Important Notice:</p>
+          <p className="text-amber-900 font-bold mb-1">⚠️ Download Options:</p>
           <p className="text-amber-800 text-sm">
-            These are <strong>blank/empty form templates</strong>. They do NOT contain any crew data. Download and fill them with your crew information as needed.
+            <strong>Without Crew Selection:</strong> Download blank form template<br />
+            <strong>With Crew Selection:</strong> Form is pre-filled with selected crew's data (Name, Rank, Passport, Email, Phone, etc)
           </p>
         </div>
 
@@ -132,7 +219,7 @@ export default function FormReferencePage() {
             📋 Total Forms: {categories.reduce((sum, cat) => sum + cat.forms.length, 0)}
           </p>
           <p className="text-blue-800 text-sm mt-1">
-            Select a category and download the blank forms you need to fill
+            Select a category and download the forms you need
           </p>
         </div>
 
@@ -208,14 +295,14 @@ export default function FormReferencePage() {
         {filteredForms.length > 0 ? (
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
             <div className="bg-slate-100 px-6 py-3 border-b border-slate-200">
-              <p className="font-bold text-slate-900">Showing {filteredForms.length} of {activeCategory?.forms.length} blank forms</p>
+              <p className="font-bold text-slate-900">Showing {filteredForms.length} of {activeCategory?.forms.length} forms</p>
             </div>
             <table className="w-full">
               <thead className="bg-slate-100 border-b border-slate-200">
                 <tr>
                   <th className="text-left px-6 py-4 font-bold text-slate-900">Form Name</th>
                   <th className="text-left px-6 py-4 font-bold text-slate-900">File Type</th>
-                  <th className="text-center px-6 py-4 font-bold text-slate-900">Download</th>
+                  <th className="text-center px-6 py-4 font-bold text-slate-900">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
@@ -228,13 +315,26 @@ export default function FormReferencePage() {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <button
-                        onClick={() => handleDownload(activeTab, form.filename)}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-bold text-sm transition-colors duration-200"
-                      >
-                        <span>⬇️</span>
-                        Download
-                      </button>
+                      <div className="flex gap-2 justify-center">
+                        {selectedCrewId && (
+                          <button
+                            onClick={() => handleDownloadWithCrewData(activeTab, form.filename)}
+                            className="inline-flex items-center gap-1 px-3 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-bold text-xs transition-colors duration-200"
+                            title="Download with crew data pre-filled"
+                          >
+                            <span>��</span>
+                            Pre-Fill
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleDownloadBlank(activeTab, form.filename)}
+                          className="inline-flex items-center gap-1 px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-bold text-xs transition-colors duration-200"
+                          title="Download blank template"
+                        >
+                          <span>⬇️</span>
+                          Blank
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -252,7 +352,7 @@ export default function FormReferencePage() {
         {/* Instructions */}
         <div className="mt-8 p-4 bg-slate-50 rounded-lg border border-slate-200">
           <p className="text-sm text-slate-700 text-center">
-            💡 <strong>How to use:</strong> Select a category, download the blank form, fill it with crew data, and submit to the relevant department.
+            💡 <strong>How to use:</strong> Select crew member → Select form category → Choose "Pre-Fill" (with data) or "Blank" (empty template) → Download
           </p>
         </div>
       </div>
