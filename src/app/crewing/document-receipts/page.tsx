@@ -322,7 +322,7 @@ export default function DocumentReceiptDashboardPage() {
                       Crew
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
-                      Kapal / Status
+                      Vessel / Status
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
                       Handover

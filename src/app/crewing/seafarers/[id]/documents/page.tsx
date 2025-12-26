@@ -472,7 +472,7 @@ export default function SeafarerDocumentsPage() {
               <div key={receipt.id} className="border border-gray-200 rounded-xl p-5">
                 <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900">{receipt.vesselName || 'Tanpa Nama Kapal'}</h3>
+                    <h3 className="text-lg font-semibold text-gray-900">{receipt.vesselName || 'No Vessel Name'}</h3>
                     <p className="text-sm text-gray-700">
                       Status: {receipt.crewStatus === 'NEW' ? 'Crew New' : 'Ex Crew'}
                     </p>

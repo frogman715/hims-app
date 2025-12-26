@@ -157,7 +157,7 @@ export default function SiuppakReportsPage() {
                     onChange={(e) => setPeriod(e.target.value)}
                     className="w-full px-4 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-blue-500"
                   >
-                    <option value="">Pilih Month</option>
+                    <option value="">Select Month</option>
                     <option value="01">Januari</option>
                     <option value="02">Februari</option>
                     <option value="03">Maret</option>
@@ -177,7 +177,7 @@ export default function SiuppakReportsPage() {
                     onChange={(e) => setPeriod(e.target.value)}
                     className="w-full px-4 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-blue-500"
                   >
-                    <option value="">Pilih Semester</option>
+                    <option value="">Select Semester</option>
                     <option value="1">Semester 1 (Januari - Juni)</option>
                     <option value="2">Semester 2 (Juli - Desember)</option>
                   </select>
@@ -225,7 +225,7 @@ export default function SiuppakReportsPage() {
                 <ul className="list-disc list-inside ml-4 space-y-1">
                   <li>Info Perusahaan: Nama, SIUKAK 281.40/2023, Penanggung Jawab, Alamat, Kontak</li>
                   <li>Data Pelaut: Nama, Kewarganegaraan, Kode Pelaut, Buku Pelaut, No. PKL, Paspor, Jabatan</li>
-                  <li>Data Kapal: Nama Kapal, IMO/MMSI, Bendera, Jenis Kapal, Principal, CBA Number</li>
+                  <li>Vessel Data: Vessel Name, IMO/MMSI, Bendera, Jenis Kapal, Principal, CBA Number</li>
                   <li>Movement Data: Sign On/Off Date & Port, Daerah Pelayaran, DN/LN, Jenis Kelamin</li>
                   <li>Nearest Family: Name & Phone Number</li>
                 </ul>
