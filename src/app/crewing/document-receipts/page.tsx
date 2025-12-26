@@ -170,7 +170,7 @@ export default function DocumentReceiptDashboardPage() {
 
   const handleCreate = () => {
     if (!selectedCrewId) {
-      setError('Pilih crew terlebih dahulu sebelum membuat receipt.');
+      setError('Select crew first before creating receipt.');
       return;
     }
     router.push(`/crewing/seafarers/${selectedCrewId}/document-receipts/new`);
@@ -260,7 +260,7 @@ export default function DocumentReceiptDashboardPage() {
           <div className="grid grid-cols-1 md:grid-cols-[3fr_1fr] gap-4">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2" htmlFor="crewSelector">
-                Pilih Crew
+                Select Crew
               </label>
               <select
                 id="crewSelector"
@@ -269,7 +269,7 @@ export default function DocumentReceiptDashboardPage() {
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 disabled={loading}
               >
-                <option value="">— Pilih crew yang menyerahkan dokumen —</option>
+                <option value="">— Select crew submitting documents —</option>
                 {seafarers.map((crew) => (
                   <option key={crew.id} value={crew.id}>
                     {crew.fullName}

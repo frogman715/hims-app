@@ -368,7 +368,7 @@ export default function CrewingReportsPage() {
             <div className="flex items-center justify-between mb-5">
               <div>
                 <h3 className="text-lg font-bold text-gray-900">Principal & Fleet Snapshot</h3>
-                <p className="text-sm text-gray-700">Crew aktif per principal/darmada</p>
+                <p className="text-sm text-gray-700">Active crew per principal/fleet</p>
               </div>
               <Link href="/crewing/principals" className="text-sm font-semibold text-blue-700 hover:text-blue-900">
                 Principal details →

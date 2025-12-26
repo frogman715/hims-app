@@ -149,7 +149,7 @@ export default function VesselCrewListPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.29-.98-5.5-2.5M12 4.5C7.305 4.5 3.5 8.305 3.5 13S7.305 21.5 12 21.5 20.5 17.695 20.5 13 16.695 4.5 12 4.5z" />
             </svg>
             <h3 className="mt-2 text-sm font-medium text-gray-900">Data vessel tidak ditemukan</h3>
-            <p className="mt-1 text-sm text-gray-700">Ensure vessel memiliki crew assignment aktif.</p>
+            <p className="mt-1 text-sm text-gray-700">Ensure vessel has active crew assignment.</p>
           </div>
         </div>
       </div>

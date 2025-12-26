@@ -108,7 +108,7 @@ export default function NewDocumentReceiptPage() {
         }));
       } catch (err) {
         console.error(err);
-        setError('Data kru tidak bisa diambil. Silakan kembali ke halaman sebelumnya.');
+        setError('Unable to retrieve crew data. Please return to previous page.');
       } finally {
         setInitializing(false);
       }

@@ -171,7 +171,7 @@ export default function PrepareJoiningPage() {
           <div>
             <h1 className="text-3xl font-bold text-slate-900">Preparing to Join</h1>
             <p className="text-base text-slate-600 mt-1">
-              Checklist terpadu memastikan crew siap berangkat ke kapal tujuan.
+              Integrated checklist to ensure crew is ready to depart to destination vessel.
             </p>
           </div>
           <Link href="/crewing/workflow" className="action-pill text-sm">
@@ -212,10 +212,10 @@ export default function PrepareJoiningPage() {
           <div className="surface-card p-12 text-center">
             <div className="text-6xl mb-4">📋</div>
             <h3 className="text-xl font-semibold text-slate-900 mb-2">
-              Tidak ada preparation aktif
+              No active preparation
             </h3>
             <p className="text-slate-600">
-              No crew yang sedang pada tahap preparing to join.
+              No crew currently in preparing to join stage.
             </p>
           </div>
         ) : (

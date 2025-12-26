@@ -148,7 +148,7 @@ export default function CrewManningWorkflow() {
                 Crew Manning Workflow
               </h1>
               <p className="text-gray-800 font-medium">
-                Alur lengkap dari aplikasi sampai seafarer siap berangkat ke kapal
+                Complete flow from application until seafarer is ready to depart to vessel
               </p>
             </div>
             <Link
@@ -209,7 +209,7 @@ export default function CrewManningWorkflow() {
         {/* Flow Diagram */}
         <div className="bg-white rounded-2xl shadow-2xl p-8 border-2 border-gray-100">
           <h2 className="text-2xl font-extrabold text-gray-900 mb-6">
-            Alur Proses Manning
+            Manning Process Flow
           </h2>
           
           <div className="flex items-center justify-between overflow-x-auto pb-4">

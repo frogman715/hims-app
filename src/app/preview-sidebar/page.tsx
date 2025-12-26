@@ -20,7 +20,7 @@ export default function PreviewSidebar() {
           <header className="space-y-2">
             <h1 className="text-4xl font-semibold text-slate-900">Navigation Preview</h1>
             <p className="text-base text-slate-600">
-              Ringkasan ini menampilkan tampilan akhir sidebar setelah penyesuaian desain
+              This summary displays the final sidebar view after design customization
               terkini diterapkan.
             </p>
           </header>
