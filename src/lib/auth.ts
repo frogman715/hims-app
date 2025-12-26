@@ -207,7 +207,7 @@ export const authOptions: NextAuthOptions = {
       token.permissionOverrides = permissionOverrides;
 
       let isSystemAdmin = false;
-      const userWithSystemAdmin = user as Record<string, unknown>;
+      const userWithSystemAdmin = user as unknown as Record<string, unknown>;
       if (user && typeof userWithSystemAdmin['isSystemAdmin'] === "boolean") {
         isSystemAdmin = userWithSystemAdmin['isSystemAdmin'] as boolean;
       } else if (tokenSubject) {
