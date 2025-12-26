@@ -112,7 +112,7 @@ export default function PrepareJoiningPage() {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-emerald-50 flex flex-col items-center justify-center gap-4">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500" />
         <p className="text-sm font-semibold text-slate-600">
-          Memuat data preparing crew…
+          Loading data preparing crew…
         </p>
       </div>
     );
@@ -215,7 +215,7 @@ export default function PrepareJoiningPage() {
               Tidak ada preparation aktif
             </h3>
             <p className="text-slate-600">
-              Belum ada crew yang sedang pada tahap preparing to join.
+              No crew yang sedang pada tahap preparing to join.
             </p>
           </div>
         ) : (

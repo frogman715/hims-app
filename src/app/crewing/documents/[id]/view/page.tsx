@@ -110,7 +110,7 @@ export default function ViewDocumentPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 flex flex-col items-center justify-center gap-4">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
-        <p className="text-sm font-semibold text-gray-700">Memuat detail dokumen…</p>
+        <p className="text-sm font-semibold text-gray-700">Loading detail dokumen…</p>
       </div>
     );
   }
@@ -131,7 +131,7 @@ export default function ViewDocumentPage() {
                 href="/crewing/documents"
                 className="action-pill"
               >
-                ← Kembali ke Daftar
+                ← Back to List
               </Link>
               <button
                 type="button"
@@ -158,7 +158,7 @@ export default function ViewDocumentPage() {
             <h1 className="text-2xl font-semibold text-gray-900">Dokumen tidak ditemukan</h1>
             <p className="text-sm text-gray-600">Dokumen yang Anda cari mungkin telah dihapus atau tidak tersedia.</p>
             <Link href="/crewing/documents" className="action-pill">
-              ← Kembali ke Daftar
+              ← Back to List
             </Link>
           </div>
         </div>
@@ -180,7 +180,7 @@ export default function ViewDocumentPage() {
               href="/crewing/documents"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition"
             >
-              ← Kembali ke Daftar
+              ← Back to List
             </Link>
           </div>
         </div>

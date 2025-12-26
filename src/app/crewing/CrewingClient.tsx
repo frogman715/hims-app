@@ -168,7 +168,7 @@ export default function CrewingClient() {
         const payload = await response.json().catch(() => null);
 
         if (!response.ok || !payload) {
-          throw new Error(payload?.error ?? "Gagal memuat data overview");
+          throw new Error(payload?.error ?? "Failed to load overview data");
         }
 
         if (!isMounted) {
@@ -183,7 +183,7 @@ export default function CrewingClient() {
         }
 
         console.error("Failed to load crewing overview:", error);
-        setOverviewError(error instanceof Error ? error.message : "Gagal memuat data overview");
+        setOverviewError(error instanceof Error ? error.message : "Failed to load overview data");
       } finally {
         if (isMounted) {
           setIsOverviewLoading(false);
@@ -466,7 +466,7 @@ export default function CrewingClient() {
         },
         {
           title: "Tanda Terima Dokumen",
-          description: "Generate & arsip tanda terima penyerahan dokumen crew",
+          description: "Generate & arsip receipt penyerahan dokumen crew",
           href: CREWING_DOCUMENT_RECEIPTS_ROUTE,
           icon: "📥",
           color: "from-emerald-600 to-teal-600",
@@ -574,7 +574,7 @@ export default function CrewingClient() {
               type="search"
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder="Masukkan kata kunci kru"
+              placeholder="Sign Inkan kata kunci kru"
               className="w-full rounded-xl border border-emerald-200 bg-white py-3 pl-10 pr-12 text-sm font-medium text-slate-800 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
             />
             {searchQuery && (

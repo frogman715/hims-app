@@ -152,7 +152,7 @@ export default function Documents() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 flex flex-col items-center justify-center gap-4">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
-        <p className="text-sm font-semibold text-gray-700">Memuat data dokumen…</p>
+        <p className="text-sm font-semibold text-gray-700">Loading documents…</p>
       </div>
     );
   }

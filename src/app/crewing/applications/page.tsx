@@ -94,7 +94,7 @@ function ApplicationsContent() {
 
   const statusOptions = [
     { value: 'ALL', label: 'Semua Status', color: 'gray', icon: '📋' },
-    { value: 'RECEIVED', label: 'Baru Masuk', color: 'blue', icon: '📝' },
+    { value: 'RECEIVED', label: 'Baru Sign In', color: 'blue', icon: '📝' },
     { value: 'REVIEWING', label: 'Di-Review', color: 'yellow', icon: '🔍' },
     { value: 'INTERVIEW', label: 'Interview', color: 'purple', icon: '🎤' },
     { value: 'PASSED', label: 'Lulus', color: 'green', icon: '✅' },
@@ -105,7 +105,7 @@ function ApplicationsContent() {
 
   const getStatusBadge = (status: string) => {
     const statusConfig: Record<string, { color: string; text: string }> = {
-      RECEIVED: { color: 'bg-blue-100 text-blue-800', text: 'Baru Masuk' },
+      RECEIVED: { color: 'bg-blue-100 text-blue-800', text: 'Baru Sign In' },
       REVIEWING: { color: 'bg-yellow-100 text-yellow-800', text: 'Di-Review' },
       INTERVIEW: { color: 'bg-purple-100 text-purple-800', text: 'Interview' },
       PASSED: { color: 'bg-green-100 text-green-800', text: 'Lulus' },
@@ -183,7 +183,7 @@ function ApplicationsContent() {
               Tidak ada aplikasi
             </h3>
             <p className="text-gray-700 mb-6">
-              Belum ada aplikasi dengan status {selectedStatus}
+              No aplikasi dengan status {selectedStatus}
             </p>
             <Link
               href="/crewing/applications/new"

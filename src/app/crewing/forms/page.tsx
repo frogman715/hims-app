@@ -303,7 +303,7 @@ export default function FormManagementPage() {
                   Tidak ada form templates
                 </h3>
                 <p className="text-gray-700 mb-6">
-                  Belum ada template yang didefinisikan untuk principal
+                  No template yang didefinisikan untuk principal
                 </p>
               </div>
             ) : (

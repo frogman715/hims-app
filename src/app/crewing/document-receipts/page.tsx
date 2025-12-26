@@ -127,14 +127,14 @@ export default function DocumentReceiptDashboardPage() {
           const seafarersData = await seafarersRes.json();
           setSeafarers(mapSeafarerOptions(seafarersData));
         } else {
-          throw new Error('Gagal memuat daftar crew');
+          throw new Error('Failed to load daftar crew');
         }
 
         if (receiptsRes.ok) {
           const receiptsData = await receiptsRes.json();
           setReceipts(Array.isArray(receiptsData) ? receiptsData : []);
         } else {
-          throw new Error('Gagal memuat tanda terima');
+          throw new Error('Failed to load receipt');
         }
       } catch (err) {
         console.error(err);
@@ -170,7 +170,7 @@ export default function DocumentReceiptDashboardPage() {
 
   const handleCreate = () => {
     if (!selectedCrewId) {
-      setError('Pilih crew terlebih dahulu sebelum membuat tanda terima.');
+      setError('Pilih crew terlebih dahulu sebelum membuat receipt.');
       return;
     }
     router.push(`/crewing/seafarers/${selectedCrewId}/document-receipts/new`);
@@ -209,7 +209,7 @@ export default function DocumentReceiptDashboardPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-6">
         <div className="mx-auto max-w-4xl rounded-2xl border border-gray-200 bg-white p-10 text-center shadow-md">
-          Memuat...
+          Loading...
         </div>
       </div>
     );
@@ -226,7 +226,7 @@ export default function DocumentReceiptDashboardPage() {
         <Breadcrumbs items={breadcrumbItems} />
         <PageHeader
           title="Tanda Terima Dokumen Crew"
-          subtitle="Buat bukti penyerahan dokumen fisik dan arsip digital"
+          subtitle="Create bukti penyerahan dokumen fisik dan arsip digital"
           actions={(
             <div className="flex flex-wrap gap-3">
               <button
@@ -234,14 +234,14 @@ export default function DocumentReceiptDashboardPage() {
                 onClick={() => router.push('/crewing')}
                 className="inline-flex items-center gap-2 rounded-lg border border-gray-400 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
               >
-                Kembali ke Crewing
+                Back to Crewing
               </button>
               <button
                 type="button"
                 onClick={handleBackToDashboard}
                 className="inline-flex items-center gap-2 rounded-lg border border-gray-400 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
               >
-                Kembali ke Dashboard
+                Back to Dashboard
               </button>
               <button
                 type="button"
@@ -249,14 +249,14 @@ export default function DocumentReceiptDashboardPage() {
                 disabled={refreshing}
                 className="inline-flex items-center gap-2 rounded-lg border border-gray-400 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50"
               >
-                {refreshing ? 'Memuat…' : 'Refresh Data'}
+                {refreshing ? 'Loading…' : 'Refresh Data'}
               </button>
             </div>
           )}
         />
 
         <section className="bg-white shadow-xl rounded-2xl p-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Buat Tanda Terima Baru</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Create Tanda Terima Baru</h2>
           <div className="grid grid-cols-1 md:grid-cols-[3fr_1fr] gap-4">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2" htmlFor="crewSelector">
@@ -285,7 +285,7 @@ export default function DocumentReceiptDashboardPage() {
                 className="w-full md:w-auto px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow hover:bg-blue-700"
                 disabled={loading}
               >
-                Buat Form
+                Create Form
               </button>
             </div>
           </div>
@@ -310,9 +310,9 @@ export default function DocumentReceiptDashboardPage() {
           )}
 
           {loading ? (
-            <div className="py-10 text-center text-gray-600">Memuat data tanda terima...</div>
+            <div className="py-10 text-center text-gray-600">Loading data receipt...</div>
           ) : filteredReceipts.length === 0 ? (
-            <div className="py-10 text-center text-gray-600">Belum ada tanda terima yang tercatat.</div>
+            <div className="py-10 text-center text-gray-600">No receipt yang tercatat.</div>
           ) : (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">

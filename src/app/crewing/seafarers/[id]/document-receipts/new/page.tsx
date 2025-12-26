@@ -192,7 +192,7 @@ export default function NewDocumentReceiptPage() {
 
       if (!response.ok) {
         const errorBody = await response.json().catch(() => ({}));
-        const message = errorBody?.error ?? 'Gagal menyimpan tanda terima dokumen.';
+        const message = errorBody?.error ?? 'Gagal menyimpan receipt dokumen.';
         throw new Error(message);
       }
 
@@ -211,7 +211,7 @@ export default function NewDocumentReceiptPage() {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-6">
         <div className="max-w-4xl mx-auto text-center py-20">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto" />
-          <p className="mt-4 text-gray-700">Menyiapkan form tanda terima dokumen...</p>
+          <p className="mt-4 text-gray-700">Menyiapkan form receipt dokumen...</p>
         </div>
       </div>
     );
@@ -228,7 +228,7 @@ export default function NewDocumentReceiptPage() {
             onClick={() => router.back()}
             className="px-6 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-800"
           >
-            Kembali
+            Back
           </button>
         </div>
       </div>
@@ -254,7 +254,7 @@ export default function NewDocumentReceiptPage() {
               className="px-5 py-2 rounded-lg border border-gray-400 text-gray-700 hover:bg-gray-100"
               disabled={submitting}
             >
-              Kembali ke Dokumen
+              Back to Dokumen
             </button>
           </div>
         </div>
@@ -283,7 +283,7 @@ export default function NewDocumentReceiptPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Nomor Telepon</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Phone Number</label>
                 <input
                   type="tel"
                   value={formData.phone}
@@ -457,7 +457,7 @@ export default function NewDocumentReceiptPage() {
                         onClick={() => removeItemRow(index)}
                         className="px-4 py-2 rounded-lg border border-red-500 text-red-600 hover:bg-red-50"
                       >
-                        Hapus Baris
+                        Delete Baris
                       </button>
                     </div>
                   )}
@@ -531,7 +531,7 @@ export default function NewDocumentReceiptPage() {
               className="px-6 py-3 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-50"
               disabled={submitting}
             >
-              {submitting ? 'Menyimpan…' : 'Simpan Tanda Terima'}
+              {submitting ? 'Menyimpan…' : 'Save Tanda Terima'}
             </button>
           </div>
         </form>

@@ -121,13 +121,13 @@ export default function CrewingReportsPage() {
         setError(null);
         const res = await fetch("/api/crewing/reports/summary", { cache: "no-store" });
         if (!res.ok) {
-          throw new Error("Gagal memuat data laporan crewing");
+          throw new Error("Failed to load data laporan crewing");
         }
         const payload: CrewingReportSummary = await res.json();
         setReport(payload);
       } catch (err) {
         console.error("Error loading crewing report:", err);
-        setError(err instanceof Error ? err.message : "Gagal memuat laporan");
+        setError(err instanceof Error ? err.message : "Failed to load laporan");
         setReport(null);
       } finally {
         setLoading(false);
@@ -142,7 +142,7 @@ export default function CrewingReportsPage() {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
-          <p className="text-sm font-semibold text-gray-700">Memuat laporan crewing…</p>
+          <p className="text-sm font-semibold text-gray-700">Loading laporan crewing…</p>
         </div>
       </div>
     );
@@ -196,7 +196,7 @@ export default function CrewingReportsPage() {
                   </div>
                   <div>
                     <p className="text-xs uppercase font-semibold text-blue-700">Navigasi</p>
-                    <p className="text-sm font-semibold text-gray-900">Kembali ke modul Crewing</p>
+                    <p className="text-sm font-semibold text-gray-900">Back to Crewing Module</p>
                   </div>
                 </div>
               </Link>

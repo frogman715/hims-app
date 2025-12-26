@@ -176,7 +176,7 @@ function InterviewsContent() {
               Tidak ada interview
             </h3>
             <p className="text-gray-700 mb-6">
-              Belum ada interview yang dijadwalkan
+              No interview yang dijadwalkan
             </p>
             <Link
               href="/crewing/interviews/new"

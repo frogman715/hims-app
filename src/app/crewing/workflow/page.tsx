@@ -155,7 +155,7 @@ export default function CrewManningWorkflow() {
               href="/crewing"
               className="px-6 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-700 font-semibold hover:border-blue-500 hover:text-blue-700 transition-all duration-200 shadow-md hover:shadow-md"
             >
-              ← Kembali ke Crewing
+              ← Back to Crewing
             </Link>
           </div>
         </div>

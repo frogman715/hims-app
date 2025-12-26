@@ -460,12 +460,12 @@ export default function SeafarerDocumentsPage() {
         </div>
         {hasOfficeAccess && !receiptsRouteAvailable ? (
           <FeatureUnavailableAlert
-            message="Sistem tidak dapat membuka halaman daftar tanda terima saat ini."
+            message="Sistem tidak dapat membuka halaman daftar receipt saat ini."
             details="Silakan hubungi administrator jika masalah ini berlanjut."
           />
         ) : null}
         {sortedReceipts.length === 0 ? (
-          <div className="text-gray-500">Belum ada tanda terima dokumen yang tercatat.</div>
+          <div className="text-gray-500">No receipt dokumen yang tercatat.</div>
         ) : (
           <div className="space-y-5">
             {sortedReceipts.map((receipt) => (

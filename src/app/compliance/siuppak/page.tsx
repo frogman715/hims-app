@@ -227,7 +227,7 @@ export default function SiuppakReportsPage() {
                   <li>Data Pelaut: Nama, Kewarganegaraan, Kode Pelaut, Buku Pelaut, No. PKL, Paspor, Jabatan</li>
                   <li>Data Kapal: Nama Kapal, IMO/MMSI, Bendera, Jenis Kapal, Principal, CBA Number</li>
                   <li>Movement Data: Sign On/Off Date & Port, Daerah Pelayaran, DN/LN, Jenis Kelamin</li>
-                  <li>Keluarga Terdekat: Nama & Nomor Telepon</li>
+                  <li>Nearest Family: Name & Phone Number</li>
                 </ul>
               </div>
             </div>
@@ -236,7 +236,7 @@ export default function SiuppakReportsPage() {
               <div>
                 <h4 className="font-medium text-gray-800 mb-2">Sheet 2: Data Principal & CBA</h4>
                 <div className="text-sm text-gray-800">
-                  <p>Daftar pemilik kapal/operator dengan nomor CBA dan masa berlaku perjanjian</p>
+                  <p>List pemilik kapal/operator dengan nomor CBA dan masa berlaku perjanjian</p>
                 </div>
               </div>
             )}
