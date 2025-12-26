@@ -12,6 +12,7 @@ declare module "next-auth" {
     role: string;
     roles: string[];
     permissionOverrides?: RolePermissionOverride[];
+    isSystemAdmin?: boolean;
   }
   interface Session {
     user: {
@@ -21,6 +22,7 @@ declare module "next-auth" {
       role: string;
       roles: string[];
       permissionOverrides?: RolePermissionOverride[];
+      isSystemAdmin?: boolean;
     };
   }
 }
@@ -30,6 +32,7 @@ declare module "next-auth/jwt" {
     role: string;
     roles: string[];
     permissionOverrides?: RolePermissionOverride[];
+    isSystemAdmin?: boolean;
     user?: {
       id: string;
       email?: string | null;
@@ -37,6 +40,7 @@ declare module "next-auth/jwt" {
       role: string;
       roles: string[];
       permissionOverrides?: RolePermissionOverride[];
+      isSystemAdmin?: boolean;
     };
   }
 }
@@ -132,6 +136,7 @@ export const authOptions: NextAuthOptions = {
           name: user.name,
           role,
           roles: normalizedRoles,
+          isSystemAdmin: user.isSystemAdmin ?? false,
         };
       },
     }),
@@ -201,6 +206,20 @@ export const authOptions: NextAuthOptions = {
       token.roles = resolvedRoles;
       token.permissionOverrides = permissionOverrides;
 
+      let isSystemAdmin = false;
+      if (user && typeof (user as any).isSystemAdmin === "boolean") {
+        isSystemAdmin = (user as any).isSystemAdmin;
+      } else if (tokenSubject) {
+        const dbUser = await safePrismaCall("jwt:isSystemAdmin", () =>
+          prisma.user.findUnique({
+            where: { id: tokenSubject },
+            select: { isSystemAdmin: true },
+          })
+        );
+        isSystemAdmin = dbUser?.isSystemAdmin ?? false;
+      }
+      token.isSystemAdmin = isSystemAdmin;
+
       const tokenUser = {
         id: tokenSubject ?? "",
         email: user?.email ?? token.email ?? null,
@@ -208,6 +227,7 @@ export const authOptions: NextAuthOptions = {
         role: primaryRole,
         roles: resolvedRoles,
         permissionOverrides,
+        isSystemAdmin,
       };
 
       token.user = tokenUser;
@@ -259,6 +279,7 @@ export const authOptions: NextAuthOptions = {
         session.user.role = primaryRole;
         session.user.roles = normalizedRoles;
         session.user.permissionOverrides = token.permissionOverrides ?? [];
+        session.user.isSystemAdmin = token.isSystemAdmin ?? false;
 
         if (shouldLogAuth) {
           console.info("[auth] session-callback", {

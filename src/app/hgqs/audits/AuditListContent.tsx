@@ -17,10 +17,10 @@ interface AuditSchedule {
 }
 
 type AuditListProps = {
-  canEdit?: boolean;
+  // Props can be added here as needed
 };
 
-export default function AuditListContent({ canEdit }: AuditListProps) {
+export default function AuditListContent({}: AuditListProps) {
   const [audits, setAudits] = useState<AuditSchedule[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
