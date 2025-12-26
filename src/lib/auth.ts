@@ -45,7 +45,7 @@ declare module "next-auth/jwt" {
   }
 }
 
-const shouldLogAuth = process.env.NODE_ENV !== "production";
+const shouldLogAuth = true; // Always log auth for debugging
 
 function assertDatabaseConfigured(context: string): void {
   if (!env.hasDatabaseUrl) {
