@@ -101,7 +101,7 @@ export default function UploadForm() {
       });
 
       if (!response.ok) {
-        throw new Error("Upload gagal, silakan coba ulang.");
+        throw new Error("Upload gagal, please coba ulang.");
       }
 
       setFeedback({
@@ -193,7 +193,7 @@ export default function UploadForm() {
                 className="mx-auto block text-sm text-slate-300"
               />
               <p className="mt-3 text-xs text-slate-500">
-                Maksimal 10 MB, format JPG, PNG, atau PDF. Gunakan kamera belakang untuk hasil terbaik.
+                Maksimal 10 MB, format JPG, PNG, atau PDF. Gunakan kamera belakang untuk result terbaik.
               </p>
               {file && (
                 <p className="mt-3 text-xs font-medium text-slate-200">

@@ -59,7 +59,7 @@ export default function PreviewSidebar() {
                 <div className="space-y-1">
                   <dt className="text-lg font-medium text-slate-800">Komunikasi visual dirapikan</dt>
                   <dd className="text-sm text-slate-600">
-                    Semua teks yang tidak diperlukan dihilangkan sehingga fokus utama tetap pada struktur menu dan hierarki modul.
+                    Semua teks yang tidak required dihilangkan sehingga fokus utama tetap pada struktur menu dan hierarki modul.
                   </dd>
                 </div>
               </div>

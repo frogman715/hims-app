@@ -341,7 +341,7 @@ export default function CrewingClient() {
     {
       href: "/crewing/prepare-joining",
       label: "Prepare Joining",
-      description: "Departure checklist Checklist keberangkatan & travel travel",
+      description: "Departure checklist & travel",
       icon: "✈️",
       accent: "bg-teal-500/10 text-teal-600",
     },
@@ -354,7 +354,7 @@ export default function CrewingClient() {
     },
     {
       href: CREWING_DOCUMENT_RECEIPTS_ROUTE,
-      label: "Tanda Terima Dokumen",
+      label: "Document Receipt",
       description: "Record document handover",
       icon: "📥",
       accent: "bg-emerald-500/10 text-emerald-600",
@@ -362,17 +362,17 @@ export default function CrewingClient() {
     {
       href: "/crewing/documents?filter=expiring",
       label: "Expiring Documents",
-      description: "Renew passport, medical Perpanjang paspor, medical & visa visa",
+      description: "Renew passport, medical & visa",
       icon: "📄",
       accent: "bg-amber-500/10 text-amber-600",
     },
   ];
 
   const reminders = [
-    "Ensure hasil medical check crew berlaku ≤ 12 bulan.",
-    "Upload scan paspor dan seaman book dengan resolusi tinggi.",
-    "Confirm Letter Guarantee sebelum tiket dikeluarkan.",
-    "Update kontak darurat sebelum crew sign-on.",
+    "Ensure medical check results are valid for ≤ 12 months.",
+    "Upload scan of passport and seaman book with high resolution.",
+    "Confirm Letter Guarantee before ticket issuance.",
+    "Update emergency contact before crew sign-on.",,
   ];
 
   const moduleCategories: ModuleCategory[] = [
@@ -743,7 +743,7 @@ export default function CrewingClient() {
           <div className="surface-card p-6">
             <div className="surface-card__header">
               <h2 className="text-lg font-semibold text-slate-900">Crew Ops Reminders</h2>
-              <p className="mt-1 text-sm text-slate-600">Checklist singkat sebelum crew berangkat.</p>
+              <p className="mt-1 text-sm text-slate-600">Short checklist before crew departure.</p>
             </div>
             <ul className="space-y-3">
               {reminders.map((item) => (

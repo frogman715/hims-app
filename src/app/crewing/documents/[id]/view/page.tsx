@@ -41,7 +41,7 @@ export default function ViewDocumentPage() {
       setError(null);
     } catch (fetchError) {
       console.error(fetchError);
-      setError('Tidak dapat memuat detail dokumen. Silakan coba lagi.');
+      setError('Tidak can memuat detail dokumen. Silakan coba lagi.');
     } finally {
       setLoading(false);
     }
@@ -156,7 +156,7 @@ export default function ViewDocumentPage() {
         <div className="max-w-3xl mx-auto py-16 px-6">
           <div className="surface-card p-8 text-center space-y-3">
             <h1 className="text-2xl font-semibold text-gray-900">Dokumen tidak ditemukan</h1>
-            <p className="text-sm text-gray-600">Dokumen yang Anda cari mungkin telah dihapus atau tidak tersedia.</p>
+            <p className="text-sm text-gray-600">Dokumen yang Anda cari mungkin telah dihapus atau tidak available.</p>
             <Link href="/crewing/documents" className="action-pill">
               ← Back to List
             </Link>
@@ -251,7 +251,7 @@ export default function ViewDocumentPage() {
                 </div>
               ) : (
                 <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-8 text-center text-sm text-gray-600">
-                  Lampiran dokumen belum tersedia.
+                  Lampiran dokumen belum available.
                 </div>
               )}
             </div>

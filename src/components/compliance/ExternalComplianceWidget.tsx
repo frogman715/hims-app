@@ -56,7 +56,7 @@ export default function ExternalComplianceWidget({ className = "" }: Props) {
 
         setStats(FALLBACK_STATS);
         setErrorMessage(
-          "Tidak dapat memuat status compliance eksternal saat ini. Data ditampilkan dalam mode offline."
+          "Tidak can memuat status compliance eksternal saat ini. Data ditampilkan dalam mode offline."
         );
         console.warn("external-compliance stats fallback", error);
       } finally {

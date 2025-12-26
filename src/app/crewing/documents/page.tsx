@@ -322,5 +322,5 @@ function formatSummaryLabel(filter: string, count: number) {
   if (filter === 'expiring') {
     return `${count} dokumen perlu diperbarui ≤14 bulan`;
   }
-  return `${count} dokumen melewati masa berlaku`;
+  return `${count} dokumen melewati masa is valid`;
 }

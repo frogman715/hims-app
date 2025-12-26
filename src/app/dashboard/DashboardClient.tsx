@@ -695,7 +695,7 @@ function RecentActivitySection({ events, className = '' }: { events: RecentActiv
     <section className={`surface-card p-6 ${className}`}>
       <h3 className="text-lg font-semibold text-slate-900 mb-4">Recent Activity</h3>
       {events.length === 0 ? (
-        <EmptyState message="Aktivitas terbaru akan muncul setelah sistem menerima pembaruan." />
+        <EmptyState message="Aktivitas latest akan muncul setelah sistem menerima pembaruan." />
       ) : (
         <div className="space-y-4">
           {events.map((event, index) => (

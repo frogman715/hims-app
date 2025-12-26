@@ -7,8 +7,8 @@ interface FeatureUnavailableAlertProps {
 }
 
 export function FeatureUnavailableAlert({
-  title = 'Fitur tidak tersedia',
-  message = 'Kami tidak dapat mengakses modul ini saat ini.',
+  title = 'Fitur tidak available',
+  message = 'Kami tidak can mengakses modul ini saat ini.',
   details,
 }: FeatureUnavailableAlertProps) {
   return (

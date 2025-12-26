@@ -460,7 +460,7 @@ export default function SeafarerDocumentsPage() {
         </div>
         {hasOfficeAccess && !receiptsRouteAvailable ? (
           <FeatureUnavailableAlert
-            message="Sistem tidak dapat membuka halaman daftar receipt saat ini."
+            message="Sistem tidak can membuka halaman daftar receipt saat ini."
             details="Silakan hubungi administrator jika masalah ini berlanjut."
           />
         ) : null}

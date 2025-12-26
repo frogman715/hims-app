@@ -128,7 +128,7 @@ function InterviewsContent() {
                 Seafarer Interviews
               </h1>
               <p className="text-gray-700">
-                Schedule dan hasil interview untuk crew candidates
+                Schedule dan result interview untuk crew candidates
               </p>
             </div>
             <div className="flex gap-3">
