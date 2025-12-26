@@ -481,6 +481,14 @@ export default function CrewingClient() {
           stats: "New!",
         },
         {
+          title: "Form References",
+          description: "Download official form templates (HGF-CR, HGF-AD, HGF-AC, etc)",
+          href: "/crewing/form-reference",
+          icon: "📄",
+          color: "from-blue-600 to-cyan-700",
+          stats: "64 Forms",
+        },
+        {
           title: "Training Records",
           description: "Training programs, orientations & certifications",
           href: "/crewing/training",
