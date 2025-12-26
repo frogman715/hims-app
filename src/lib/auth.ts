@@ -287,8 +287,10 @@ export const authOptions: NextAuthOptions = {
             userId: session.user.id,
             role: session.user.role,
             roles: session.user.roles,
+            isSystemAdmin: session.user.isSystemAdmin,
             tokenRole: token.role ?? null,
             tokenRoles: token.roles ?? null,
+            tokenIsSystemAdmin: token.isSystemAdmin ?? null,
           });
         }
       }
