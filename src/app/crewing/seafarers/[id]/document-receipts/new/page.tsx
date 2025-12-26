@@ -478,7 +478,7 @@ export default function NewDocumentReceiptPage() {
             </div>
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Lokasi Penyerahan</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Delivery Location</label>
                 <input
                   type="text"
                   value={formData.deliveryLocation}
@@ -488,7 +488,7 @@ export default function NewDocumentReceiptPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Date Penyerahan</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Delivery Date</label>
                 <input
                   type="date"
                   value={formData.deliveryDate}

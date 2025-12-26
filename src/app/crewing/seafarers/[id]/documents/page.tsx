@@ -481,7 +481,7 @@ export default function SeafarerDocumentsPage() {
                     </p>
                     {receipt.deliveryLocation && (
                       <p className="text-sm text-gray-600">
-                        Lokasi Penyerahan: {receipt.deliveryLocation}
+                        Delivery Location: {receipt.deliveryLocation}
                         {receipt.deliveryDate ? `, ${formatDate(receipt.deliveryDate) ?? ''}` : ''}
                       </p>
                     )}

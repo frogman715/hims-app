@@ -259,7 +259,7 @@ export default function SiuppakReportsPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
             <div className="text-sm text-gray-800">
-              <strong>Format Reference:</strong> LAPORAN SEMESTER KEGIATAN PEREKRUTAN DAN PENEMPATAN AWAK KAPAL-DEPERLA.xlsx
+              <strong>Format Reference:</strong> CREW RECRUITMENT AND PLACEMENT ACTIVITY REPORT-MARITIME.xlsx
               <br />
               <span className="text-xs">Generated report follows official Transportation format for SIUPPAK audit compliance</span>
             </div>

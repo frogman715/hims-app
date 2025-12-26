@@ -176,7 +176,7 @@ export default function CrewingReportsPage() {
                 Crewing Performance Reports
               </h1>
               <p className="text-white/90 text-lg font-medium leading-relaxed">
-                Ikhtisar menyeluruh pipeline perekrutan, kesiapan joining, dan kepatuhan dokumen
+                Comprehensive overview of recruitment pipeline, joining readiness, and document compliance to support operational decisions.
                 untuk mendukung keputusan operasional.
               </p>
               {error ? (
@@ -210,7 +210,7 @@ export default function CrewingReportsPage() {
                   </div>
                   <div>
                     <p className="text-xs uppercase font-semibold text-white/80">Pipeline</p>
-                    <p className="text-sm font-semibold text-white">Lihat alur manning</p>
+                    <p className="text-sm font-semibold text-white">View manning flow</p>
                   </div>
                 </div>
               </Link>
@@ -222,33 +222,33 @@ export default function CrewingReportsPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-10">
         {/* Summary Stats */}
         <section>
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Ringkasan Cepat</h2>
+          <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Summary</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             {[
               {
                 label: "Total Applications",
                 value: formatNumber(report?.stats.totalApplications),
-                subtext: "Semua kandidat terdaftar",
+                subtext: "All registered candidates",
               },
               {
                 label: "Interviews Scheduled",
                 value: formatNumber(report?.stats.interviewsScheduled),
-                subtext: "Interview mendatang",
+                subtext: "Upcoming interviews",
               },
               {
                 label: "Crew Ready",
                 value: formatNumber(report?.stats.crewReady),
-                subtext: "Siap berangkat",
+                subtext: "Ready to depart",
               },
               {
                 label: "Docs Expiring ≤ 14mo",
                 value: formatNumber(report?.stats.documentsExpiringSoon),
-                subtext: "Perlu perpanjangan",
+                subtext: "Need renewal",
               },
               {
                 label: "Active Assignments",
                 value: formatNumber(report?.stats.activeAssignments),
-                subtext: "Penugasan aktif",
+                subtext: "Active assignments",
               },
             ].map((card) => (
               <div
@@ -304,7 +304,7 @@ export default function CrewingReportsPage() {
                 <p className="text-sm text-gray-700">Checklist dokumen, medical, training, travel</p>
               </div>
               <Link href="/crewing/prepare-joining" className="text-sm font-semibold text-blue-700 hover:text-blue-900">
-                Buka modul →
+                Open module →
               </Link>
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -312,7 +312,7 @@ export default function CrewingReportsPage() {
                 <div key={stage.status} className="rounded-xl border border-gray-200 p-4 bg-gradient-to-br from-gray-50 to-white">
                   <p className="text-xs font-semibold text-gray-500 uppercase">{stage.label}</p>
                   <p className="text-2xl font-bold text-gray-900 mt-2">{formatNumber(stage.count)}</p>
-                  <p className="text-xs text-gray-600 mt-3">Crew dalam tahap ini</p>
+                  <p className="text-xs text-gray-600 mt-3">Crew in this stage</p>
                 </div>
               ))}
             </div>
@@ -325,10 +325,10 @@ export default function CrewingReportsPage() {
             <div className="flex items-center justify-between mb-5">
               <div>
                 <h3 className="text-lg font-bold text-gray-900">Document Compliance</h3>
-                <p className="text-sm text-gray-700">Kinerja kepatuhan dokumen awak kapal</p>
+                <p className="text-sm text-gray-700">Crew document compliance performance</p>
               </div>
               <Link href="/crewing/documents" className="text-sm font-semibold text-blue-700 hover:text-blue-900">
-                Kelola dokumen →
+                Manage documents →
               </Link>
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -339,7 +339,7 @@ export default function CrewingReportsPage() {
                     ? `${report.documentCompliance.complianceRate}%`
                     : "—"}
                 </p>
-                <p className="text-xs text-gray-600 mt-3">Dokumen valid dibanding total</p>
+                <p className="text-xs text-gray-600 mt-3">Valid documents compared to total</p>
               </div>
               <div className="rounded-xl border border-gray-200 p-5">
                 <p className="text-xs font-semibold text-gray-500 uppercase">Total Documents</p>
@@ -371,7 +371,7 @@ export default function CrewingReportsPage() {
                 <p className="text-sm text-gray-700">Crew aktif per principal/darmada</p>
               </div>
               <Link href="/crewing/principals" className="text-sm font-semibold text-blue-700 hover:text-blue-900">
-                Detail principal →
+                Principal details →
               </Link>
             </div>
             <div className="space-y-3">
@@ -400,10 +400,10 @@ export default function CrewingReportsPage() {
             <div className="flex items-center justify-between mb-5">
               <div>
                 <h3 className="text-lg font-bold text-gray-900">Upcoming Deployments</h3>
-                <p className="text-sm text-gray-700">Penugasan yang dijadwalkan dalam pipeline</p>
+                <p className="text-sm text-gray-700">Scheduled assignments in pipeline</p>
               </div>
               <Link href="/crewing/assignments" className="text-sm font-semibold text-blue-700 hover:text-blue-900">
-                Lihat assignments →
+                View assignments →
               </Link>
             </div>
             <div className="space-y-3">
@@ -441,10 +441,10 @@ export default function CrewingReportsPage() {
             <div className="flex items-center justify-between mb-5">
               <div>
                 <h3 className="text-lg font-bold text-gray-900">Recent Activity</h3>
-                <p className="text-sm text-gray-700">Log aktivitas penting dalam modul crewing</p>
+                <p className="text-sm text-gray-700">Important activity log in crewing module</p>
               </div>
               <Link href="/crewing" className="text-sm font-semibold text-blue-700 hover:text-blue-900">
-                Modul utama →
+                Main module →
               </Link>
             </div>
             <div className="space-y-3">

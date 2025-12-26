@@ -110,7 +110,7 @@ export const GET = withPermission("compliance", PermissionLevel.VIEW_ACCESS, asy
   // Title
   sheet1.mergeCells('A1:AN1');
   const titleCell = sheet1.getCell('A1');
-  titleCell.value = `LAPORAN ${type.toUpperCase()} KEGIATAN PEREKRUTAN DAN PENEMPATAN`;
+  titleCell.value = `${type.toUpperCase()} CREW RECRUITMENT AND PLACEMENT ACTIVITY REPORT`;
   titleCell.font = { size: 14, bold: true };
   titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
 
@@ -157,7 +157,7 @@ export const GET = withPermission("compliance", PermissionLevel.VIEW_ACCESS, asy
     { col: 32, text: 'PELABUHAN SIGN ON', span: 1 },
     { col: 33, text: 'TANGGAL SIGN OFF', span: 1 },
     { col: 34, text: 'PELABUHAN SIGN OFF', span: 1 },
-    { col: 35, text: 'PENEMPATAN DN / LN', span: 1 },
+    { col: 35, text: 'PLACEMENT DOMESTIC/INTERNATIONAL', span: 1 },
     { col: 36, text: 'JENIS KELAMIN', span: 1 },
     { col: 37, text: 'NAMA KELUARGA TERDEKAT', span: 1 },
     { col: 38, text: 'NOMOR TELEPON KELUARGA TERDEKAT', span: 1 },

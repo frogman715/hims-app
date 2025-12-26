@@ -259,7 +259,7 @@ export default function SeafarerBiodataPage() {
                     role="menuitem"
                   >
                     <span className="mt-0.5 text-indigo-500">📄</span>
-                    <span>Kelola dokumen & sertifikat</span>
+                    <span>Manage documents & certificates</span>
                   </Link>
                   <Link
                     href={`/crewing/assignments/new?seafarerId=${seafarer.id}`}
