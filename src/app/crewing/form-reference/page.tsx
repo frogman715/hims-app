@@ -104,10 +104,19 @@ export default function FormReferencePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-slate-900 mb-2">Form References</h1>
-          <p className="text-lg text-slate-600">Download and manage company form templates</p>
+        {/* Header with Back Button */}
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-bold text-slate-900 mb-2">Form References</h1>
+            <p className="text-lg text-slate-600">Download and manage company form templates</p>
+          </div>
+          <a
+            href="/crewing"
+            className="px-4 py-2.5 bg-slate-600 hover:bg-slate-700 text-white rounded-lg font-bold transition-colors duration-200 flex items-center gap-2"
+          >
+            <span>←</span>
+            Back
+          </a>
         </div>
 
         {/* Info Box */}
@@ -120,62 +129,80 @@ export default function FormReferencePage() {
           </p>
         </div>
 
+        {/* Breadcrumb */}
+        <div className="mb-6 text-sm text-slate-600">
+          <span>Form References</span>
+          {activeCategory && (
+            <>
+              <span className="mx-2">/</span>
+              <span className="font-bold text-slate-900">{activeCategory.category}</span>
+            </>
+          )}
+        </div>
+
         {/* Tabs with descriptions */}
-        <div className="space-y-4 mb-6">
-          {categories.map((cat) => (
-            <button
-              key={cat.categoryCode}
-              onClick={() => {
-                setActiveTab(cat.categoryCode);
-                setSearchTerm("");
-              }}
-              className={`w-full text-left p-4 rounded-lg border-2 transition-all duration-200 ${
-                activeTab === cat.categoryCode
-                  ? "bg-blue-600 text-white border-blue-700 shadow-md"
-                  : "bg-white text-slate-900 border-slate-200 hover:border-blue-400"
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <div className="font-bold text-lg">{cat.category}</div>
-                  <div className={`text-sm mt-1 ${activeTab === cat.categoryCode ? "text-blue-100" : "text-slate-600"}`}>
-                    {cat.description}
-                  </div>
-                </div>
-                <span className={`px-3 py-1 rounded-full text-sm font-bold ${
+        <div className="mb-6">
+          <div className="text-sm font-bold text-slate-600 mb-3 uppercase tracking-wider">Select Category:</div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+            {categories.map((cat) => (
+              <button
+                key={cat.categoryCode}
+                onClick={() => {
+                  setActiveTab(cat.categoryCode);
+                  setSearchTerm("");
+                }}
+                className={`text-left p-4 rounded-lg border-2 transition-all duration-200 ${
                   activeTab === cat.categoryCode
-                    ? "bg-blue-400 text-white"
-                    : "bg-slate-200 text-slate-700"
-                }`}>
-                  {cat.forms.length} forms
-                </span>
-              </div>
-            </button>
-          ))}
+                    ? "bg-blue-600 text-white border-blue-700 shadow-md ring-2 ring-blue-300"
+                    : "bg-white text-slate-900 border-slate-200 hover:border-blue-400 hover:shadow-md"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="font-bold text-base">{cat.category}</div>
+                    <div className={`text-xs mt-1 ${activeTab === cat.categoryCode ? "text-blue-100" : "text-slate-600"}`}>
+                      {cat.description}
+                    </div>
+                  </div>
+                  <span className={`px-3 py-1 rounded-full text-sm font-bold whitespace-nowrap ml-3 ${
+                    activeTab === cat.categoryCode
+                      ? "bg-blue-400 text-white"
+                      : "bg-slate-200 text-slate-700"
+                  }`}>
+                    {cat.forms.length}
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Search */}
         <div className="mb-6">
+          <label className="block text-sm font-bold text-slate-700 mb-2">Search in {activeCategory?.category}:</label>
           <input
             type="text"
-            placeholder="Search forms in this category..."
+            placeholder="Type form name to search..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+            className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-medium"
           />
         </div>
 
-        {/* Category Description */}
+        {/* Category Description Box */}
         {activeCategory && (
-          <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 mb-6">
-            <h3 className="font-bold text-slate-900 mb-2">{activeCategory.category}</h3>
-            <p className="text-slate-700">{activeCategory.description}</p>
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 rounded-lg p-4 mb-6">
+            <h3 className="font-bold text-slate-900 text-lg mb-2">About {activeCategory.category}</h3>
+            <p className="text-slate-700 leading-relaxed">{activeCategory.description}</p>
           </div>
         )}
 
         {/* Forms Table */}
         {filteredForms.length > 0 ? (
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
+            <div className="bg-slate-100 px-6 py-3 border-b border-slate-200">
+              <p className="font-bold text-slate-900">Showing {filteredForms.length} of {activeCategory?.forms.length} forms</p>
+            </div>
             <table className="w-full">
               <thead className="bg-slate-100 border-b border-slate-200">
                 <tr>
@@ -196,7 +223,7 @@ export default function FormReferencePage() {
                     <td className="px-6 py-4 text-center">
                       <button
                         onClick={() => handleDownload(activeTab, form.filename)}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-bold transition-colors duration-200"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-bold transition-colors duration-200 shadow-sm hover:shadow-md"
                       >
                         <span>⬇️</span>
                         Download
@@ -210,10 +237,23 @@ export default function FormReferencePage() {
         ) : (
           <div className="bg-white rounded-lg shadow-md p-8 text-center">
             <p className="text-slate-600 text-lg">
-              {searchTerm ? "No forms matching your search" : "No forms available"}
+              {searchTerm ? "❌ No forms matching your search" : "❌ No forms available in this category"}
             </p>
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm("")}
+                className="mt-4 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-bold"
+              >
+                Clear Search
+              </button>
+            )}
           </div>
         )}
+
+        {/* Footer Info */}
+        <div className="mt-8 text-center text-sm text-slate-600">
+          <p>Click on any category above to view and download forms</p>
+        </div>
       </div>
     </div>
   );
