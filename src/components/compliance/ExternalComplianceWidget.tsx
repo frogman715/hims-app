@@ -111,7 +111,7 @@ export default function ExternalComplianceWidget({ className = "" }: Props) {
             <div className="flex-1">
               <h4 className="font-semibold text-slate-900 text-sm mb-1">KOSMA Certificate</h4>
               <p className="text-xs text-slate-700 mb-2">
-                KOSMA adalah sertifikat pelatihan Korea (bukan compliance tracking). Data sertifikat KOSMA dikelola di <strong>Documents Management</strong>.
+                KOSMA is a Korean training certificate (not compliance tracking). KOSMA certificate data is managed in <strong>Documents Management</strong>.
               </p>
               <div className="flex gap-2">
                 <Link
@@ -183,7 +183,7 @@ export default function ExternalComplianceWidget({ className = "" }: Props) {
             </div>
           </div>
           <p className="text-xs text-slate-600 mt-2">
-            Validasi sijil dan sertifikat pelaut Indonesia
+            Validate Indonesian sailor certificates
           </p>
         </div>
 
@@ -234,7 +234,7 @@ export default function ExternalComplianceWidget({ className = "" }: Props) {
             </div>
           </div>
           <p className="text-xs text-slate-600 mt-2">
-            Visa Schengen Belanda untuk crew kapal tanker
+            Dutch Schengen Visa for tanker crew
           </p>
         </div>
       </div>

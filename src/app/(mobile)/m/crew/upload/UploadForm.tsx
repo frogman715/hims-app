@@ -40,7 +40,7 @@ export default function UploadForm() {
     if (!candidate) {
       return {
         valid: false,
-        message: "Pilih file dokumen terlebih dahulu.",
+        message: "Please select a document file first.",
       } as const;
     }
 
@@ -79,7 +79,7 @@ export default function UploadForm() {
 
     resetProgressTimer();
     setLoading(true);
-    setFeedback({ tone: "info", message: "Mengunggah dokumen, mohon tunggu sebentar..." });
+    setFeedback({ tone: "info", message: "Uploading document, please wait..." });
     setProgress(12);
 
     progressTimerRef.current = setInterval(() => {
@@ -161,7 +161,7 @@ export default function UploadForm() {
         <div className="space-y-1.5">
           <h2 className="text-base font-semibold text-slate-100">Informasi Dokumen</h2>
           <p className="text-sm text-slate-400">
-            Ensure foto terlihat jelas dan seluruh halaman sertifikat terbaca.
+            Ensure photo is clear and all certificate pages are readable.
           </p>
         </div>
 

@@ -167,7 +167,7 @@ export default function Documents() {
         <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
           <div>
             <h1 className="text-3xl md:text-4xl font-bold text-gray-900">Document Management</h1>
-            <p className="text-base md:text-lg text-gray-700 mt-2">Pantau status dokumen STCW, paspor, medical, dan visa.</p>
+            <p className="text-base md:text-lg text-gray-700 mt-2">Monitor STCW certificate, passport, medical, and visa document status.</p>
           </div>
           <div className="flex flex-wrap gap-3">
             <Link
@@ -192,7 +192,7 @@ export default function Documents() {
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h2 className="text-lg font-semibold text-gray-900">Filter Status Dokumen</h2>
-              <p className="text-sm text-gray-600">Pilih untuk menampilkan dokumen tertentu berdasarkan status kadaluarsa atau cari berdasarkan nama kru, tipe, atau nomor dokumen.</p>
+              <p className="text-sm text-gray-600">Select to display specific documents based on expiration status or search by crew name, type, or document number.</p>
             </div>
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-end">
               <div className="relative w-full md:w-72">
@@ -200,7 +200,7 @@ export default function Documents() {
                   type="search"
                   value={searchTerm}
                   onChange={(event) => setSearchTerm(event.target.value)}
-                  placeholder="Cari dokumen..."
+                  placeholder="Search documents..."
                   className="w-full rounded-lg border border-gray-300 bg-white py-2.5 pl-10 pr-3 text-sm font-medium text-gray-800 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                 />
                 <svg
@@ -260,7 +260,7 @@ export default function Documents() {
 
           {filteredDocuments.length === 0 ? (
             <div className="px-6 py-12 text-center text-sm text-gray-600">
-              Tidak ada dokumen pada kategori ini.
+              No documents in this category.
             </div>
           ) : (
             <div className="overflow-x-auto">

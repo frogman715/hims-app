@@ -236,7 +236,7 @@ export default function SiuppakReportsPage() {
               <div>
                 <h4 className="font-medium text-gray-800 mb-2">Sheet 2: Data Principal & CBA</h4>
                 <div className="text-sm text-gray-800">
-                  <p>List pemilik kapal/operator dengan nomor CBA dan masa is valid perjanjian</p>
+                  <p>List of ship owners/operators with CBA number and agreement is valid period</p>
                 </div>
               </div>
             )}

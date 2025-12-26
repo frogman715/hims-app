@@ -629,7 +629,7 @@ function ExpiringItemsSection({ items, className = '' }: { items: ExpiringItem[]
         </Link>
       </div>
       {items.length === 0 ? (
-        <EmptyState message="Tidak ada dokumen atau kontrak yang mendekati masa kedaluwarsa." />
+        <EmptyState message="No documents or contracts approaching expiration." />
       ) : (
         <div className="space-y-3">
           {items.map((item, index) => (
@@ -695,7 +695,7 @@ function RecentActivitySection({ events, className = '' }: { events: RecentActiv
     <section className={`surface-card p-6 ${className}`}>
       <h3 className="text-lg font-semibold text-slate-900 mb-4">Recent Activity</h3>
       {events.length === 0 ? (
-        <EmptyState message="Aktivitas latest akan muncul setelah sistem menerima pembaruan." />
+        <EmptyState message="Latest activity will appear after system receives updates." />
       ) : (
         <div className="space-y-4">
           {events.map((event, index) => (
@@ -724,7 +724,7 @@ function QuickLinksSection() {
     {
       href: '/m/crew/documents',
       label: 'Dokumen Saya',
-      description: 'Upload atau unduh sertifikat, paspor, dan dokumen penting.',
+      description: 'Upload or download certificates, passports, and important documents.',
       icon: '📄',
     },
     {
