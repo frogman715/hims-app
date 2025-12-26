@@ -507,7 +507,7 @@ function CrewPortalDashboard({ expiringItems, pendingTasks, recentActivity, user
     <div className="space-y-6">
       <DashboardHeader
         title="Crew Portal"
-        subtitle={`Selamat datang, ${user?.name ?? 'Crew Member'}`}
+        subtitle={`Welcome, ${user?.name ?? 'Crew Member'}`}
       />
       <QuickLinksSection />
       <div className="grid gap-6 lg:grid-cols-2">
@@ -577,7 +577,7 @@ function CrewMovementSection({ crewMovement, className = '' }: { crewMovement: C
         </Link>
       </div>
       {crewMovement.length === 0 ? (
-        <EmptyState message="Belum ada data pergerakan crew." />
+        <EmptyState message="No crew movement data yet." />
       ) : (
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
@@ -667,7 +667,7 @@ function PendingTasksSection({ tasks, className = '' }: { tasks: PendingTask[]; 
         </Link>
       </div>
       {tasks.length === 0 ? (
-        <EmptyState message="Belum ada tugas yang terdaftar." />
+        <EmptyState message="No tasks registered yet." />
       ) : (
         <div className="space-y-3">
           {tasks.map((task, index) => (

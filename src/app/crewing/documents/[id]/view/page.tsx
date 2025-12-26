@@ -34,7 +34,7 @@ export default function ViewDocumentPage() {
     try {
       const response = await fetch(`/api/documents/${id}`);
       if (!response.ok) {
-        throw new Error('Gagal memuat detail dokumen');
+        throw new Error('Failed to load document details');
       }
       const data = (await response.json()) as DocumentDetail;
       setDocument(data);
@@ -124,7 +124,7 @@ export default function ViewDocumentPage() {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
         <div className="max-w-3xl mx-auto py-16 px-6">
           <div className="surface-card p-8 text-center space-y-4">
-            <h1 className="text-2xl font-semibold text-gray-900">Gagal Memuat Dokumen</h1>
+            <h1 className="text-2xl font-semibold text-gray-900">Failed to Load Document</h1>
             <p className="text-sm text-gray-600">{error}</p>
             <div className="flex items-center justify-center gap-3">
               <Link

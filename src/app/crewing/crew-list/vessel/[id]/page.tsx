@@ -83,7 +83,7 @@ export default function VesselCrewListPage() {
       setVessel(vesselData);
     } catch (error) {
       console.error("Error fetching vessel crew:", error);
-      setError("Gagal memuat data crew untuk kapal ini.");
+      setError("Failed to load crew data for this vessel.");
       setVessel(null);
     } finally {
       setLoading(false);

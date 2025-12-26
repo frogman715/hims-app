@@ -108,7 +108,7 @@ export default function CrewListPage() {
       setVesselCrews(vesselCrews);
     } catch (error) {
       console.error("Error fetching crew list:", error);
-      setError("Gagal memuat data crew list. Silakan coba lagi.");
+      setError("Failed to load crew list data. Please try again.");
       setVesselCrews([]);
     } finally {
       setLoading(false);

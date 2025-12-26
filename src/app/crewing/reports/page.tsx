@@ -388,7 +388,7 @@ export default function CrewingReportsPage() {
                     </div>
                   ))
                 : (
-                    <div className="text-sm text-gray-700">Belum ada data principal aktif.</div>
+                    <div className="text-sm text-gray-700">No active principals.</div>
                   )}
             </div>
           </div>
@@ -432,7 +432,7 @@ export default function CrewingReportsPage() {
                   </div>
                 ))
               ) : (
-                <p className="text-sm text-gray-700">Belum ada penugasan mendatang.</p>
+                <p className="text-sm text-gray-700">No upcoming assignments.</p>
               )}
             </div>
           </div>
@@ -463,7 +463,7 @@ export default function CrewingReportsPage() {
                   </div>
                 ))
               ) : (
-                <p className="text-sm text-gray-700">Belum ada aktivitas terbaru.</p>
+                <p className="text-sm text-gray-700">No recent activity.</p>
               )}
             </div>
           </div>

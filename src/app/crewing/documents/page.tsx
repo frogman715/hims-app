@@ -181,7 +181,7 @@ export default function Documents() {
               href="/crewing"
               className="inline-flex items-center gap-2 px-5 py-3 rounded-xl border border-gray-300 text-sm font-semibold text-gray-800 hover:border-blue-500 hover:text-blue-600 transition"
             >
-              ← Kembali ke Crewing
+              ← Back to Crewing
             </Link>
           </div>
         </div>
