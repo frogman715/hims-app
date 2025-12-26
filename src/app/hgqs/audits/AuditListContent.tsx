@@ -16,9 +16,7 @@ interface AuditSchedule {
   report: { status: string } | null;
 }
 
-type AuditListProps = {
-  // Props can be added here as needed
-};
+type AuditListProps = Record<string, never>;
 
 export default function AuditListContent({}: AuditListProps) {
   const [audits, setAudits] = useState<AuditSchedule[]>([]);

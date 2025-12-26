@@ -207,8 +207,9 @@ export const authOptions: NextAuthOptions = {
       token.permissionOverrides = permissionOverrides;
 
       let isSystemAdmin = false;
-      if (user && typeof (user as any).isSystemAdmin === "boolean") {
-        isSystemAdmin = (user as any).isSystemAdmin;
+      const userWithSystemAdmin = user as Record<string, unknown>;
+      if (user && typeof userWithSystemAdmin['isSystemAdmin'] === "boolean") {
+        isSystemAdmin = userWithSystemAdmin['isSystemAdmin'] as boolean;
       } else if (tokenSubject) {
         const dbUser = await safePrismaCall("jwt:isSystemAdmin", () =>
           prisma.user.findUnique({
