@@ -161,7 +161,7 @@ export default function UploadForm() {
         <div className="space-y-1.5">
           <h2 className="text-base font-semibold text-slate-100">Informasi Dokumen</h2>
           <p className="text-sm text-slate-400">
-            Pastikan foto terlihat jelas dan seluruh halaman sertifikat terbaca.
+            Ensure foto terlihat jelas dan seluruh halaman sertifikat terbaca.
           </p>
         </div>
 

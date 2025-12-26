@@ -201,11 +201,11 @@ export default function ViewDocumentPage() {
                   <dd className="text-gray-900">{document.docNumber || '—'}</dd>
                 </div>
                 <div>
-                  <dt className="font-medium text-gray-600">Tanggal Terbit</dt>
+                  <dt className="font-medium text-gray-600">Date Terbit</dt>
                   <dd className="text-gray-900">{formattedDetails.issueDate}</dd>
                 </div>
                 <div>
-                  <dt className="font-medium text-gray-600">Tanggal Kedaluwarsa</dt>
+                  <dt className="font-medium text-gray-600">Date Kedaluwarsa</dt>
                   <dd className="text-gray-900">{formattedDetails.expiryDate}</dd>
                 </div>
                 <div>

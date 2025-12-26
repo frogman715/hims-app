@@ -334,44 +334,44 @@ export default function CrewingClient() {
     {
       href: "/crewing/seafarers/new",
       label: "Add Seafarer",
-      description: "Registrasi awak kapal baru",
+      description: "Register new crew member",
       icon: "➕",
       accent: "bg-blue-500/10 text-blue-600",
     },
     {
       href: "/crewing/prepare-joining",
       label: "Prepare Joining",
-      description: "Checklist keberangkatan & travel",
+      description: "Departure checklist Checklist keberangkatan & travel travel",
       icon: "✈️",
       accent: "bg-teal-500/10 text-teal-600",
     },
     {
       href: "/crewing/crew-list",
       label: "Crew List Onboard",
-      description: "Monitoring kru per vessel",
+      description: "Monitor crew per vessel",
       icon: "🚢",
       accent: "bg-indigo-500/10 text-indigo-600",
     },
     {
       href: CREWING_DOCUMENT_RECEIPTS_ROUTE,
       label: "Tanda Terima Dokumen",
-      description: "Catat penyerahan dokumen fisik crew",
+      description: "Record document handover",
       icon: "📥",
       accent: "bg-emerald-500/10 text-emerald-600",
     },
     {
       href: "/crewing/documents?filter=expiring",
       label: "Expiring Documents",
-      description: "Perpanjang paspor, medical & visa",
+      description: "Renew passport, medical Perpanjang paspor, medical & visa visa",
       icon: "📄",
       accent: "bg-amber-500/10 text-amber-600",
     },
   ];
 
   const reminders = [
-    "Pastikan hasil medical check crew berlaku ≤ 12 bulan.",
+    "Ensure hasil medical check crew berlaku ≤ 12 bulan.",
     "Upload scan paspor dan seaman book dengan resolusi tinggi.",
-    "Konfirmasi Letter Guarantee sebelum tiket dikeluarkan.",
+    "Confirm Letter Guarantee sebelum tiket dikeluarkan.",
     "Update kontak darurat sebelum crew sign-on.",
   ];
 
@@ -506,7 +506,7 @@ export default function CrewingClient() {
         },
         {
           title: "SIUPPAK Reports",
-          description: "Laporan semester perekrutan untuk audit Perhubungan",
+          description: "Report semester perekrutan untuk audit Perhubungan",
           href: "/compliance/siuppak",
           icon: "📊",
           color: "from-red-600 to-rose-700",
@@ -529,7 +529,7 @@ export default function CrewingClient() {
               <div>
                 <h1 className="text-3xl font-bold text-slate-900">Crewing Department</h1>
                 <p className="mt-2 max-w-3xl text-base text-slate-600">
-                  Operasi perekrutan, assignment, dan compliance awak kapal dalam satu hub yang tenang dan profesional.
+                  Recruitment, assignment, and crew compliance operations in one calm and professional hub.
                 </p>
                 <div className="mt-4 flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-600">
                   <span className="action-pill text-xs">System Online</span>
@@ -561,11 +561,11 @@ export default function CrewingClient() {
                 <span className="badge-soft bg-emerald-500/20 text-emerald-600">🔎</span>
                 <span>Global Crew Search</span>
               </div>
-              <h2 className="mt-2 text-xl font-semibold text-slate-900">Temukan kru lebih cepat</h2>
+              <h2 className="mt-2 text-xl font-semibold text-slate-900">Find crew faster</h2>
               <p className="text-sm text-slate-600">
-                Cari kru lintas database dengan nama, dokumen, vessel, atau kontak.
+                Search crew across databases by name, document, vessel, or contact.
               </p>
-              <p className="text-xs text-slate-500">Contoh: Ricky paspor B123, Chief Officer Lundqvist, atau 0812...</p>
+              <p className="text-xs text-slate-500">Example: Ricky passport B123, Chief Officer Lundqvist, or 0812...</p>
             </div>
           </div>
           <div className="relative">
@@ -718,7 +718,7 @@ export default function CrewingClient() {
           <div className="surface-card p-6">
             <div className="surface-card__header">
               <h2 className="text-lg font-semibold text-slate-900">Quick Actions</h2>
-              <p className="mt-1 text-sm text-slate-600">Langkah cepat untuk tugas harian crewing.</p>
+              <p className="mt-1 text-sm text-slate-600">Quick steps for daily crewing tasks.</p>
             </div>
             <div className="space-y-3">
               {quickActions.map((action) => (

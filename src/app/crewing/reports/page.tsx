@@ -77,7 +77,7 @@ function formatNumber(value: number | null | undefined) {
 function formatDate(isoDate: string) {
   const date = new Date(isoDate);
   if (Number.isNaN(date.getTime())) {
-    return "Tanggal tidak diketahui";
+    return "Date tidak diketahui";
   }
   return date.toLocaleDateString("id-ID", {
     weekday: "short",

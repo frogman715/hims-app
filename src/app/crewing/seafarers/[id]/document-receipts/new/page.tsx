@@ -334,7 +334,7 @@ export default function NewDocumentReceiptPage() {
             {formData.crewStatus === 'EX_CREW' && (
               <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Tanggal Turun Kapal</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Date Turun Kapal</label>
                   <input
                     type="date"
                     value={formData.lastSignOffDate}
@@ -488,7 +488,7 @@ export default function NewDocumentReceiptPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Tanggal Penyerahan</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Date Penyerahan</label>
                 <input
                   type="date"
                   value={formData.deliveryDate}

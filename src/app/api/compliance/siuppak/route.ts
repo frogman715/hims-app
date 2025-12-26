@@ -44,7 +44,7 @@ export const GET = withPermission("compliance", PermissionLevel.VIEW_ACCESS, asy
       endDate = new Date(year, 11, 31, 23, 59, 59); // Dec 31
     }
   } else {
-    // Tahunan
+    // Yearan
     startDate = new Date(year, 0, 1);
     endDate = new Date(year, 11, 31, 23, 59, 59);
   }

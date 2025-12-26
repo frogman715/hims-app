@@ -56,9 +56,9 @@ export default function SiuppakReportsPage() {
               ← Back to Crewing Department
             </Link>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">Laporan SIUPPAK</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Report SIUPPAK</h1>
           <p className="text-gray-700 mt-2">
-            Laporan Kegiatan Perekrutan dan Penempatan Awak Kapal untuk Audit Perhubungan
+            Report Kegiatan Perekrutan dan Penempatan Awak Kapal untuk Audit Perhubungan
           </p>
         </div>
 
@@ -69,9 +69,9 @@ export default function SiuppakReportsPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <div>
-              <h3 className="font-semibold text-blue-900 mb-1">Tentang Laporan SIUPPAK</h3>
+              <h3 className="font-semibold text-blue-900 mb-1">Tentang Report SIUPPAK</h3>
               <p className="text-sm text-blue-700">
-                Laporan ini digenerate otomatis dari data crew movements (sign on/off), vessel assignments, dan principal agreements. 
+                Report ini digenerate otomatis dari data crew movements (sign on/off), vessel assignments, dan principal agreements. 
                 File Excel mengikuti format resmi Perhubungan dengan 40 kolom data untuk audit SIUPAK.
               </p>
             </div>
@@ -80,12 +80,12 @@ export default function SiuppakReportsPage() {
 
         {/* Report Generator */}
         <div className="bg-white rounded-lg shadow border border-gray-300 p-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">Generate Laporan</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-6">Generate Report</h2>
 
           {/* Report Type Selection */}
           <div className="mb-6">
             <label className="block text-sm font-semibold text-gray-900 mb-3">
-              Jenis Laporan <span className="text-red-500">*</span>
+              Jenis Report <span className="text-red-500">*</span>
             </label>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <button
@@ -97,8 +97,8 @@ export default function SiuppakReportsPage() {
                 }`}
               >
                 <div className="text-2xl mb-2">📅</div>
-                <div className="font-semibold">Bulanan</div>
-                <div className="text-sm text-gray-700 mt-1">Laporan per bulan</div>
+                <div className="font-semibold">Monthan</div>
+                <div className="text-sm text-gray-700 mt-1">Report per bulan</div>
               </button>
 
               <button
@@ -111,7 +111,7 @@ export default function SiuppakReportsPage() {
               >
                 <div className="text-2xl mb-2">📊</div>
                 <div className="font-semibold">Semester</div>
-                <div className="text-sm text-gray-700 mt-1">Laporan 6 bulan</div>
+                <div className="text-sm text-gray-700 mt-1">Report 6 bulan</div>
               </button>
 
               <button
@@ -123,8 +123,8 @@ export default function SiuppakReportsPage() {
                 }`}
               >
                 <div className="text-2xl mb-2">📈</div>
-                <div className="font-semibold">Tahunan</div>
-                <div className="text-sm text-gray-700 mt-1">Laporan per tahun</div>
+                <div className="font-semibold">Yearan</div>
+                <div className="text-sm text-gray-700 mt-1">Report per tahun</div>
               </button>
             </div>
           </div>
@@ -133,7 +133,7 @@ export default function SiuppakReportsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div>
               <label className="block text-sm font-semibold text-gray-900 mb-2">
-                Tahun <span className="text-red-500">*</span>
+                Year <span className="text-red-500">*</span>
               </label>
               <select
                 value={year}
@@ -149,7 +149,7 @@ export default function SiuppakReportsPage() {
             {reportType !== 'tahunan' && (
               <div>
                 <label className="block text-sm font-semibold text-gray-900 mb-2">
-                  {reportType === 'bulanan' ? 'Bulan' : 'Semester'} <span className="text-red-500">*</span>
+                  {reportType === 'bulanan' ? 'Month' : 'Semester'} <span className="text-red-500">*</span>
                 </label>
                 {reportType === 'bulanan' ? (
                   <select
@@ -157,7 +157,7 @@ export default function SiuppakReportsPage() {
                     onChange={(e) => setPeriod(e.target.value)}
                     className="w-full px-4 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-blue-500"
                   >
-                    <option value="">Pilih Bulan</option>
+                    <option value="">Pilih Month</option>
                     <option value="01">Januari</option>
                     <option value="02">Februari</option>
                     <option value="03">Maret</option>
@@ -215,11 +215,11 @@ export default function SiuppakReportsPage() {
 
         {/* Report Structure Info */}
         <div className="mt-8 bg-white rounded-lg shadow border border-gray-300 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Struktur Laporan</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Struktur Report</h3>
           
           <div className="space-y-6">
             <div>
-              <h4 className="font-medium text-gray-800 mb-2">Sheet 1: Laporan {reportType.charAt(0).toUpperCase() + reportType.slice(1)}</h4>
+              <h4 className="font-medium text-gray-800 mb-2">Sheet 1: Report {reportType.charAt(0).toUpperCase() + reportType.slice(1)}</h4>
               <div className="text-sm text-gray-800 space-y-1">
                 <p><strong>40 Kolom Data:</strong></p>
                 <ul className="list-disc list-inside ml-4 space-y-1">
@@ -243,7 +243,7 @@ export default function SiuppakReportsPage() {
 
             {reportType === 'tahunan' && (
               <div>
-                <h4 className="font-medium text-gray-800 mb-2">Sheet 3: Statistik Bulanan</h4>
+                <h4 className="font-medium text-gray-800 mb-2">Sheet 3: Statistik Monthan</h4>
                 <div className="text-sm text-gray-800">
                   <p>Breakdown per bulan: A* (diberangkatkan), B* (dipulangkan), DN/LN, Gender</p>
                 </div>
