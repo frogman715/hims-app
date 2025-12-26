@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { readdirSync, statSync } from "fs";
@@ -95,7 +95,7 @@ function loadForms(): FormCategory[] {
   return categories.sort((a, b) => a.categoryCode.localeCompare(b.categoryCode));
 }
 
-export const GET = async (request: NextRequest) => {
+export const GET = async () => {
   try {
     const session = await getServerSession(authOptions);
     if (!session) {

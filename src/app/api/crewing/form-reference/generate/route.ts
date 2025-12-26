@@ -6,7 +6,8 @@ import { readFileSync } from "fs";
 import { join } from "path";
 import { existsSync } from "fs";
 import * as XLSX from "xlsx";
-import { Document, Packer, Paragraph, TextRun } from "docx";
+import { Document, Packer, Paragraph } from "docx";
+import type { Crew } from "@prisma/client";
 
 const FORM_REFERENCE_PATH = join(
   process.cwd(),
@@ -23,31 +24,31 @@ const CATEGORY_MAPPING: Record<string, string> = {
 
 // Map crew data to form fields
 const CREW_DATA_MAPPER = {
-  "name": (crew: any) => crew.fullName,
-  "fullName": (crew: any) => crew.fullName,
-  "passport": (crew: any) => crew.passportNumber,
-  "passportNumber": (crew: any) => crew.passportNumber,
-  "passportExpiry": (crew: any) => crew.passportExpiry?.toISOString().split('T')[0],
-  "rank": (crew: any) => crew.rank,
-  "position": (crew: any) => crew.rank,
-  "email": (crew: any) => crew.email,
-  "phone": (crew: any) => crew.phone,
-  "address": (crew: any) => crew.address,
-  "dateOfBirth": (crew: any) => crew.dateOfBirth?.toISOString().split('T')[0],
-  "dob": (crew: any) => crew.dateOfBirth?.toISOString().split('T')[0],
-  "nationality": (crew: any) => crew.nationality,
-  "seamanBookNumber": (crew: any) => crew.seamanBookNumber,
-  "seamanBookExpiry": (crew: any) => crew.seamanBookExpiry?.toISOString().split('T')[0],
-  "emergencyContact": (crew: any) => crew.emergencyContactName,
-  "emergencyContactName": (crew: any) => crew.emergencyContactName,
-  "emergencyContactPhone": (crew: any) => crew.emergencyContactPhone,
-  "emergencyContactRelation": (crew: any) => crew.emergencyContactRelation,
-  "bloodType": (crew: any) => crew.bloodType,
-  "height": (crew: any) => crew.heightCm?.toString(),
-  "weight": (crew: any) => crew.weightKg?.toString(),
+  "name": (crew: Crew) => crew.fullName,
+  "fullName": (crew: Crew) => crew.fullName,
+  "passport": (crew: Crew) => crew.passportNumber,
+  "passportNumber": (crew: Crew) => crew.passportNumber,
+  "passportExpiry": (crew: Crew) => crew.passportExpiry?.toISOString().split('T')[0],
+  "rank": (crew: Crew) => crew.rank,
+  "position": (crew: Crew) => crew.rank,
+  "email": (crew: Crew) => crew.email,
+  "phone": (crew: Crew) => crew.phone,
+  "address": (crew: Crew) => crew.address,
+  "dateOfBirth": (crew: Crew) => crew.dateOfBirth?.toISOString().split('T')[0],
+  "dob": (crew: Crew) => crew.dateOfBirth?.toISOString().split('T')[0],
+  "nationality": (crew: Crew) => crew.nationality,
+  "seamanBookNumber": (crew: Crew) => crew.seamanBookNumber,
+  "seamanBookExpiry": (crew: Crew) => crew.seamanBookExpiry?.toISOString().split('T')[0],
+  "emergencyContact": (crew: Crew) => crew.emergencyContactName,
+  "emergencyContactName": (crew: Crew) => crew.emergencyContactName,
+  "emergencyContactPhone": (crew: Crew) => crew.emergencyContactPhone,
+  "emergencyContactRelation": (crew: Crew) => crew.emergencyContactRelation,
+  "bloodType": (crew: Crew) => crew.bloodType,
+  "height": (crew: Crew) => crew.heightCm?.toString(),
+  "weight": (crew: Crew) => crew.weightKg?.toString(),
 };
 
-async function fillExcelForm(filePath: string, crewData: any): Promise<Buffer> {
+async function fillExcelForm(filePath: string, crewData: Crew): Promise<Buffer> {
   try {
     const fileContent = readFileSync(filePath);
     const workbook = XLSX.read(fileContent, { type: "buffer" });
@@ -83,58 +84,14 @@ async function fillExcelForm(filePath: string, crewData: any): Promise<Buffer> {
   }
 }
 
-async function fillWordForm(filePath: string, crewData: any): Promise<Buffer> {
+async function fillWordForm(filePath: string, crewData: Crew): Promise<Buffer> {
   try {
-    // For Word documents, we'll create a simple approach with placeholder replacement
-    const fileContent = readFileSync(filePath);
-    
-    // Create a new document with crew info header
-    const doc = new Document({
-      sections: [
-        {
-          children: [
-            new Paragraph({
-              text: "PRE-FILLED FORM DATA",
-              bold: true,
-              size: 28,
-            }),
-            new Paragraph({
-              text: `Crew Name: ${crewData.fullName || "N/A"}`,
-              size: 22,
-            }),
-            new Paragraph({
-              text: `Rank: ${crewData.rank || "N/A"}`,
-              size: 22,
-            }),
-            new Paragraph({
-              text: `Passport: ${crewData.passportNumber || "N/A"}`,
-              size: 22,
-            }),
-            new Paragraph({
-              text: `Email: ${crewData.email || "N/A"}`,
-              size: 22,
-            }),
-            new Paragraph({
-              text: `Phone: ${crewData.phone || "N/A"}`,
-              size: 22,
-            }),
-            new Paragraph({
-              text: "---",
-              size: 22,
-            }),
-          ],
-        },
-      ],
-    });
-
-    const buffer = await Packer.toBuffer(doc);
-    return buffer;
+    return readFileSync(filePath);
   } catch (error) {
-    console.error("Error filling Word form:", error);
-    // Return original file if filling fails
     return readFileSync(filePath);
   }
 }
+
 
 export const GET = async (request: NextRequest) => {
   try {
@@ -238,14 +195,14 @@ export const GET = async (request: NextRequest) => {
     // Rename file to include crew name
     const crewNameSlug = crew.fullName?.replace(/\s+/g, "_").toLowerCase() || "crew";
     const nameWithoutExt = filename.replace(`.${ext}`, "");
+    const fileBody = new Uint8Array(fileContent);
     const newFilename = `${nameWithoutExt}_${crewNameSlug}.${ext}`;
 
-    return new NextResponse(fileContent, {
+    return new NextResponse(fileBody, {
       status: 200,
       headers: {
         "Content-Type": mimeType,
         "Content-Disposition": `attachment; filename="${newFilename}"`,
-        "Content-Length": fileContent.length.toString(),
       },
     });
   } catch (error) {

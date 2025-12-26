@@ -209,7 +209,7 @@ export default function FormReferencePage() {
           <p className="text-amber-900 font-bold mb-1">⚠️ Download Options:</p>
           <p className="text-amber-800 text-sm">
             <strong>Without Crew Selection:</strong> Download blank form template<br />
-            <strong>With Crew Selection:</strong> Form is pre-filled with selected crew's data (Name, Rank, Passport, Email, Phone, etc)
+            <strong>With Crew Selection:</strong> Form is pre-filled with selected crew&apos;s data (Name, Rank, Passport, Email, Phone, etc)
           </p>
         </div>
 
@@ -352,7 +352,7 @@ export default function FormReferencePage() {
         {/* Instructions */}
         <div className="mt-8 p-4 bg-slate-50 rounded-lg border border-slate-200">
           <p className="text-sm text-slate-700 text-center">
-            💡 <strong>How to use:</strong> Select crew member → Select form category → Choose "Pre-Fill" (with data) or "Blank" (empty template) → Download
+            💡 <strong>How to use:</strong> Select crew member → Select form category → Choose &quot;Pre-Fill&quot; (with data) or &quot;Blank&quot; (empty template) → Download
           </p>
         </div>
       </div>
