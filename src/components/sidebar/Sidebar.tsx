@@ -17,7 +17,7 @@ export default function Sidebar({ navigationItems }: SidebarProps) {
     { href: "/crewing", label: "Crewing Department", icon: "⚓" },
     { href: "/contracts", label: "Contracts", icon: "📋" },
     { href: "/crewing/documents", label: "Documents", icon: "📁" },
-    { href: "/form-reference", label: "Form References", icon: "📄" },
+    { href: "/crewing/form-reference", label: "Form References", icon: "📄" },
     { href: "/insurance", label: "Insurance", icon: "⚡" },
     { href: "/crewing/principals", label: "Fleet Management", icon: "🚢" },
     { href: "/accounting", label: "Accounting", icon: "💵" },
