@@ -24,7 +24,6 @@ export default function FormReferencePage() {
   const [activeTab, setActiveTab] = useState("hgf-cr");
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Check permissions
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/auth/signin");
@@ -108,7 +107,7 @@ export default function FormReferencePage() {
         <div className="mb-8 flex items-center justify-between">
           <div>
             <h1 className="text-4xl font-bold text-slate-900 mb-2">Form References</h1>
-            <p className="text-lg text-slate-600">Download and manage company form templates</p>
+            <p className="text-lg text-slate-600">Download official blank form templates to fill with crew data</p>
           </div>
           <a
             href="/crewing"
@@ -119,13 +118,21 @@ export default function FormReferencePage() {
           </a>
         </div>
 
+        {/* Important Notice - These are BLANK templates */}
+        <div className="bg-amber-50 border-l-4 border-amber-500 rounded-lg p-4 mb-6">
+          <p className="text-amber-900 font-bold mb-1">⚠️ Important Notice:</p>
+          <p className="text-amber-800 text-sm">
+            These are <strong>blank/empty form templates</strong>. They do NOT contain any crew data. Download and fill them with your crew information as needed.
+          </p>
+        </div>
+
         {/* Info Box */}
         <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 rounded-lg">
           <p className="text-blue-900 font-semibold">
             📋 Total Forms: {categories.reduce((sum, cat) => sum + cat.forms.length, 0)}
           </p>
           <p className="text-blue-800 text-sm mt-1">
-            Select a category and download the forms you need
+            Select a category and download the blank forms you need to fill
           </p>
         </div>
 
@@ -140,7 +147,7 @@ export default function FormReferencePage() {
           )}
         </div>
 
-        {/* Tabs with descriptions */}
+        {/* Category Selection */}
         <div className="mb-6">
           <div className="text-sm font-bold text-slate-600 mb-3 uppercase tracking-wider">Select Category:</div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
@@ -189,11 +196,11 @@ export default function FormReferencePage() {
           />
         </div>
 
-        {/* Category Description Box */}
+        {/* Category Description */}
         {activeCategory && (
           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 rounded-lg p-4 mb-6">
             <h3 className="font-bold text-slate-900 text-lg mb-2">About {activeCategory.category}</h3>
-            <p className="text-slate-700 leading-relaxed">{activeCategory.description}</p>
+            <p className="text-slate-700 leading-relaxed text-sm">{activeCategory.description}</p>
           </div>
         )}
 
@@ -201,29 +208,29 @@ export default function FormReferencePage() {
         {filteredForms.length > 0 ? (
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
             <div className="bg-slate-100 px-6 py-3 border-b border-slate-200">
-              <p className="font-bold text-slate-900">Showing {filteredForms.length} of {activeCategory?.forms.length} forms</p>
+              <p className="font-bold text-slate-900">Showing {filteredForms.length} of {activeCategory?.forms.length} blank forms</p>
             </div>
             <table className="w-full">
               <thead className="bg-slate-100 border-b border-slate-200">
                 <tr>
                   <th className="text-left px-6 py-4 font-bold text-slate-900">Form Name</th>
                   <th className="text-left px-6 py-4 font-bold text-slate-900">File Type</th>
-                  <th className="text-center px-6 py-4 font-bold text-slate-900">Action</th>
+                  <th className="text-center px-6 py-4 font-bold text-slate-900">Download</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
                 {filteredForms.map((form, idx) => (
                   <tr key={idx} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-6 py-4 text-slate-900 font-medium">{form.filename}</td>
+                    <td className="px-6 py-4 text-slate-900 font-medium text-sm">{form.filename}</td>
                     <td className="px-6 py-4">
-                      <span className="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-bold">
+                      <span className="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-bold">
                         {form.type.toUpperCase()}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-center">
                       <button
                         onClick={() => handleDownload(activeTab, form.filename)}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-bold transition-colors duration-200 shadow-sm hover:shadow-md"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-bold text-sm transition-colors duration-200"
                       >
                         <span>⬇️</span>
                         Download
@@ -237,22 +244,16 @@ export default function FormReferencePage() {
         ) : (
           <div className="bg-white rounded-lg shadow-md p-8 text-center">
             <p className="text-slate-600 text-lg">
-              {searchTerm ? "❌ No forms matching your search" : "❌ No forms available in this category"}
+              {searchTerm ? "No forms matching your search" : "No forms available"}
             </p>
-            {searchTerm && (
-              <button
-                onClick={() => setSearchTerm("")}
-                className="mt-4 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-bold"
-              >
-                Clear Search
-              </button>
-            )}
           </div>
         )}
 
-        {/* Footer Info */}
-        <div className="mt-8 text-center text-sm text-slate-600">
-          <p>Click on any category above to view and download forms</p>
+        {/* Instructions */}
+        <div className="mt-8 p-4 bg-slate-50 rounded-lg border border-slate-200">
+          <p className="text-sm text-slate-700 text-center">
+            💡 <strong>How to use:</strong> Select a category, download the blank form, fill it with crew data, and submit to the relevant department.
+          </p>
         </div>
       </div>
     </div>

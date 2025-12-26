@@ -25,27 +25,27 @@ const CATEGORY_MAPPING: Record<string, { code: string; display: string; descript
   "CR": {
     code: "hgf-cr",
     display: "HGF-CR - Crew Management",
-    description: "Forms untuk manajemen crew, kontrak, dan dokumentasi seafarer (pelaut). Includes recruitment, signing on/off, medical checks, dan crew evaluations."
+    description: "Forms for crew management, contracts, and seafarer documentation. Includes recruitment, signing on/off, medical checks, and crew evaluations. These are blank templates - fill them with crew data as needed."
   },
   "AD": {
     code: "hgf-ad",
     display: "HGF-AD - Administration",
-    description: "Forms administrasi general company, personnel management, compliance documentation, dan employee records. Termasuk insurance, training, dan company policies."
+    description: "General company administration, personnel management, compliance documentation, and employee records. Includes insurance, training, and company policies. Blank templates for your use."
   },
   "AC": {
     code: "hgf-ac",
     display: "HGF-AC - Accounting",
-    description: "Forms untuk accounting, payroll, invoicing, dan financial documentation. Termasuk wage calculations, allotments, dan billing records."
+    description: "Forms for accounting, payroll, invoicing, and financial documentation. Includes wage calculations, allotments, and billing records. Empty templates ready to be filled."
   },
   "INTEGRIS CO.,LTD": {
     code: "intergis",
     display: "INTEGRIS CO.,LTD - Partner Forms",
-    description: "Formulir khusus untuk partner company INTEGRIS CO.,LTD. Includes specialized documentation untuk partner operations dan compliance."
+    description: "Specialized forms for partner company INTEGRIS CO.,LTD. Includes documentation templates for partner operations and compliance requirements."
   },
   "LUNDQVIST REDERIERNA": {
     code: "lundqvist",
     display: "LUNDQVIST REDERIERNA - Partner Forms",
-    description: "Formulir khusus untuk partner company LUNDQVIST REDERIERNA. Includes specialized documentation untuk partner operations dan compliance."
+    description: "Specialized forms for partner company LUNDQVIST REDERIERNA. Includes documentation templates for partner operations and compliance requirements."
   },
 };
 
