@@ -57,7 +57,7 @@ export default async function AuditsPage() {
             </Link>
           )}
         </div>
-        <AuditListContent canEdit={canEdit} />
+        <AuditListContent />
       </div>
     </div>
   );
