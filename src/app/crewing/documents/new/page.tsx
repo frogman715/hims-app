@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { DOCUMENT_TYPES } from '@/lib/document-types';
 
 interface DocumentFormData {
   seafarerId: string;
@@ -178,18 +179,11 @@ export default function NewDocumentPage() {
                   className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200"
                 >
                   <option value="">Select Document Type</option>
-                  <option value="Passport">Passport</option>
-                  <option value="Seaman's Book">Seaman&apos;s Book (Buku Pelaut)</option>
-                  <option value="Certificate of Competency">Certificate of Competency (COC)</option>
-                  <option value="Certificate of Proficiency">Certificate of Proficiency (COP)</option>
-                  <option value="Basic Safety Training">Basic Safety Training (BST)</option>
-                  <option value="General Operator Certificate">General Operator Certificate (GOC)</option>
-                  <option value="Medical Certificate">Medical Certificate</option>
-                  <option value="Visa">Visa</option>
-                  <option value="Yellow Fever Certificate">Yellow Fever Certificate</option>
-                  <option value="Drug Test Certificate">Drug Test Certificate</option>
-                  <option value="Training Certificate">Training Certificate</option>
-                  <option value="Other">Other</option>
+                  {DOCUMENT_TYPES.map((docType) => (
+                    <option key={docType.value} value={docType.value}>
+                      {docType.label}
+                    </option>
+                  ))}
                 </select>
               </div>
 

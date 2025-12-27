@@ -67,15 +67,17 @@ export async function GET() {
     const fortyFiveDaysFromNow = new Date();
     fortyFiveDaysFromNow.setDate(fortyFiveDaysFromNow.getDate() + 45);
 
-    const oneYearFromNow = new Date();
-    oneYearFromNow.setDate(oneYearFromNow.getDate() + 365);
+    // Documents Expiring Soon: 13 months threshold (390 days) - standardized with mobile crew dashboard
+    // IMO STCW requires 12-month renewal, 13 months provides 1 month advance notice
+    const thirteenMonthsFromNow = new Date();
+    thirteenMonthsFromNow.setMonth(thirteenMonthsFromNow.getMonth() + 13);
 
-    // Documents Expiring Soon: CrewDocuments expiring within 1 year
+    // Documents Expiring Soon: CrewDocuments expiring within 13 months
     const documentsExpiringSoon = await prisma.crewDocument.count({
       where: {
         expiryDate: {
           gte: new Date(),
-          lte: oneYearFromNow
+          lte: thirteenMonthsFromNow
         }
       }
     });
@@ -85,7 +87,7 @@ export async function GET() {
       where: {
         expiryDate: {
           gte: new Date(),
-          lte: oneYearFromNow
+          lte: thirteenMonthsFromNow
         }
       },
       include: {

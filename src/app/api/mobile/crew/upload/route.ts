@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireUserApi } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
+import { writeFile, mkdir } from "fs/promises";
+import { join, extname } from "path";
+import { randomUUID } from "crypto";
 
 export async function POST(req: NextRequest) {
   const auth = await requireUserApi(["CREW", "CREW_PORTAL"]);
@@ -20,7 +23,6 @@ export async function POST(req: NextRequest) {
 
   try {
     const sessionEmail = auth.session.user.email ?? null;
-
     let crew = await prisma.crew.findUnique({
       where: { id: auth.user.id },
       select: { id: true },
@@ -39,19 +41,75 @@ export async function POST(req: NextRequest) {
         email: sessionEmail,
         uploadType,
       });
-    } else {
-      console.info("Mobile upload received", {
-        crewId: crew.id,
-        userId: auth.user.id,
-        uploadType,
-        fileName: file.name,
-        fileSize: file.size,
-      });
-      // Storage backend not yet implemented. Persisting metadata can be added here in future releases.
+      return NextResponse.json({ error: "Crew record not found" }, { status: 404 });
     }
-  } catch (error) {
-    console.error("Mobile upload metadata handling failed", error);
-  }
 
-  return NextResponse.json({ ok: true });
+    // Validate file
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+    const ALLOWED_MIME_TYPES: Record<string, string> = {
+      "application/pdf": ".pdf",
+      "image/jpeg": ".jpg",
+      "image/png": ".png",
+      "image/heic": ".heic",
+      "image/heif": ".heif",
+    };
+
+    const mimeType = file.type || "";
+    const declaredExtension = extname(file.name || "").toLowerCase();
+    const allowedExtension = ALLOWED_MIME_TYPES[mimeType];
+
+    if (!allowedExtension || (declaredExtension && declaredExtension !== allowedExtension)) {
+      return NextResponse.json({ error: "Unsupported file type" }, { status: 415 });
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json({ error: "File size exceeds maximum allowed (10MB)" }, { status: 413 });
+    }
+
+    // Create uploads directory if it doesn't exist
+    const uploadsDir = join(process.cwd(), "public", "uploads", "documents");
+    try {
+      await mkdir(uploadsDir, { recursive: true });
+    } catch {
+      // Directory might already exist
+    }
+
+    // Generate unique filename
+    const fileName = `${randomUUID()}${allowedExtension}`;
+    const filePath = join(uploadsDir, fileName);
+
+    // Save file
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+    await writeFile(filePath, buffer);
+
+    const publicUrl = `/uploads/documents/${fileName}`;
+
+    // Save document record to database with PENDING status
+    const document = await prisma.crewDocument.create({
+      data: {
+        crewId: crew.id,
+        docType: uploadType.toUpperCase(),
+        docNumber: "PENDING",
+        issueDate: new Date(),
+        expiryDate: null,
+        fileUrl: publicUrl,
+        remarks: "Uploaded via mobile app - pending review",
+      },
+    });
+
+    console.info("Mobile upload saved successfully", {
+      crewId: crew.id,
+      userId: auth.user.id,
+      uploadType,
+      fileName: file.name,
+      fileSize: file.size,
+      documentId: document.id,
+    });
+
+    return NextResponse.json({ ok: true, documentId: document.id }, { status: 201 });
+  } catch (error) {
+    console.error("Mobile upload failed", error);
+    return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+  }
 }

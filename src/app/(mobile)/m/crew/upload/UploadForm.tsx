@@ -1,20 +1,17 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { DOCUMENT_TYPES } from "@/lib/document-types";
 
 type FeedbackState = {
   tone: "success" | "error" | "info";
   message: string;
 };
 
-const documentOptions = [
-  { value: "BST", label: "Basic Safety Training (BST)" },
-  { value: "AFF", label: "Advanced Fire Fighting (AFF)" },
-  { value: "MEFA", label: "Medical First Aid (MEFA)" },
-  { value: "SCRB", label: "Survival Craft & Rescue Boat (SCRB)" },
-  { value: "PASSPORT", label: "Passport" },
-  { value: "SEAMAN_BOOK", label: "Seaman Book" },
-];
+const documentOptions = DOCUMENT_TYPES.map((doc) => ({
+  value: doc.value,
+  label: doc.label,
+}));
 
 export default function UploadForm() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);

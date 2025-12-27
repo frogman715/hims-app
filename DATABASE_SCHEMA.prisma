@@ -1,0 +1,682 @@
+// HIMS COMPLIANCE MODULES - DATABASE SCHEMA (Prisma)
+// File: prisma/schema.prisma (additions to existing schema)
+// Date: December 27, 2025
+// Status: Ready for development
+
+// ============================================================================
+// EXISTING SCHEMA (DO NOT MODIFY)
+// ============================================================================
+// User, Crew, CrewDocument, Risk, Audit, etc. - all remain unchanged
+// Only add NEW models below
+
+// ============================================================================
+// MODULE 1: NONCONFORMITY MANAGEMENT
+// ============================================================================
+
+enum NonconformityType {
+  FAKE_CERTIFICATE
+  MISSING_DOCUMENT
+  EXPIRED_CERTIFICATE
+  HEALTH_ISSUE
+  SAFETY_VIOLATION
+  TRAINING_DEFICIENCY
+  COMPLIANCE_BREACH
+  OTHER
+}
+
+enum NonconformitySeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum NonconformityStatus {
+  OPEN          // Initial report
+  UNDER_REVIEW  // QMR reviewing
+  IN_PROGRESS   // Corrective action being taken
+  AWAITING_VERIFICATION  // Action taken, waiting follow-up
+  CLOSED        // Resolved & verified
+  REJECTED      // Not confirmed as actual nonconformity
+}
+
+model Nonconformity {
+  id                    String   @id @default(cuid())
+  
+  // Reference to entity (crew, document, or process)
+  crewId                String?  @db.Uuid  // NULL if document/process level
+  documentId            String?  @db.Uuid  // NULL if crew/process level
+  processArea           String?  // "Hiring", "Training", "Medical Eval", etc.
+  
+  // Nonconformity Details
+  type                  NonconformityType
+  severity              NonconformitySeverity
+  description           String   @db.Text
+  rootCauseAnalysis     String?  @db.Text // Optional, filled during review
+  evidenceFiles        String[]  // URLs to uploaded evidence/documents
+  
+  // Reporting
+  reportedBy            String   @db.Uuid  // User ID
+  reportedDate          DateTime @default(now())
+  reportingDepartment   String   // "Crewing", "Medical", "Training", etc.
+  
+  // Corrective Action
+  correctiveAction      String?  @db.Text
+  correctionDeadline    DateTime?
+  responsiblePerson     String?  @db.Uuid  // User ID assigned to fix
+  
+  // Status & Workflow
+  status                NonconformityStatus @default(OPEN)
+  statusUpdatedAt       DateTime @updatedAt
+  statusUpdatedBy       String?  @db.Uuid
+  
+  // Effectiveness Verification (30 days after correction)
+  verificationDate      DateTime?
+  verifiedBy            String?  @db.Uuid
+  verificationResult    String?  @db.Text  // "Effective" or "Ineffective"
+  isEffective           Boolean?
+  
+  // Audit Trail
+  comments              String?  @db.Text
+  attachments           String[]
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  // Relations (optional, for advanced features)
+  relatedRisks          String[]  // Risk IDs that contributed
+  linkedCorrectiveActions String[]  // Corrective action IDs
+  
+  @@index([crewId])
+  @@index([documentId])
+  @@index([status])
+  @@index([severity])
+  @@index([reportedDate])
+  @@unique([id])
+}
+
+// Audit trail for nonconformity changes
+model NonconformityAuditLog {
+  id                    String   @id @default(cuid())
+  nonconformityId       String
+  action                String   // "CREATED", "UPDATED", "STATUS_CHANGED", etc.
+  changedBy             String   @db.Uuid
+  changedAt             DateTime @default(now())
+  fieldName             String?  // Which field changed
+  oldValue              String?  @db.Text
+  newValue              String?  @db.Text
+  
+  @@index([nonconformityId])
+  @@index([changedAt])
+}
+
+// ============================================================================
+// MODULE 2: ADVANCED CERTIFICATE TRACKING
+// ============================================================================
+
+enum CertificateType {
+  PEME                  // Pre-Employment Medical Exam (2 years)
+  STCW_COC              // Certificate of Competency (varies)
+  STCW_ENDORSEMENT      // STCW Endorsement (varies)
+  ADVANCED_FIRE_FIGHTING  // Advanced FF (5 years)
+  BASIC_SAFETY          // Basic Safety (indefinite, need refresher)
+  SECURITY_TRAINING     // Security Training (5 years)
+  COLOR_VISION          // Color Vision Test (6 years)
+  ECDIS_TRAINING        // ECDIS Training (5 years)
+  ISM_CODE              // ISM Code Training (varies)
+  MEDICAL_FITNESS       // Medical Fitness (2 years)
+  OTHER
+}
+
+enum CertificateStatus {
+  VALID              // Currently valid
+  EXPIRING_SOON      // < 15 months to expiry (alert status)
+  EXPIRED            // Past expiry date
+  UNDER_RENEWAL      // Renewal process in progress
+  NOT_FOUND          // Uploaded but not found when checked
+  LOST               // Lost/damaged, need replacement
+}
+
+// Enhanced CrewDocument model additions
+// (These are additions to CrewDocument, not a new model)
+// ADD TO EXISTING CrewDocument:
+// certificateType?    CertificateType?
+// certificateStatus?  CertificateStatus?  (computed field from expiryDate)
+// issuedDate?         DateTime?
+// renewalTracking?    String? // JSON tracking renewal process
+
+model CertificateRenewalRequest {
+  id                    String   @id @default(cuid())
+  
+  crewId                String   @db.Uuid
+  documentId            String   // Reference to CrewDocument
+  certificateType       CertificateType
+  
+  // Renewal Details
+  currentExpiryDate     DateTime
+  renewalRequestDate    DateTime @default(now())
+  requestedBy           String   @db.Uuid  // User ID
+  
+  // Renewal Process
+  submittedTo           String?  // "Authority X", "Training Center Y"
+  submissionDate        DateTime?
+  expectedCompletionDate DateTime?
+  
+  // Renewal Result
+  renewalCompletionDate DateTime?
+  newExpiryDate         DateTime?
+  newCertificateNumber  String?
+  renewalStatus         String @default("PENDING")  // PENDING, IN_PROGRESS, COMPLETED, FAILED
+  
+  // Tracking
+  comments              String?  @db.Text
+  attachments           String[]  // Renewal documents, updated cert, etc.
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  @@index([crewId])
+  @@index([renewalStatus])
+  @@index([renewalRequestDate])
+}
+
+model CertificateExpiryAlert {
+  id                    String   @id @default(cuid())
+  
+  crewId                String   @db.Uuid
+  documentId            String
+  certificateType       CertificateType
+  
+  // Alert Details
+  crewName              String
+  crewEmail             String
+  expiryDate            DateTime
+  daysUntilExpiry       Int
+  
+  // Alert Status
+  alertTriggeredAt      DateTime @default(now())
+  alertSentAt           DateTime?
+  recipientEmails       String[]  // Crew + HR
+  emailDeliveryStatus   String @default("PENDING")  // PENDING, SENT, FAILED
+  
+  // Follow-up
+  reminderSentCount     Int @default(0)
+  lastReminderDate      DateTime?
+  crewAcknowledged      Boolean @default(false)
+  acknowledgedAt        DateTime?
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  @@index([crewId])
+  @@index([expiryDate])
+  @@index([emailDeliveryStatus])
+}
+
+// Cron job execution log (for monitoring)
+model CertificateAlertCronLog {
+  id                    String   @id @default(cuid())
+  executionDate         DateTime @default(now())
+  crewsChecked          Int
+  alertsTriggered       Int
+  emailsSent            Int
+  failureCount          Int
+  errorMessage          String?  @db.Text
+  executionTimeMs       Int
+  status                String @default("SUCCESS")  // SUCCESS, FAILED, PARTIAL
+  
+  @@index([executionDate])
+}
+
+// ============================================================================
+// MODULE 3: VENDOR MANAGEMENT SYSTEM
+// ============================================================================
+
+enum VendorType {
+  MEDICAL_CLINIC        // PEME providers
+  TRAVEL_AGENT          // Visa & travel services
+  TRAINING_PROVIDER     // STCW training centers
+  UNIFORM_SUPPLIER      // Uniform & equipment
+  TRANSPORTATION        // Hotel, airport pickup
+  DOCUMENTATION         // Seaman book, passport services
+  OTHER
+}
+
+enum VendorEvaluationStatus {
+  NOT_EVALUATED         // Initial state
+  UNDER_EVALUATION      // Assessment in progress
+  APPROVED              // Score >= 80, registered
+  APPROVED_WITH_CONDITIONS  // Approved but has improvement areas
+  REJECTED              // Score < 80 or quality issues
+  SUSPENDED             // Was approved but quality degraded
+  DELISTED              // No longer working with company
+}
+
+model Vendor {
+  id                    String   @id @default(cuid())
+  
+  // Basic Info
+  name                  String   @unique
+  vendorType            VendorType
+  location              String   // City/Region
+  address               String?  @db.Text
+  contactPerson         String
+  contactPhone          String
+  contactEmail          String
+  
+  // Registration
+  registrationDate      DateTime @default(now())
+  registeredBy          String   @db.Uuid  // User ID
+  
+  // Current Status
+  evaluationStatus      VendorEvaluationStatus @default(NOT_EVALUATED)
+  
+  // Evaluation Scores
+  latestEvaluationScore Int?     // 0-100 scale
+  latestEvaluationDate  DateTime?
+  evaluationNotes       String?  @db.Text
+  
+  // Performance Tracking
+  totalTransactions     Int @default(0)  // Jobs completed
+  satisfactionScore     Float?   // 1.0-5.0 scale
+  onTimePercentage      Float?   // % deliveries on time
+  qualityScore          Float?   // 1.0-5.0 scale
+  
+  // Re-evaluation Schedule
+  nextEvaluationDue     DateTime?
+  lastEvaluationDate    DateTime?
+  evaluationFrequencyMonths Int @default(12)  // Annual by default
+  
+  // Compliance
+  certificationsHeld    String[]  // ISO, quality certifications, etc.
+  isBlacklisted         Boolean @default(false)
+  blacklistReason       String?
+  blacklistDate         DateTime?
+  
+  // Documents
+  vendorAgreement       String?   // File URL
+  certificates          String[]  // File URLs
+  references            String[]  // Other clients using vendor
+  
+  // Audit Trail
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  evaluations           VendorEvaluation[]  // Related evaluations
+  
+  @@index([vendorType])
+  @@index([evaluationStatus])
+  @@index([nextEvaluationDue])
+  @@index([isBlacklisted])
+}
+
+model VendorEvaluation {
+  id                    String   @id @default(cuid())
+  
+  vendorId              String
+  vendor                Vendor   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  
+  // Evaluation Details
+  evaluationDate        DateTime @default(now())
+  evaluatedBy           String   @db.Uuid  // User ID
+  
+  // Scoring Criteria (customizable per vendor type)
+  // Overall score must be >= 80 for approval
+  
+  // Quality (0-100)
+  qualityScore          Int
+  qualityComment        String?
+  
+  // Delivery Performance (0-100)
+  deliveryScore         Int
+  deliveryComment       String?
+  
+  // Cost Competitiveness (0-100)
+  costScore             Int
+  costComment           String?
+  
+  // Communication & Responsiveness (0-100)
+  communicationScore    Int
+  communicationComment  String?
+  
+  // Compliance & Certifications (0-100)
+  complianceScore       Int
+  complianceComment     String?
+  
+  // Financial Stability (0-100 if applicable)
+  financialScore        Int?
+  financialComment      String?
+  
+  // Overall Score (weighted average or manual)
+  overallScore          Int      // Must be >= 80
+  recommendedStatus     VendorEvaluationStatus
+  
+  // Additional Feedback
+  strengths             String?  @db.Text
+  improvementAreas      String?  @db.Text
+  actionItemsForVendor  String?  @db.Text
+  
+  // Supporting Documents
+  attachments           String[]
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  @@index([vendorId])
+  @@index([evaluationDate])
+  @@unique([vendorId, evaluationDate])
+}
+
+model VendorPerformanceLog {
+  id                    String   @id @default(cuid())
+  
+  vendorId              String
+  performanceDate       DateTime @default(now())
+  
+  // Transaction Details
+  jobType               String   // "PEME", "Visa", "Training", etc.
+  jobCompletionDate     DateTime
+  daysToCompletion      Int
+  
+  // Performance Metrics
+  qualityIssuesFound    Boolean @default(false)
+  issueDescription      String?
+  delayedDelivery       Boolean @default(false)
+  customerSatisfaction  Float?   // 1.0-5.0
+  
+  // Cost Tracking
+  estimatedCost         Float
+  actualCost            Float
+  costVariancePercent   Float    // (actual - estimated) / estimated * 100
+  
+  notes                 String?  @db.Text
+  
+  @@index([vendorId])
+  @@index([performanceDate])
+}
+
+model VendorWarningLetter {
+  id                    String   @id @default(cuid())
+  
+  vendorId              String
+  issueDate             DateTime @default(now())
+  issuedBy              String   @db.Uuid  // User ID
+  
+  // Warning Details
+  reason                String   @db.Text  // Why warning issued
+  previousIssues        String?  @db.Text  // History of problems
+  actionRequired        String   @db.Text  // What needs to be fixed
+  deadline              DateTime  // By when it needs to be fixed
+  
+  // Follow-up
+  responseReceivedDate  DateTime?
+  responseText          String?  @db.Text
+  isResolved            Boolean @default(false)
+  resolvedDate          DateTime?
+  
+  // Documents
+  letterText            String?  @db.Text
+  attachments           String[]
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  @@index([vendorId])
+  @@index([issueDate])
+}
+
+// ============================================================================
+// MODULE 4: COMPLAINT & GRIEVANCE MANAGEMENT
+// ============================================================================
+
+enum ComplaintType {
+  WAGE_PAYMENT           // Salary/payment issues
+  WORKING_CONDITIONS     // Hours, workload, facilities
+  HEALTH_SAFETY          // Medical, safety concerns
+  HARASSMENT_BULLYING    // Discrimination, harassment
+  DISCRIMINATION         // Based on gender, race, etc.
+  FOOD_ACCOMMODATION     // Quality of meals, accommodation
+  MEDICAL_FITNESS        // Health/fitness to work
+  REPATRIATION           // Getting home after contract
+  CONTRACT_TERMS         // Violation of employment agreement
+  OTHER
+}
+
+enum ComplaintSeverity {
+  LOW                    // Minor inconvenience
+  MEDIUM                 // Affects work/morale
+  HIGH                   // Significant impact
+  CRITICAL               // Immediate threat to safety/wellbeing
+}
+
+enum ComplaintStatus {
+  SUBMITTED              // Initial submission
+  ACKNOWLEDGED           // Company received & will investigate
+  UNDER_INVESTIGATION    // Being looked into
+  ESCALATED              // Moved to higher level
+  RESOLVED               // Solution agreed
+  CLOSED                 // Resolution verified & implemented
+  WITHDRAWN              // Crew withdrew complaint
+  REJECTED               // Not substantiated
+}
+
+model Complaint {
+  id                    String   @id @default(cuid())
+  
+  // Who is complaining
+  crewId                String   @db.Uuid
+  crewName              String
+  crewPosition          String   // Position on ship/office
+  complaintDate         DateTime @default(now())
+  
+  // Complaint Details
+  type                  ComplaintType
+  severity              ComplaintSeverity
+  description           String   @db.Text
+  affectedAreas         String[]  // Which aspects of work affected
+  
+  // Location Details
+  locationOnShip        String?   // Ship name / Office location
+  dateOfIncident        DateTime?
+  
+  // Complainant Info
+  submittedBy           String   @db.Uuid  // Can be crew or HR on behalf
+  submissionChannel     String   // "Online Form", "Email", "In-Person", "Phone"
+  anonymousSubmission   Boolean @default(false)
+  
+  // Evidence
+  evidence              String?  @db.Text
+  attachments           String[]  // Photos, documents, etc.
+  
+  // Status & Workflow
+  status                ComplaintStatus @default(SUBMITTED)
+  statusUpdatedAt       DateTime @updatedAt
+  
+  // Acknowledgment
+  acknowledgedBy        String?  @db.Uuid
+  acknowledgedAt        DateTime?
+  acknowledgmentMessage String?  @db.Text
+  
+  // Investigation
+  investigator          String?  @db.Uuid  // Assigned investigator
+  investigationNotes    String?  @db.Text
+  investigationDeadline DateTime?
+  
+  // Escalation Trail
+  escalationLevel       Int @default(1)  // 1=Department Head, 2=Manager, 3=QMR, 4=Director
+  escalatedAt           DateTime?
+  escalatedBy           String?  @db.Uuid
+  escalationReason      String?
+  
+  // Resolution
+  resolutionDate        DateTime?
+  resolvedBy            String?  @db.Uuid
+  resolutionSummary     String?  @db.Text
+  resolutionActions     String?  @db.Text  // What was done to fix
+  crewSatisfied         Boolean?  // Follow-up: was crew satisfied?
+  satisfactionNotes     String?
+  
+  // Confidentiality
+  confidentialityLevel   String @default("RESTRICTED")  // Who can see: RESTRICTED, DEPARTMENT, MANAGEMENT, PUBLIC
+  
+  // Follow-up
+  followUpDate          DateTime?
+  followUpNotes         String?
+  isClosed              Boolean @default(false)
+  
+  // Audit Trail
+  comments              String[]  // Internal comments (not visible to crew)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  auditLog              ComplaintAuditLog[]
+  
+  @@index([crewId])
+  @@index([status])
+  @@index([severity])
+  @@index([complaintDate])
+  @@index([escalationLevel])
+}
+
+model ComplaintAuditLog {
+  id                    String   @id @default(cuid())
+  
+  complaintId           String
+  complaint             Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  
+  // Action Details
+  action                String   // "SUBMITTED", "ACKNOWLEDGED", "ESCALATED", "RESOLVED", etc.
+  actionDate            DateTime @default(now())
+  actionBy              String   @db.Uuid  // User ID
+  
+  // Change Details
+  statusBefore          String?
+  statusAfter           String?
+  escalationLevelBefore Int?
+  escalationLevelAfter  Int?
+  
+  notes                 String?  @db.Text
+  
+  @@index([complaintId])
+  @@index([actionDate])
+}
+
+model ComplaintResolution {
+  id                    String   @id @default(cuid())
+  
+  complaintId           String   @unique
+  complaint             Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  
+  // Resolution Details
+  resolutionType        String   // "Investigation", "Negotiation", "Disciplinary", "Policy Change", etc.
+  description           String   @db.Text
+  implementationDate    DateTime?
+  
+  // Responsible Parties
+  ownerDepartment       String   // Which dept responsible for implementation
+  ownerPerson           String   @db.Uuid  // User ID
+  
+  // Verification
+  verificationDate      DateTime?
+  verifiedBy            String?  @db.Uuid
+  verificationEvidence  String[]
+  isImplemented         Boolean @default(false)
+  
+  // Effectiveness
+  preventRecurrence     String?  @db.Text  // How to prevent similar complaints
+  trainingRequired      Boolean @default(false)
+  trainingTopics        String[]
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+// ============================================================================
+// INDEXES FOR PERFORMANCE
+// ============================================================================
+
+// Additional indexes for complex queries can be added:
+// @@index([crewId, status])
+// @@index([type, severity, status])
+// etc.
+
+// ============================================================================
+// NOTES FOR IMPLEMENTATION
+// ============================================================================
+
+/*
+1. MIGRATIONS:
+   - Each model should have its own migration file
+   - Use: npx prisma migrate dev --name add_nonconformity_module
+   - Migration files are timestamped and sequential
+   - Can be rolled back: npx prisma migrate resolve
+
+2. ENUMS:
+   - PostgreSQL ENUM types are created automatically
+   - Prisma generates TypeScript types
+   - Can be updated later without breaking existing data
+
+3. RELATIONSHIPS:
+   - All new modules are isolated (no required relations to existing models)
+   - Some relations use references (like foreign keys) with onDelete: Cascade
+   - This means if parent is deleted, related records are deleted too
+
+4. INDEXES:
+   - Added for fields frequently used in WHERE, ORDER BY, JOIN clauses
+   - This improves query performance significantly
+   - Index naming is automatic in Prisma
+
+5. EXISTING DATA:
+   - Zero changes to existing tables (User, Crew, CrewDocument, Risk, Audit)
+   - Zero impact on existing applications
+   - Can rollback anytime (just delete migrations)
+
+6. GENERATED TYPES:
+   - After migration, Prisma generates TypeScript types
+   - Types are available in: node_modules/.prisma/client
+   - Import in your API routes for type safety
+
+7. NEXT STEPS:
+   - Create migration files for each module
+   - Run migrations in sequence
+   - Generate Prisma client
+   - Build TypeScript types
+   - Start API development
+*/
+
+// ============================================================================
+// DATABASE SIZE ESTIMATION
+// ============================================================================
+
+/*
+Assuming 500 crew members and 10-year data retention:
+
+Nonconformity table:
+  - ~10 records per crew member per year = 50,000 rows
+  - ~2 KB per row = 100 MB
+  - With audit logs: 300 MB total
+
+Certificate Tracking:
+  - ~5 certificates per crew = 2,500 documents
+  - ~500 renewal requests per year = 5,000 rows
+  - ~1 KB per row = 5 MB
+  - With alerts/logs: 50 MB total
+
+Vendor Management:
+  - ~100 vendors with 15 evaluations each = 1,500 rows
+  - ~5 KB per row = 7.5 MB
+  - With performance logs: 100 MB total
+
+Complaint Management:
+  - ~5 complaints per crew per year = 25,000 rows
+  - ~3 KB per row = 75 MB
+  - With audit logs & resolutions: 150 MB total
+
+TOTAL ESTIMATED SIZE: ~600-700 MB (very manageable)
+Backup size: ~100-150 MB compressed
+Typical query response: < 200ms
+
+Database connections needed: +2 (existing might be 5, now 7 total)
+*/
+
+// ============================================================================
+// END OF SCHEMA
+// ============================================================================

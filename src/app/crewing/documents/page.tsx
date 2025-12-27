@@ -4,6 +4,8 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { getDocumentTypeLabel } from "@/lib/document-types";
+import DocumentActions from "./DocumentActions";
 
 interface SeafarerDocument {
   id: string;
@@ -280,7 +282,7 @@ export default function Documents() {
                   {filteredDocuments.map((document) => (
                     <tr key={document.id} className="hover:bg-blue-50/40 transition">
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">{document.crew.fullName}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">{document.docType}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">{getDocumentTypeLabel(document.docType)}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">{document.docNumber}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
                         {document.issueDate ? new Date(document.issueDate).toLocaleDateString('id-ID') : '—'}
@@ -294,14 +296,13 @@ export default function Documents() {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold">
-                        <div className="flex items-center">
-                          <Link
-                            href={`/crewing/documents/${document.id}/view`}
-                            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 text-gray-800 hover:border-blue-500 hover:text-blue-600 transition"
-                          >
-                            View
-                          </Link>
-                        </div>
+                        <DocumentActions
+                          documentId={document.id}
+                          docNumber={document.docNumber}
+                          fileUrl={document.fileUrl ?? null}
+                          seafarerName={document.crew.fullName}
+                          onDeleteSuccess={() => fetchDocuments()}
+                        />
                       </td>
                     </tr>
                   ))}

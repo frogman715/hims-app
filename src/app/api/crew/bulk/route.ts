@@ -357,7 +357,7 @@ export const POST = withPermission(
       }
 
       // Create crews in database
-      const createdCrews: Array<{ id: string; seafarerName: string; rank: string; email: string | null; phone: string | null; status: string }> = [];
+      const createdCrews: Array<{ id: string; fullName: string; rank: string; email: string | null; phone: string | null; status: string }> = [];
       const createErrors: Array<{ row: number; fullName: string; error: string }> = [];
 
       for (let idx = 0; idx < payload.crews.length; idx++) {
@@ -367,7 +367,7 @@ export const POST = withPermission(
         try {
           const created = await prisma.crew.create({
             data: {
-              seafarerName: crew.fullName.trim(),
+              fullName: crew.fullName.trim(),
               rank: crew.rank.trim(),
               email: crew.email?.trim() || null,
               phone: crew.phone?.trim() || null,
@@ -413,7 +413,7 @@ export const POST = withPermission(
             },
             created: createdCrews.map((c) => ({
               id: c.id,
-              fullName: c.seafarerName,
+              fullName: c.fullName,
               rank: c.rank,
               email: c.email,
             })),
@@ -435,7 +435,7 @@ export const POST = withPermission(
           },
           crews: createdCrews.map((c) => ({
             id: c.id,
-            fullName: c.seafarerName,
+            fullName: c.fullName,
             rank: c.rank,
             email: c.email,
             phone: c.phone,

@@ -1,0 +1,63 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run build
+
+      - name: Deploy to VPS
+        env:
+          VPS_IP: ${{ secrets.VPS_IP }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          VPS_APP_DIR: /var/www/hims-app
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H $VPS_IP >> ~/.ssh/known_hosts
+          
+          # Deploy
+          ssh -i ~/.ssh/id_rsa $VPS_USER@$VPS_IP << 'EOF'
+          set -e
+          cd $VPS_APP_DIR
+          git fetch origin
+          git reset --hard origin/main
+          npm ci --production
+          npm run build
+          npx prisma migrate deploy
+          sudo systemctl restart hims-app
+          sleep 2
+          curl http://localhost:3000/api/health || exit 1
+          echo "✓ Deployment successful!"
+          EOF
+
+      - name: Notify deployment
+        if: success()
+        run: echo "✓ Application deployed successfully to VPS"
+
+      - name: Notify failure
+        if: failure()
+        run: |
+          echo "✗ Deployment failed!"
+          exit 1

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { writeFile, mkdir } from "fs/promises";
+import { writeFile, mkdir, unlink } from "fs/promises";
 import { join } from "path";
 import { checkPermission, PermissionLevel } from "@/lib/permission-middleware";
 
@@ -43,10 +43,7 @@ export async function GET(
     return NextResponse.json(document);
   } catch (error) {
     console.error("Error fetching document:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch document" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to fetch document" }, { status: 500 });
   }
 }
 
@@ -62,7 +59,10 @@ export async function PUT(
 
     // Check documents permission for editing
     if (!checkPermission(session, 'documents', PermissionLevel.EDIT_ACCESS)) {
-      return NextResponse.json({ error: "Insufficient permissions to update documents" }, { status: 403 });
+      return NextResponse.json(
+        { error: "Insufficient permissions to update documents" },
+        { status: 403 }
+      );
     }
 
     const { id } = await params;
@@ -77,9 +77,10 @@ export async function PUT(
     const file = formData.get('file') as File;
 
     if (!docType || !docNumber || !issueDate || !expiryDate) {
-      return NextResponse.json({
-        error: "Document type, document number, issue date, and expiry date are required"
-      }, { status: 400 });
+      return NextResponse.json(
+        { error: "Document type, document number, issue date, and expiry date are required" },
+        { status: 400 }
+      );
     }
 
     // Check if document exists
@@ -146,10 +147,7 @@ export async function PUT(
     return NextResponse.json(document);
   } catch (error) {
     console.error("Error updating document:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -165,7 +163,10 @@ export async function DELETE(
 
     // Check documents permission for full access (delete operation)
     if (!checkPermission(session, 'documents', PermissionLevel.FULL_ACCESS)) {
-      return NextResponse.json({ error: "Insufficient permissions to delete documents" }, { status: 403 });
+      return NextResponse.json(
+        { error: "Insufficient permissions to delete documents" },
+        { status: 403 }
+      );
     }
 
     const { id } = await params;
@@ -180,17 +181,47 @@ export async function DELETE(
       return NextResponse.json({ error: "Document not found" }, { status: 404 });
     }
 
-    // Delete document
+    // Delete file from disk if it exists
+    if (existingDocument.fileUrl) {
+      try {
+        const fileName = existingDocument.fileUrl.split('/').pop();
+        
+        // Validate fileName to prevent directory traversal attacks
+        if (fileName && /^[\w\-\.]+$/.test(fileName)) {
+          const filePath = join(process.cwd(), 'public', 'uploads', 'documents', fileName);
+          
+          try {
+            await unlink(filePath);
+          } catch (fileError) {
+            // File might not exist, which is acceptable
+            // Continue with database delete even if file delete fails
+            if ((fileError as NodeJS.ErrnoException).code !== 'ENOENT') {
+              console.warn("Warning: File deletion failed but was not ENOENT:", fileError);
+            }
+          }
+        } else {
+          console.warn("Invalid fileName format, skipping file deletion:", fileName);
+        }
+      } catch (fileError) {
+        console.error("Error processing file deletion:", fileError);
+        // Continue with database delete even if file deletion fails
+      }
+    }
+
+    // Delete document from database
     await prisma.crewDocument.delete({
       where: { id: documentId },
+    });
+
+    console.info("Document deleted", {
+      documentId,
+      crewId: existingDocument.crewId,
+      docType: existingDocument.docType,
     });
 
     return NextResponse.json({ message: "Document deleted successfully" });
   } catch (error) {
     console.error("Error deleting document:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
