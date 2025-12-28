@@ -7,7 +7,6 @@ interface DocumentActionsProps {
   documentId: string;
   docNumber: string;
   fileUrl: string | null;
-  seafarerName: string;
   onDeleteSuccess?: () => void;
 }
 
@@ -15,7 +14,6 @@ export default function DocumentActions({
   documentId,
   docNumber,
   fileUrl,
-  seafarerName,
   onDeleteSuccess,
 }: DocumentActionsProps) {
   const [isDeleting, setIsDeleting] = useState(false);

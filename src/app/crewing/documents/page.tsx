@@ -300,7 +300,6 @@ export default function Documents() {
                           documentId={document.id}
                           docNumber={document.docNumber}
                           fileUrl={document.fileUrl ?? null}
-                          seafarerName={document.crew.fullName}
                           onDeleteSuccess={() => fetchDocuments()}
                         />
                       </td>

@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { writeFile, mkdir } from "fs/promises";
 import { join, extname } from "path";
-import { randomUUID } from "crypto";
 import { withPermission } from "@/lib/api-middleware";
 import { PermissionLevel } from "@/lib/permission-middleware";
 import { DataSensitivity as PrismaDataSensitivity, Prisma } from "@prisma/client";
