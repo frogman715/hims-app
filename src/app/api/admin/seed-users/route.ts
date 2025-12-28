@@ -5,11 +5,19 @@ import bcrypt from "bcryptjs";
 // This endpoint seeds test users - only accessible with correct secret key
 export async function POST(request: Request) {
   try {
-    // Security: require a secret key to prevent unauthorized seeding
+    // Security: Only allow in development or with proper secret key
+    const isProduction = process.env.NODE_ENV === "production";
     const authHeader = request.headers.get("authorization");
-    const secretKey = process.env.SEED_SECRET_KEY || "seed-secret-key";
+    const secretKey = process.env.SEED_SECRET_KEY;
     
-    if (authHeader !== `Bearer ${secretKey}`) {
+    if (isProduction && !secretKey) {
+      return NextResponse.json(
+        { error: "Seed endpoint not available in production without SEED_SECRET_KEY" },
+        { status: 403 }
+      );
+    }
+    
+    if (isProduction && authHeader !== `Bearer ${secretKey}`) {
       return NextResponse.json(
         { error: "Unauthorized - invalid or missing authorization header" },
         { status: 401 }
