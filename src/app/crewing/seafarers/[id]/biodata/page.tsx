@@ -53,6 +53,7 @@ interface Seafarer {
     issueDate: string;
     expiryDate: string;
     remarks?: string;
+    fileUrl?: string;
   }>;
 }
 
@@ -534,6 +535,9 @@ export default function SeafarerBiodataPage() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Status
                     </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -571,6 +575,74 @@ export default function SeafarerBiodataPage() {
                           }`}>
                             {isExpired ? 'Expired' : isExpiringSoon ? 'Expiring Soon' : 'Valid'}
                           </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <div className="flex gap-2">
+                            {document.fileUrl && (
+                              <a
+                                href={document.fileUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center px-3 py-2 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition"
+                                title="View document"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                              </a>
+                            )}
+                            <button
+                              onClick={() => {
+                                alert('Edit functionality coming soon');
+                              }}
+                              className="inline-flex items-center px-3 py-2 bg-amber-100 text-amber-700 rounded hover:bg-amber-200 transition"
+                              title="Edit document"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
+                            </button>
+                            {document.fileUrl && (
+                              <a
+                                href={document.fileUrl}
+                                download
+                                className="inline-flex items-center px-3 py-2 bg-green-100 text-green-700 rounded hover:bg-green-200 transition"
+                                title="Download document"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                </svg>
+                              </a>
+                            )}
+                            <button
+                              onClick={async () => {
+                                if (confirm(`Delete ${document.docType}?`)) {
+                                  try {
+                                    const response = await fetch(`/api/documents/${document.id}`, {
+                                      method: 'DELETE',
+                                    });
+                                    if (response.ok) {
+                                      alert('Document deleted successfully');
+                                      // Reload page to reflect changes
+                                      window.location.reload();
+                                    } else {
+                                      alert('Failed to delete document');
+                                    }
+                                  } catch (error) {
+                                    console.error('Error deleting document:', error);
+                                    alert('Error deleting document');
+                                  }
+                                }
+                              }}
+                              className="inline-flex items-center px-3 py-2 bg-red-100 text-red-700 rounded hover:bg-red-200 transition"
+                              title="Delete document"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );

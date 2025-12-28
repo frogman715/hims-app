@@ -339,6 +339,8 @@ model Crew {
   emergencyContactRelation String?
   emergencyContactPhone    String?
   sensitivity              DataSensitivity @default(AMBER)
+  photoUrl                 String?
+  slug                     String?         @unique
 
   // Relations
   documents           CrewDocument[]
