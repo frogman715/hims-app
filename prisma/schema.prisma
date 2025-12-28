@@ -316,8 +316,6 @@ model User {
 model Crew {
   id                       String          @id @default(cuid())
   fullName                 String
-  slug                     String?         @unique // For URL slug (crew name)
-  photoUrl                 String?         // Profile photo URL
   dateOfBirth              DateTime?
   placeOfBirth             String?
   nationality              String?
