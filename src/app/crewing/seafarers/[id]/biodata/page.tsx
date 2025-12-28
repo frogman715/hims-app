@@ -4,6 +4,7 @@ import { useSession } from "next-auth/react";
 import { useRouter, useParams } from "next/navigation";
 import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
+import PhotoUpload from "../PhotoUpload";
 
 interface Seafarer {
   id: string;
@@ -16,6 +17,7 @@ interface Seafarer {
   rank: string | null;
   phone: string | null;
   email: string | null;
+  photoUrl?: string | null;
   heightCm: number | null;
   weightKg: number | null;
   coverallSize: string | null;
@@ -208,21 +210,40 @@ export default function SeafarerBiodataPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-6">
       <div className="max-w-6xl mx-auto">
+        {/* Back button */}
+        <div className="mb-6">
+          <Link
+            href="/crewing/seafarers"
+            className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl inline-flex items-center"
+          >
+            ← Back to Seafarers
+          </Link>
+        </div>
+
         {/* Header */}
         <div className="mb-8">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-center space-x-4">
-              <Link
-                href="/crewing/seafarers"
-                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
-              >
-                ← Back to Seafarers
-              </Link>
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+            {/* Left side - Photo and name */}
+            <div className="flex items-start space-x-6 flex-1">
+              {/* Photo Upload Component */}
+              <div className="flex-shrink-0">
+                <PhotoUpload
+                  seafarerId={seafarer.id}
+                  currentPhotoUrl={seafarer.photoUrl || undefined}
+                  onPhotoUpdated={(photoUrl) => {
+                    setSeafarer({ ...seafarer, photoUrl });
+                  }}
+                />
+              </div>
+
+              {/* Name and description */}
               <div>
                 <h1 className="text-3xl font-bold text-gray-900 mb-2">{seafarer.fullName}</h1>
                 <p className="text-gray-800">Complete seafarer biodata and service history</p>
               </div>
             </div>
+
+            {/* Action menu */}
             <div className="relative flex flex-wrap gap-2" ref={actionMenuRef}>
               <button
                 type="button"
