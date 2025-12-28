@@ -70,6 +70,12 @@ export default function Seafarers() {
       if (response.ok) {
         const data = await response.json();
         setSeafarers(data);
+      } else if (response.status === 401) {
+        // Session expired or not authenticated - redirect to login
+        console.log("Session expired, redirecting to login");
+        router.push("/auth/signin");
+      } else {
+        console.error("Error fetching seafarers:", response.status, response.statusText);
       }
     } catch (error) {
       console.error("Error fetching seafarers:", error);
