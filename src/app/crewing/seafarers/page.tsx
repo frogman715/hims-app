@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Button } from "@/components/ui/Button";
 
 interface Seafarer {
@@ -10,6 +11,7 @@ interface Seafarer {
   fullName: string;
   nationality: string;
   dateOfBirth: string | null;
+  photoUrl?: string;
   assignments: Array<{
     id: number;
     rank: string | null;
@@ -135,9 +137,20 @@ export default function Seafarers() {
                   <tr key={seafarer.id} className="transition hover:bg-emerald-50/40">
                     <td className="whitespace-nowrap px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-200 text-sm font-semibold text-slate-700">
-                          {seafarer.fullName.charAt(0).toUpperCase()}
-                        </span>
+                        {seafarer.photoUrl ? (
+                          <div className="relative h-10 w-10 overflow-hidden rounded-full">
+                            <Image
+                              src={seafarer.photoUrl}
+                              alt={seafarer.fullName}
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-200 text-sm font-semibold text-slate-700">
+                            {seafarer.fullName.charAt(0).toUpperCase()}
+                          </span>
+                        )}
                         <button
                           type="button"
                           onClick={() => router.push(`/crewing/seafarers/${seafarer.id}/biodata`)}
