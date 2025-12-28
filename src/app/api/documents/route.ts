@@ -144,8 +144,20 @@ export const POST = withPermission(
       // Directory might already exist
     }
 
-    // Generate unique filename
-    const fileName = `${randomUUID()}${allowedExtension}`;
+    // Get crew name for readable filename
+    const crew = await prisma.crew.findUnique({
+      where: { id: crewId },
+      select: { fullName: true }
+    });
+    
+    if (!crew) {
+      return NextResponse.json({ error: "Crew not found" }, { status: 404 });
+    }
+
+    // Generate readable filename: {crewname}_{doctype}.{ext}
+    const crewNameSafe = crew.fullName.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+    const docTypeSafe = docType.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+    const fileName = `${crewNameSafe}_${docTypeSafe}${allowedExtension}`;
     const filePath = join(uploadsDir, fileName);
 
     // Save file
