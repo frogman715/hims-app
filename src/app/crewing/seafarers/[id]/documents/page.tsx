@@ -300,14 +300,35 @@ export default function SeafarerDocumentsPage() {
                   className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="">Select document type</option>
-                  <option value="Passport">Passport</option>
-                  <option value="COC">Certificate of Competency (COC)</option>
-                  <option value="COP">Certificate of Proficiency (COP)</option>
-                  <option value="BST">Basic Safety Training</option>
-                  <option value="Medical Certificate">Medical Certificate</option>
-                  <option value="Seaman Book">Seaman Book</option>
-                  <option value="Visa">Visa</option>
-                  <option value="Other">Other</option>
+                  <optgroup label="Common Documents">
+                    <option value="PASPOR">PASPOR (Passport)</option>
+                    <option value="SEAMAN BOOK">SEAMAN BOOK</option>
+                  </optgroup>
+                  <optgroup label="Certificates - All Ranks">
+                    <option value="COC / IJAZAH NAUTIKA">COC / IJAZAH NAUTIKA</option>
+                    <option value="COE / ENDORSEMENT">COE / ENDORSEMENT</option>
+                    <option value="GMDSS">GMDSS</option>
+                    <option value="BST">BST (Basic Safety Training)</option>
+                    <option value="SCRB">SCRB</option>
+                    <option value="AFF">AFF</option>
+                    <option value="MEFA">MEFA</option>
+                    <option value="MC">MC</option>
+                    <option value="ARPA">ARPA</option>
+                    <option value="RADAR">RADAR</option>
+                    <option value="ECDIS">ECDIS</option>
+                    <option value="SSO">SSO (Ship Security Officer)</option>
+                    <option value="BRM">BRM</option>
+                    <option value="YELLOW FEVER">YELLOW FEVER</option>
+                    <option value="ORU / GOC">ORU / GOC</option>
+                    <option value="BOCT">BOCT</option>
+                    <option value="ACT">ACT</option>
+                    <option value="AOT">AOT</option>
+                  </optgroup>
+                  <optgroup label="Other Documents">
+                    <option value="Medical Certificate">Medical Certificate</option>
+                    <option value="Visa">Visa</option>
+                    <option value="Other">Other</option>
+                  </optgroup>
                 </select>
               </div>
 

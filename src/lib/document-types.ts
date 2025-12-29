@@ -11,34 +11,34 @@ export interface DocumentType {
 
 export const DOCUMENT_TYPES: DocumentType[] = [
   // Identity Documents
-  { value: "PASSPORT", label: "Passport", category: "identity" },
-  { value: "SEAMAN_BOOK", label: "Seaman Book", category: "identity" },
+  { value: "PASSPORT", label: "PASPOR (Passport)", category: "identity" },
+  { value: "SEAMAN_BOOK", label: "SEAMAN BOOK", category: "identity" },
 
   // Certification & Qualifications
-  { value: "COC_IJAZAH_NAUTICA", label: "COC / Ijazah Nautica", category: "certification" },
-  { value: "COE_ENDORSEMENT", label: "COE / Endorsement", category: "certification" },
+  { value: "COC_IJAZAH_NAUTICA", label: "COC / IJAZAH NAUTIKA", category: "certification" },
+  { value: "COE_ENDORSEMENT", label: "COE / ENDORSEMENT", category: "certification" },
 
   // Safety Certificates
-  { value: "BST", label: "Basic Safety Training (BST)", category: "safety" },
-  { value: "SCRB", label: "Survival Craft & Rescue Boat (SCRB)", category: "safety" },
-  { value: "AFF", label: "Advanced Fire Fighting (AFF)", category: "safety" },
-  { value: "MEFA", label: "Medical First Aid (MEFA)", category: "safety" },
+  { value: "BST", label: "BST (Basic Safety Training)", category: "safety" },
+  { value: "SCRB", label: "SCRB", category: "safety" },
+  { value: "AFF", label: "AFF (Advanced Fire Fighting)", category: "safety" },
+  { value: "MEFA", label: "MEFA (Medical First Aid)", category: "safety" },
 
   // Technical Certificates
   { value: "GMDSS", label: "GMDSS", category: "technical" },
-  { value: "MC", label: "Maintenance Course (MC)", category: "technical" },
+  { value: "MC", label: "MC (Maintenance Course)", category: "technical" },
   { value: "ARPA", label: "ARPA", category: "technical" },
   { value: "RADAR", label: "RADAR", category: "technical" },
   { value: "ECDIS", label: "ECDIS", category: "technical" },
 
   // Management Certificates
-  { value: "SSO", label: "Senior Seafarers Officer (SSO)", category: "management" },
-  { value: "BRM", label: "Bridge Resource Management (BRM)", category: "management" },
+  { value: "SSO", label: "SSO (Ship Security Officer)", category: "management" },
+  { value: "BRM", label: "BRM (Bridge Resource Management)", category: "management" },
 
   // Health & Medical
-  { value: "YELLOW_FEVER", label: "Yellow Fever Vaccination", category: "health" },
+  { value: "YELLOW_FEVER", label: "YELLOW FEVER (Vaccination)", category: "health" },
 
-  // Additional Certifications
+  // Additional Certifications - All included
   { value: "ORU_GOC", label: "ORU / GOC", category: "other" },
   { value: "BOCT", label: "BOCT", category: "other" },
   { value: "ACT", label: "ACT", category: "other" },
