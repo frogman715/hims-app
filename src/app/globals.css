@@ -4,7 +4,9 @@
    Version: 2.0 (December 2025)
    ============================================ */
 
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 /* ============================================
    DESIGN TOKENS (CSS Variables)
