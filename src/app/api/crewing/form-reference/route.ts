@@ -57,39 +57,45 @@ function loadForms(): FormCategory[] {
 
     for (const item of items) {
       const itemPath = join(FORM_REFERENCE_PATH, item);
-      const stat = statSync(itemPath);
+      
+      try {
+        const stat = statSync(itemPath);
+        
+        if (stat.isDirectory() && CATEGORY_MAPPING[item]) {
+          const mapping = CATEGORY_MAPPING[item];
+          const forms: Form[] = [];
 
-      if (stat.isDirectory() && CATEGORY_MAPPING[item]) {
-        const mapping = CATEGORY_MAPPING[item];
-        const forms: Form[] = [];
-
-        try {
-          const files = readdirSync(itemPath);
-          for (const file of files) {
-            const ext = file.split(".").pop()?.toLowerCase() || "";
-            if (["xlsx", "xls", "docx", "doc", "pdf"].includes(ext)) {
-              forms.push({
-                filename: file,
-                type: ext,
-              });
+          try {
+            const files = readdirSync(itemPath);
+            for (const file of files) {
+              const ext = file.split(".").pop()?.toLowerCase() || "";
+              if (["xlsx", "xls", "docx", "doc", "pdf"].includes(ext)) {
+                forms.push({
+                  filename: file,
+                  type: ext,
+                });
+              }
             }
+          } catch (error) {
+            console.error(`Error reading directory ${item}:`, error);
           }
-        } catch (error) {
-          console.error(`Error reading directory ${item}:`, error);
-        }
 
-        if (forms.length > 0) {
-          categories.push({
-            category: mapping.display,
-            categoryCode: mapping.code,
-            description: mapping.description,
-            forms: forms.sort((a, b) => a.filename.localeCompare(b.filename)),
-          });
+          if (forms.length > 0) {
+            categories.push({
+              category: mapping.display,
+              categoryCode: mapping.code,
+              description: mapping.description,
+              forms: forms.sort((a, b) => a.filename.localeCompare(b.filename)),
+            });
+          }
         }
+      } catch (statError) {
+        console.error(`Error accessing ${item}:`, statError);
       }
     }
   } catch (error) {
     console.error("Error loading forms:", error);
+    throw new Error(`Failed to load form categories: ${String(error)}`);
   }
 
   return categories.sort((a, b) => a.categoryCode.localeCompare(b.categoryCode));

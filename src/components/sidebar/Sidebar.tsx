@@ -14,13 +14,28 @@ export default function Sidebar({ navigationItems }: SidebarProps) {
   const router = useRouter();
 
   const defaultNavItems: NavItem[] = [
-    { href: "/crewing", label: "Crewing Department", icon: "⚓" },
-    { href: "/contracts", label: "Contracts", icon: "📋" },
-    { href: "/crewing/documents", label: "Documents", icon: "📁" },
-    { href: "/crewing/form-reference", label: "Form References", icon: "📄" },
-    { href: "/insurance", label: "Insurance", icon: "⚡" },
-    { href: "/crewing/principals", label: "Fleet Management", icon: "🚢" },
-    { href: "/accounting", label: "Accounting", icon: "💵" },
+    // ========== CREWING DEPARTMENT ==========
+    { href: "/crewing", label: "Seafarer Recruitment", icon: "👥", group: "CREWING DEPARTMENT" },
+    { href: "/crewing/seafarers", label: "Seafarers List", icon: "📋", group: "CREWING DEPARTMENT" },
+    { href: "/contracts", label: "Employment Contracts", icon: "📝", group: "CREWING DEPARTMENT" },
+    { href: "/crewing/documents", label: "Document Management", icon: "📁", group: "CREWING DEPARTMENT" },
+    { href: "/crewing/form-reference", label: "Form References", icon: "📄", group: "CREWING DEPARTMENT" },
+    { href: "/crewing/principals", label: "Fleet Management", icon: "🚢", group: "CREWING DEPARTMENT" },
+    
+    // ========== OPERATIONS & COMPLIANCE ==========
+    { href: "/insurance", label: "Insurance Management", icon: "🛡️", group: "OPERATIONS" },
+    { href: "/compliance", label: "Compliance Tracking", icon: "✅", group: "OPERATIONS" },
+    
+    // ========== HR & ADMINISTRATION ==========
+    { href: "/hr", label: "HR Department", icon: "👔", group: "HR & ADMINISTRATION" },
+    { href: "/accounting", label: "Finance & Accounting", icon: "💵", group: "HR & ADMINISTRATION" },
+    
+    // ========== QUALITY MANAGEMENT ==========
+    { href: "/quality", label: "Quality Management System", icon: "⚙️", group: "QUALITY MANAGEMENT" },
+    { href: "/quality/hgqs-compliance", label: "HGQS Compliance Tracker", icon: "📊", group: "QUALITY MANAGEMENT" },
+    { href: "/quality/audits", label: "Internal Audits", icon: "🔍", group: "QUALITY MANAGEMENT" },
+    { href: "/quality/corrective-actions", label: "Corrective Actions", icon: "🔧", group: "QUALITY MANAGEMENT" },
+    { href: "/quality/reviews", label: "Management Reviews", icon: "📈", group: "QUALITY MANAGEMENT" },
   ];
 
   const navItems = navigationItems || defaultNavItems;

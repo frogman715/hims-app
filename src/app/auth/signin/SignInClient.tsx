@@ -42,55 +42,71 @@ function SignInForm() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800">
+    <div className="min-h-screen flex flex-col lg:flex-row bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900">
       {/* Left side - Branding (hidden on mobile) */}
-      <div className="hidden lg:flex lg:w-1/2 flex-col justify-center items-center px-8 py-12">
-        <div className="max-w-lg text-center lg:text-left space-y-8">
-          <div className="flex justify-center lg:justify-start">
-            <div className="h-24 w-24">
+      <div className="hidden lg:flex lg:w-1/2 flex-col justify-between items-center px-12 py-16">
+        <div className="flex-1 flex flex-col justify-center max-w-lg space-y-12">
+          {/* Logo Section */}
+          <div className="flex justify-center">
+            <div className="h-28 w-28 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 p-2 flex items-center justify-center">
               <img
                 src="/hanmarinereal.png"
                 alt="HANMARINE Global Indonesia"
-                className="h-24 w-24 object-contain drop-shadow-lg"
+                className="h-24 w-24 object-contain drop-shadow-2xl"
               />
             </div>
           </div>
-          <div className="space-y-4">
-            <h1 className="text-4xl lg:text-5xl font-bold text-white leading-tight">
-              HANMARINE HIMS
-            </h1>
-            <p className="text-lg text-blue-100">
+
+          {/* Text Section */}
+          <div className="space-y-6">
+            <div className="space-y-3">
+              <h1 className="text-5xl font-black text-white leading-tight tracking-tight">
+                HANMARINE
+              </h1>
+              <h2 className="text-3xl font-bold text-blue-300">HIMS</h2>
+            </div>
+            <p className="text-lg text-blue-100 font-medium">
               Maritime Crew Management Platform
             </p>
-            <div className="flex flex-col lg:flex-row gap-4 text-sm text-blue-200 pt-4">
-              <span className="flex items-center gap-2">
-                <span className="w-2 h-2 bg-blue-400 rounded-full"></span>
-                MLC 2006
-              </span>
-              <span className="flex items-center gap-2">
-                <span className="w-2 h-2 bg-blue-400 rounded-full"></span>
-                STCW 2010
-              </span>
-              <span className="flex items-center gap-2">
-                <span className="w-2 h-2 bg-blue-400 rounded-full"></span>
-                ISM Code
-              </span>
+          </div>
+
+          {/* Certifications */}
+          <div className="space-y-4 pt-4 border-t border-white/10">
+            <p className="text-sm text-blue-200/80 font-medium uppercase tracking-wider">
+              International Standards
+            </p>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                <span className="text-sm text-blue-100">MLC 2006</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                <span className="text-sm text-blue-100">STCW 2010</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                <span className="text-sm text-blue-100">ISM Code</span>
+              </div>
             </div>
           </div>
-          <p className="text-sm text-blue-300 border-t border-blue-700 pt-8">
-            Enterprise-grade crew management system trusted by maritime
-            professionals
+        </div>
+
+        {/* Bottom tagline */}
+        <div className="text-center">
+          <p className="text-sm text-blue-300/70">
+            Enterprise-grade crew management trusted by maritime professionals worldwide
           </p>
         </div>
       </div>
 
       {/* Right side - Sign-in form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
+      <div className="w-full lg:w-1/2 flex items-center justify-center px-4 py-8 sm:px-6 lg:px-12">
         <div className="w-full max-w-md">
-          {/* Mobile logo */}
-          <div className="lg:hidden text-center mb-8 space-y-2">
+          {/* Mobile Header */}
+          <div className="lg:hidden text-center mb-10 space-y-4">
             <div className="flex justify-center">
-              <div className="h-16 w-16">
+              <div className="h-20 w-20 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 p-2 flex items-center justify-center">
                 <img
                   src="/hanmarinereal.png"
                   alt="HANMARINE Global Indonesia"
@@ -98,71 +114,82 @@ function SignInForm() {
                 />
               </div>
             </div>
-            <h1 className="text-2xl font-bold text-white">HANMARINE HIMS</h1>
+            <div>
+              <h1 className="text-3xl font-black text-white">HANMARINE HIMS</h1>
+              <p className="text-sm text-blue-200 mt-1">Maritime Crew Management</p>
+            </div>
           </div>
 
-          {/* Sign-in card */}
-          <div className="bg-white rounded-2xl shadow-2xl border border-slate-100 p-8 space-y-6">
-            {/* Desktop heading */}
-            <div className="hidden lg:block space-y-2 mb-8">
-              <h2 className="text-3xl font-bold text-slate-900">
-                Welcome Back
-              </h2>
-              <p className="text-slate-600">Sign in to your HIMS account</p>
+          {/* Sign-in Card */}
+          <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/30 p-8 sm:p-10 space-y-8">
+            {/* Card Header */}
+            <div className="hidden lg:block space-y-2">
+              <h2 className="text-3xl font-bold text-slate-900">Welcome Back</h2>
+              <p className="text-slate-600">Sign in to your account</p>
             </div>
 
             {/* Form section */}
-            <form className="space-y-5" onSubmit={handleSubmit}>
+            <form className="space-y-6" onSubmit={handleSubmit}>
               {/* Email field */}
-              <div className="space-y-2.5">
+              <div className="space-y-3">
                 <label
                   htmlFor="email"
-                  className="block text-sm font-semibold text-slate-900"
+                  className="block text-sm font-semibold text-slate-800"
                 >
                   Email Address
                 </label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  disabled={isLoading}
-                  aria-invalid={error ? "true" : "false"}
-                  className="w-full px-4 py-3 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500 disabled:border-slate-200"
-                  placeholder="admin@hanmarine.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
+                <div className="relative">
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    disabled={isLoading}
+                    aria-invalid={error ? "true" : "false"}
+                    className="w-full px-5 py-3.5 rounded-xl border-2 border-slate-200 bg-white text-slate-900 placeholder-slate-400 text-sm font-medium transition duration-200 focus:border-blue-500 focus:ring-0 focus:bg-white disabled:bg-slate-50 disabled:text-slate-500 disabled:border-slate-200 disabled:cursor-not-allowed hover:border-slate-300"
+                    placeholder="admin@hanmarine.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                  <svg className="absolute right-4 top-3.5 h-5 w-5 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                </div>
               </div>
 
               {/* Password field */}
-              <div className="space-y-2.5">
+              <div className="space-y-3">
                 <label
                   htmlFor="password"
-                  className="block text-sm font-semibold text-slate-900"
+                  className="block text-sm font-semibold text-slate-800"
                 >
                   Password
                 </label>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  minLength={6}
-                  disabled={isLoading}
-                  aria-invalid={error ? "true" : "false"}
-                  className="w-full px-4 py-3 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500 disabled:border-slate-200"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
+                <div className="relative">
+                  <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    autoComplete="current-password"
+                    required
+                    minLength={6}
+                    disabled={isLoading}
+                    aria-invalid={error ? "true" : "false"}
+                    className="w-full px-5 py-3.5 rounded-xl border-2 border-slate-200 bg-white text-slate-900 placeholder-slate-400 text-sm font-medium transition duration-200 focus:border-blue-500 focus:ring-0 focus:bg-white disabled:bg-slate-50 disabled:text-slate-500 disabled:border-slate-200 disabled:cursor-not-allowed hover:border-slate-300"
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                  <svg className="absolute right-4 top-3.5 h-5 w-5 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                </div>
               </div>
 
               {/* Error message */}
               {error && (
-                <div className="flex gap-3 rounded-lg border border-red-200 bg-red-50 p-4 text-sm">
+                <div className="flex gap-3 rounded-xl border-2 border-red-200 bg-red-50 p-4">
                   <svg
                     className="h-5 w-5 flex-shrink-0 mt-0.5 text-red-600"
                     fill="currentColor"
@@ -174,7 +201,7 @@ function SignInForm() {
                       clipRule="evenodd"
                     />
                   </svg>
-                  <div className="text-red-600">{error}</div>
+                  <div className="text-red-700 text-sm font-medium">{error}</div>
                 </div>
               )}
 
@@ -182,7 +209,7 @@ function SignInForm() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold text-sm transition hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-2 disabled:from-slate-400 disabled:to-slate-400 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold text-sm uppercase tracking-wide transition-all duration-300 hover:from-blue-700 hover:to-blue-800 hover:shadow-lg hover:shadow-blue-500/30 active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-2 disabled:from-slate-400 disabled:to-slate-400 disabled:cursor-not-allowed disabled:hover:shadow-none disabled:hover:from-slate-400"
               >
                 {isLoading ? (
                   <>
@@ -205,7 +232,7 @@ function SignInForm() {
                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                       />
                     </svg>
-                    Signing in...
+                    <span>Signing in...</span>
                   </>
                 ) : (
                   <>
@@ -222,7 +249,7 @@ function SignInForm() {
                         d="M13 10V3L4 14h7v7l9-11h-7z"
                       />
                     </svg>
-                    Sign In
+                    <span>Sign In</span>
                   </>
                 )}
               </button>
@@ -231,22 +258,27 @@ function SignInForm() {
             {/* Divider */}
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-slate-200"></div>
+                <div className="w-full border-t-2 border-slate-100"></div>
               </div>
               <div className="relative flex justify-center text-xs">
-                <span className="px-3 bg-white text-slate-500">
-                  Protected by enterprise security
+                <span className="px-3 bg-white text-slate-500 font-medium">
+                  Enterprise Security
                 </span>
               </div>
             </div>
 
             {/* Footer */}
-            <div className="text-center text-xs text-slate-500">
-              <p>
-                © {new Date().getFullYear()} PT. Hanmarine Global Indonesia.
-                All rights reserved.
+            <div className="text-center text-xs text-slate-500 space-y-2">
+              <p className="font-medium">
+                © {new Date().getFullYear()} PT. Hanmarine Global Indonesia
               </p>
+              <p>All rights reserved. Confidential & Proprietary</p>
             </div>
+          </div>
+
+          {/* Additional info */}
+          <div className="mt-8 text-center text-xs text-blue-200/60">
+            <p>Secure • Encrypted • Compliant with maritime regulations</p>
           </div>
         </div>
       </div>

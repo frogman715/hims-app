@@ -23,6 +23,7 @@ interface SeafarerDocument {
 interface Seafarer {
   id: string;
   fullName: string;
+  rank?: string | null;
 }
 
 interface DocumentReceiptSummary {
@@ -189,6 +190,33 @@ export default function SeafarerDocumentsPage() {
     }
   };
 
+  const handleViewDocument = (docId: string) => {
+    // Open document in new tab
+    window.open(`/api/documents/${docId}`, '_blank');
+  };
+
+  const handleDeleteDocument = async (docId: string, docType: string) => {
+    if (!confirm(`Are you sure you want to delete the ${docType} document?`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/documents/${docId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        await fetchDocuments(); // Refresh the list
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to delete document: ${errorData.error}`);
+      }
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      alert('Error deleting document');
+    }
+  };
+
   const formatDate = (value: string | null | undefined) => {
     if (!value) {
       return null;
@@ -222,7 +250,7 @@ export default function SeafarerDocumentsPage() {
       <Breadcrumbs items={breadcrumbItems} />
       <PageHeader
         title={`Documents for ${seafarer.fullName}`}
-        subtitle={`Seafarer ID: ${seafarerId}`}
+        subtitle={`${seafarer.fullName}${seafarer.rank ? ` - ${seafarer.rank}` : ''}`}
         actions={(
           <div className="flex flex-wrap gap-2">
             <Link
@@ -446,10 +474,16 @@ export default function SeafarerDocumentsPage() {
                     )}
                   </div>
                   <div className="flex gap-2">
-                    <button className="text-blue-600 hover:text-blue-800 text-sm">
+                    <button
+                      onClick={() => handleViewDocument(doc.id)}
+                      className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                    >
                       View
                     </button>
-                    <button className="text-red-600 hover:text-red-800 text-sm">
+                    <button
+                      onClick={() => handleDeleteDocument(doc.id, doc.docType)}
+                      className="text-red-600 hover:text-red-800 text-sm font-medium"
+                    >
                       Delete
                     </button>
                   </div>

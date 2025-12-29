@@ -64,20 +64,20 @@ export async function GET() {
     });
 
     // Calculate dates for warnings
-    const fortyFiveDaysFromNow = new Date();
-    fortyFiveDaysFromNow.setDate(fortyFiveDaysFromNow.getDate() + 45);
+    const ninetyDaysFromNow = new Date();
+    ninetyDaysFromNow.setDate(ninetyDaysFromNow.getDate() + 90);
 
-    // Documents Expiring Soon: 13 months threshold (390 days) - standardized with mobile crew dashboard
-    // IMO STCW requires 12-month renewal, 13 months provides 1 month advance notice
-    const thirteenMonthsFromNow = new Date();
-    thirteenMonthsFromNow.setMonth(thirteenMonthsFromNow.getMonth() + 13);
+    // Documents Expiring Soon: 15 months threshold
+    // Shows documents approaching 15-month expiry mark
+    const fifteenMonthsFromNow = new Date();
+    fifteenMonthsFromNow.setMonth(fifteenMonthsFromNow.getMonth() + 15);
 
-    // Documents Expiring Soon: CrewDocuments expiring within 13 months
+    // Documents Expiring Soon: CrewDocuments expiring within 15 months
     const documentsExpiringSoon = await prisma.crewDocument.count({
       where: {
         expiryDate: {
           gte: new Date(),
-          lte: thirteenMonthsFromNow
+          lte: fifteenMonthsFromNow
         }
       }
     });
@@ -87,7 +87,7 @@ export async function GET() {
       where: {
         expiryDate: {
           gte: new Date(),
-          lte: thirteenMonthsFromNow
+          lte: fifteenMonthsFromNow
         }
       },
       include: {
@@ -123,13 +123,14 @@ export async function GET() {
 
     const crewWithExpiringDocumentsArray = Object.values(crewWithExpiringDocumentsGrouped);
 
-    // Contracts Expiring Soon: Assignments with endDate within 45 days and status ONBOARD
+    // Contracts Expiring Soon: Assignments with endDate within 90 days and status ONBOARD
+    // For 8-9 month contracts, 90 days notice catches crew with 1-3 months remaining
     const contractsExpiringSoon = await prisma.assignment.count({
       where: {
         status: 'ONBOARD',
         endDate: {
           gte: new Date(),
-          lte: fortyFiveDaysFromNow
+          lte: ninetyDaysFromNow
         }
       }
     });
@@ -140,7 +141,7 @@ export async function GET() {
         status: 'ONBOARD',
         endDate: {
           gte: new Date(),
-          lte: fortyFiveDaysFromNow
+          lte: ninetyDaysFromNow
         }
       },
       include: {
