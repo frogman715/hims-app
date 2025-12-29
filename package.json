@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "postbuild": "mkdir -p .next/standalone/public && cp -a public/. .next/standalone/public/ && cp .next/prerender-manifest.json .next/standalone/ && cp .next/routes-manifest.json .next/standalone/",
+    "postbuild": "mkdir -p .next/standalone/.next && cp -a .next/static .next/standalone/.next/ && cp -a public .next/standalone/ && cp .next/prerender-manifest.json .next/standalone/ && cp .next/routes-manifest.json .next/standalone/",
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
