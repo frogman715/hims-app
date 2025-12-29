@@ -11,8 +11,10 @@ export default function SignInClient() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const desiredTarget = searchParams.get("callbackUrl") ?? searchParams.get("redirect") ?? undefined;
-  const safeTarget = desiredTarget && desiredTarget.startsWith("/") ? desiredTarget : "/";
+  const desiredTarget =
+    searchParams.get("callbackUrl") ?? searchParams.get("redirect") ?? undefined;
+  const safeTarget =
+    desiredTarget && desiredTarget.startsWith("/") ? desiredTarget : "/";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,7 +47,7 @@ export default function SignInClient() {
       <div className="hidden lg:flex lg:w-1/2 flex-col justify-center items-center px-8 py-12">
         <div className="max-w-lg text-center lg:text-left space-y-8">
           <div className="flex justify-center lg:justify-start">
-            <div className="relative h-24 w-24">
+            <div className="h-24 w-24">
               <img
                 src="/hanmarinereal.png"
                 alt="HANMARINE Global Indonesia"
@@ -57,7 +59,9 @@ export default function SignInClient() {
             <h1 className="text-4xl lg:text-5xl font-bold text-white leading-tight">
               HANMARINE HIMS
             </h1>
-            <p className="text-lg text-blue-100">Maritime Crew Management Platform</p>
+            <p className="text-lg text-blue-100">
+              Maritime Crew Management Platform
+            </p>
             <div className="flex flex-col lg:flex-row gap-4 text-sm text-blue-200 pt-4">
               <span className="flex items-center gap-2">
                 <span className="w-2 h-2 bg-blue-400 rounded-full"></span>
@@ -74,7 +78,8 @@ export default function SignInClient() {
             </div>
           </div>
           <p className="text-sm text-blue-300 border-t border-blue-700 pt-8">
-            Enterprise-grade crew management system trusted by maritime professionals
+            Enterprise-grade crew management system trusted by maritime
+            professionals
           </p>
         </div>
       </div>
@@ -85,18 +90,24 @@ export default function SignInClient() {
           {/* Mobile logo */}
           <div className="lg:hidden text-center mb-8 space-y-2">
             <div className="flex justify-center">
-              <div className="relative h-16 w-16">
-              <img
-                src="/hanmarinereal.png"
-                alt="HANMARINE Global Indonesia"
-                className="h-16 w-16 object-contain"
+              <div className="h-16 w-16">
+                <img
+                  src="/hanmarinereal.png"
+                  alt="HANMARINE Global Indonesia"
+                  className="h-16 w-16 object-contain"
+                />
+              </div>
+            </div>
+            <h1 className="text-2xl font-bold text-white">HANMARINE HIMS</h1>
           </div>
 
           {/* Sign-in card */}
           <div className="bg-white rounded-2xl shadow-2xl border border-slate-100 p-8 space-y-6">
             {/* Desktop heading */}
             <div className="hidden lg:block space-y-2 mb-8">
-              <h2 className="text-3xl font-bold text-slate-900">Welcome Back</h2>
+              <h2 className="text-3xl font-bold text-slate-900">
+                Welcome Back
+              </h2>
               <p className="text-slate-600">Sign in to your HIMS account</p>
             </div>
 
@@ -104,7 +115,10 @@ export default function SignInClient() {
             <form className="space-y-5" onSubmit={handleSubmit}>
               {/* Email field */}
               <div className="space-y-2.5">
-                <label htmlFor="email" className="block text-sm font-semibold text-slate-900">
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-semibold text-slate-900"
+                >
                   Email Address
                 </label>
                 <input
@@ -124,7 +138,10 @@ export default function SignInClient() {
 
               {/* Password field */}
               <div className="space-y-2.5">
-                <label htmlFor="password" className="block text-sm font-semibold text-slate-900">
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-semibold text-slate-900"
+                >
                   Password
                 </label>
                 <input
@@ -146,7 +163,11 @@ export default function SignInClient() {
               {/* Error message */}
               {error && (
                 <div className="flex gap-3 rounded-lg border border-red-200 bg-red-50 p-4 text-sm">
-                  <svg className="h-5 w-5 flex-shrink-0 mt-0.5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                  <svg
+                    className="h-5 w-5 flex-shrink-0 mt-0.5 text-red-600"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
                     <path
                       fillRule="evenodd"
                       d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
@@ -165,8 +186,19 @@ export default function SignInClient() {
               >
                 {isLoading ? (
                   <>
-                    <svg className="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <svg
+                      className="h-5 w-5 animate-spin"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
                       <path
                         className="opacity-75"
                         fill="currentColor"
@@ -177,8 +209,18 @@ export default function SignInClient() {
                   </>
                 ) : (
                   <>
-                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    <svg
+                      className="h-5 w-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13 10V3L4 14h7v7l9-11h-7z"
+                      />
                     </svg>
                     Sign In
                   </>
@@ -192,13 +234,18 @@ export default function SignInClient() {
                 <div className="w-full border-t border-slate-200"></div>
               </div>
               <div className="relative flex justify-center text-xs">
-                <span className="px-3 bg-white text-slate-500">Protected by enterprise security</span>
+                <span className="px-3 bg-white text-slate-500">
+                  Protected by enterprise security
+                </span>
               </div>
             </div>
 
             {/* Footer */}
             <div className="text-center text-xs text-slate-500">
-              <p>© {new Date().getFullYear()} PT. Hanmarine Global Indonesia. All rights reserved.</p>
+              <p>
+                © {new Date().getFullYear()} PT. Hanmarine Global Indonesia.
+                All rights reserved.
+              </p>
             </div>
           </div>
         </div>
