@@ -24,8 +24,6 @@ export async function POST(request: Request) {
       );
     }
 
-    const { Role } = await import("@prisma/client");
-
     const users = [
       {
         name: "Rinaldy (Director)",
