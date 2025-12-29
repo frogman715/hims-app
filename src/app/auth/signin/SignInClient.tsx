@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -47,12 +46,10 @@ export default function SignInClient() {
         <div className="max-w-lg text-center lg:text-left space-y-8">
           <div className="flex justify-center lg:justify-start">
             <div className="relative h-24 w-24">
-              <Image
+              <img
                 src="/hanmarinereal.png"
                 alt="HANMARINE Global Indonesia"
-                fill
-                priority
-                className="object-contain drop-shadow-lg"
+                className="h-24 w-24 object-contain drop-shadow-lg"
               />
             </div>
           </div>
@@ -89,16 +86,10 @@ export default function SignInClient() {
           <div className="lg:hidden text-center mb-8 space-y-2">
             <div className="flex justify-center">
               <div className="relative h-16 w-16">
-                <Image
-                  src="/hanmarinereal.png"
-                  alt="HANMARINE Global Indonesia"
-                  fill
-                  priority
-                  className="object-contain"
-                />
-              </div>
-            </div>
-            <h1 className="text-2xl font-bold text-white">HANMARINE HIMS</h1>
+              <img
+                src="/hanmarinereal.png"
+                alt="HANMARINE Global Indonesia"
+                className="h-16 w-16 object-contain"
           </div>
 
           {/* Sign-in card */}

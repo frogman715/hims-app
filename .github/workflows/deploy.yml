@@ -45,8 +45,10 @@ jobs:
           git reset --hard origin/main
           npm ci --production
           npm run build
+          npm run postbuild
           npx prisma migrate deploy
-          sudo systemctl restart hims-app
+          pm2 delete hims-app || true
+          pm2 start ecosystem.config.js
           sleep 2
           curl http://localhost:3000/api/health || exit 1
           echo "✓ Deployment successful!"
