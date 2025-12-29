@@ -12,7 +12,8 @@ module.exports = {
   apps: [
     {
       name: "hims-app",
-      script: ".next/standalone/server.js",
+      script: "node",
+      args: ".next/standalone/server.js",
       cwd: projectRoot,
       env_file: envFile,
       env: {
