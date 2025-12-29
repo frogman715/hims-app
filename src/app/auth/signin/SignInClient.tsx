@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-export default function SignInClient() {
+function SignInForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -251,5 +251,13 @@ export default function SignInClient() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SignInClient() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800"><div className="text-white">Loading...</div></div>}>
+      <SignInForm />
+    </Suspense>
   );
 }
