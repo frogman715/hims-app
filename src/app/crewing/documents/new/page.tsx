@@ -132,8 +132,20 @@ export default function NewDocumentPage() {
         setUploadProgress(100);
         setTimeout(() => router.push('/crewing/documents'), 500);
       } else {
-        const error = await response.json();
-        setUploadError(`Failed to create document: ${error.error || 'Unknown error'}`);
+        let errorMsg = 'Unknown error';
+        try {
+          const contentType = response.headers.get('content-type');
+          if (contentType?.includes('application/json')) {
+            const error = await response.json();
+            errorMsg = error.error || 'Unknown error';
+          } else {
+            errorMsg = `Server error: ${response.status} ${response.statusText}`;
+          }
+        } catch (parseError) {
+          console.error('Failed to parse error response:', parseError);
+          errorMsg = `Server error: ${response.status} ${response.statusText}`;
+        }
+        setUploadError(`Failed to create document: ${errorMsg}`);
         setUploadProgress(0);
       }
     } catch (error) {
