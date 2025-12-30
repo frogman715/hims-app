@@ -32,6 +32,8 @@ export default function NewDocumentPage() {
   });
   const [seafarers, setSeafarers] = useState<Seafarer[]>([]);
   const [loading, setLoading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [fetchLoading, setFetchLoading] = useState(true);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
@@ -56,8 +58,58 @@ export default function NewDocumentPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setUploadError(null);
+    setUploadProgress(0);
 
     try {
+      // Validate required fields
+      if (!formData.seafarerId) {
+        setUploadError('Please select a seafarer');
+        setLoading(false);
+        return;
+      }
+      if (!formData.docType) {
+        setUploadError('Please select a document type');
+        setLoading(false);
+        return;
+      }
+      if (!formData.docNumber) {
+        setUploadError('Please enter a document number');
+        setLoading(false);
+        return;
+      }
+      if (!formData.issueDate) {
+        setUploadError('Please select an issue date');
+        setLoading(false);
+        return;
+      }
+      if (!formData.expiryDate) {
+        setUploadError('Please select an expiry date');
+        setLoading(false);
+        return;
+      }
+      if (!selectedFile) {
+        setUploadError('Please select a file to upload');
+        setLoading(false);
+        return;
+      }
+
+      // Validate file type and size
+      const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+      const ALLOWED_TYPES = ['application/pdf', 'image/jpeg', 'image/png', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+      
+      if (!ALLOWED_TYPES.includes(selectedFile.type)) {
+        setUploadError(`Invalid file type. Allowed: PDF, JPG, PNG, DOC, DOCX. Got: ${selectedFile.type || 'unknown'}`);
+        setLoading(false);
+        return;
+      }
+
+      if (selectedFile.size > MAX_FILE_SIZE) {
+        setUploadError(`File size (${(selectedFile.size / 1024 / 1024).toFixed(2)}MB) exceeds maximum of 10MB`);
+        setLoading(false);
+        return;
+      }
+
       const formDataToSend = new FormData();
       formDataToSend.append('seafarerId', formData.seafarerId);
       formDataToSend.append('docType', formData.docType);
@@ -65,25 +117,30 @@ export default function NewDocumentPage() {
       formDataToSend.append('issueDate', formData.issueDate);
       formDataToSend.append('expiryDate', formData.expiryDate);
       formDataToSend.append('remarks', formData.remarks);
+      formDataToSend.append('file', selectedFile);
 
-      if (selectedFile) {
-        formDataToSend.append('file', selectedFile);
-      }
+      setUploadProgress(10);
 
       const response = await fetch('/api/documents', {
         method: 'POST',
         body: formDataToSend,
       });
 
+      setUploadProgress(90);
+
       if (response.ok) {
-        router.push('/crewing/documents');
+        setUploadProgress(100);
+        setTimeout(() => router.push('/crewing/documents'), 500);
       } else {
         const error = await response.json();
-        alert(`Failed to create document: ${error.error}`);
+        setUploadError(`Failed to create document: ${error.error || 'Unknown error'}`);
+        setUploadProgress(0);
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('Error creating document');
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error occurred';
+      setUploadError(`Error creating document: ${errorMsg}`);
+      setUploadProgress(0);
     } finally {
       setLoading(false);
     }
@@ -246,13 +303,13 @@ export default function NewDocumentPage() {
                   id="file"
                   name="file"
                   required
-                  accept=".pdf,.jpg,.jpeg,.png"
+                  accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
                   onChange={handleFileChange}
                   className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-100"
                 />
-                <p className="text-sm text-gray-500 mt-1">Accepted formats: PDF, JPG, JPEG, PNG</p>
+                <p className="text-sm text-gray-500 mt-1">Accepted formats: PDF, JPG, JPEG, PNG, DOC, DOCX (Max 10MB)</p>
                 {selectedFile && (
-                  <p className="text-sm text-green-600 mt-1">Selected: {selectedFile.name}</p>
+                  <p className="text-sm text-green-600 mt-1">✓ Selected: {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)}MB)</p>
                 )}
               </div>
 
@@ -272,19 +329,54 @@ export default function NewDocumentPage() {
                 />
               </div>
 
+              {/* Error Alert */}
+              {uploadError && (
+                <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
+                  <p className="text-sm font-medium text-red-800">
+                    <span className="font-bold">Error: </span>{uploadError}
+                  </p>
+                </div>
+              )}
+
+              {/* Upload Progress */}
+              {loading && uploadProgress > 0 && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium text-blue-600">
+                      {uploadProgress < 90 ? 'Uploading file...' : 'Processing...'}
+                    </p>
+                    <p className="text-sm font-semibold text-blue-600">{uploadProgress}%</p>
+                  </div>
+                  <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-blue-500 to-blue-600 transition-all duration-300"
+                      style={{ width: `${uploadProgress}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+
               {/* Action Buttons */}
               <div className="flex gap-4 pt-6 border-t border-gray-300">
                 <button
                   type="submit"
-                  disabled={loading}
-                  className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-8 py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed disabled:cursor-not-allowed"
+                  disabled={loading || !selectedFile}
+                  className="flex-1 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 disabled:from-gray-400 disabled:to-gray-400 text-white px-8 py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-2xl disabled:opacity-70 disabled:cursor-not-allowed"
                 >
-                  {loading ? 'Creating...' : 'Create Document'}
+                  {loading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                      {uploadProgress < 90 ? 'UPLOADING...' : 'PROCESSING...'}
+                    </span>
+                  ) : (
+                    '✓ Create Document'
+                  )}
                 </button>
                 <button
                   type="button"
                   onClick={() => router.back()}
-                  className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-8 py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-2xl"
+                  disabled={loading}
+                  className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 disabled:from-gray-400 disabled:to-gray-400 text-white px-8 py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-2xl disabled:opacity-70 disabled:cursor-not-allowed"
                 >
                   Cancel
                 </button>

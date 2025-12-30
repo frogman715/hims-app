@@ -91,7 +91,17 @@ export const POST = withPermission(
     const file = formData.get('file') as File | null;
 
     if (!crewId || !docType || !docNumber || !issueDate || !expiryDate || !file) {
-      return NextResponse.json({ error: "Crew ID, document type, document number, issue date, expiry date, and file are required" }, { status: 400 });
+      const missing = [];
+      if (!crewId) missing.push('seafarerId');
+      if (!docType) missing.push('docType');
+      if (!docNumber) missing.push('docNumber');
+      if (!issueDate) missing.push('issueDate');
+      if (!expiryDate) missing.push('expiryDate');
+      if (!file) missing.push('file');
+      return NextResponse.json(
+        { error: `Missing required fields: ${missing.join(', ')}` },
+        { status: 400 }
+      );
     }
 
     if (isCrewPortalOnly && crewId !== session.user.id) {
@@ -111,7 +121,17 @@ export const POST = withPermission(
     const parsedExpiryDate = new Date(expiryDate);
 
     if (Number.isNaN(parsedIssueDate.getTime()) || Number.isNaN(parsedExpiryDate.getTime())) {
-      return NextResponse.json({ error: "Invalid issue or expiry date" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid date format. Please use YYYY-MM-DD format for both issue date and expiry date" },
+        { status: 400 }
+      );
+    }
+
+    if (parsedExpiryDate <= parsedIssueDate) {
+      return NextResponse.json(
+        { error: "Expiry date must be after issue date" },
+        { status: 400 }
+      );
     }
 
     const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
@@ -128,11 +148,20 @@ export const POST = withPermission(
     const allowedExtension = ALLOWED_MIME_TYPES[mimeType];
 
     if (!allowedExtension || (declaredExtension && declaredExtension !== allowedExtension)) {
-      return NextResponse.json({ error: "Unsupported file type" }, { status: 415 });
+      const allowedMimes = Object.keys(ALLOWED_MIME_TYPES).join(", ");
+      return NextResponse.json(
+        { error: `Unsupported file type: ${mimeType || 'unknown'}. Allowed MIME types: ${allowedMimes}` },
+        { status: 415 }
+      );
     }
 
     if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json({ error: "File size exceeds maximum allowed (10MB)" }, { status: 413 });
+      const fileSizeMB = (file.size / 1024 / 1024).toFixed(2);
+      const maxSizeMB = (MAX_FILE_SIZE / 1024 / 1024).toFixed(0);
+      return NextResponse.json(
+        { error: `File size (${fileSizeMB}MB) exceeds maximum allowed (${maxSizeMB}MB)` },
+        { status: 413 }
+      );
     }
 
     // Create uploads directory if it doesn't exist
