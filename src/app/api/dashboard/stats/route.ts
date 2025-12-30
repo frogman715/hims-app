@@ -63,16 +63,17 @@ export async function GET() {
       where: { status: 'ONBOARD' }
     });
 
-    // Calculate dates for warnings
-    const ninetyDaysFromNow = new Date();
-    ninetyDaysFromNow.setDate(ninetyDaysFromNow.getDate() + 90);
+    // Calculate dates for warnings (using UTC to match database timezone)
+    const now = new Date();
+    const ninetyDaysFromNow = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000);
 
     // Documents Expiring Soon: 15 months threshold
     // Shows documents approaching 15-month expiry mark
     const fifteenMonthsFromNow = new Date();
     fifteenMonthsFromNow.setMonth(fifteenMonthsFromNow.getMonth() + 15);
 
-    // Documents Expiring Soon: CrewDocuments expired or expiring within 15 months
+    // Documents Expiring Soon: CrewDocuments expired or expiring within 15 months (including already expired)
+    // Count all documents with expiryDate in past or within 15 months
     const documentsExpiringSoon = await prisma.crewDocument.count({
       where: {
         expiryDate: {
@@ -80,6 +81,8 @@ export async function GET() {
         }
       }
     });
+
+    console.log('[DASHBOARD_STATS] documentsExpiringSoon count:', documentsExpiringSoon, 'threshold:', fifteenMonthsFromNow);
 
     // Get detailed info of crew with documents expiring soon (including already expired)
     const crewWithExpiringDocuments = await prisma.crewDocument.findMany({
