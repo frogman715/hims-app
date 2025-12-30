@@ -8,6 +8,15 @@ import { DataSensitivity as PrismaDataSensitivity, Prisma } from "@prisma/client
 import { hasSensitivityAccess, UserRole, DataSensitivity } from "@/lib/permissions";
 import { maskDocumentNumber } from "@/lib/masking";
 
+// Configure max body size for file uploads
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '50mb',
+    },
+  },
+};
+
 export const GET = withPermission(
   "documents",
   PermissionLevel.VIEW_ACCESS,

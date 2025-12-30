@@ -5,6 +5,15 @@ import { writeFile, mkdir } from "fs/promises";
 import { join, extname } from "path";
 import { randomUUID } from "crypto";
 
+// Configure max body size for file uploads
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '50mb',
+    },
+  },
+};
+
 export async function POST(req: NextRequest) {
   const auth = await requireUserApi(["CREW", "CREW_PORTAL"]);
   if (!auth.ok) {
