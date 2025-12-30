@@ -72,21 +72,19 @@ export async function GET() {
     const fifteenMonthsFromNow = new Date();
     fifteenMonthsFromNow.setMonth(fifteenMonthsFromNow.getMonth() + 15);
 
-    // Documents Expiring Soon: CrewDocuments expiring within 15 months
+    // Documents Expiring Soon: CrewDocuments expired or expiring within 15 months
     const documentsExpiringSoon = await prisma.crewDocument.count({
       where: {
         expiryDate: {
-          gte: new Date(),
           lte: fifteenMonthsFromNow
         }
       }
     });
 
-    // Get detailed info of crew with documents expiring soon
+    // Get detailed info of crew with documents expiring soon (including already expired)
     const crewWithExpiringDocuments = await prisma.crewDocument.findMany({
       where: {
         expiryDate: {
-          gte: new Date(),
           lte: fifteenMonthsFromNow
         }
       },
