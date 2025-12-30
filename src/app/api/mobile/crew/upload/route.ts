@@ -74,8 +74,12 @@ export async function POST(req: NextRequest) {
       // Directory might already exist
     }
 
-    // Generate unique filename
-    const fileName = `${randomUUID()}${allowedExtension}`;
+    // Generate professional filename: {date}_{crewid}_{uploadtype}_{hash}.{ext}
+    // Format: 20251230_cm123abc_medical_a7f2e.jpg
+    const timestamp = new Date().toISOString().split('T')[0].replace(/-/g, '');
+    const randomHash = Math.random().toString(36).substring(2, 7);
+    const uploadTypeSafe = uploadType.toLowerCase().replace(/\s+/g, '_');
+    const fileName = `${timestamp}_${crew.id}_${uploadTypeSafe}_${randomHash}${allowedExtension}`;
     const filePath = join(uploadsDir, fileName);
 
     // Save file

@@ -47,10 +47,12 @@ export async function POST(
       // Directory might already exist
     }
 
-    // Generate unique filename
-    const timestamp = Date.now();
-    const extension = file.name.split(".").pop() || "jpg";
-    const filename = `${seafarerId}_${timestamp}.${extension}`;
+    // Generate professional filename: {date}_{seafarerid}_{hash}.{ext}
+    // Format: 20251230_cm123abc_a7f2e.jpg
+    const timestamp = new Date().toISOString().split('T')[0].replace(/-/g, '');
+    const randomHash = Math.random().toString(36).substring(2, 7);
+    const extension = file.name.split(".").pop()?.toLowerCase() || "jpg";
+    const filename = `${timestamp}_${seafarerId}_${randomHash}.${extension}`;
     const filepath = path.join(uploadsDir, filename);
 
     // Save file

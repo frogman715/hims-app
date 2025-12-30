@@ -182,10 +182,12 @@ export const POST = withPermission(
       return NextResponse.json({ error: "Crew not found" }, { status: 404 });
     }
 
-    // Generate readable filename: {crewname}_{doctype}.{ext}
-    const crewNameSafe = crew.fullName.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+    // Generate professional filename: {date}_{crewid}_{doctype}_{docnumber}.{ext}
+    // Format: 20251230_clxuser001_coc_620027165IN20225.jpg
+    const timestamp = new Date().toISOString().split('T')[0].replace(/-/g, '');
+    const docNumberSafe = docNumber.toLowerCase().replace(/[^a-z0-9]/g, '');
     const docTypeSafe = docType.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
-    const fileName = `${crewNameSafe}_${docTypeSafe}${allowedExtension}`;
+    const fileName = `${timestamp}_${crewId}_${docTypeSafe}_${docNumberSafe}${allowedExtension}`;
     const filePath = join(uploadsDir, fileName);
 
     // Save file
