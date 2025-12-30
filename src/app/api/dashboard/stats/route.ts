@@ -218,6 +218,48 @@ export async function GET() {
 
     const crewWithIssuesArray = Object.values(allCrewWithIssues);
 
+    // Transform crewWithIssues into expiringItems format for dashboard
+    const expiringItems: Array<{
+      seafarer: string;
+      type: string;
+      name: string;
+      expiryDate: string;
+      daysLeft: number;
+    }> = [];
+
+    crewWithIssuesArray.forEach((crew) => {
+      // Add documents
+      crew.documents.forEach((doc) => {
+        if (doc.expiryDate) {
+          expiringItems.push({
+            seafarer: crew.name,
+            type: doc.type,
+            name: doc.type,
+            expiryDate: doc.expiryDate.toISOString(),
+            daysLeft: doc.daysUntilExpiry,
+          });
+        }
+      });
+      
+      // Add contracts
+      crew.contracts.forEach((contract) => {
+        if (contract.expiryDate) {
+          expiringItems.push({
+            seafarer: crew.name,
+            type: 'CONTRACT',
+            name: `${contract.vesselName} Contract`,
+            expiryDate: contract.expiryDate.toISOString(),
+            daysLeft: contract.daysUntilExpiry,
+          });
+        }
+      });
+    });
+
+    // Sort by days left (most urgent first)
+    expiringItems.sort((a, b) => a.daysLeft - b.daysLeft);
+    // Limit to 10 most urgent items
+    expiringItems.splice(10);
+
     // Pending Tasks: Applications with RECEIVED or REVIEWING status
     const pendingApplications = await prisma.application.count({
       where: { status: { in: ['RECEIVED', 'REVIEWING'] } }
@@ -233,7 +275,7 @@ export async function GET() {
       crewReady,
       crewOnboard: crewOnBoard,
       documentsExpiringSoon,
-      crewWithIssues: crewWithIssuesArray,
+      expiringItems,
       contractsExpiringSoon,
       pendingTasks,
     });
