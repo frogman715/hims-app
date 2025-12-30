@@ -91,10 +91,38 @@ export async function POST(req: NextRequest) {
     const fileName = `${timestamp}_${crew.id}_${uploadTypeSafe}_${randomHash}${allowedExtension}`;
     const filePath = join(uploadsDir, fileName);
 
-    // Save file
+    // Save file with error handling and logging
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-    await writeFile(filePath, buffer);
+    
+    console.log('[MOBILE_UPLOAD] Attempting to write file:', {
+      filePath,
+      uploadsDir,
+      fileName,
+      bufferSize: buffer.length,
+      timestamp: new Date().toISOString()
+    });
+    
+    try {
+      await writeFile(filePath, buffer);
+      console.log('[MOBILE_UPLOAD] File written successfully:', filePath);
+    } catch (writeError) {
+      console.error('[MOBILE_UPLOAD] writeFile failed:', {
+        error: writeError instanceof Error ? writeError.message : String(writeError),
+        code: (writeError as NodeJS.ErrnoException)?.code,
+        errno: (writeError as NodeJS.ErrnoException)?.errno,
+        filePath,
+        stack: writeError instanceof Error ? writeError.stack : undefined
+      });
+      
+      return NextResponse.json(
+        { 
+          error: "Failed to save file to disk",
+          details: writeError instanceof Error ? writeError.message : "Unknown error"
+        },
+        { status: 500 }
+      );
+    }
 
     const publicUrl = `/uploads/documents/${fileName}`;
 

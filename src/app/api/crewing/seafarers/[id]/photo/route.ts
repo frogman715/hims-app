@@ -64,9 +64,38 @@ export async function POST(
     const filename = `${timestamp}_${seafarerId}_${randomHash}.${extension}`;
     const filepath = path.join(uploadsDir, filename);
 
-    // Save file
+    // Save file with error handling and logging
     const bytes = await file.arrayBuffer();
-    await writeFile(filepath, Buffer.from(bytes));
+    const buffer = Buffer.from(bytes);
+    
+    console.log('[PHOTO_UPLOAD] Attempting to write file:', {
+      filepath,
+      uploadsDir,
+      filename,
+      bufferSize: buffer.length,
+      timestamp: new Date().toISOString()
+    });
+    
+    try {
+      await writeFile(filepath, buffer);
+      console.log('[PHOTO_UPLOAD] File written successfully:', filepath);
+    } catch (writeError) {
+      console.error('[PHOTO_UPLOAD] writeFile failed:', {
+        error: writeError instanceof Error ? writeError.message : String(writeError),
+        code: (writeError as NodeJS.ErrnoException)?.code,
+        errno: (writeError as NodeJS.ErrnoException)?.errno,
+        filepath,
+        stack: writeError instanceof Error ? writeError.stack : undefined
+      });
+      
+      return NextResponse.json(
+        { 
+          error: "Failed to save file to disk",
+          details: writeError instanceof Error ? writeError.message : "Unknown error"
+        },
+        { status: 500 }
+      );
+    }
 
     const photoUrl = `/uploads/photos/${filename}`;
 
