@@ -73,10 +73,10 @@ export async function GET() {
     fifteenMonthsFromNow.setMonth(fifteenMonthsFromNow.getMonth() + 15);
 
     // Documents Expiring Soon: CrewDocuments expired or expiring within 15 months (including already expired)
-    // Use raw query to ensure proper date comparison
+    // Use raw SQL query that matches database logic
     const documentsExpiringSoonResult = await prisma.$queryRaw<Array<{count: bigint}>>`
       SELECT COUNT(*) as count FROM "CrewDocument" 
-      WHERE "expiryDate" <= ${fifteenMonthsFromNow}
+      WHERE "expiryDate" <= NOW() + INTERVAL '15 months'
     `;
     const documentsExpiringSoon = Number(documentsExpiringSoonResult[0]?.count || 0);
 
