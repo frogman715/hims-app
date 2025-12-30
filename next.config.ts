@@ -2,6 +2,14 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: 'standalone',
+  
+  // Increase upload limit to 50MB (from default 1MB)
+  api: {
+    bodyParser: {
+      sizeLimit: '50mb',
+    },
+  },
+  
   eslint: {
     // Ignore ESLint errors during production build (warnings only)
     ignoreDuringBuilds: false,
