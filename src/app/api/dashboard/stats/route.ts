@@ -74,11 +74,11 @@ export async function GET() {
 
     // Documents Expiring Soon: CrewDocuments expired or expiring within 15 months (including already expired)
     // Use raw query to ensure proper date comparison
-    const documentsExpiringSoonResult = await prisma.$queryRaw`
+    const documentsExpiringSoonResult = await prisma.$queryRaw<Array<{count: bigint}>>`
       SELECT COUNT(*) as count FROM "CrewDocument" 
       WHERE "expiryDate" <= ${fifteenMonthsFromNow}
     `;
-    const documentsExpiringSoon = Number((documentsExpiringSoonResult as any[])[0]?.count || 0);
+    const documentsExpiringSoon = Number(documentsExpiringSoonResult[0]?.count || 0);
 
     // Get detailed info of crew with documents expiring soon (including already expired)
     const crewWithExpiringDocuments = await prisma.crewDocument.findMany({
