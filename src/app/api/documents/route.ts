@@ -174,7 +174,8 @@ export const POST = withPermission(
     }
 
     // Create uploads directory if it doesn't exist
-    const uploadsDir = join(process.cwd(), 'public', 'uploads', 'documents');
+    // Use absolute path: in standalone mode process.cwd() is .next/standalone, not app root
+    const uploadsDir = process.env.UPLOADS_DIR || join('/var/www/hims-app', 'public', 'uploads', 'documents');
     try {
       await mkdir(uploadsDir, { recursive: true });
     } catch {

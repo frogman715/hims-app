@@ -49,7 +49,8 @@ export async function POST(
     }
 
     // Create uploads directory if it doesn't exist
-    const uploadsDir = path.join(process.cwd(), "public/uploads/photos");
+    // Use absolute path: in standalone mode process.cwd() is .next/standalone, not app root
+    const uploadsDir = process.env.UPLOADS_DIR ? path.join(process.env.UPLOADS_DIR, '../photos') : path.join('/var/www/hims-app', 'public/uploads/photos');
     try {
       await mkdir(uploadsDir, { recursive: true });
     } catch {
