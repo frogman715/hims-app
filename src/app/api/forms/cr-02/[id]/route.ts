@@ -2,14 +2,36 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import type { Prisma } from '@prisma/client';
 
-type ApplicationWithRelations = Prisma.ApplicationGetPayload<{
-  include: {
-    crew: true;
-    principal: true;
-  };
-}>;
+type ApplicationWithRelations = {
+  id: string;
+  crewId: string | null;
+  principalId: string | null;
+  position: string;
+  status: string;
+  applicationDate: Date | string | null;
+  crew: {
+    id: string;
+    fullName: string;
+    dateOfBirth: Date | string | null;
+    placeOfBirth?: string | null;
+    nationality?: string | null;
+    passportNumber?: string | null;
+    rank?: string | null;
+    phone?: string | null;
+    email?: string | null;
+    address?: string | null;
+    passportExpiry?: Date | string | null;
+    seamanBookNumber?: string | null;
+    seamanBookExpiry?: Date | string | null;
+    mobileNumber: string;
+  } | null;
+  principal: {
+    id: string;
+    name: string;
+    country: string;
+  } | null;
+};
 
 type HydratedApplication = ApplicationWithRelations & {
   crew: NonNullable<ApplicationWithRelations['crew']>;

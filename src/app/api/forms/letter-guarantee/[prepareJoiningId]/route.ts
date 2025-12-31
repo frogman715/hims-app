@@ -3,7 +3,6 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { checkPermission, PermissionLevel } from "@/lib/permission-middleware";
-import { Prisma } from "@prisma/client";
 
 interface LetterGuaranteeHandlingAgent {
   name: string;
@@ -384,7 +383,7 @@ export async function POST(
     }
 
     const body = await req.json();
-    const { formData } = body as { formData?: Prisma.JsonValue };
+    const { formData } = body as { formData?: unknown };
 
     if (formData === undefined) {
       return NextResponse.json(

@@ -3,7 +3,6 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { checkPermission, PermissionLevel } from '@/lib/permission-middleware';
 import { prisma } from '@/lib/prisma';
-import type { Prisma } from '@prisma/client';
 
 type UpdateVesselPayload = {
   name?: string;

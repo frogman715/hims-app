@@ -9,7 +9,6 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { checkPermission, PermissionLevel } from "@/lib/permission-middleware";
 import { handleApiError, ApiError } from "@/lib/error-handler";
-import { Prisma } from "@prisma/client";
 import type { Session } from "next-auth";
 
 type RouteContext = { params: Promise<{ id: string }> };
@@ -64,7 +63,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       data: {
         riskId,
         action: "REVIEWED",
-        changedFields: { effectiveness: payload.effectiveness, newRiskScore } as Prisma.InputJsonValue,
+        changedFields: { effectiveness: payload.effectiveness, newRiskScore } as unknown,
         changedById: session.user.id,
       },
     });

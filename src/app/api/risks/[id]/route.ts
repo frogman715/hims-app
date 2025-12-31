@@ -15,7 +15,6 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { checkPermission, PermissionLevel } from "@/lib/permission-middleware";
 import { handleApiError, ApiError } from "@/lib/error-handler";
-import { Prisma } from "@prisma/client";
 import type { Session } from "next-auth";
 
 type RouteContext = {
@@ -149,7 +148,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       data: {
         riskId: id,
         action: "UPDATED",
-        changedFields: changedFields as Prisma.InputJsonValue,
+        changedFields: changedFields as unknown,
         changedById: session.user.id,
       },
     });
@@ -196,7 +195,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
       data: {
         riskId: id,
         action: "CLOSED",
-        changedFields: { status: "CLOSED" } as Prisma.InputJsonValue,
+        changedFields: { status: "CLOSED" } as unknown,
         changedById: session.user.id,
       },
     });
