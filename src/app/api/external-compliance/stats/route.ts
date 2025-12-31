@@ -2,23 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withPermission } from "@/lib/api-middleware";
 import { PermissionLevel } from "@/lib/permission-middleware";
-
-enum ComplianceSystemType {
-  DEPHUB_CERTIFICATE = "DEPHUB_CERTIFICATE",
-  SCHENGEN_VISA_NL = "SCHENGEN_VISA_NL",
-  ISO_9001 = "ISO_9001",
-  ISO_14001 = "ISO_14001",
-  ISO_45001 = "ISO_45001",
-  OTHER = "OTHER",
-}
-
-enum ComplianceStatus {
-  COMPLIANT = "COMPLIANT",
-  NON_COMPLIANT = "NON_COMPLIANT",
-  PENDING = "PENDING",
-  EXPIRED = "EXPIRED",
-  VERIFIED = "VERIFIED",
-}
+import { ComplianceSystemType, ComplianceStatus } from "@prisma/client";
 
 /**
  * GET /api/external-compliance/stats
