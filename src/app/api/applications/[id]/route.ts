@@ -33,18 +33,6 @@ interface UpdateApplicationPayload {
   remarks?: string | null;
 }
 
-// Define ApplicationUpdateInput locally instead of importing from Prisma
-interface ApplicationUpdateInput {
-  status?: string;
-  position?: string;
-  vesselType?: string | null;
-  principalId?: string | null;
-  remarks?: string | null;
-  reviewedBy?: string;
-  reviewedAt?: Date;
-  principal?: { connect: { id: string } } | { disconnect: boolean };
-}
-
 const APPLICATION_STATUS_VALUES = new Set<ApplicationStatus>([
   ApplicationStatus.RECEIVED,
   ApplicationStatus.REVIEWING,
@@ -178,7 +166,7 @@ export async function PUT(
       return NextResponse.json({ error: "Invalid application update payload" }, { status: 400 });
     }
 
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
     
     if (body.status !== undefined) {
       updateData.status = body.status;
