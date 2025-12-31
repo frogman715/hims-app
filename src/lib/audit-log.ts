@@ -1,5 +1,4 @@
 import { prisma } from '@/lib/prisma';
-import type { Prisma } from '@prisma/client';
 
 export enum HgqsAuditAction {
   MANUAL_CREATED = 'HGQS_MANUAL_CREATED',
@@ -45,7 +44,7 @@ const SENSITIVE_KEYS = new Set([
   'financial'
 ]);
 
-function sanitizePayload(value: unknown): Prisma.InputJsonValue {
+function sanitizePayload(value: unknown): unknown {
   if (value === null || value === undefined) {
     return null;
   }
@@ -59,7 +58,7 @@ function sanitizePayload(value: unknown): Prisma.InputJsonValue {
   }
 
   if (typeof value === 'object') {
-    const result: Record<string, Prisma.InputJsonValue> = {};
+    const result: Record<string, unknown> = {};
     for (const [key, entry] of Object.entries(value as Record<string, unknown>)) {
       if (SENSITIVE_KEYS.has(key)) {
         result[key] = '[REDACTED]';
