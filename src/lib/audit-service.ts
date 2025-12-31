@@ -6,7 +6,6 @@
 
 import { prisma } from "./prisma";
 import { ApiError } from "./error-handler";
-import { Prisma } from "@prisma/client";
 
 /**
  * Generate auto-incrementing audit finding number
@@ -83,7 +82,7 @@ export async function createAuditSchedule(
     auditees: string[];
     auditors: string[];
   },
-  trx?: Prisma.TransactionClient
+  trx?: unknown
 ) {
   const client = trx || prisma;
 
@@ -117,7 +116,7 @@ export async function updateAuditSchedule(
     status?: string;
     endDate?: Date;
   },
-  trx?: Prisma.TransactionClient
+  trx?: unknown
 ) {
   const client = trx || prisma;
 
@@ -161,7 +160,7 @@ export async function createAuditFinding(
     severity: string;
     evidence: string[];
   },
-  trx?: Prisma.TransactionClient
+  trx?: unknown
 ) {
   const client = trx || prisma;
 
@@ -211,7 +210,7 @@ export async function createAuditReport(
     };
   },
   userId: string,
-  trx?: Prisma.TransactionClient
+  trx?: unknown
 ) {
   const client = trx || prisma;
 
@@ -239,7 +238,7 @@ export async function createAuditReport(
       reportNumber,
       summary: data.summary,
       recommendations: data.recommendations,
-      findings: data.findings as Prisma.InputJsonValue,
+      findings: data.findings as unknown,
       status: "DRAFT",
     },
     include: {
@@ -257,7 +256,7 @@ export async function createAuditReport(
 export async function approveAuditReport(
   reportId: string,
   userId: string,
-  trx?: Prisma.TransactionClient
+  trx?: unknown
 ) {
   const client = trx || prisma;
 
