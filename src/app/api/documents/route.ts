@@ -4,7 +4,6 @@ import { writeFile, mkdir } from "fs/promises";
 import { join, extname } from "path";
 import { withPermission } from "@/lib/api-middleware";
 import { PermissionLevel } from "@/lib/permission-middleware";
-import { DataSensitivity as PrismaDataSensitivity } from "@prisma/client";
 import { hasSensitivityAccess, UserRole, DataSensitivity } from "@/lib/permissions";
 import { maskDocumentNumber } from "@/lib/masking";
 
@@ -50,7 +49,7 @@ export const GET = withPermission(
     const canViewRed = hasSensitivityAccess(normalizedRoles, DataSensitivity.RED);
 
     const sanitizedDocuments = documents.map((document) => {
-      const prismaToLibSensitivity: Record<PrismaDataSensitivity, DataSensitivity> = {
+      const prismaToLibSensitivity: Record<string, DataSensitivity> = {
         RED: DataSensitivity.RED,
         AMBER: DataSensitivity.AMBER,
         GREEN: DataSensitivity.GREEN,
