@@ -3,8 +3,14 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { checkPermission, PermissionLevel } from "@/lib/permission-middleware";
-import { PrepareJoiningStatus } from "@prisma/client";
-import type { Prisma } from "@prisma/client";
+
+enum PrepareJoiningStatus {
+  PREPARING = "PREPARING",
+  DOCUMENTS_READY = "DOCUMENTS_READY",
+  READY = "READY",
+  CANCELLED = "CANCELLED",
+  COMPLETED = "COMPLETED",
+}
 
 const prepareJoiningStatuses = new Set<PrepareJoiningStatus>([
   ...Object.values(PrepareJoiningStatus),
@@ -25,7 +31,7 @@ export async function GET(req: NextRequest) {
     const status = searchParams.get("status");
     const crewId = searchParams.get("crewId");
 
-    const where: Prisma.PrepareJoiningWhereInput = {};
+    const where: Record<string, unknown> = {};
     if (status && status !== "ALL") {
       const normalizedStatus = status.trim();
       if (

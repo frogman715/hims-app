@@ -2,13 +2,21 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { FormApprovalStatus, Prisma } from "@prisma/client";
 
-function mergeApprovalNotes(formData: Prisma.JsonValue | null | undefined, notes: string): Prisma.JsonValue {
+enum FormApprovalStatus {
+  DRAFT = "DRAFT",
+  SUBMITTED = "SUBMITTED",
+  UNDER_REVIEW = "UNDER_REVIEW",
+  CHANGES_REQUESTED = "CHANGES_REQUESTED",
+  APPROVED = "APPROVED",
+  REJECTED = "REJECTED",
+}
+
+function mergeApprovalNotes(formData: unknown, notes: string): unknown {
   if (formData && typeof formData === "object" && !Array.isArray(formData)) {
-    return { ...formData, approvalNotes: notes } as Prisma.JsonObject;
+    return { ...(formData as Record<string, unknown>), approvalNotes: notes };
   }
-  return { approvalNotes: notes } satisfies Prisma.JsonObject;
+  return { approvalNotes: notes };
 }
 
 // POST /api/form-submissions/[id]/approve - Approve form submission
@@ -52,7 +60,7 @@ export async function POST(
         status: FormApprovalStatus.APPROVED,
         approvedBy: session?.user?.email || "Unknown",
         approvedAt: new Date(),
-        formData: mergeApprovalNotes(existingForm.formData, notes),
+        formData: mergeApprovalNotes(existingForm.formData, notes) as unknown as object,
       },
       include: {
         template: true,

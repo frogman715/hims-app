@@ -3,8 +3,14 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { checkPermission, PermissionLevel } from "@/lib/permission-middleware";
-import { PrepareJoiningStatus } from "@prisma/client";
-import type { Prisma } from "@prisma/client";
+
+enum PrepareJoiningStatus {
+  PREPARING = "PREPARING",
+  DOCUMENTS_READY = "DOCUMENTS_READY",
+  READY = "READY",
+  CANCELLED = "CANCELLED",
+  COMPLETED = "COMPLETED",
+}
 
 type UpdatePrepareJoiningPayload = {
   status?: string;
@@ -148,7 +154,7 @@ export async function PUT(
 
     const body = (await req.json()) as UpdatePrepareJoiningPayload;
 
-    const updateData: Prisma.PrepareJoiningUpdateInput = {};
+    const updateData: Record<string, unknown> = {};
 
     if (body.status !== undefined) {
       const normalizedStatus = body.status?.trim();

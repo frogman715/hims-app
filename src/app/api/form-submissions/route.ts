@@ -3,7 +3,13 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { checkPermission, PermissionLevel } from "@/lib/permission-middleware";
-import { Prisma, FormApprovalStatus } from "@prisma/client";
+
+enum FormApprovalStatus {
+  PENDING = "PENDING",
+  APPROVED = "APPROVED",
+  REJECTED = "REJECTED",
+  CHANGES_REQUESTED = "CHANGES_REQUESTED",
+}
 
 // GET /api/form-submissions - Get all form submissions
 export async function GET(req: NextRequest) {
@@ -20,7 +26,7 @@ export async function GET(req: NextRequest) {
     const status = searchParams.get("status");
     const prepareJoiningId = searchParams.get("prepareJoiningId");
 
-    const where: Prisma.PrepareJoiningFormWhereInput = {};
+    const where: Record<string, unknown> = {};
     if (status && status !== "ALL" && Object.values(FormApprovalStatus).includes(status as FormApprovalStatus)) {
       where.status = status as FormApprovalStatus;
     }

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { Prisma } from "@prisma/client";
+
 
 type CrewReplacementStatus = "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
 
@@ -71,7 +71,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     const approvedBy = normalizeOptionalString(parsedBody.approvedBy ?? null);
     const notes = normalizeOptionalString(parsedBody.notes ?? null);
 
-    const updateData: Prisma.CrewReplacementUpdateInput = {
+    const updateData: Record<string, unknown> = {
       status,
       remarks: notes,
       updatedAt: new Date(),

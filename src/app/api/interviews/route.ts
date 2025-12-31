@@ -3,8 +3,27 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { checkPermission, PermissionLevel } from "@/lib/permission-middleware";
-import { ApplicationStatus, InterviewStatus } from "@prisma/client";
-import type { Prisma } from "@prisma/client";
+
+enum ApplicationStatus {
+  RECEIVED = "RECEIVED",
+  REVIEWING = "REVIEWING",
+  INTERVIEW = "INTERVIEW",
+  PASSED = "PASSED",
+  OFFERED = "OFFERED",
+  ACCEPTED = "ACCEPTED",
+  REJECTED = "REJECTED",
+  CANCELLED = "CANCELLED",
+}
+
+enum InterviewStatus {
+  SCHEDULED = "SCHEDULED",
+  COMPLETED = "COMPLETED",
+  NO_SHOW = "NO_SHOW",
+  PASSED = "PASSED",
+  FAILED = "FAILED",
+  RESCHEDULED = "RESCHEDULED",
+  CANCELLED = "CANCELLED",
+}
 
 interface CreateInterviewPayload {
   applicationId: string;
@@ -39,7 +58,7 @@ export async function GET(req: NextRequest) {
     const status = searchParams.get("status");
     const applicationId = searchParams.get("applicationId");
 
-    const where: Prisma.InterviewWhereInput = {};
+    const where: Record<string, unknown> = {};
     if (status && status.toUpperCase() !== "ALL") {
       const normalizedStatus = status.toUpperCase() as InterviewStatus;
       if (!validInterviewStatuses.has(normalizedStatus)) {

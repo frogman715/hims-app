@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { checkPermission, PermissionLevel } from "@/lib/permission-middleware";
-import { Prisma } from "@prisma/client";
+
 
 interface CreateTemplatePayload {
   principalId: string;
@@ -50,7 +50,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const principalId = searchParams.get("principalId");
 
-    const where: Prisma.PrincipalFormTemplateWhereInput = {};
+    const where: Record<string, unknown> = {};
     if (principalId) {
       where.principalId = principalId;
     }

@@ -3,10 +3,18 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { checkPermission, PermissionLevel } from "@/lib/permission-middleware";
-import { FormApprovalStatus, Prisma } from "@prisma/client";
+
+enum FormApprovalStatus {
+  DRAFT = "DRAFT",
+  SUBMITTED = "SUBMITTED",
+  UNDER_REVIEW = "UNDER_REVIEW",
+  CHANGES_REQUESTED = "CHANGES_REQUESTED",
+  APPROVED = "APPROVED",
+  REJECTED = "REJECTED",
+}
 
 interface UpdateFormSubmissionPayload {
-  formData?: Prisma.JsonValue;
+  formData?: unknown;
   status?: FormApprovalStatus;
 }
 
@@ -197,9 +205,9 @@ export async function PUT(
 
     const { formData, status } = parsedBody;
 
-    const updateData: Prisma.PrepareJoiningFormUpdateInput = {};
+    const updateData: Record<string, unknown> = {};
     if (formData !== undefined) {
-      updateData.formData = formData;
+      updateData.formData = formData as unknown;
     }
     
     // Status transitions

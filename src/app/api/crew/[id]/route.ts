@@ -2,9 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { canAccessRedData, encrypt, decrypt } from "@/lib/crypto";
 import { maskPassport } from "@/lib/masking";
-import { Prisma, CrewStatus } from "@prisma/client";
 import { withPermission } from "@/lib/api-middleware";
 import { PermissionLevel } from "@/lib/permission-middleware";
+
+enum CrewStatus {
+  ACTIVE = "ACTIVE",
+  INACTIVE = "INACTIVE",
+  RETIRED = "RETIRED",
+  DECEASED = "DECEASED",
+}
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -93,7 +99,7 @@ export const PATCH = withPermission<RouteContext>(
       const { id } = await params;
       const data = await req.json();
 
-      const updateData: Prisma.CrewUpdateInput = {};
+      const updateData: Record<string, unknown> = {};
 
       if (typeof data.fullName === "string" && data.fullName.trim()) {
         updateData.fullName = data.fullName.trim();

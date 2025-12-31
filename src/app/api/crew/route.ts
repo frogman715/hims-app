@@ -2,7 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withPermission } from "@/lib/api-middleware";
 import { PermissionLevel } from "@/lib/permission-middleware";
-import { Prisma, CrewStatus } from "@prisma/client";
+enum CrewStatus {
+  ACTIVE = "ACTIVE",
+  INACTIVE = "INACTIVE",
+  RETIRED = "RETIRED",
+  DECEASED = "DECEASED",
+}
 
 interface CreateCrewPayload {
   fullName: string;
@@ -44,7 +49,7 @@ export const GET = withPermission(
       const parsedOffset = Number.parseInt(searchParams.get("offset") || "0", 10);
       const offset = Number.isFinite(parsedOffset) && parsedOffset > 0 ? parsedOffset : 0;
 
-      const where: Prisma.CrewWhereInput = {};
+      const where: Record<string, unknown> = {};
 
       if (
         status &&

@@ -2,13 +2,21 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { FormApprovalStatus, Prisma } from "@prisma/client";
 
-function mergeRequestedChanges(formData: Prisma.JsonValue | null | undefined, changes: string): Prisma.JsonValue {
+enum FormApprovalStatus {
+  DRAFT = "DRAFT",
+  SUBMITTED = "SUBMITTED",
+  UNDER_REVIEW = "UNDER_REVIEW",
+  CHANGES_REQUESTED = "CHANGES_REQUESTED",
+  APPROVED = "APPROVED",
+  REJECTED = "REJECTED",
+}
+
+function mergeRequestedChanges(formData: unknown, changes: string): unknown {
   if (formData && typeof formData === "object" && !Array.isArray(formData)) {
-    return { ...formData, requestedChanges: changes } as Prisma.JsonObject;
+    return { ...(formData as Record<string, unknown>), requestedChanges: changes };
   }
-  return { requestedChanges: changes } satisfies Prisma.JsonObject;
+  return { requestedChanges: changes };
 }
 
 // POST /api/form-submissions/[id]/request-changes - Request changes to form submission
@@ -59,7 +67,7 @@ export async function POST(
         status: FormApprovalStatus.CHANGES_REQUESTED,
         reviewedBy: session?.user?.email || "Unknown",
         reviewedAt: new Date(),
-        formData: mergeRequestedChanges(existingForm.formData, changes),
+        formData: mergeRequestedChanges(existingForm.formData, changes) as unknown as object,
       },
       include: {
         template: true,

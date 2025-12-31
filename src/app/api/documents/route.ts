@@ -4,7 +4,7 @@ import { writeFile, mkdir } from "fs/promises";
 import { join, extname } from "path";
 import { withPermission } from "@/lib/api-middleware";
 import { PermissionLevel } from "@/lib/permission-middleware";
-import { DataSensitivity as PrismaDataSensitivity, Prisma } from "@prisma/client";
+import { DataSensitivity as PrismaDataSensitivity } from "@prisma/client";
 import { hasSensitivityAccess, UserRole, DataSensitivity } from "@/lib/permissions";
 import { maskDocumentNumber } from "@/lib/masking";
 
@@ -26,7 +26,7 @@ export const GET = withPermission(
     const normalizedRoles = normalizeRoles(userRoles);
     const isCrewPortalOnly = normalizedRoles.length === 1 && normalizedRoles[0] === UserRole.CREW_PORTAL;
 
-    const whereClause: Prisma.CrewDocumentWhereInput = {};
+    const whereClause: Record<string, unknown> = {};
     if (isCrewPortalOnly) {
       whereClause.crewId = session.user.id;
     }

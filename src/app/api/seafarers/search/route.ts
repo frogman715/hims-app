@@ -3,13 +3,12 @@ import { prisma } from "@/lib/prisma";
 import { withPermission } from "@/lib/api-middleware";
 import { PermissionLevel } from "@/lib/permission-middleware";
 import { ApiError } from "@/lib/error-handler";
-import type { Prisma } from "@prisma/client";
 
 const MAX_RESULTS = 15;
 const EXPIRY_WINDOW_MONTHS = 14;
 const AGE_KEYWORDS = new Set(["umur", "usia", "tahun", "th", "thn", "yo", "yrs"]);
 
-function createAgeRangeCondition(token: string): Prisma.CrewWhereInput | null {
+function createAgeRangeCondition(token: string): Record<string, unknown> | null {
   if (!/^\d{1,2}$/.test(token)) {
     return null;
   }
@@ -57,7 +56,7 @@ function calculateAge(date: Date | null): number | null {
   return age >= 0 ? age : null;
 }
 
-function buildSearchFilters(query: string): Prisma.CrewWhereInput {
+function buildSearchFilters(query: string): Record<string, unknown> {
   const tokens = query
     .split(/\s+/)
     .map((token) => token.trim())
@@ -71,7 +70,7 @@ function buildSearchFilters(query: string): Prisma.CrewWhereInput {
   return {
     AND: tokens.map((token) => {
       const insensitive = "insensitive" as const;
-      const conditions: Prisma.CrewWhereInput[] = [
+      const conditions: Record<string, unknown>[] = [
         { fullName: { contains: token, mode: insensitive } },
         { rank: { contains: token, mode: insensitive } },
         { nationality: { contains: token, mode: insensitive } },
