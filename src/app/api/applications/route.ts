@@ -3,7 +3,18 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { checkPermission, applicationsGuard, PermissionLevel } from "@/lib/permission-middleware";
-import { ApplicationStatus, Prisma } from "@prisma/client";
+
+// Define ApplicationStatus enum locally since it's not in Prisma schema
+enum ApplicationStatus {
+  RECEIVED = "RECEIVED",
+  REVIEWING = "REVIEWING",
+  INTERVIEW = "INTERVIEW",
+  PASSED = "PASSED",
+  OFFERED = "OFFERED",
+  ACCEPTED = "ACCEPTED",
+  REJECTED = "REJECTED",
+  CANCELLED = "CANCELLED",
+}
 
 interface CreateApplicationPayload {
   crewId: string;
