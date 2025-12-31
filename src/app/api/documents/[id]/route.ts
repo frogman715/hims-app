@@ -40,7 +40,32 @@ export async function GET(
       return NextResponse.json({ error: "Document not found" }, { status: 404 });
     }
 
-    return NextResponse.json(document);
+    // Authorization: Check ownership or admin role
+    // Non-admin users can only view their own crew's documents
+    const isAdmin = session.user?.roles?.includes('ADMIN') || session.user?.roles?.includes('DIRECTOR');
+    const isOwnDocument = document.crew.id === session.user?.id; // Assuming crewId is stored in session.user.id
+    
+    if (!isAdmin && !isOwnDocument) {
+      return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 });
+    }
+
+    // Normalize dates to ISO strings for consistent FE handling
+    // Normalize fileUrl: ensure leading slash for legacy values
+    let normalizedFileUrl = document.fileUrl;
+    if (normalizedFileUrl && !normalizedFileUrl.startsWith('/')) {
+      normalizedFileUrl = `/${normalizedFileUrl}`;
+    }
+
+    const response = {
+      ...document,
+      issueDate: document.issueDate ? new Date(document.issueDate).toISOString() : null,
+      expiryDate: document.expiryDate ? new Date(document.expiryDate).toISOString() : null,
+      createdAt: document.createdAt.toISOString(),
+      updatedAt: document.updatedAt.toISOString(),
+      fileUrl: normalizedFileUrl,
+    };
+
+    return NextResponse.json(response);
   } catch (error) {
     console.error("Error fetching document:", error);
     return NextResponse.json({ error: "Failed to fetch document" }, { status: 500 });

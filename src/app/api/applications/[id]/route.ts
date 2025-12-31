@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { PrepareJoiningStatus, Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 
 // Define ApplicationStatus enum locally since it's not in Prisma schema
 enum ApplicationStatus {
@@ -14,6 +14,16 @@ enum ApplicationStatus {
   ACCEPTED = "ACCEPTED",
   REJECTED = "REJECTED",
   CANCELLED = "CANCELLED",
+}
+
+// Define PrepareJoiningStatus enum locally since it's not in Prisma schema
+enum PrepareJoiningStatus {
+  PENDING = "PENDING",
+  DOCUMENTS = "DOCUMENTS",
+  MEDICAL = "MEDICAL",
+  TRAINING = "TRAINING",
+  TRAVEL = "TRAVEL",
+  READY = "READY",
 }
 
 interface UpdateApplicationPayload {

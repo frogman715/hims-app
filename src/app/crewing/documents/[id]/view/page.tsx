@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { formatDocumentDate, getExpiryStatus } from '@/lib/date-utils';
 
 interface DocumentDetail {
   id: string;
@@ -61,28 +62,9 @@ export default function ViewDocumentPage() {
   const formattedDetails = useMemo(() => {
     if (!document) return null;
 
-    const formatDate = (value: string | null) => {
-      if (!value) return '—';
-      try {
-        return new Date(value).toLocaleDateString('id-ID', {
-          day: '2-digit',
-          month: 'short',
-          year: 'numeric',
-        });
-      } catch {
-        return value;
-      }
-    };
-
-    const getExpiringThreshold = (reference: Date) => {
-      const threshold = new Date(reference.getTime());
-      threshold.setMonth(threshold.getMonth() + 14);
-      return threshold;
-    };
-
     const now = new Date();
     const expiry = document.expiryDate ? new Date(document.expiryDate) : null;
-    const expiringThreshold = getExpiringThreshold(now);
+    const expiringThreshold = new Date(now.getFullYear(), now.getMonth() + 15, now.getDate());
 
     let statusLabel = 'Valid';
     let statusClass = 'bg-emerald-100 text-emerald-700';
@@ -99,8 +81,8 @@ export default function ViewDocumentPage() {
     }
 
     return {
-      issueDate: formatDate(document.issueDate),
-      expiryDate: formatDate(document.expiryDate),
+      issueDate: formatDocumentDate(document.issueDate),
+      expiryDate: formatDocumentDate(document.expiryDate),
       statusLabel,
       statusClass,
     };

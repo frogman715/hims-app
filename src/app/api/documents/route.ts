@@ -60,13 +60,19 @@ export const GET = withPermission(
         (libSensitivity === DataSensitivity.RED && !canViewRed) ||
         (libSensitivity === DataSensitivity.AMBER && !canViewAmber);
 
+      // Normalize fileUrl: ensure leading slash for legacy values
+      let normalizedFileUrl = document.fileUrl;
+      if (normalizedFileUrl && !normalizedFileUrl.startsWith('/')) {
+        normalizedFileUrl = `/${normalizedFileUrl}`;
+      }
+
       return {
         ...document,
         docNumber:
           document.docNumber && requiresMask
             ? maskDocumentNumber(document.docNumber)
             : document.docNumber,
-        fileUrl: requiresMask ? null : document.fileUrl,
+        fileUrl: requiresMask ? null : normalizedFileUrl,
       };
     });
 
