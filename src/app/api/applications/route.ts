@@ -87,7 +87,7 @@ export async function GET(req: NextRequest) {
     const crewId = searchParams.get("crewId");
     const principalId = searchParams.get("principalId");
 
-    const where: Prisma.ApplicationWhereInput = {};
+    const where: Record<string, unknown> = {};
     if (status && status !== "ALL" && APPLICATION_STATUS_VALUES.has(status as ApplicationStatus)) {
       where.status = status as ApplicationStatus;
     }
