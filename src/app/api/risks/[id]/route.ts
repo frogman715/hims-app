@@ -85,7 +85,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     }
 
     // Prepare update data
-    const updateData: Prisma.RiskUpdateInput = {};
+    const updateData: Record<string, unknown> = {};
     const changedFields: Record<string, unknown> = {};
 
     if (payload.title !== undefined) {
