@@ -13,10 +13,11 @@ enum ComplianceSystemType {
 }
 
 enum ComplianceStatus {
+  COMPLIANT = "COMPLIANT",
+  NON_COMPLIANT = "NON_COMPLIANT",
   PENDING = "PENDING",
-  VERIFIED = "VERIFIED",
   EXPIRED = "EXPIRED",
-  REJECTED = "REJECTED",
+  VERIFIED = "VERIFIED",
 }
 
 /**
