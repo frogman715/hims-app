@@ -86,7 +86,7 @@ export async function PUT(
       principalId
     } = body;
 
-    const updateData: Prisma.VesselUpdateInput = {};
+    const updateData: Record<string, unknown> = {};
 
     if (name !== undefined) {
       if (typeof name !== 'string' || !name.trim()) {
