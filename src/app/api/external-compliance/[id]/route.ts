@@ -3,7 +3,16 @@ import { prisma } from "@/lib/prisma";
 import { withPermission } from "@/lib/api-middleware";
 import { PermissionLevel } from "@/lib/permission-middleware";
 import { handleApiError, ApiError } from "@/lib/error-handler";
-import { ComplianceStatus } from "@prisma/client";
+
+enum ComplianceStatus {
+  NOT_STARTED = "NOT_STARTED",
+  IN_PROGRESS = "IN_PROGRESS",
+  COMPLETED = "COMPLETED",
+  FAILED = "FAILED",
+  PENDING_REVIEW = "PENDING_REVIEW",
+  APPROVED = "APPROVED",
+  REJECTED = "REJECTED",
+}
 
 type ComplianceHandlerContext = { params: { id: string } };
 
@@ -80,7 +89,7 @@ export async function PUT(
           ...(nextStatus && { status: nextStatus as ComplianceStatus }),
           ...(typeof verificationUrl === "string" && { verificationUrl }),
           ...(typeof notes === "string" && { notes }),
-        },
+        } as Record<string, unknown>,
         include: {
           crew: {
             select: {
