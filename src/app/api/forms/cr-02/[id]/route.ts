@@ -10,6 +10,7 @@ type ApplicationWithRelations = {
   position: string;
   status: string;
   applicationDate: Date | string | null;
+  remarks?: string | null;
   crew: {
     id: string;
     fullName: string;
