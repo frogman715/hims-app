@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { Prisma } from "@prisma/client";
 
 /**
  * Custom API Error class for structured error handling
@@ -40,38 +39,44 @@ export function handleApiError(error: unknown): NextResponse {
     );
   }
 
-  // Handle Prisma errors
-  if (error instanceof Prisma.PrismaClientKnownRequestError) {
-    switch (error.code) {
-      case "P2002":
-        return NextResponse.json(
-          { error: "A record with this value already exists", code: "DUPLICATE_ENTRY" },
-          { status: 409 }
-        );
-      case "P2025":
-        return NextResponse.json(
-          { error: "Record not found", code: "NOT_FOUND" },
-          { status: 404 }
-        );
-      case "P2003":
-        return NextResponse.json(
-          { error: "Related record not found", code: "FOREIGN_KEY_VIOLATION" },
-          { status: 400 }
-        );
-      default:
-        return NextResponse.json(
-          { error: "Database operation failed", code: "DATABASE_ERROR" },
-          { status: 500 }
-        );
+  // Handle Prisma errors by checking error properties
+  if (error && typeof error === "object") {
+    const err = error as Record<string, unknown>;
+    
+    // PrismaClientKnownRequestError has a 'code' property
+    if (typeof err.code === "string" && err.code.startsWith("P")) {
+      const code = err.code;
+      switch (code) {
+        case "P2002":
+          return NextResponse.json(
+            { error: "A record with this value already exists", code: "DUPLICATE_ENTRY" },
+            { status: 409 }
+          );
+        case "P2025":
+          return NextResponse.json(
+            { error: "Record not found", code: "NOT_FOUND" },
+            { status: 404 }
+          );
+        case "P2003":
+          return NextResponse.json(
+            { error: "Related record not found", code: "FOREIGN_KEY_VIOLATION" },
+            { status: 400 }
+          );
+        default:
+          return NextResponse.json(
+            { error: "Database operation failed", code: "DATABASE_ERROR" },
+            { status: 500 }
+          );
+      }
     }
-  }
-
-  // Handle validation errors
-  if (error instanceof Prisma.PrismaClientValidationError) {
-    return NextResponse.json(
-      { error: "Invalid data provided", code: "VALIDATION_ERROR" },
-      { status: 400 }
-    );
+    
+    // Check for validation errors by error name
+    if (err.name === "PrismaClientValidationError") {
+      return NextResponse.json(
+        { error: "Invalid data provided", code: "VALIDATION_ERROR" },
+        { status: 400 }
+      );
+    }
   }
 
   // Handle generic errors
