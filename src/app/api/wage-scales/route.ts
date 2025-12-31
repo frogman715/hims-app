@@ -3,7 +3,15 @@ import { prisma } from "@/lib/prisma";
 import { withPermission } from "@/lib/api-middleware";
 import { PermissionLevel } from "@/lib/permission-middleware";
 import { ApiError, validateRequired } from "@/lib/error-handler";
-import { WageComponent } from "@prisma/client";
+
+enum WageComponent {
+  BASIC_WAGE = "BASIC_WAGE",
+  FIXED_OVERTIME = "FIXED_OVERTIME",
+  MONTHLY_WAGE = "MONTHLY_WAGE",
+  LEAVE_PAY = "LEAVE_PAY",
+  SPECIAL_ALLOWANCE = "SPECIAL_ALLOWANCE",
+  BONUS = "BONUS",
+}
 
 type WageScaleItemPayload = {
   component: string;
