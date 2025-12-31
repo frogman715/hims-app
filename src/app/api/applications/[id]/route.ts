@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { Prisma } from "@prisma/client";
 
 // Define ApplicationStatus enum locally since it's not in Prisma schema
 enum ApplicationStatus {
@@ -32,6 +31,18 @@ interface UpdateApplicationPayload {
   vesselType?: string | null;
   principalId?: string | null;
   remarks?: string | null;
+}
+
+// Define ApplicationUpdateInput locally instead of importing from Prisma
+interface ApplicationUpdateInput {
+  status?: string;
+  position?: string;
+  vesselType?: string | null;
+  principalId?: string | null;
+  remarks?: string | null;
+  reviewedBy?: string;
+  reviewedAt?: Date;
+  principal?: { connect: { id: string } } | { disconnect: boolean };
 }
 
 const APPLICATION_STATUS_VALUES = new Set<ApplicationStatus>([
@@ -167,7 +178,7 @@ export async function PUT(
       return NextResponse.json({ error: "Invalid application update payload" }, { status: 400 });
     }
 
-    const updateData: Prisma.ApplicationUpdateInput = {};
+    const updateData: any = {};
     
     if (body.status !== undefined) {
       updateData.status = body.status;
