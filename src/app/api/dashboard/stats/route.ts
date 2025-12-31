@@ -99,7 +99,7 @@ export async function GET() {
     });
 
     // Group documents by crew
-    const crewWithExpiringDocumentsGrouped = crewWithExpiringDocuments.reduce((acc: Record<string, CrewWithDocuments>, doc) => {
+    const crewWithExpiringDocumentsGrouped: Record<string, CrewWithDocuments> = crewWithExpiringDocuments.reduce((acc: Record<string, CrewWithDocuments>, doc) => {
       const crewName = doc.crew.fullName;
       if (!acc[crewName]) {
         acc[crewName] = {
@@ -116,7 +116,7 @@ export async function GET() {
       return acc;
     }, {});
 
-    const crewWithExpiringDocumentsArray = Object.values(crewWithExpiringDocumentsGrouped);
+    const crewWithExpiringDocumentsArray: CrewWithDocuments[] = Object.values(crewWithExpiringDocumentsGrouped);
 
     // Contracts Expiring Soon: Assignments with endDate within 90 days and status ONBOARD
     // For 8-9 month contracts, 90 days notice catches crew with 1-3 months remaining
@@ -158,7 +158,7 @@ export async function GET() {
     });
 
     // Group contracts by crew
-    const crewWithExpiringContractsGrouped = crewWithExpiringContracts.reduce((acc: Record<string, CrewWithContracts>, assignment) => {
+    const crewWithExpiringContractsGrouped: Record<string, CrewWithContracts> = crewWithExpiringContracts.reduce((acc: Record<string, CrewWithContracts>, assignment) => {
       const crewName = assignment.crew.fullName;
       if (!acc[crewName]) {
         acc[crewName] = {
@@ -178,7 +178,7 @@ export async function GET() {
       return acc;
     }, {});
 
-    const crewWithExpiringContractsArray = Object.values(crewWithExpiringContractsGrouped);
+    const crewWithExpiringContractsArray: CrewWithContracts[] = Object.values(crewWithExpiringContractsGrouped);
 
     // Combine crew with expiring documents and contracts
     const allCrewWithIssues: Record<string, CrewWithIssues> = {};
