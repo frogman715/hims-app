@@ -3,7 +3,20 @@ import { prisma } from "@/lib/prisma";
 import { withPermission } from "@/lib/api-middleware";
 import { PermissionLevel } from "@/lib/permission-middleware";
 import { ApiError, validateRequired } from "@/lib/error-handler";
-import { ComplianceSystemType, ComplianceStatus } from "@prisma/client";
+
+enum ComplianceSystemType {
+  ISO_9001 = "ISO_9001",
+  ISO_14001 = "ISO_14001",
+  ISO_45001 = "ISO_45001",
+  OTHER = "OTHER",
+}
+
+enum ComplianceStatus {
+  COMPLIANT = "COMPLIANT",
+  NON_COMPLIANT = "NON_COMPLIANT",
+  PENDING = "PENDING",
+  EXPIRED = "EXPIRED",
+}
 
 /**
  * GET /api/external-compliance
@@ -15,15 +28,11 @@ export const GET = withPermission("compliance", PermissionLevel.VIEW_ACCESS, asy
   const systemType = searchParams.get("systemType") as ComplianceSystemType | null;
   const status = searchParams.get("status") as ComplianceStatus | null;
 
-  const where: {
-    crewId?: string;
-    systemType?: ComplianceSystemType;
-    status?: ComplianceStatus;
-  } = {};
+  const where: Record<string, unknown> = {};
 
   if (crewId) where.crewId = crewId;
-  if (systemType) where.systemType = systemType;
-  if (status) where.status = status;
+  if (systemType) where.systemType = systemType as string;
+  if (status) where.status = status as string;
 
   const compliances = await prisma.externalCompliance.findMany({
     where,
@@ -84,17 +93,20 @@ export const POST = withPermission("compliance", PermissionLevel.EDIT_ACCESS, as
     throw new ApiError(404, "Crew not found", "CREW_NOT_FOUND");
   }
 
+  const createData = {
+    crewId: crewId!,
+    systemType,
+    certificateId,
+    issueDate,
+    expiryDate,
+    status: ComplianceStatus.PENDING,
+    verificationUrl,
+    notes,
+  };
+
   const compliance = await prisma.externalCompliance.create({
-    data: {
-      crewId: crewId!,
-      systemType,
-      certificateId,
-      issueDate,
-      expiryDate,
-      status: ComplianceStatus.PENDING,
-      verificationUrl,
-      notes,
-    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    data: createData as any,
     include: {
       crew: {
         select: {
