@@ -7,7 +7,26 @@ import { join } from "path";
 import { existsSync } from "fs";
 import * as XLSX from "xlsx";
 import { Document, Packer, Paragraph } from "docx";
-import type { Crew } from "@prisma/client";
+
+interface Crew {
+  fullName: string;
+  passportNumber?: string | null;
+  passportExpiry?: Date | null;
+  rank: string;
+  email?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  dateOfBirth?: Date | null;
+  nationality?: string | null;
+  seamanBookNumber?: string | null;
+  seamanBookExpiry?: Date | null;
+  emergencyContactName?: string | null;
+  emergencyContactPhone?: string | null;
+  emergencyContactRelation?: string | null;
+  bloodType?: string | null;
+  heightCm?: number | null;
+  weightKg?: number | null;
+}
 
 const FORM_REFERENCE_PATH = join(
   process.cwd(),
