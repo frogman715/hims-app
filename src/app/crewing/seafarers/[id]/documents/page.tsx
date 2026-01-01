@@ -191,8 +191,8 @@ export default function SeafarerDocumentsPage() {
   };
 
   const handleViewDocument = (docId: string) => {
-    // Open document in new tab
-    window.open(`/api/documents/${docId}`, '_blank');
+    // Navigate to document viewer page
+    router.push(`/crewing/documents/${docId}/view`);
   };
 
   const handleDeleteDocument = async (docId: string, docType: string) => {
