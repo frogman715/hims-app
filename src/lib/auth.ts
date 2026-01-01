@@ -229,7 +229,7 @@ export const authOptions: NextAuthOptions = {
             where: { id: tokenSubject },
             select: { isSystemAdmin: true },
           })
-        );
+        ) as { isSystemAdmin: boolean } | null;
         isSystemAdmin = dbUser?.isSystemAdmin ?? false;
       }
       token.isSystemAdmin = isSystemAdmin;
