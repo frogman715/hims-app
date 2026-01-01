@@ -144,6 +144,39 @@ export default function NewApplicationPage() {
       });
 
       if (response.ok) {
+        const applicationData = await response.json();
+        const applicationId = applicationData.id;
+
+        // Auto-create checklists for relevant procedures
+        try {
+          const proceduresRes = await fetch('/api/crewing/procedures?phase=Pre-Deployment');
+          if (proceduresRes.ok) {
+            const proceduresData = await proceduresRes.json();
+            
+            // Create a checklist for each procedure
+            for (const procedure of proceduresData.data || []) {
+              await fetch('/api/crewing/checklists', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  applicationId,
+                  procedureId: procedure.id,
+                  checklistCode: procedure.code,
+                  itemsJson: procedure.steps.map((step: Record<string, unknown>) => ({
+                    order: step.order,
+                    title: step.title,
+                    description: step.description,
+                    checked: false,
+                  })) || [],
+                }),
+              });
+            }
+          }
+        } catch (checklistErr) {
+          console.warn('Failed to create checklists:', checklistErr);
+          // Don't fail the application creation if checklists fail
+        }
+
         router.push('/crewing/applications');
       } else {
         const errorData = await response.json();
