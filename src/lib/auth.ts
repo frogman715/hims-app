@@ -89,7 +89,7 @@ async function fetchUserRole(userId: string, context: string): Promise<string | 
       where: { id: userId },
       select: { role: true },
     })
-  );
+  ) as { role: string } | null;
   return result?.role ?? undefined;
 }
 
