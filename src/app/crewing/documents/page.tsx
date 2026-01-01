@@ -44,6 +44,20 @@ export default function Documents() {
     }
   }, []);
 
+  // Update URL when filter changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (filter === 'all') {
+        params.delete('filter');
+      } else {
+        params.set('filter', filter);
+      }
+      const newUrl = `${window.location.pathname}${params.toString() ? '?' + params.toString() : ''}`;
+      window.history.replaceState({}, '', newUrl);
+    }
+  }, [filter]);
+
   useEffect(() => {
     if (status === "loading") return;
     if (!session) {
