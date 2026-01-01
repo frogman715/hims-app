@@ -30,17 +30,15 @@ export default function Documents() {
   const [filter, setFilter] = useState('all'); // all, expiring, expired
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Read filter from URL query params (manual parse to avoid useSearchParams issue)
+  // Read filter from URL query params on mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const filterParam = params.get('filter');
       const typeParam = params.get('type');
-      if (filterParam) {
-        setFilter(filterParam);
-      } else if (typeParam) {
-        setFilter(typeParam);
-      }
+      // Set initial filter from URL, default to 'all' if not specified
+      const initialFilter = filterParam || typeParam || 'all';
+      setFilter(initialFilter);
     }
   }, []);
 
