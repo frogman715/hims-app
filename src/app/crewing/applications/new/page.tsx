@@ -8,7 +8,7 @@ interface ApplicationFormData {
   position: string;
   vesselType: string;
   principalId: string;
-  vesselId: string;
+  vesselId?: string;
   applicationDate: string;
 }
 
@@ -67,7 +67,6 @@ export default function NewApplicationPage() {
     position: '',
     vesselType: '',
     principalId: '',
-    vesselId: '',
     applicationDate: new Date().toISOString().split('T')[0],
   });
   const [crew, setCrew] = useState<Crew[]>([]);
@@ -104,21 +103,20 @@ export default function NewApplicationPage() {
 
   // Fetch vessels when principal changes
   useEffect(() => {
-    if (!formData.principalId) {
-      setVessels([]);
-      return;
-    }
-
     const fetchVessels = async () => {
+      if (!formData.principalId) {
+        setVessels([]);
+        return;
+      }
+
       try {
-        const response = await fetch(`/api/vessels?principalId=${formData.principalId}`);
+        const response = await fetch(`/api/principals/${formData.principalId}/vessels`);
         if (response.ok) {
-          const vesselData = await response.json();
-          setVessels(vesselData);
+          const data = await response.json();
+          setVessels(data);
         }
       } catch (err) {
         console.error('Error fetching vessels:', err);
-        setVessels([]);
       }
     };
 
@@ -142,7 +140,6 @@ export default function NewApplicationPage() {
           vesselType: formData.vesselType || null,
           principalId: formData.principalId || null,
           applicationDate: formData.applicationDate,
-          remarks: formData.vesselId ? `Applied for vessel: ${vessels.find(v => v.id === formData.vesselId)?.name}` : null,
         }),
       });
 
@@ -228,7 +225,7 @@ export default function NewApplicationPage() {
             {/* Principal/Company */}
             <div>
               <label htmlFor="principalId" className="block text-sm font-semibold text-gray-900 mb-2">
-                Target Principal/Shipping Company *
+                Target Principal/Ship Owner *
               </label>
               <select
                 id="principalId"
@@ -247,16 +244,16 @@ export default function NewApplicationPage() {
               </select>
             </div>
 
-            {/* Vessel Selection */}
+            {/* Vessel Selection (conditional) */}
             {formData.principalId && (
               <div>
                 <label htmlFor="vesselId" className="block text-sm font-semibold text-gray-900 mb-2">
-                  Target Vessel (Ship)
+                  Target Vessel (from selected principal)
                 </label>
                 <select
                   id="vesselId"
                   name="vesselId"
-                  value={formData.vesselId}
+                  value={formData.vesselId || ''}
                   onChange={handleChange}
                   className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
@@ -267,8 +264,8 @@ export default function NewApplicationPage() {
                     </option>
                   ))}
                 </select>
-                {vessels.length === 0 && (
-                  <p className="text-sm text-gray-500 mt-2">No vessels found for this company</p>
+                {vessels.length === 0 && formData.principalId && (
+                  <p className="text-sm text-gray-500 mt-2">No vessels found for this principal</p>
                 )}
               </div>
             )}
