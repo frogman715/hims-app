@@ -56,7 +56,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
       data: {
         riskId,
         action: "ADDED_ACTION",
-        changedFields: { actionId: action.id, description: payload.description } as unknown,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        changedFields: { actionId: action.id, description: payload.description } as any,
         changedById: session.user.id,
       },
     });

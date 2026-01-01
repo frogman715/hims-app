@@ -148,7 +148,8 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       data: {
         riskId: id,
         action: "UPDATED",
-        changedFields: changedFields as unknown,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        changedFields: changedFields as any,
         changedById: session.user.id,
       },
     });
@@ -195,7 +196,8 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
       data: {
         riskId: id,
         action: "CLOSED",
-        changedFields: { status: "CLOSED" } as unknown,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        changedFields: { status: "CLOSED" } as any,
         changedById: session.user.id,
       },
     });

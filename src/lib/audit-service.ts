@@ -84,7 +84,8 @@ export async function createAuditSchedule(
   },
   trx?: unknown
 ) {
-  const client = trx || prisma;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const client = (trx || prisma) as any;
 
   const schedule = await client.auditSchedule.create({
     data: {
@@ -118,7 +119,8 @@ export async function updateAuditSchedule(
   },
   trx?: unknown
 ) {
-  const client = trx || prisma;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const client = (trx || prisma) as any;
 
   // Verify schedule exists
   const schedule = await client.auditSchedule.findUnique({
@@ -162,7 +164,8 @@ export async function createAuditFinding(
   },
   trx?: unknown
 ) {
-  const client = trx || prisma;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const client = (trx || prisma) as any;
 
   // Verify schedule exists
   const schedule = await client.auditSchedule.findUnique({
@@ -212,7 +215,8 @@ export async function createAuditReport(
   userId: string,
   trx?: unknown
 ) {
-  const client = trx || prisma;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const client = (trx || prisma) as any;
 
   // Verify schedule exists
   const schedule = await client.auditSchedule.findUnique({
@@ -238,7 +242,8 @@ export async function createAuditReport(
       reportNumber,
       summary: data.summary,
       recommendations: data.recommendations,
-      findings: data.findings as unknown,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      findings: data.findings as any,
       status: "DRAFT",
     },
     include: {
@@ -258,7 +263,8 @@ export async function approveAuditReport(
   userId: string,
   trx?: unknown
 ) {
-  const client = trx || prisma;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const client = (trx || prisma) as any;
 
   // Verify report exists
   const report = await client.auditReport.findUnique({

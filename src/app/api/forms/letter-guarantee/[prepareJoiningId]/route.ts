@@ -431,7 +431,8 @@ export async function POST(
       data: {
         prepareJoiningId,
         templateId: template.id,
-        formData: formData as unknown,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        formData: formData as any,
         status: "DRAFT",
         version: 1,
       },

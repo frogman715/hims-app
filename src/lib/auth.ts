@@ -367,7 +367,8 @@ async function loadPermissionOverrides(roles: string[]): Promise<RolePermissionO
     prisma.roleModulePermission.findMany({
       where: {
         role: {
-          in: normalizedRoles,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          in: normalizedRoles as any,
         },
       },
       select: {

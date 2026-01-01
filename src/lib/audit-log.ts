@@ -101,9 +101,12 @@ export async function recordAuditLog({
       action,
       entityType,
       entityId,
-      metadataJson: metadata ? sanitizePayload(metadata) : null,
-      oldValuesJson: before ? sanitizePayload(before) : null,
-      newValuesJson: after ? sanitizePayload(after) : null
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      metadataJson: metadata ? (sanitizePayload(metadata) as any) : null,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      oldValuesJson: before ? (sanitizePayload(before) as any) : null,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      newValuesJson: after ? (sanitizePayload(after) as any) : null
     }
   });
 }

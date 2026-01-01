@@ -63,7 +63,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
       data: {
         riskId,
         action: "REVIEWED",
-        changedFields: { effectiveness: payload.effectiveness, newRiskScore } as unknown,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        changedFields: { effectiveness: payload.effectiveness, newRiskScore } as any,
         changedById: session.user.id,
       },
     });
