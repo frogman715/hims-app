@@ -431,7 +431,7 @@ export async function POST(
       data: {
         prepareJoiningId,
         templateId: template.id,
-        formData,
+        formData: formData as unknown,
         status: "DRAFT",
         version: 1,
       },
