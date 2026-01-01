@@ -165,13 +165,6 @@ const SUMMARY_CARDS: SummaryCardConfig[] = [
     href: '/crewing/applications',
     icon: '📝',
   },
-  {
-    key: 'expiringDocuments',
-    label: 'Expiring Documents',
-    description: 'Need renewal follow up',
-    href: '/crewing/documents?filter=expiring',
-    icon: '📄',
-  },
 ];
 
 export default function DashboardClient() {

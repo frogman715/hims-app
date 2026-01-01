@@ -266,12 +266,27 @@ export async function GET() {
 
     const pendingTasks = pendingApplications + complaints;
 
+    // Count total crew and active vessels
+    const totalCrew = await prisma.crew.count();
+    const activeVessels = await prisma.vessel.count({
+      where: { 
+        assignments: {
+          some: {
+            status: 'ONBOARD'
+          }
+        }
+      }
+    });
+
     return NextResponse.json({
+      totalCrew,
+      activeVessels,
+      pendingApplications,
+      expiringDocuments: documentsExpiringSoon,
       crewReady,
       crewOnboard: crewOnBoard,
-      documentsExpiringSoon,
-      expiringItems,
       contractsExpiringSoon,
+      expiringItems,
       pendingTasks,
     });
   } catch (error) {

@@ -450,6 +450,14 @@ export default function CrewingClient() {
           color: "from-orange-600 to-red-600",
           stats: formatStat(stats?.crewReplacementPending, "Pending"),
         },
+        {
+          title: "Sign-Off Records",
+          description: "Crew sign-off tracking and archives",
+          href: "/crewing/sign-off",
+          icon: "📤",
+          color: "from-red-600 to-rose-700",
+          stats: formatStat(stats?.signOffThisMonth, "This Month"),
+        },
       ],
     },
     {
@@ -487,14 +495,6 @@ export default function CrewingClient() {
           icon: "📄",
           color: "from-blue-600 to-cyan-700",
           stats: "64 Forms",
-        },
-        {
-          title: "Training Records",
-          description: "Training programs, orientations & certifications",
-          href: "/crewing/training",
-          icon: "🎓",
-          color: "from-yellow-600 to-amber-700",
-          stats: formatStat(stats?.trainingInProgress, "Active"),
         },
         {
           title: "Monthly Checklist",
