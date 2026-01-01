@@ -12,20 +12,7 @@ type ApplicationWithRelations = {
   applicationDate: Date | string | null;
   remarks?: string | null;
   crew: {
-    id: string;
-    fullName: string;
-    dateOfBirth: Date | string | null;
-    placeOfBirth?: string | null;
-    nationality?: string | null;
-    passportNumber?: string | null;
-    rank?: string | null;
-    phone?: string | null;
-    email?: string | null;
-    address?: string | null;
-    passportExpiry?: Date | string | null;
-    seamanBookNumber?: string | null;
-    seamanBookExpiry?: Date | string | null;
-    mobileNumber: string;
+    [key: string]: unknown; // Accept any crew properties
   } | null;
   principal: {
     id: string;
