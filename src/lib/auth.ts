@@ -3,9 +3,21 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
 import { rateLimit } from "@/lib/rate-limit";
 import bcrypt from "bcryptjs";
-import { Prisma, Role as PrismaRole } from "@prisma/client";
 import type { RolePermissionOverride } from "@/lib/permissions";
 import { env } from "@/lib/env";
+
+enum Role {
+  DIRECTOR = "DIRECTOR",
+  CDMO = "CDMO",
+  OPERATIONAL = "OPERATIONAL",
+  ACCOUNTING = "ACCOUNTING",
+  HR = "HR",
+  CREW_PORTAL = "CREW_PORTAL",
+  QMR = "QMR",
+  HR_ADMIN = "HR_ADMIN",
+  SECTION_HEAD = "SECTION_HEAD",
+  STAFF = "STAFF",
+}
 
 declare module "next-auth" {
   interface User {
@@ -58,7 +70,8 @@ async function safePrismaCall<T>(context: string, action: () => Promise<T>): Pro
   try {
     return await action();
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientInitializationError) {
+    // Check for Prisma initialization errors by error name and message
+    if (error && typeof error === "object" && "name" in error && error.name === "PrismaClientInitializationError") {
       console.error("[auth] prisma-initialization-failed", {
         context,
         message: error.message,
@@ -337,7 +350,7 @@ async function loadPermissionOverrides(roles: string[]): Promise<RolePermissionO
     new Set(
       roles
         .map((role) => role.toUpperCase())
-        .filter((role): role is PrismaRole => (Object.values(PrismaRole) as string[]).includes(role))
+        .filter((role): role is string => (Object.values(Role) as string[]).includes(role))
     )
   );
 
