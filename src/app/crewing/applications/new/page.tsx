@@ -4,43 +4,131 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 interface ApplicationFormData {
-  seafarerId: string;
-  appliedRank: string;
+  crewId: string;
+  position: string;
+  vesselType: string;
+  principalId: string;
+  vesselId: string;
+  applicationDate: string;
 }
 
-interface Seafarer {
-  id: number;
+interface Crew {
+  id: string;
   fullName: string;
 }
+
+interface Principal {
+  id: string;
+  name: string;
+}
+
+interface Vessel {
+  id: string;
+  name: string;
+  principalId: string;
+}
+
+const VESSEL_TYPES = [
+  'General Cargo',
+  'Container Ship',
+  'Bulk Carrier',
+  'Tanker',
+  'RoRo',
+  'Refrigerated Cargo',
+  'Multi-Purpose',
+  'Yacht',
+  'Fishing Vessel',
+  'Other',
+];
+
+const POSITIONS = [
+  'Master/Captain',
+  'Chief Officer',
+  'Second Officer',
+  'Third Officer',
+  'Deck Cadet',
+  'Chief Engineer',
+  'Second Engineer',
+  'Third Engineer',
+  'Fourth Engineer',
+  'Engine Cadet',
+  'Chief Steward',
+  'Bosun',
+  'Carpenter',
+  'Able Seaman',
+  'Ordinary Seaman',
+  'Galley Boy',
+];
 
 export default function NewApplicationPage() {
   const router = useRouter();
   const [formData, setFormData] = useState<ApplicationFormData>({
-    seafarerId: '',
-    appliedRank: '',
+    crewId: '',
+    position: '',
+    vesselType: '',
+    principalId: '',
+    vesselId: '',
+    applicationDate: new Date().toISOString().split('T')[0],
   });
-  const [seafarers, setSeafarers] = useState<Seafarer[]>([]);
+  const [crew, setCrew] = useState<Crew[]>([]);
+  const [principals, setPrincipals] = useState<Principal[]>([]);
+  const [vessels, setVessels] = useState<Vessel[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchSeafarers = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch('/api/seafarers');
-        if (response.ok) {
-          const data = await response.json();
-          setSeafarers(data);
+        const [crewRes, principalsRes] = await Promise.all([
+          fetch('/api/seafarers'),
+          fetch('/api/principals'),
+        ]);
+
+        if (crewRes.ok) {
+          const crewData = await crewRes.json();
+          setCrew(crewData);
         }
-      } catch (error) {
-        console.error('Error fetching seafarers:', error);
+
+        if (principalsRes.ok) {
+          const principalsData = await principalsRes.json();
+          setPrincipals(principalsData);
+        }
+      } catch (err) {
+        console.error('Error fetching data:', err);
+        setError('Failed to load form data');
       }
     };
 
-    fetchSeafarers();
+    fetchData();
   }, []);
+
+  // Fetch vessels when principal changes
+  useEffect(() => {
+    if (!formData.principalId) {
+      setVessels([]);
+      return;
+    }
+
+    const fetchVessels = async () => {
+      try {
+        const response = await fetch(`/api/vessels?principalId=${formData.principalId}`);
+        if (response.ok) {
+          const vesselData = await response.json();
+          setVessels(vesselData);
+        }
+      } catch (err) {
+        console.error('Error fetching vessels:', err);
+        setVessels([]);
+      }
+    };
+
+    fetchVessels();
+  }, [formData.principalId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
 
     try {
       const response = await fetch('/api/applications', {
@@ -49,23 +137,29 @@ export default function NewApplicationPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          seafarerId: parseInt(formData.seafarerId),
-          appliedRank: formData.appliedRank,
+          crewId: formData.crewId,
+          position: formData.position,
+          vesselType: formData.vesselType || null,
+          principalId: formData.principalId || null,
+          applicationDate: formData.applicationDate,
+          remarks: formData.vesselId ? `Applied for vessel: ${vessels.find(v => v.id === formData.vesselId)?.name}` : null,
         }),
       });
 
       if (response.ok) {
         router.push('/crewing/applications');
       } else {
-        alert('Failed to create application');
+        const errorData = await response.json();
+        setError(errorData.error || 'Failed to create application');
       }
-    } catch (error) {
-      console.error('Error:', error);
-      alert('Error creating application');
+    } catch (err) {
+      console.error('Error:', err);
+      setError('Error creating application');
     } finally {
       setLoading(false);
     }
   };
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData(prev => ({
@@ -80,60 +174,159 @@ export default function NewApplicationPage() {
         <div className="bg-white rounded-lg shadow-lg border border-gray-300 p-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-6">Add New Application</h1>
 
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+              {error}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label htmlFor="seafarerId" className="block text-sm font-semibold text-gray-900 mb-2">
-              Seafarer *
-            </label>
-            <select
-              id="seafarerId"
-              name="seafarerId"
-              required
-              value={formData.seafarerId}
-              onChange={handleChange}
-              className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-blue-500"
-            >
-              <option value="">Select a seafarer</option>
-              {seafarers.map(seafarer => (
-                <option key={seafarer.id} value={seafarer.id}>
-                  {seafarer.fullName}
-                </option>
-              ))}
-            </select>
-          </div>
+            {/* Seafarer Selection */}
+            <div>
+              <label htmlFor="crewId" className="block text-sm font-semibold text-gray-900 mb-2">
+                Seafarer *
+              </label>
+              <select
+                id="crewId"
+                name="crewId"
+                required
+                value={formData.crewId}
+                onChange={handleChange}
+                className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">Select a seafarer</option>
+                {crew.map(c => (
+                  <option key={c.id} value={c.id}>
+                    {c.fullName}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-          <div>
-            <label htmlFor="appliedRank" className="block text-sm font-semibold text-gray-900 mb-2">
-              Applied Rank
-            </label>
-            <input
-              type="text"
-              id="appliedRank"
-              name="appliedRank"
-              value={formData.appliedRank}
-              onChange={handleChange}
-              placeholder="e.g., Captain, Chief Engineer, etc."
-              className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-blue-500"
-            />
-          </div>
+            {/* Position */}
+            <div>
+              <label htmlFor="position" className="block text-sm font-semibold text-gray-900 mb-2">
+                Applied Position/Rank *
+              </label>
+              <select
+                id="position"
+                name="position"
+                required
+                value={formData.position}
+                onChange={handleChange}
+                className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">Select position</option>
+                {POSITIONS.map(pos => (
+                  <option key={pos} value={pos}>
+                    {pos}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-          <div className="flex gap-4 pt-6 border-t border-gray-300 mt-6">
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex-1 bg-blue-600 text-white font-semibold px-8 py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:cursor-not-allowed transition-colors shadow-md hover:shadow-lg"
-            >
-              {loading ? 'Creating...' : 'Create Application'}
-            </button>
-            <button
-              type="button"
-              onClick={() => router.back()}
-              className="flex-1 bg-gray-600 text-white font-semibold px-8 py-3 rounded-lg hover:bg-gray-700 transition-colors shadow-md hover:shadow-lg"
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
+            {/* Principal/Company */}
+            <div>
+              <label htmlFor="principalId" className="block text-sm font-semibold text-gray-900 mb-2">
+                Target Principal/Shipping Company *
+              </label>
+              <select
+                id="principalId"
+                name="principalId"
+                required
+                value={formData.principalId}
+                onChange={handleChange}
+                className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">Select company/principal</option>
+                {principals.map(principal => (
+                  <option key={principal.id} value={principal.id}>
+                    {principal.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Vessel Selection */}
+            {formData.principalId && (
+              <div>
+                <label htmlFor="vesselId" className="block text-sm font-semibold text-gray-900 mb-2">
+                  Target Vessel (Ship)
+                </label>
+                <select
+                  id="vesselId"
+                  name="vesselId"
+                  value={formData.vesselId}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">Select vessel (optional)</option>
+                  {vessels.map(vessel => (
+                    <option key={vessel.id} value={vessel.id}>
+                      {vessel.name}
+                    </option>
+                  ))}
+                </select>
+                {vessels.length === 0 && (
+                  <p className="text-sm text-gray-500 mt-2">No vessels found for this company</p>
+                )}
+              </div>
+            )}
+
+            {/* Vessel Type */}
+            <div>
+              <label htmlFor="vesselType" className="block text-sm font-semibold text-gray-900 mb-2">
+                Preferred Vessel Type
+              </label>
+              <select
+                id="vesselType"
+                name="vesselType"
+                value={formData.vesselType}
+                onChange={handleChange}
+                className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">Select vessel type (optional)</option>
+                {VESSEL_TYPES.map(type => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Application Date */}
+            <div>
+              <label htmlFor="applicationDate" className="block text-sm font-semibold text-gray-900 mb-2">
+                Application Date *
+              </label>
+              <input
+                type="date"
+                id="applicationDate"
+                name="applicationDate"
+                required
+                value={formData.applicationDate}
+                onChange={handleChange}
+                className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+
+            <div className="flex gap-4 pt-6 border-t border-gray-300 mt-6">
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex-1 bg-blue-600 text-white font-semibold px-8 py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-md hover:shadow-lg"
+              >
+                {loading ? 'Creating...' : 'Create Application'}
+              </button>
+              <button
+                type="button"
+                onClick={() => router.back()}
+                className="flex-1 bg-gray-600 text-white font-semibold px-8 py-3 rounded-lg hover:bg-gray-700 transition-colors shadow-md hover:shadow-lg"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
