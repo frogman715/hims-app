@@ -179,12 +179,27 @@ export const POST = withPermission(
     }
 
     // Create uploads directory if it doesn't exist
-    // Use absolute path: in standalone mode process.cwd() is .next/standalone, not app root
-    const uploadsDir = process.env.UPLOADS_DIR || join('/var/www/hims-app', 'public', 'uploads', 'documents');
+    // In standalone mode, try multiple paths to find the right one
+    let uploadsDir = process.env.UPLOADS_DIR;
+    if (!uploadsDir) {
+      // Try relative path first (for standalone mode where cwd is project root)
+      uploadsDir = join(process.cwd(), 'public', 'uploads', 'documents');
+      // If cwd is .next/standalone, go up two levels
+      if (process.cwd().endsWith('.next/standalone')) {
+        uploadsDir = join(process.cwd(), '..', '..', 'public', 'uploads', 'documents');
+      }
+    }
     try {
       await mkdir(uploadsDir, { recursive: true });
-    } catch {
-      // Directory might already exist
+    } catch (mkdirError) {
+      console.error('[UPLOAD] mkdir failed:', mkdirError);
+      // Try fallback path
+      uploadsDir = '/var/www/hims-app/public/uploads/documents';
+      try {
+        await mkdir(uploadsDir, { recursive: true });
+      } catch {
+        // Will handle in writeFile error
+      }
     }
 
     // Get crew name for readable filename
