@@ -27,7 +27,9 @@ type HydratedApplication = ApplicationWithRelations & {
 
 // CR-02: Application Form Template
 function generateCR02HTML(application: HydratedApplication) {
-  const { crew, position, principal, status } = application;
+  const { position, principal, status } = application;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const crew = application.crew as any;
   const applicationDate = application.applicationDate
     ? new Date(application.applicationDate)
     : new Date();
