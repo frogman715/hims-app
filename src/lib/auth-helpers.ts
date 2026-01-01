@@ -1,7 +1,6 @@
 import { NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { Role } from "@prisma/client";
 
 export interface HanmarineUser {
   id: string;
@@ -18,7 +17,7 @@ export interface HanmarineSession {
 
 export async function requireRole(
   req: NextRequest,
-  allowedRoles: Role[]
+  allowedRoles: string[]
 ): Promise<void> {
   const session = await getServerSession(authOptions) as HanmarineSession | null;
 
@@ -34,7 +33,7 @@ export async function requireRole(
   if (isSystemAdmin) return;
 
   // If user has at least one allowed role
-  if (!userRoles.some((role: string) => allowedRoles.includes(role as Role))) {
+  if (!userRoles.some((role: string) => allowedRoles.includes(role))) {
     throw new Response("Forbidden", { status: 403 });
   }
 }
