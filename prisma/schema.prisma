@@ -305,6 +305,11 @@ model User {
   // Phase 1: Internal Audit (ISO 9001 Clause 9.2)
   auditReportsApproved AuditReport[] @relation("AuditReportApprovedBy")
 
+  // Phase 1: Crewing Procedures Digitization
+  crewingProceduresUpdated CrewingProcedure[]  @relation("CrewingProcedureUpdatedBy")
+  crewingChecklistsSubmitted CrewingChecklist[] @relation("ChecklistSubmittedBy")
+  crewingChecklistsApproved  CrewingChecklist[] @relation("ChecklistApprovedBy")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -370,6 +375,7 @@ model Crew {
   // HGQS Relations
   communicationLogs CommunicationLog[]
   signOffs          CrewSignOff[]
+  checklists        CrewingChecklist[] // Phase 1: Digitize procedures
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -626,6 +632,7 @@ model Application {
 
   crew      Crew       @relation(fields: [crewId], references: [id])
   principal Principal? @relation(fields: [principalId], references: [id])
+  checklists CrewingChecklist[] // Phase 1: Digitize procedures
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -2170,3 +2177,119 @@ model AuditReport {
   @@index([status])
   @@index([reportDate])
 }
+
+// ==========================
+// CREWING PROCEDURES & COMPLIANCE (Phase 1: Digitize)
+// ==========================
+
+model CrewingProcedure {
+  id          String  @id @default(cuid())
+  procId      String  @unique // PROC-CR-001, etc
+  code        String  @unique // HGF-CR-01, etc
+  title       String
+  department  String  @default("Crewing")
+  phase       String  // Recruitment, Pre-Deployment, Deployment, Post-Deployment
+  description String  @db.Text
+  
+  // Structured procedure data
+  stepsJson   Json    // Array of {order, title, description, required, ...}
+  responsibilities String[] // Array of responsible roles
+  timeline    String
+  formCode    String  // Reference to HGF form
+  
+  // Compliance
+  complianceStandards String[] // ISO 9001:2015, MLC 2006, etc
+  isActive    Boolean @default(true)
+  version     Int     @default(1)
+  
+  // Audit trail
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  updatedById String?
+  updatedBy   User?    @relation("CrewingProcedureUpdatedBy", fields: [updatedById], references: [id])
+  
+  // Relations
+  checklists  CrewingChecklist[]
+  
+  @@index([phase])
+  @@index([procId])
+  @@index([isActive])
+}
+
+enum CrewingChecklistStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+}
+
+model CrewingChecklist {
+  id              String                    @id @default(cuid())
+  procedureId     String
+  procedure       CrewingProcedure          @relation(fields: [procedureId], references: [id], onDelete: Cascade)
+  
+  // Context
+  applicationId   String?
+  application     Application?             @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+  crewId          String?
+  crew            Crew?                    @relation(fields: [crewId], references: [id], onDelete: SetNull)
+  
+  // Checklist tracking
+  checklistCode   String // HGF-CR-01-001, etc
+  status          CrewingChecklistStatus   @default(NOT_STARTED)
+  
+  // Items completion
+  itemsJson       Json // Array of {order, title, checked, completedAt, completedBy}
+  completionPercent Int @default(0)
+  
+  // Approvals
+  submittedAt     DateTime?
+  submittedById   String?
+  submittedBy     User?                    @relation("ChecklistSubmittedBy", fields: [submittedById], references: [id])
+  
+  approvedAt      DateTime?
+  approvedById    String?
+  approvedBy      User?                    @relation("ChecklistApprovedBy", fields: [approvedById], references: [id])
+  
+  remarks         String? @db.Text
+  
+  // Audit trail
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@unique([procedureId, applicationId, crewId])
+  @@index([status])
+  @@index([procedureId])
+  @@index([applicationId])
+  @@index([crewId])
+}
+
+model CrewingDocumentRequirement {
+  id              String @id @default(cuid())
+  procedureId     String
+  
+  // Document requirement
+  documentCode    String // SIRB, PASSPORT, STCW, MEDICAL, etc
+  documentTitle   String
+  description     String? @db.Text
+  
+  // Validation rules
+  isRequired      Boolean @default(true)
+  minValidity     Int? // Months
+  acceptableIssuingCountries String[] // Empty = all accepted
+  
+  // Audit trail
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@unique([procedureId, documentCode])
+  @@index([procedureId])
+}
+
+// Add to Application model (relation)
+// checklists CrewingChecklist[]
+
+// Add to Crew model (relation)
+// checklists CrewingChecklist[]

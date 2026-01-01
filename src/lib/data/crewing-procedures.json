@@ -1,0 +1,432 @@
+{
+  "procedures": [
+    {
+      "id": "PROC-CR-001",
+      "code": "HGF-CR-01",
+      "title": "Documents Checklist",
+      "department": "Crewing",
+      "phase": "Pre-Deployment",
+      "description": "Comprehensive checklist for seafarer documentation verification before joining vessel",
+      "steps": [
+        {
+          "order": 1,
+          "title": "Verify SIRB (Seafarer's Identification Record Book)",
+          "description": "Check authenticity and no alterations",
+          "required": true,
+          "documents": ["SIRB"]
+        },
+        {
+          "order": 2,
+          "title": "Verify Passport",
+          "description": "Valid passport with minimum 6 months validity",
+          "required": true,
+          "documents": ["Passport"]
+        },
+        {
+          "order": 3,
+          "title": "Verify STCW Certificates",
+          "description": "All required STCW95 certificates current and valid",
+          "required": true,
+          "documents": ["STCW Certificates", "COC"]
+        },
+        {
+          "order": 4,
+          "title": "Verify Medical Certificate",
+          "description": "Valid ICSFL medical examination certificate",
+          "required": true,
+          "documents": ["Medical Certificate"]
+        },
+        {
+          "order": 5,
+          "title": "Verify Visa",
+          "description": "Valid visa for flag state and port states",
+          "required": true,
+          "documents": ["Visa"]
+        },
+        {
+          "order": 6,
+          "title": "Verify Training Certificates",
+          "description": "GMDSS, Fire Safety, First Aid, Safety Training certificates as per company requirements",
+          "required": true,
+          "documents": ["Training Certificates"]
+        },
+        {
+          "order": 7,
+          "title": "Verify Flag State Requirements",
+          "description": "Additional certificates per vessel flag state",
+          "required": true,
+          "documents": ["Flag State Docs"]
+        },
+        {
+          "order": 8,
+          "title": "Verify Criminal Record Clearance",
+          "description": "Police clearance or equivalent",
+          "required": true,
+          "documents": ["Police Clearance"]
+        }
+      ],
+      "responsibilities": ["Document Officer", "Crewing Manager"],
+      "timeline": "Before dispatch",
+      "form": "HGF-CR-01"
+    },
+    {
+      "id": "PROC-CR-002",
+      "code": "HGF-CR-02",
+      "title": "Application for Employment",
+      "department": "Crewing",
+      "phase": "Recruitment",
+      "description": "Standard application form for seafarer employment",
+      "steps": [
+        {
+          "order": 1,
+          "title": "Complete Application Form",
+          "description": "Fill in personal details, experience, qualifications",
+          "required": true,
+          "fields": ["fullName", "dateOfBirth", "nationality", "position", "experience"]
+        },
+        {
+          "order": 2,
+          "title": "Submit Required Documents",
+          "description": "Attach all supporting documents per checklist",
+          "required": true,
+          "documents": ["Resume", "Certificates", "References"]
+        },
+        {
+          "order": 3,
+          "title": "Document Screening",
+          "description": "Initial screening for document completeness",
+          "required": true,
+          "criteria": ["No falsified documents", "No false certificates", "No fraudulent visas"]
+        },
+        {
+          "order": 4,
+          "title": "Schedule Interview",
+          "description": "Arrange interview with Expert Staff",
+          "required": true
+        }
+      ],
+      "responsibilities": ["Applicant", "Document Officer", "Expert Staff"],
+      "timeline": "Ongoing recruitment",
+      "form": "HGF-CR-02"
+    },
+    {
+      "id": "PROC-CR-003",
+      "code": "HGF-CR-09",
+      "title": "Record of Interview for Crew",
+      "department": "Crewing",
+      "phase": "Recruitment",
+      "description": "Interview assessment and evaluation form",
+      "steps": [
+        {
+          "order": 1,
+          "title": "Conduct Interview",
+          "description": "Professional interview by qualified Expert Staff",
+          "required": true,
+          "assessmentAreas": ["Technical Knowledge", "Communication", "Work Value", "Experience Verification"]
+        },
+        {
+          "order": 2,
+          "title": "Assess Language Proficiency",
+          "description": "Evaluate English communication skills (Active speaking/writing)",
+          "required": true,
+          "criteria": ["Must understand English", "Can communicate clearly"]
+        },
+        {
+          "order": 3,
+          "title": "Assess Technical Competence",
+          "description": "Verify technical knowledge relevant to position",
+          "required": true
+        },
+        {
+          "order": 4,
+          "title": "Document Interview Result",
+          "description": "Record assessment and recommendation",
+          "required": true,
+          "scoring": "0-100 points"
+        },
+        {
+          "order": 5,
+          "title": "Make Recommendation",
+          "description": "Approve, Conditional Approval, or Reject",
+          "required": true,
+          "options": ["APPROVED", "CONDITIONAL", "REJECTED"]
+        }
+      ],
+      "responsibilities": ["Expert Staff"],
+      "timeline": "Upon application submission",
+      "form": "HGF-CR-09"
+    },
+    {
+      "id": "PROC-CR-004",
+      "code": "HGF-CR-03",
+      "title": "Checklist for Departing Crew",
+      "department": "Crewing",
+      "phase": "Pre-Deployment",
+      "description": "Pre-departure verification checklist",
+      "steps": [
+        {
+          "order": 1,
+          "title": "Verify All Documents Updated",
+          "description": "Ensure all certificates and documents current",
+          "required": true
+        },
+        {
+          "order": 2,
+          "title": "Conduct Medical Check",
+          "description": "Final health assessment before departure",
+          "required": true
+        },
+        {
+          "order": 3,
+          "title": "Provide Pre-Joining Brief",
+          "description": "Brief on vessel operation, company policies, safety procedures",
+          "required": true
+        },
+        {
+          "order": 4,
+          "title": "Review Employment Contract",
+          "description": "Ensure seafarer understands contract terms and conditions",
+          "required": true
+        },
+        {
+          "order": 5,
+          "title": "Arrange Travel",
+          "description": "Book flights and arrange travel logistics",
+          "required": true
+        },
+        {
+          "order": 6,
+          "title": "Conduct Safety Training",
+          "description": "Company-specific safety and security training",
+          "required": true
+        },
+        {
+          "order": 7,
+          "title": "Final Sign-Off",
+          "description": "Seafarer confirmation ready for deployment",
+          "required": true
+        }
+      ],
+      "responsibilities": ["Crewing Manager", "Document Officer", "Expert Staff"],
+      "timeline": "1-2 weeks before joining",
+      "form": "HGF-CR-03"
+    },
+    {
+      "id": "PROC-CR-005",
+      "code": "HGF-CR-04",
+      "title": "De-Briefing Form",
+      "department": "Crewing",
+      "phase": "Post-Deployment",
+      "description": "Post-deployment feedback and evaluation",
+      "steps": [
+        {
+          "order": 1,
+          "title": "Conduct De-Briefing Interview",
+          "description": "Interview seafarer upon return",
+          "required": true,
+          "areas": ["Performance", "Vessel Condition", "Crew Relationships", "Issues Encountered"]
+        },
+        {
+          "order": 2,
+          "title": "Collect Feedback",
+          "description": "Document seafarer's experience and suggestions",
+          "required": true
+        },
+        {
+          "order": 3,
+          "title": "Identify Issues",
+          "description": "Note any problems or concerns raised",
+          "required": true
+        },
+        {
+          "order": 4,
+          "title": "Plan Follow-up",
+          "description": "Arrange any necessary medical or support services",
+          "required": false
+        }
+      ],
+      "responsibilities": ["Crewing Manager", "Expert Staff"],
+      "timeline": "Upon return to office",
+      "form": "HGF-CR-04"
+    },
+    {
+      "id": "PROC-CR-006",
+      "code": "HGF-CR-08",
+      "title": "Crew Evaluation Report",
+      "department": "Crewing",
+      "phase": "Post-Deployment",
+      "description": "Performance evaluation from vessel",
+      "steps": [
+        {
+          "order": 1,
+          "title": "Receive Evaluation from Vessel",
+          "description": "Collect performance report from Master/Management Company",
+          "required": true,
+          "evaluationAreas": ["Technical Competence", "Safety Compliance", "Teamwork", "Punctuality", "Conduct"]
+        },
+        {
+          "order": 2,
+          "title": "Review Evaluation",
+          "description": "Expert Staff reviews report",
+          "required": true
+        },
+        {
+          "order": 3,
+          "title": "Identify Training Needs",
+          "description": "Determine any remedial training needed",
+          "required": true
+        },
+        {
+          "order": 4,
+          "title": "Document Results",
+          "description": "Record evaluation in seafarer file",
+          "required": true
+        },
+        {
+          "order": 5,
+          "title": "Plan Development",
+          "description": "Suggest training for promotion or skill enhancement",
+          "required": false
+        }
+      ],
+      "responsibilities": ["Crewing Manager", "Expert Staff"],
+      "timeline": "End of contract",
+      "form": "HGF-CR-08"
+    },
+    {
+      "id": "PROC-CR-007",
+      "code": "HGF-CR-10",
+      "title": "Contract of Employment",
+      "department": "Crewing",
+      "phase": "Pre-Deployment",
+      "description": "Employment contract between company and seafarer",
+      "steps": [
+        {
+          "order": 1,
+          "title": "Prepare Contract",
+          "description": "Generate contract per principal requirements and MLC 2006",
+          "required": true,
+          "includes": ["Terms and Conditions", "Wages", "Leave", "Contract Duration", "Safety Provisions"]
+        },
+        {
+          "order": 2,
+          "title": "Review with Seafarer",
+          "description": "Explain all terms clearly, obtain understanding",
+          "required": true
+        },
+        {
+          "order": 3,
+          "title": "Obtain Signatures",
+          "description": "Both parties sign contract",
+          "required": true
+        },
+        {
+          "order": 4,
+          "title": "Provide Copy",
+          "description": "Give signed copy to seafarer",
+          "required": true
+        },
+        {
+          "order": 5,
+          "title": "File Record",
+          "description": "Maintain signed copy in personnel file",
+          "required": true
+        }
+      ],
+      "responsibilities": ["Crewing Manager", "Expert Staff"],
+      "timeline": "Before deployment",
+      "form": "HGF-CR-10",
+      "compliance": ["MLC 2006", "Regulation 2.1"]
+    },
+    {
+      "id": "PROC-CR-008",
+      "code": "HGF-CR-17",
+      "title": "Notice of Crew On&Off-Signing",
+      "department": "Crewing",
+      "phase": "Deployment",
+      "description": "Official notice of crew sign-on and sign-off dates",
+      "steps": [
+        {
+          "order": 1,
+          "title": "Confirm Sign-On Date",
+          "description": "Finalize crew joining date with vessel",
+          "required": true
+        },
+        {
+          "order": 2,
+          "title": "Issue Sign-On Notice",
+          "description": "Notify seafarer of exact joining date/place/vessel",
+          "required": true
+        },
+        {
+          "order": 3,
+          "title": "Confirm Sign-Off Schedule",
+          "description": "Plan crew relief and replacement",
+          "required": true
+        },
+        {
+          "order": 4,
+          "title": "Issue Sign-Off Notice",
+          "description": "Notify seafarer of planned sign-off date",
+          "required": true
+        },
+        {
+          "order": 5,
+          "title": "Maintain Records",
+          "description": "Document all sign-on/off dates for compliance",
+          "required": true
+        }
+      ],
+      "responsibilities": ["Crewing Manager", "Document Officer"],
+      "timeline": "Ongoing",
+      "form": "HGF-CR-17",
+      "compliance": ["MLC 2006 Regulation 2.3"]
+    }
+  ],
+  "qualifications": {
+    "expertStaff": {
+      "education": "Minimum ANTIII or ATTIII or equivalent",
+      "experience": "Minimum 5 years in shipping/passenger vessels",
+      "languages": "Active English communication skills",
+      "certifications": ["MLC 2006 Reg 1.2 Understanding", "Interview Certification"],
+      "responsibilities": [
+        "Conduct crew interviews",
+        "Review applications",
+        "Assess competence",
+        "Oversee QMS implementation",
+        "Handle legal matters"
+      ]
+    },
+    "crewingManager": {
+      "education": "Minimum Diploma III",
+      "experience": "Foreign shipping company experience",
+      "languages": "Active English communication skills",
+      "certifications": ["MLC 2006 Reg 1.2 Understanding"],
+      "responsibilities": [
+        "Select qualified crew",
+        "Arrange vessel line-up",
+        "Manage training programs",
+        "Oversee flight arrangements",
+        "Implement training responsibilities"
+      ]
+    },
+    "documentOfficer": {
+      "education": "Minimum Senior High School",
+      "languages": "English communication skills",
+      "skills": ["MS Office proficiency", "Document verification"],
+      "certifications": ["MLC 2006 Reg 1.2 Understanding", "Document Management"],
+      "responsibilities": [
+        "Check document licenses",
+        "Process visas",
+        "Dispatch joining crew",
+        "Maintain training records"
+      ]
+    }
+  },
+  "standards": {
+    "compliance": ["ISO 9001:2015", "MLC 2006 Regulation 1.4", "STCW95", "ILO Conventions"],
+    "documentation": "All procedures must be documented and maintained per HGF forms",
+    "recordRetention": "Records retained per company retention schedule",
+    "auditFrequency": "Semi-annual internal audits required"
+  }
+}
