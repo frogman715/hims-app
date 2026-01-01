@@ -376,9 +376,9 @@ async function loadPermissionOverrides(roles: string[]): Promise<RolePermissionO
         level: true,
       },
     })
-  );
+  ) as Array<{ role: string; moduleKey: string; level: string }> | null;
 
-  return overrides.map((entry) => ({
+  return (overrides || []).map((entry) => ({
     role: entry.role,
     moduleKey: entry.moduleKey,
     level: entry.level as RolePermissionOverride['level'],
