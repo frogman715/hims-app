@@ -123,6 +123,7 @@ export async function GET(request: NextRequest, props: { params: RouteParams }) 
     }
 
     // Return file as download
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const response = new NextResponse(buffer as any);
     response.headers.set('Content-Type', contentType);
     response.headers.set('Content-Disposition', `attachment; filename="${filename}"`);
