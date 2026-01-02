@@ -123,7 +123,7 @@ export async function GET(request: NextRequest, props: { params: RouteParams }) 
     }
 
     // Return file as download
-    const response = new NextResponse(buffer as unknown as Uint8Array);
+    const response = new NextResponse(buffer as any);
     response.headers.set('Content-Type', contentType);
     response.headers.set('Content-Disposition', `attachment; filename="${filename}"`);
 
