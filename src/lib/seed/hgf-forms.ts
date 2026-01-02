@@ -3,16 +3,27 @@
  * Creates 8 complete HGF forms with fields and validation rules
  */
 
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, HGFFormType } from '@prisma/client';
+
+interface FormSeedData {
+  formCode: string;
+  procedureId: string;
+  name: string;
+  description: string;
+  formType: HGFFormType;
+  fieldsJson: Record<string, unknown>[];
+  requiredDocs?: Record<string, unknown>[];
+  validationJson?: Record<string, unknown>[];
+}
 
 export const seedHGFForms = async (prisma: PrismaClient) => {
-  const forms = [
+  const forms: FormSeedData[] = [
     {
       formCode: 'HGF-CR-01',
       procedureId: 'PROC-CR-001',
       name: 'Documents Checklist',
       description: 'Comprehensive checklist for seafarer documentation verification',
-      formType: 'CHECKLIST',
+      formType: 'CHECKLIST' as HGFFormType,
       fieldsJson: [
         {
           id: 'doc-sirb',
@@ -95,7 +106,7 @@ export const seedHGFForms = async (prisma: PrismaClient) => {
       procedureId: 'PROC-CR-002',
       name: 'Application for Employment',
       description: 'Standard application form for seafarer employment',
-      formType: 'APPLICATION',
+      formType: 'APPLICATION' as HGFFormType,
       fieldsJson: [
         {
           id: 'full-name',
@@ -197,7 +208,7 @@ export const seedHGFForms = async (prisma: PrismaClient) => {
       procedureId: 'PROC-CR-003',
       name: 'Pre-Deployment Health Check',
       description: 'Health verification form before vessel deployment',
-      formType: 'VERIFICATION',
+      formType: 'VERIFICATION' as HGFFormType,
       fieldsJson: [
         {
           id: 'health-check-date',
@@ -258,7 +269,17 @@ export const seedHGFForms = async (prisma: PrismaClient) => {
       if (!existingForm) {
         await prisma.hGFForm.create({
           data: {
-            ...formData,
+            formCode: formData.formCode,
+            procedureId: formData.procedureId,
+            name: formData.name,
+            description: formData.description,
+            formType: formData.formType,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            fieldsJson: formData.fieldsJson as any,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            requiredDocs: formData.requiredDocs as any,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            validationJson: formData.validationJson as any,
             isActive: true,
             version: 1,
           },

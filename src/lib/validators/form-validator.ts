@@ -3,6 +3,8 @@
  * Handles client-side and server-side validation for HGF forms
  */
 
+import { PrismaClient } from '@prisma/client';
+
 export interface ValidationError {
   field: string;
   message: string;
@@ -242,7 +244,7 @@ export class FormValidator {
 export async function validateFormSubmission(
   formId: string,
   submittedData: Record<string, unknown>,
-  prisma: any
+  prisma: PrismaClient
 ): Promise<{ valid: boolean; errors: ValidationError[] }> {
   try {
     // Fetch form definition
@@ -261,8 +263,10 @@ export async function validateFormSubmission(
     }
 
     // Parse form fields
-    const fields = form.fieldsJson as FormField[];
-    const rules = form.validationRules as ValidationRule[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const fields = form.fieldsJson as any as FormField[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const rules = form.validationRules as any as ValidationRule[];
 
     // Create validator
     const validator = new FormValidator(fields, rules);
