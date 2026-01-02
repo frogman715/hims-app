@@ -1,4 +1,4 @@
-import { QMSReport, NonconformityRecord, AuditTrail } from '@prisma/client';
+import { QMSReport, AuditTrail } from '@prisma/client';
 import nodemailer from 'nodemailer';
 
 /**
@@ -152,10 +152,10 @@ export class ReportExportService {
    */
   private static buildPDFContent(
     report: QMSReport & {
-      approver?: { email: string; fullName: string } | null;
+      approver?: { email: string; name: string } | null;
     },
     metrics?: Record<string, unknown>,
-    nonconformities?: NonconformityRecord[]
+    nonconformities?: Array<Record<string, unknown>>
   ): string {
     const lines: string[] = [];
 
@@ -171,7 +171,7 @@ export class ReportExportService {
     lines.push(`Period: ${this.formatDate(report.periodStart)} to ${this.formatDate(report.periodEnd)}`);
     lines.push(`Status: ${report.status}`);
     if (report.approver) {
-      lines.push(`Approved By: ${report.approver.fullName} on ${this.formatDate(report.approvedAt)}`);
+      lines.push(`Approved By: ${report.approver.name} on ${this.formatDate(report.approvedAt)}`);
     }
     lines.push('');
 
@@ -203,8 +203,10 @@ export class ReportExportService {
       const byStatus: Record<string, number> = {};
 
       nonconformities.forEach((nc) => {
-        bySeverity[nc.severity] = (bySeverity[nc.severity] || 0) + 1;
-        byStatus[nc.status] = (byStatus[nc.status] || 0) + 1;
+        const severity = String(nc.severity || 'unknown');
+        const status = String(nc.status || 'unknown');
+        bySeverity[severity] = (bySeverity[severity] || 0) + 1;
+        byStatus[status] = (byStatus[status] || 0) + 1;
       });
 
       lines.push('By Severity:');
@@ -246,10 +248,10 @@ export class ReportExportService {
    */
   private static buildExcelContent(
     report: QMSReport & {
-      approver?: { email: string; fullName: string } | null;
+      approver?: { email: string; name: string } | null;
     },
     metrics?: Record<string, unknown>,
-    nonconformities?: NonconformityRecord[],
+    nonconformities?: Array<Record<string, unknown>>,
     auditEvents?: AuditTrail[]
   ): string {
     const lines: string[] = [];
@@ -258,7 +260,7 @@ export class ReportExportService {
     lines.push('REPORT SUMMARY');
     lines.push('Title,Type,Period Start,Period End,Status,Approved By,Approved Date');
     lines.push(
-      `"${report.title}","${report.reportType}","${this.formatDate(report.periodStart)}","${this.formatDate(report.periodEnd)}","${report.status}","${report.approver?.fullName || 'N/A'}","${report.approvedAt ? this.formatDate(report.approvedAt) : 'N/A'}"`
+      `"${report.title}","${report.reportType}","${this.formatDate(report.periodStart)}","${this.formatDate(report.periodEnd)}","${report.status}","${report.approver?.name || 'N/A'}","${report.approvedAt ? this.formatDate(report.approvedAt) : 'N/A'}"`,
     );
     lines.push('');
 
@@ -278,8 +280,15 @@ export class ReportExportService {
       lines.push('NON-CONFORMITIES');
       lines.push('ID,Severity,Status,Type,Description,Due Date,Assigned To');
       nonconformities.forEach((nc) => {
+        const id = String(nc.id || '');
+        const severity = String(nc.severity || '');
+        const status = String(nc.status || '');
+        const type = String(nc.type || '');
+        const description = String(nc.description || '').replace(/"/g, '""');
+        const dueDate = nc.dueDate instanceof Date ? this.formatDate(nc.dueDate) : String(nc.dueDate || '');
+        const assignedTo = String(nc.assignedTo || 'N/A');
         lines.push(
-          `"${nc.id}","${nc.severity}","${nc.status}","${nc.type}","${String(nc.description).replace(/"/g, '""')}","${this.formatDate(nc.dueDate)}","${nc.assignedTo || 'N/A'}"`
+          `"${id}","${severity}","${status}","${type}","${description}","${dueDate}","${assignedTo}"`
         );
       });
       lines.push('');
@@ -306,7 +315,7 @@ export class ReportExportService {
    */
   private static buildEmailContent(
     report: QMSReport & {
-      approver?: { email: string; fullName: string } | null;
+      approver?: { email: string; name: string } | null;
     }
   ): string {
     return `
@@ -336,7 +345,7 @@ export class ReportExportService {
       <p><strong>Type:</strong> ${report.reportType || 'General'}</p>
       <p><strong>Period:</strong> ${this.formatDate(report.periodStart)} to ${this.formatDate(report.periodEnd)}</p>
       <p><strong>Status:</strong> <span style="color: #059669;">${report.status}</span></p>
-      ${report.approver ? `<p><strong>Approved By:</strong> ${report.approver.fullName}</p>` : ''}
+      ${report.approver ? `<p><strong>Approved By:</strong> ${report.approver.name}</p>` : ''}
     </div>
 
     ${report.description ? `<div class="section"><h3>Description</h3><p>${report.description}</p></div>` : ''}

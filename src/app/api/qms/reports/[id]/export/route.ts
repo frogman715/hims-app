@@ -177,8 +177,7 @@ export async function POST(request: NextRequest, props: { params: RouteParams })
     // Schedule distribution
     const scheduleResult = await ReportExportService.scheduleReportDistribution(
       params.id,
-      schedule as 'daily' | 'weekly' | 'monthly',
-      recipients as string[]
+      schedule as 'daily' | 'weekly' | 'monthly'
     );
 
     return NextResponse.json(

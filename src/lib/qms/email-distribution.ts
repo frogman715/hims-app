@@ -108,7 +108,7 @@ export class EmailDistributionService {
       where: { id: job.reportId },
       include: {
         approver: {
-          select: { id: true, email: true, fullName: true },
+          select: { id: true, email: true, name: true },
         },
       },
     });
@@ -137,7 +137,9 @@ export class EmailDistributionService {
     });
 
     // Generate exports
-    const metricsSnapshot = report.metricsSnapshot as Record<string, unknown> | null;
+    const metricsSnapshot = report.metricsSnapshot
+      ? (JSON.parse(report.metricsSnapshot) as Record<string, unknown>)
+      : null;
     const pdfBuffer = await ReportExportService.generatePDFReport(
       report,
       metricsSnapshot,
