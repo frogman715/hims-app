@@ -320,6 +320,14 @@ model User {
   formTemplatesCreated      FormTemplate[]    @relation("FormTemplateCreatedBy")
   hgfSubmissionAuditLogs    HGFSubmissionAuditLog[]
 
+  // Phase 3: Quality Management System (QMS)
+  qmsDocumentsReviewed      QMSDocument[]     @relation("QMSDocumentReviewedBy")
+  nonconformitiesAssigned   NonconformityRecord[] @relation("NonconformityAssignedTo")
+  nonconformitiesVerified   NonconformityRecord[] @relation("NonconformityVerifier")
+  nonconformityAuditLogs    NonconformityAuditLog[] @relation("NonconformityAuditLogBy")
+  auditTrails               AuditTrail[]
+  qmsReportsApproved        QMSReport[]       @relation("QMSReportApprovedBy")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -388,6 +396,10 @@ model Crew {
   checklists        CrewingChecklist[] // Phase 1: Digitize procedures
   hgfSubmissions    HGFSubmission[] // Phase 2: HGF Forms
   documentUploads   DocumentUpload[] // Phase 2: Documents
+  
+  // Phase 3: QMS Relations
+  qmsDocuments      QMSDocument[]
+  nonconformities   NonconformityRecord[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -419,6 +431,9 @@ model CrewDocument {
   sensitivity DataSensitivity @default(AMBER)
 
   crew Crew @relation(fields: [crewId], references: [id])
+  
+  // Phase 3: QMS Relations
+  qmsDocuments QMSDocument[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -2597,3 +2612,262 @@ model EmailNotificationLog {
 
 // Add to Crew model (relation)
 // checklists CrewingChecklist[]
+
+// ============================================================================
+// MODULE: QUALITY MANAGEMENT SYSTEM (QMS) DASHBOARD - PHASE 3
+// ============================================================================
+
+enum DocumentStatus {
+  ACTIVE
+  EXPIRED
+  EXPIRING_SOON
+  ARCHIVED
+}
+
+enum NonconformityStatus {
+  OPEN
+  UNDER_REVIEW
+  IN_PROGRESS
+  CLOSED
+  REJECTED
+}
+
+enum AuditCategoryType {
+  DOCUMENT_VERIFICATION
+  PROCESS_COMPLIANCE
+  CREW_RECORD
+  TRAINING_REQUIREMENT
+  SAFETY_PROTOCOL
+  REGULATORY
+}
+
+model QMSDocument {
+  id              String          @id @default(cuid())
+  
+  // Document reference
+  crewId          String?
+  crew            Crew?           @relation(fields: [crewId], references: [id])
+  documentId      String?
+  document        CrewDocument?   @relation(fields: [documentId], references: [id])
+  
+  // QMS tracking
+  status          DocumentStatus  @default(ACTIVE)
+  riskLevel       String          // LOW, MEDIUM, HIGH, CRITICAL
+  lastVerifiedAt  DateTime?
+  expiresAt       DateTime?
+  
+  // Metadata
+  category        String          // CERTIFICATE, MEDICAL, VISA, etc
+  reviewedBy      String?
+  reviewer        User?           @relation("QMSDocumentReviewedBy", fields: [reviewedBy], references: [id])
+  remarks         String?         @db.Text
+  
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  @@index([crewId])
+  @@index([status])
+  @@index([riskLevel])
+  @@index([expiresAt])
+}
+
+model NonconformityRecord {
+  id              String          @id @default(cuid())
+  
+  // Reference
+  crewId          String?
+  crew            Crew?           @relation(fields: [crewId], references: [id])
+  
+  // Details
+  type            String          // FAKE_CERT, MISSING_DOC, EXPIRED_CERT, etc
+  severity        String          // LOW, MEDIUM, HIGH, CRITICAL
+  status          NonconformityStatus @default(OPEN)
+  
+  // Description
+  description     String          @db.Text
+  findings        String?         @db.Text
+  correctiveAction String?        @db.Text
+  
+  // Timeline
+  reportedAt      DateTime        @default(now())
+  dueDate         DateTime?
+  closedAt        DateTime?
+  
+  // Assignment
+  assignedTo      String?
+  assignee        User?           @relation("NonconformityAssignedTo", fields: [assignedTo], references: [id])
+  
+  // Verification
+  verifiedBy      String?
+  verifier        User?           @relation("NonconformityVerifier", fields: [verifiedBy], references: [id])
+  verificationDate DateTime?
+  
+  // Audit trail
+  auditLogs       NonconformityAuditLog[]
+  
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  @@index([crewId])
+  @@index([status])
+  @@index([severity])
+  @@index([dueDate])
+}
+
+model NonconformityAuditLog {
+  id              String          @id @default(cuid())
+  
+  // Reference
+  nonconformityId String
+  nonconformity   NonconformityRecord @relation(fields: [nonconformityId], references: [id], onDelete: Cascade)
+  
+  // Action
+  action          String          // CREATED, STATUS_CHANGED, COMMENT_ADDED, etc
+  oldValue        String?
+  newValue        String?
+  comment         String?         @db.Text
+  
+  // Actor
+  performedBy     String
+  user            User            @relation("NonconformityAuditLogBy", fields: [performedBy], references: [id])
+  
+  createdAt       DateTime        @default(now())
+  
+  @@index([nonconformityId])
+  @@index([action])
+  @@index([performedBy])
+}
+
+model AuditTrail {
+  id              String          @id @default(cuid())
+  
+  // Audit details
+  category        AuditCategoryType
+  entityType      String          // Crew, Document, HGFSubmission, etc
+  entityId        String?
+  
+  // Event
+  event           String          // CREATED, UPDATED, DELETED, VERIFIED, REJECTED, etc
+  description     String?         @db.Text
+  changesSummary  String?         @db.Text // JSON string of changes
+  
+  // Context
+  userId          String
+  user            User            @relation(fields: [userId], references: [id])
+  ipAddress       String?
+  userAgent       String?
+  
+  // Status
+  severity        String          @default("INFO") // INFO, WARNING, CRITICAL
+  
+  createdAt       DateTime        @default(now())
+  
+  @@index([entityType])
+  @@index([category])
+  @@index([severity])
+  @@index([createdAt])
+  @@index([userId])
+}
+
+model ComplianceMetric {
+  id              String          @id @default(cuid())
+  
+  // Metric definition
+  name            String          @unique
+  description     String?
+  
+  // Current value
+  currentValue    Float
+  targetValue     Float
+  unit            String          // PERCENT, COUNT, DAYS, etc
+  
+  // Calculation
+  formula         String?         @db.Text // For calculated metrics
+  lastCalculatedAt DateTime       @default(now())
+  
+  // Trend
+  trend           String?         // UP, DOWN, STABLE
+  trendDate       DateTime?
+  
+  // Metadata
+  isActive        Boolean         @default(true)
+  category        String          // DOCUMENT_COMPLIANCE, TRAINING_COMPLIANCE, etc
+  
+  // Relations
+  history         ComplianceMetricHistory[]
+  
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  @@index([category])
+  @@index([isActive])
+}
+
+model ComplianceMetricHistory {
+  id              String          @id @default(cuid())
+  
+  // Reference
+  metricId        String
+  metric          ComplianceMetric @relation(fields: [metricId], references: [id], onDelete: Cascade)
+  
+  // Value
+  value           Float
+  calculatedAt    DateTime        @default(now())
+  
+  @@index([metricId])
+  @@index([calculatedAt])
+}
+
+model QMSReport {
+  id              String          @id @default(cuid())
+  
+  // Report details
+  title           String
+  description     String?         @db.Text
+  reportType      String          // MONTHLY, QUARTERLY, ANNUAL, AUDIT, etc
+  
+  // Period
+  periodStart     DateTime
+  periodEnd       DateTime
+  
+  // Content (as JSON for flexibility)
+  sections        String          @db.Text // JSON array of report sections
+  
+  // Status
+  status          String          @default("DRAFT") // DRAFT, FINAL, APPROVED, PUBLISHED
+  approvedBy      String?
+  approver        User?           @relation("QMSReportApprovedBy", fields: [approvedBy], references: [id])
+  approvedAt      DateTime?
+  
+  // Metrics snapshot
+  metricsSnapshot String?         @db.Text // JSON snapshot of metrics at report time
+  
+  // File
+  fileUrl         String?
+  fileName        String?
+  
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  @@index([reportType])
+  @@index([status])
+  @@index([periodStart])
+  @@index([approvedBy])
+}
+
+// ============================================================================
+// RELATION UPDATES NEEDED IN EXISTING MODELS:
+// ============================================================================
+// User model: Add relations for QMS
+// - nonconformitiesAssigned  NonconformityRecord[]
+// - nonconformitiesVerified  NonconformityRecord[] @relation("NonconformityVerifier")
+// - auditTrails              AuditTrail[]
+// - qmsDocumentsReviewed     QMSDocument[]
+// - qmsReportsApproved       QMSReport[]
+//
+// Crew model: Add relations for QMS
+// - qmsDocuments             QMSDocument[]
+// - nonconformities          NonconformityRecord[]
+//
+// CrewDocument model: Add relation for QMS
+// - qmsDocuments             QMSDocument[]
