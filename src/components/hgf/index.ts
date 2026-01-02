@@ -7,6 +7,7 @@ export { FormRenderer } from './FormRenderer';
 export { DocumentUploadZone } from './DocumentUploadZone';
 export { SubmissionDashboard } from './SubmissionDashboard';
 export { HGFFormsList } from './HGFFormsList';
+export { ApprovalDashboard } from './ApprovalDashboard';
 
 // Re-export types if needed
 export type { } from './FormRenderer';
