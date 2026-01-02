@@ -310,6 +310,16 @@ model User {
   crewingChecklistsSubmitted CrewingChecklist[] @relation("ChecklistSubmittedBy")
   crewingChecklistsApproved  CrewingChecklist[] @relation("ChecklistApprovedBy")
 
+  // Phase 2: HGF Forms & Documents
+  hgfSubmissionsSubmitted   HGFSubmission[]   @relation("HGFSubmissionSubmittedBy")
+  hgfSubmissionsApproved    HGFSubmission[]   @relation("HGFSubmissionApprovedBy")
+  hgfSubmissionsRejected    HGFSubmission[]   @relation("HGFSubmissionRejectedBy")
+  hgfSubmissionsRevisionsAsked HGFSubmission[] @relation("HGFSubmissionRevisionsAskedBy")
+  documentsUploaded         DocumentUpload[]   @relation("DocumentUploadUploadedBy")
+  documentsVerified         DocumentUpload[]   @relation("DocumentUploadVerifiedBy")
+  formTemplatesCreated      FormTemplate[]    @relation("FormTemplateCreatedBy")
+  hgfSubmissionAuditLogs    HGFSubmissionAuditLog[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -376,6 +386,8 @@ model Crew {
   communicationLogs CommunicationLog[]
   signOffs          CrewSignOff[]
   checklists        CrewingChecklist[] // Phase 1: Digitize procedures
+  hgfSubmissions    HGFSubmission[] // Phase 2: HGF Forms
+  documentUploads   DocumentUpload[] // Phase 2: Documents
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -633,6 +645,7 @@ model Application {
   crew      Crew       @relation(fields: [crewId], references: [id])
   principal Principal? @relation(fields: [principalId], references: [id])
   checklists CrewingChecklist[] // Phase 1: Digitize procedures
+  hgfSubmissions HGFSubmission[] @relation("HGFSubmission") // Phase 2: HGF Forms
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -2287,7 +2300,298 @@ model CrewingDocumentRequirement {
   @@unique([procedureId, documentCode])
   @@index([procedureId])
 }
+// ==========================
+// PHASE 2: HGF FORMS & DOCUMENTS
+// ==========================
 
+enum HGFFormType {
+  CHECKLIST
+  APPLICATION
+  VERIFICATION
+  TRAINING
+  DECLARATION
+}
+
+enum HGFSubmissionStatus {
+  DRAFT
+  SUBMITTED
+  PENDING_REVIEW
+  UNDER_REVIEW
+  REVISIONS_NEEDED
+  RESUBMITTED
+  APPROVED
+  REJECTED
+  ARCHIVED
+}
+
+enum DocumentVerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+  EXPIRED
+}
+
+model HGFForm {
+  id              String          @id @default(cuid())
+  formCode        String          @unique // HGF-CR-01, HGF-CR-02, etc
+  procedureId     String?
+  
+  // Form metadata
+  name            String
+  description     String?         @db.Text
+  formType        HGFFormType
+  
+  // Form structure (JSON with field definitions)
+  fieldsJson      Json // Array of {id, name, label, type, required, ...}
+  sectionsJson    Json? // Array of {id, title, description, fieldIds}
+  
+  // Validation rules
+  validationJson  Json? // Array of {fieldName, ruleType, ruleValue, errorMessage}
+  
+  // Document requirements
+  requiredDocs    Json? // Array of {code, title, required, expiryMonths}
+  
+  // Status & versioning
+  isActive        Boolean         @default(true)
+  version         Int             @default(1)
+  
+  // Audit trail
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  submissions     HGFSubmission[]
+  validationRules FormValidationRule[]
+  
+  @@index([formCode])
+  @@index([formType])
+  @@index([isActive])
+}
+
+model HGFSubmission {
+  id              String                @id @default(cuid())
+  formId          String
+  form            HGFForm               @relation(fields: [formId], references: [id])
+  
+  // Reference information
+  formCode        String // Denormalized for faster lookup
+  crewId          String?
+  crew            Crew?                 @relation(fields: [crewId], references: [id])
+  applicationId   String?
+  application     Application?          @relation("HGFSubmission", fields: [applicationId], references: [id])
+  
+  // Form response data
+  submittedData   Json // Form field values
+  
+  // Status & workflow
+  status          HGFSubmissionStatus   @default(DRAFT)
+  
+  // Submission tracking
+  submittedAt     DateTime?
+  submittedById   String?
+  submittedBy     User?                 @relation("HGFSubmissionSubmittedBy", fields: [submittedById], references: [id])
+  
+  // Approval workflow
+  approvalStep    Int                   @default(0) // Which step in approval chain
+  approvedAt      DateTime?
+  approvedById    String?
+  approvedBy      User?                 @relation("HGFSubmissionApprovedBy", fields: [approvedById], references: [id])
+  
+  rejectedAt      DateTime?
+  rejectedById    String?
+  rejectedBy      User?                 @relation("HGFSubmissionRejectedBy", fields: [rejectedById], references: [id])
+  rejectionReason String?               @db.Text
+  
+  // Revision tracking
+  revisionReason  String?               @db.Text
+  revisionsAskedAt DateTime?
+  revisionsAskedById String?
+  revisionsAskedBy User?                @relation("HGFSubmissionRevisionsAskedBy", fields: [revisionsAskedById], references: [id])
+  
+  // Remarks & comments
+  remarks         String?               @db.Text
+  approvalRemarks String?               @db.Text
+  
+  // Document verification
+  allDocsVerified Boolean               @default(false)
+  
+  // Audit trail
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+  
+  documents       DocumentUpload[]
+  auditLog        HGFSubmissionAuditLog[]
+  
+  @@unique([formId, crewId, applicationId])
+  @@index([formCode])
+  @@index([status])
+  @@index([crewId])
+  @@index([applicationId])
+  @@index([submittedAt])
+}
+
+// Add to Application model relation
+// hgfSubmissions HGFSubmission[] @relation("HGFSubmission")
+
+model DocumentUpload {
+  id              String                    @id @default(cuid())
+  submissionId    String
+  submission      HGFSubmission             @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  
+  crewId          String?
+  crew            Crew?                     @relation(fields: [crewId], references: [id])
+  
+  // Document information
+  documentType    String // CERTIFICATE, PASSPORT, MEDICAL, VISA, etc
+  documentCode    String? // STCW_BST, PASSPORT, etc
+  documentTitle   String?
+  
+  // File information
+  fileName        String
+  fileUrl         String // S3 or storage path
+  fileSize        Int // Bytes
+  mimeType        String // application/pdf, image/jpeg, etc
+  
+  // Document metadata
+  issueDate       DateTime?
+  expiryDate      DateTime?
+  documentNumber  String? // Passport number, certificate number, etc
+  issuingCountry  String?
+  
+  // Verification
+  verificationStatus DocumentVerificationStatus @default(PENDING)
+  verifiedAt      DateTime?
+  verifiedById    String?
+  verifiedBy      User?                     @relation("DocumentUploadVerifiedBy", fields: [verifiedById], references: [id])
+  verificationNotes String?                 @db.Text
+  
+  // Audit trail
+  uploadedAt      DateTime                  @default(now())
+  uploadedById    String?
+  uploadedBy      User?                     @relation("DocumentUploadUploadedBy", fields: [uploadedById], references: [id])
+  
+  createdAt       DateTime                  @default(now())
+  updatedAt       DateTime                  @updatedAt
+  
+  @@index([submissionId])
+  @@index([crewId])
+  @@index([documentCode])
+  @@index([verificationStatus])
+}
+
+model FormValidationRule {
+  id              String          @id @default(cuid())
+  formId          String
+  form            HGFForm         @relation(fields: [formId], references: [id], onDelete: Cascade)
+  
+  // Rule definition
+  fieldName       String
+  ruleType        String // REQUIRED, PATTERN, MIN_LENGTH, MAX_LENGTH, CUSTOM
+  ruleValue       String? // Regex, number, or custom rule name
+  
+  // Validation message
+  errorMessage    String
+  
+  // Dependency (conditional validation)
+  dependsOnField  String? // Only validate if another field has value
+  dependsOnValue  String? // Only validate if that field equals this
+  
+  // Order for processing
+  orderIndex      Int             @default(0)
+  
+  // Audit trail
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  @@unique([formId, fieldName, ruleType])
+  @@index([formId])
+  @@index([fieldName])
+}
+
+model FormTemplate {
+  id              String          @id @default(cuid())
+  
+  // Template metadata
+  name            String          @unique
+  description     String?         @db.Text
+  formType        HGFFormType
+  category        String? // e.g., "Crewing", "Medical", "Training"
+  
+  // Base field definitions
+  baseFieldsJson  Json // Template field definitions
+  
+  // Usage tracking
+  usageCount      Int             @default(0)
+  lastUsedAt      DateTime?
+  
+  // Status
+  isActive        Boolean         @default(true)
+  
+  // Audit trail
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  createdById     String
+  createdBy       User            @relation("FormTemplateCreatedBy", fields: [createdById], references: [id])
+  
+  @@index([formType])
+  @@index([isActive])
+}
+
+// Add relation to User model:
+// formTemplatesCreated FormTemplate[] @relation("FormTemplateCreatedBy")
+
+model HGFSubmissionAuditLog {
+  id              String          @id @default(cuid())
+  submissionId    String
+  submission      HGFSubmission   @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  
+  // Action information
+  action          String // CREATE, UPDATE, SUBMIT, APPROVE, REJECT, VERIFY_DOC, etc
+  changedFields   Json? // {fieldName: {from, to}}
+  
+  // Actor information
+  performedById   String
+  performedBy     User            @relation(fields: [performedById], references: [id])
+  
+  // Request context
+  ipAddress       String?
+  userAgent       String?
+  reason          String?         @db.Text
+  
+  // Timestamp
+  performedAt     DateTime        @default(now())
+  
+  @@index([submissionId])
+  @@index([action])
+  @@index([performedAt])
+}
+
+// Add relation to User model:
+// hgfSubmissionAuditLogs HGFSubmissionAuditLog[]
+
+model EmailNotificationLog {
+  id              String          @id @default(cuid())
+  
+  // Email details
+  recipientEmail  String
+  recipientName   String?
+  subject         String
+  emailType       String // SUBMISSION_CONFIRMATION, APPROVAL_REQUIRED, etc
+  
+  // Related entity
+  relatedEntityType String? // HGFSubmission, DocumentUpload, etc
+  relatedEntityId String?
+  
+  // Status
+  status          String          @default("SENT") // SENT, FAILED, BOUNCED
+  failureReason   String?
+  
+  // Audit
+  sentAt          DateTime        @default(now())
+  
+  @@index([recipientEmail])
+  @@index([emailType])
+  @@index([status])
+}
 // Add to Application model (relation)
 // checklists CrewingChecklist[]
 
