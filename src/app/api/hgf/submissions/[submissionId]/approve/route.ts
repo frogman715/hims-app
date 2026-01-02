@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { prisma } from '@/lib/prisma';
 import { authOptions } from '@/lib/auth';
+import { getEmailServiceInstance } from '@/lib/email';
+import { createHGFEmailNotifications } from '@/lib/email/hgf-notifications';
 
 export async function POST(
   request: NextRequest,
@@ -87,6 +89,22 @@ export async function POST(
         reason: remarks || null,
       },
     });
+
+    // Send email notifications
+    try {
+      const emailService = getEmailServiceInstance();
+      const notifications = createHGFEmailNotifications({
+        emailService,
+        prisma,
+        appBaseUrl: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+      });
+
+      // Send approval notification email to crew
+      await notifications.sendApprovalNotification(submissionId, session.user.id, remarks || '');
+    } catch (error) {
+      console.warn('Failed to send approval notification email:', error);
+      // Don't fail the API response if emails fail
+    }
 
     return NextResponse.json({
       data: updatedSubmission,
