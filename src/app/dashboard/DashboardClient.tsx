@@ -134,6 +134,13 @@ const OFFICE_NAV_ITEMS: OfficeNavigationItem[] = [
     label: 'Disciplinary',
     icon: '⚖️',
   },
+  {
+    module: ModuleName.quality,
+    href: '/quality/qms-dashboard',
+    label: 'QMS Dashboard',
+    icon: '📊',
+    requiredLevel: PermissionLevel.VIEW_ACCESS,
+  },
 ];
 
 const CREW_PORTAL_NAV_ITEMS: Array<{ href: string; label: string; icon: string }> = [
