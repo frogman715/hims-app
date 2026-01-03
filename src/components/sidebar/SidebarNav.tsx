@@ -30,13 +30,13 @@ export default function SidebarNav({ items }: SidebarNavProps) {
     // If session not loaded, show nothing to be safe
     if (!session?.user) return false;
     
-    // Check permission
-    const userRoles = Array.isArray(session.user.roles) 
+    // Check permission - cast roles to UserRole array
+    const userRoles = (Array.isArray(session.user.roles) 
       ? session.user.roles 
-      : [session.user.roles];
+      : [session.user.roles]) as string[];
     
     return hasPermission(
-      userRoles,
+      userRoles as any,
       item.module,
       item.requiredLevel ?? PermissionLevel.VIEW_ACCESS
     );
