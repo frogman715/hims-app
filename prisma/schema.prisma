@@ -245,6 +245,37 @@ enum PermissionAccessLevel {
 }
 
 // ==========================
+// DOCUMENT CONTROL SYSTEM
+// ==========================
+
+enum DocumentControlStatus {
+  DRAFT
+  FOR_APPROVAL
+  APPROVED
+  ACTIVE
+  OBSOLETE
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  REVOKED
+}
+
+enum RetentionPeriod {
+  THREE_MONTHS
+  SIX_MONTHS
+  ONE_YEAR
+  TWO_YEARS
+  THREE_YEARS
+  FIVE_YEARS
+  SEVEN_YEARS
+  TEN_YEARS
+  PERMANENT
+}
+
+// ==========================
 // AUTH / USER
 // ==========================
 
@@ -327,6 +358,14 @@ model User {
   nonconformityAuditLogs    NonconformityAuditLog[] @relation("NonconformityAuditLogBy")
   auditTrails               AuditTrail[]
   qmsReportsApproved        QMSReport[]       @relation("QMSReportApprovedBy")
+
+  // Phase 4.2: Document Control System
+  documentsCreated         DocumentControl[] @relation("DocumentCreatedBy")
+  documentRevisionsCreated DocumentRevision[] @relation("DocumentRevisionCreatedBy")
+  documentApprovalsAssignedTo DocumentApproval[] @relation("DocumentApprovalAssignedTo")
+  documentApprovalsApprovedBy DocumentApproval[] @relation("DocumentApprovalApprovedBy")
+  documentDistributionsReceived DocumentDistribution[] @relation("DocumentDistributionRecipient")
+  documentAcknowledgements DocumentAcknowledgement[] @relation("DocumentAcknowledgement")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -2856,6 +2895,172 @@ model QMSReport {
 }
 
 // ============================================================================
+// DOCUMENT CONTROL SYSTEM
+// ============================================================================
+
+model DocumentControl {
+  id              String          @id @default(cuid())
+  
+  // Document identification (HGQS-MM, HGQS-PM, HGQS-MG, etc)
+  code            String          @unique // HGQS-MM-001, HGQS-PM-002, etc
+  title           String
+  description     String?         @db.Text
+  
+  // Document type (Manual, Procedure, Form, etc)
+  documentType    String          // MAIN_MANUAL, PROCEDURE, FORM, GUIDELINE, WORK_INSTRUCTION
+  department      String          // HGQS, CREWING, ACCOUNTING, HR, ADMIN, QUALITY, etc
+  
+  // Current version
+  currentRevision Int             @default(0)
+  status          DocumentControlStatus @default(DRAFT)
+  
+  // Retention
+  retentionPeriod RetentionPeriod @default(PERMANENT)
+  retentionStartDate DateTime?
+  disposalDate    DateTime?
+  
+  // Content & attachments
+  contentUrl      String?         // S3 URL or file path
+  fileName        String?
+  fileSize        Int?            // bytes
+  
+  // Metadata
+  effectiveDate   DateTime
+  obsoleteDate    DateTime?
+  
+  // Relations
+  createdById     String
+  createdBy       User            @relation("DocumentCreatedBy", fields: [createdById], references: [id])
+  
+  revisions       DocumentRevision[]
+  approvals       DocumentApproval[]
+  distributions   DocumentDistribution[]
+  acknowledgements DocumentAcknowledgement[]
+  
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  @@index([code])
+  @@index([status])
+  @@index([department])
+  @@index([documentType])
+  @@index([createdById])
+}
+
+model DocumentRevision {
+  id              String          @id @default(cuid())
+  
+  // Reference to main document
+  documentId      String
+  document        DocumentControl @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  
+  // Revision info
+  revisionNumber  Int             // v1, v2, v3, etc
+  changesSummary  String?         @db.Text // What changed in this revision
+  
+  // File
+  revisionUrl     String?
+  fileName        String?
+  
+  // Creator
+  createdById     String
+  createdBy       User            @relation("DocumentRevisionCreatedBy", fields: [createdById], references: [id])
+  
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  @@index([documentId])
+  @@index([revisionNumber])
+  @@index([createdById])
+  @@unique([documentId, revisionNumber])
+}
+
+model DocumentApproval {
+  id              String          @id @default(cuid())
+  
+  // Reference to document
+  documentId      String
+  document        DocumentControl @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  
+  // Approval flow
+  approvalLevel   Int             // 1 = QMR, 2 = Director, etc
+  approvalRole    String          // QMR, DIRECTOR, SECTION_HEAD, etc
+  
+  status          ApprovalStatus  @default(PENDING)
+  
+  // Approver info
+  assignedToId    String?
+  assignedTo      User?           @relation("DocumentApprovalAssignedTo", fields: [assignedToId], references: [id])
+  
+  approvedById    String?
+  approvedBy      User?           @relation("DocumentApprovalApprovedBy", fields: [approvedById], references: [id])
+  
+  approvalComments String?        @db.Text
+  approvedAt      DateTime?
+  rejectionReason String?         @db.Text
+  
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  @@index([documentId])
+  @@index([status])
+  @@index([assignedToId])
+  @@index([approvedById])
+}
+
+model DocumentDistribution {
+  id              String          @id @default(cuid())
+  
+  // Reference to document
+  documentId      String
+  document        DocumentControl @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  
+  // Distributed to
+  recipientId     String
+  recipient       User            @relation("DocumentDistributionRecipient", fields: [recipientId], references: [id])
+  
+  // Distribution details
+  distributionType String         // EMAIL, SYSTEM_NOTIFICATION, MANUAL, etc
+  distributedAt   DateTime        @default(now())
+  
+  // Acknowledgement required?
+  requiresAcknowledgement Boolean @default(true)
+  
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  @@index([documentId])
+  @@index([recipientId])
+  @@unique([documentId, recipientId])
+}
+
+model DocumentAcknowledgement {
+  id              String          @id @default(cuid())
+  
+  // Reference to document
+  documentId      String
+  document        DocumentControl @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  
+  // Acknowledgement by
+  acknowledgedById String
+  acknowledgedBy  User            @relation("DocumentAcknowledgement", fields: [acknowledgedById], references: [id])
+  
+  status          AcknowledgementStatus @default(PENDING)
+  acknowledgedAt  DateTime?
+  
+  // Comments
+  remarks         String?         @db.Text
+  
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  @@index([documentId])
+  @@index([acknowledgedById])
+  @@index([status])
+  @@unique([documentId, acknowledgedById])
+}
+
+// ============================================================================
 // RELATION UPDATES NEEDED IN EXISTING MODELS:
 // ============================================================================
 // User model: Add relations for QMS
@@ -2864,6 +3069,14 @@ model QMSReport {
 // - auditTrails              AuditTrail[]
 // - qmsDocumentsReviewed     QMSDocument[]
 // - qmsReportsApproved       QMSReport[]
+//
+// User model: Add relations for Document Control
+// - documentsCreated         DocumentControl[] @relation("DocumentCreatedBy")
+// - documentRevisionsCreated DocumentRevision[] @relation("DocumentRevisionCreatedBy")
+// - documentApprovalsAssignedTo DocumentApproval[] @relation("DocumentApprovalAssignedTo")
+// - documentApprovalsApprovedBy DocumentApproval[] @relation("DocumentApprovalApprovedBy")
+// - documentDistributionsReceived DocumentDistribution[] @relation("DocumentDistributionRecipient")
+// - documentAcknowledgements DocumentAcknowledgement[] @relation("DocumentAcknowledgement")
 //
 // Crew model: Add relations for QMS
 // - qmsDocuments             QMSDocument[]
