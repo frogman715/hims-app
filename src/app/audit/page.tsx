@@ -51,12 +51,28 @@ export default function AuditManagementPage() {
       if (filters.status) params.append('status', filters.status);
       if (filters.auditType) params.append('auditType', filters.auditType);
 
-      const response = await fetch(`/api/audit/list?${params.toString()}`);
-      if (!response.ok) throw new Error('Failed to fetch audits');
+      const response = await fetch(`/api/audit/list?${params.toString()}`, {
+        method: 'GET',
+        credentials: 'include', // Include cookies for session
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (response.status === 401) {
+        router.push('/auth/signin');
+        return;
+      }
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to fetch audits');
+      }
 
       const data = await response.json();
-      setAudits(data);
+      setAudits(Array.isArray(data) ? data : []);
     } catch (err) {
+      console.error('Fetch error:', err);
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
@@ -64,10 +80,10 @@ export default function AuditManagementPage() {
   };
 
   useEffect(() => {
-    if (session?.user) {
+    if (status === 'authenticated' && session?.user) {
       fetchAudits();
     }
-  }, [session, filters]);
+  }, [status, session, filters]);
 
   const handleCreateSuccess = () => {
     setShowCreateForm(false);
