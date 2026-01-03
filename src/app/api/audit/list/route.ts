@@ -42,8 +42,8 @@ export async function GET(req: NextRequest) {
     }
 
     const { searchParams } = new URL(req.url);
-    const status = searchParams.get('status');
-    const auditType = searchParams.get('auditType');
+    const status = searchParams.get('status') || undefined;
+    const auditType = searchParams.get('auditType') || undefined;
     const limit = parseInt(searchParams.get('limit') || '20');
     const offset = parseInt(searchParams.get('offset') || '0');
 

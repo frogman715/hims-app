@@ -99,21 +99,36 @@ export async function listAudits(filters?: {
   limit?: number;
   offset?: number;
 }) {
-  // Build where clause - only include defined filters
-  const where: Record<string, unknown> = {};
+  const include = {
+    leadAuditor: { select: { id: true, name: true, email: true } },
+    findings: { select: { id: true } },
+    nonConformities: { select: { id: true } },
+  };
+  const take = filters?.limit || 20;
+  const skip = filters?.offset || 0;
+  const orderBy = { plannedDate: 'desc' as const };
+
+  // No filters - return all audits
+  if (!filters?.status && !filters?.auditType) {
+    return prisma.complianceAudit.findMany({
+      include,
+      take,
+      skip,
+      orderBy,
+    });
+  }
+
+  // With filters - build where clause
+  const where: Record<string, any> = {};
   if (filters?.status) where.status = filters.status;
   if (filters?.auditType) where.auditType = filters.auditType;
 
   return prisma.complianceAudit.findMany({
     where,
-    include: {
-      leadAuditor: { select: { id: true, name: true, email: true } },
-      findings: { select: { id: true } },
-      nonConformities: { select: { id: true } },
-    },
-    take: filters?.limit || 20,
-    skip: filters?.offset || 0,
-    orderBy: { plannedDate: 'desc' },
+    include,
+    take,
+    skip,
+    orderBy,
   });
 }
 
