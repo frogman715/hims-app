@@ -34,6 +34,7 @@ export default function Sidebar({ navigationItems }: SidebarProps) {
     // ========== QUALITY MANAGEMENT ==========
     { href: "/quality", label: "Quality Management System", icon: "⚙️", group: "QUALITY MANAGEMENT", module: ModuleName.quality, requiredLevel: PermissionLevel.VIEW_ACCESS },
     { href: "/quality/qms-dashboard", label: "QMS Dashboard", icon: "📊", group: "QUALITY MANAGEMENT", module: ModuleName.quality, requiredLevel: PermissionLevel.VIEW_ACCESS },
+    { href: "/documents", label: "Document Control", icon: "📋", group: "QUALITY MANAGEMENT", module: ModuleName.quality, requiredLevel: PermissionLevel.VIEW_ACCESS },
     { href: "/quality/hgqs-compliance", label: "HGQS Compliance Tracker", icon: "📊", group: "QUALITY MANAGEMENT", module: ModuleName.quality, requiredLevel: PermissionLevel.VIEW_ACCESS },
     { href: "/quality/audits", label: "Internal Audits", icon: "🔍", group: "QUALITY MANAGEMENT", module: ModuleName.quality, requiredLevel: PermissionLevel.VIEW_ACCESS },
     { href: "/quality/corrective-actions", label: "Corrective Actions", icon: "🔧", group: "QUALITY MANAGEMENT", module: ModuleName.quality, requiredLevel: PermissionLevel.VIEW_ACCESS },
