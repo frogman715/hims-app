@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import type { DashboardMetrics, Alert } from '@/lib/qms/advanced-analytics';
 
 export function AdvancedQMSDashboard() {
@@ -60,7 +61,17 @@ export function AdvancedQMSDashboard() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-bold text-gray-900">QMS Advanced Dashboard</h2>
+        <div className="flex items-center gap-4">
+          <Link
+            href="/dashboard"
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition"
+            title="Back to Dashboard"
+          >
+            <span className="text-2xl">←</span>
+            <span>Back</span>
+          </Link>
+          <h2 className="text-3xl font-bold text-gray-900">QMS Advanced Dashboard</h2>
+        </div>
         <button
           onClick={fetchMetrics}
           className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
