@@ -11,6 +11,24 @@ import {
   AcknowledgeModal,
 } from '@/components/documents';
 
+interface Document {
+  id: string;
+  code: string;
+  title: string;
+  documentType: string;
+  department: string;
+  status: string;
+  createdAt: string;
+  createdBy: {
+    name: string;
+    email: string;
+  };
+  approvals: Array<{
+    status: string;
+    assignedTo?: { name: string };
+  }>;
+}
+
 export default function DocumentManagementPage() {
   const [activeTab, setActiveTab] = useState<
     'documents' | 'approvals'
@@ -31,26 +49,14 @@ export default function DocumentManagementPage() {
   // Refresh trigger
   const [refreshKey, setRefreshKey] = useState(0);
 
-  const handleCreateDocument = (document: any) => {
+  const handleCreateDocument = (document: Record<string, unknown>) => {
     setShowCreateModal(false);
     setRefreshKey((prev) => prev + 1);
   };
 
-  const handleSelectDocument = (document: any) => {
+  const handleSelectDocument = (document: Document) => {
     // Could open detail view here
     console.log('Selected document:', document);
-  };
-
-  const handleDistributeClick = (documentId: string, title: string) => {
-    setSelectedDocumentId(documentId);
-    setSelectedDocumentTitle(title);
-    setShowDistributeModal(true);
-  };
-
-  const handleAcknowledgeClick = (documentId: string, code: string) => {
-    setSelectedDocumentId(documentId);
-    setSelectedDocCode(code);
-    setShowAcknowledgeModal(true);
   };
 
   const handleApprovalAction = (

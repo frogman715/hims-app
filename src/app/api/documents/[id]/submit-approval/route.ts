@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { submitForApproval } from '@/lib/documents/service';
+import type { Role } from '@prisma/client';
 
 export async function POST(
   req: NextRequest,
@@ -21,7 +22,7 @@ export async function POST(
     const document = await submitForApproval(
       id,
       session.user.id,
-      session.user.role as any
+      session.user.role as Role
     );
 
     return NextResponse.json(document);

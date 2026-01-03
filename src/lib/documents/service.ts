@@ -3,6 +3,7 @@ import {
   DocumentControlStatus,
   ApprovalStatus,
   Role,
+  RetentionPeriod,
 } from '@prisma/client';
 import {
   hasDocumentPermission,
@@ -40,7 +41,7 @@ export async function createDocument(input: {
       description: input.description,
       documentType: input.documentType,
       department: input.department,
-      retentionPeriod: input.retentionPeriod as unknown as string,
+      retentionPeriod: input.retentionPeriod as RetentionPeriod,
       effectiveDate: input.effectiveDate,
       status: DocumentControlStatus.DRAFT,
       createdById: input.createdById,
@@ -387,7 +388,11 @@ export async function distributeDocument(
   );
 
   // Update document status to ACTIVE if not already
-  if (document.status !== DocumentControlStatus.ACTIVE) {
+  const currentDoc = await prisma.documentControl.findUnique({
+    where: { id: documentId },
+  });
+
+  if (currentDoc && currentDoc.status !== DocumentControlStatus.ACTIVE) {
     await prisma.documentControl.update({
       where: { id: documentId },
       data: {

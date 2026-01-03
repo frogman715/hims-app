@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { updateDocument } from '@/lib/documents/service';
+import type { Role } from '@prisma/client';
 
 export async function PUT(
   req: NextRequest,
@@ -22,7 +23,7 @@ export async function PUT(
     const document = await updateDocument(id, {
       ...data,
       userId: session.user.id,
-      userRole: session.user.role as any,
+      userRole: session.user.role as Role,
     });
 
     return NextResponse.json(document);

@@ -5,7 +5,7 @@ import { Role } from '@prisma/client';
  * Defines who can do what with documents
  */
 
-export const documentPermissions = {
+export const documentPermissions: Record<string, Role[]> = {
   // Can CREATE new documents
   canCreate: [Role.QMR, Role.DIRECTOR],
 

@@ -74,12 +74,12 @@ export default function ApprovalDashboard({
         (data.data as Array<Record<string, unknown>>).forEach((doc) => {
           if (doc.approvals) {
             (doc.approvals as Array<Record<string, unknown>>).forEach((approval) => {
-              const approval_record = {
-                ...approval,
+              const approval_record: ApprovalRecord = {
+                ...(approval as unknown as ApprovalRecord),
                 document: {
-                  code: doc.code,
-                  title: doc.title,
-                  documentType: doc.documentType,
+                  code: String(doc.code),
+                  title: String(doc.title),
+                  documentType: String(doc.documentType),
                 },
               };
 
