@@ -15,28 +15,28 @@ export default function Sidebar({ navigationItems }: SidebarProps) {
 
   const defaultNavItems: NavItem[] = [
     // ========== CREWING DEPARTMENT ==========
-    { href: "/crewing", label: "Seafarer Recruitment", icon: "👥", group: "CREWING DEPARTMENT" },
-    { href: "/crewing/seafarers", label: "Seafarers List", icon: "📋", group: "CREWING DEPARTMENT" },
-    { href: "/contracts", label: "Employment Contracts", icon: "📝", group: "CREWING DEPARTMENT" },
-    { href: "/crewing/documents", label: "Document Management", icon: "📁", group: "CREWING DEPARTMENT" },
-    { href: "/crewing/form-reference", label: "Form References", icon: "📄", group: "CREWING DEPARTMENT" },
-    { href: "/crewing/principals", label: "Fleet Management", icon: "🚢", group: "CREWING DEPARTMENT" },
+    { href: "/crewing", label: "Seafarer Recruitment", icon: "👥", group: "CREWING DEPARTMENT", module: "crewing", requiredLevel: "VIEW_ACCESS" },
+    { href: "/crewing/seafarers", label: "Seafarers List", icon: "📋", group: "CREWING DEPARTMENT", module: "crew", requiredLevel: "VIEW_ACCESS" },
+    { href: "/contracts", label: "Employment Contracts", icon: "📝", group: "CREWING DEPARTMENT", module: "contracts", requiredLevel: "VIEW_ACCESS" },
+    { href: "/crewing/documents", label: "Document Management", icon: "📁", group: "CREWING DEPARTMENT", module: "documents", requiredLevel: "VIEW_ACCESS" },
+    { href: "/crewing/form-reference", label: "Form References", icon: "📄", group: "CREWING DEPARTMENT", module: "crewing", requiredLevel: "VIEW_ACCESS" },
+    { href: "/crewing/principals", label: "Fleet Management", icon: "🚢", group: "CREWING DEPARTMENT", module: "principals", requiredLevel: "VIEW_ACCESS" },
     
     // ========== OPERATIONS & COMPLIANCE ==========
-    { href: "/insurance", label: "Insurance Management", icon: "🛡️", group: "OPERATIONS" },
-    { href: "/compliance", label: "Compliance Tracking", icon: "✅", group: "OPERATIONS" },
+    { href: "/insurance", label: "Insurance Management", icon: "🛡️", group: "OPERATIONS", module: "insurance", requiredLevel: "VIEW_ACCESS" },
+    { href: "/compliance", label: "Compliance Tracking", icon: "✅", group: "OPERATIONS", module: "compliance", requiredLevel: "VIEW_ACCESS" },
     
     // ========== HR & ADMINISTRATION ==========
-    { href: "/hr", label: "HR Department", icon: "👔", group: "HR & ADMINISTRATION" },
-    { href: "/accounting", label: "Finance & Accounting", icon: "💵", group: "HR & ADMINISTRATION" },
+    { href: "/hr", label: "HR Department", icon: "👔", group: "HR & ADMINISTRATION", module: "crew", requiredLevel: "VIEW_ACCESS" },
+    { href: "/accounting", label: "Finance & Accounting", icon: "💵", group: "HR & ADMINISTRATION", module: "accounting", requiredLevel: "VIEW_ACCESS" },
     
     // ========== QUALITY MANAGEMENT ==========
-    { href: "/quality", label: "Quality Management System", icon: "⚙️", group: "QUALITY MANAGEMENT" },
-    { href: "/quality/qms-dashboard", label: "QMS Dashboard", icon: "📊", group: "QUALITY MANAGEMENT" },
-    { href: "/quality/hgqs-compliance", label: "HGQS Compliance Tracker", icon: "📊", group: "QUALITY MANAGEMENT" },
-    { href: "/quality/audits", label: "Internal Audits", icon: "🔍", group: "QUALITY MANAGEMENT" },
-    { href: "/quality/corrective-actions", label: "Corrective Actions", icon: "🔧", group: "QUALITY MANAGEMENT" },
-    { href: "/quality/reviews", label: "Management Reviews", icon: "📈", group: "QUALITY MANAGEMENT" },
+    { href: "/quality", label: "Quality Management System", icon: "⚙️", group: "QUALITY MANAGEMENT", module: "quality", requiredLevel: "VIEW_ACCESS" },
+    { href: "/quality/qms-dashboard", label: "QMS Dashboard", icon: "📊", group: "QUALITY MANAGEMENT", module: "quality", requiredLevel: "VIEW_ACCESS" },
+    { href: "/quality/hgqs-compliance", label: "HGQS Compliance Tracker", icon: "📊", group: "QUALITY MANAGEMENT", module: "quality", requiredLevel: "VIEW_ACCESS" },
+    { href: "/quality/audits", label: "Internal Audits", icon: "🔍", group: "QUALITY MANAGEMENT", module: "quality", requiredLevel: "VIEW_ACCESS" },
+    { href: "/quality/corrective-actions", label: "Corrective Actions", icon: "🔧", group: "QUALITY MANAGEMENT", module: "quality", requiredLevel: "VIEW_ACCESS" },
+    { href: "/quality/reviews", label: "Management Reviews", icon: "📈", group: "QUALITY MANAGEMENT", module: "quality", requiredLevel: "VIEW_ACCESS" },
   ];
 
   const navItems = navigationItems || defaultNavItems;

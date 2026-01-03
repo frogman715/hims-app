@@ -1,13 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSession } from "next/navigation";
+import { useSession as useSessionAuth } from "next-auth/react";
+import { hasPermission, ModuleName, PermissionLevel } from "@/lib/permissions";
 
 export interface NavItem {
   href: string;
   label: string;
   icon: string;
   group?: string;
+  module?: ModuleName;
+  requiredLevel?: PermissionLevel;
 }
 
 interface SidebarNavProps {
@@ -16,9 +20,30 @@ interface SidebarNavProps {
 
 export default function SidebarNav({ items }: SidebarNavProps) {
   const pathname = usePathname();
+  const { data: session } = useSessionAuth();
+  
+  // Filter items based on user permissions
+  const filteredItems = items.filter((item) => {
+    // If no module specified, always show
+    if (!item.module) return true;
+    
+    // If session not loaded, show nothing to be safe
+    if (!session?.user) return false;
+    
+    // Check permission
+    const userRoles = Array.isArray(session.user.roles) 
+      ? session.user.roles 
+      : [session.user.roles];
+    
+    return hasPermission(
+      userRoles,
+      item.module,
+      item.requiredLevel ?? PermissionLevel.VIEW_ACCESS
+    );
+  });
   
   // Group items by department
-  const groupedItems = items.reduce((acc, item) => {
+  const groupedItems = filteredItems.reduce((acc, item) => {
     const group = item.group || "OTHER";
     if (!acc[group]) acc[group] = [];
     acc[group].push(item);
