@@ -2,6 +2,7 @@
 
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { ModuleName, PermissionLevel } from "@/lib/permissions";
 import SidebarHeader from "./SidebarHeader";
 import SidebarNav, { type NavItem } from "./SidebarNav";
 
@@ -15,28 +16,28 @@ export default function Sidebar({ navigationItems }: SidebarProps) {
 
   const defaultNavItems: NavItem[] = [
     // ========== CREWING DEPARTMENT ==========
-    { href: "/crewing", label: "Seafarer Recruitment", icon: "👥", group: "CREWING DEPARTMENT", module: "crewing", requiredLevel: "VIEW_ACCESS" },
-    { href: "/crewing/seafarers", label: "Seafarers List", icon: "📋", group: "CREWING DEPARTMENT", module: "crew", requiredLevel: "VIEW_ACCESS" },
-    { href: "/contracts", label: "Employment Contracts", icon: "📝", group: "CREWING DEPARTMENT", module: "contracts", requiredLevel: "VIEW_ACCESS" },
-    { href: "/crewing/documents", label: "Document Management", icon: "📁", group: "CREWING DEPARTMENT", module: "documents", requiredLevel: "VIEW_ACCESS" },
-    { href: "/crewing/form-reference", label: "Form References", icon: "📄", group: "CREWING DEPARTMENT", module: "crewing", requiredLevel: "VIEW_ACCESS" },
-    { href: "/crewing/principals", label: "Fleet Management", icon: "🚢", group: "CREWING DEPARTMENT", module: "principals", requiredLevel: "VIEW_ACCESS" },
+    { href: "/crewing", label: "Seafarer Recruitment", icon: "👥", group: "CREWING DEPARTMENT", module: ModuleName.crewing, requiredLevel: PermissionLevel.VIEW_ACCESS },
+    { href: "/crewing/seafarers", label: "Seafarers List", icon: "📋", group: "CREWING DEPARTMENT", module: ModuleName.crew, requiredLevel: PermissionLevel.VIEW_ACCESS },
+    { href: "/contracts", label: "Employment Contracts", icon: "📝", group: "CREWING DEPARTMENT", module: ModuleName.contracts, requiredLevel: PermissionLevel.VIEW_ACCESS },
+    { href: "/crewing/documents", label: "Document Management", icon: "📁", group: "CREWING DEPARTMENT", module: ModuleName.documents, requiredLevel: PermissionLevel.VIEW_ACCESS },
+    { href: "/crewing/form-reference", label: "Form References", icon: "📄", group: "CREWING DEPARTMENT", module: ModuleName.crewing, requiredLevel: PermissionLevel.VIEW_ACCESS },
+    { href: "/crewing/principals", label: "Fleet Management", icon: "🚢", group: "CREWING DEPARTMENT", module: ModuleName.principals, requiredLevel: PermissionLevel.VIEW_ACCESS },
     
     // ========== OPERATIONS & COMPLIANCE ==========
-    { href: "/insurance", label: "Insurance Management", icon: "🛡️", group: "OPERATIONS", module: "insurance", requiredLevel: "VIEW_ACCESS" },
-    { href: "/compliance", label: "Compliance Tracking", icon: "✅", group: "OPERATIONS", module: "compliance", requiredLevel: "VIEW_ACCESS" },
+    { href: "/insurance", label: "Insurance Management", icon: "🛡️", group: "OPERATIONS", module: ModuleName.insurance, requiredLevel: PermissionLevel.VIEW_ACCESS },
+    { href: "/compliance", label: "Compliance Tracking", icon: "✅", group: "OPERATIONS", module: ModuleName.compliance, requiredLevel: PermissionLevel.VIEW_ACCESS },
     
     // ========== HR & ADMINISTRATION ==========
-    { href: "/hr", label: "HR Department", icon: "👔", group: "HR & ADMINISTRATION", module: "crew", requiredLevel: "VIEW_ACCESS" },
-    { href: "/accounting", label: "Finance & Accounting", icon: "💵", group: "HR & ADMINISTRATION", module: "accounting", requiredLevel: "VIEW_ACCESS" },
+    { href: "/hr", label: "HR Department", icon: "👔", group: "HR & ADMINISTRATION", module: ModuleName.crew, requiredLevel: PermissionLevel.VIEW_ACCESS },
+    { href: "/accounting", label: "Finance & Accounting", icon: "💵", group: "HR & ADMINISTRATION", module: ModuleName.accounting, requiredLevel: PermissionLevel.VIEW_ACCESS },
     
     // ========== QUALITY MANAGEMENT ==========
-    { href: "/quality", label: "Quality Management System", icon: "⚙️", group: "QUALITY MANAGEMENT", module: "quality", requiredLevel: "VIEW_ACCESS" },
-    { href: "/quality/qms-dashboard", label: "QMS Dashboard", icon: "📊", group: "QUALITY MANAGEMENT", module: "quality", requiredLevel: "VIEW_ACCESS" },
-    { href: "/quality/hgqs-compliance", label: "HGQS Compliance Tracker", icon: "📊", group: "QUALITY MANAGEMENT", module: "quality", requiredLevel: "VIEW_ACCESS" },
-    { href: "/quality/audits", label: "Internal Audits", icon: "🔍", group: "QUALITY MANAGEMENT", module: "quality", requiredLevel: "VIEW_ACCESS" },
-    { href: "/quality/corrective-actions", label: "Corrective Actions", icon: "🔧", group: "QUALITY MANAGEMENT", module: "quality", requiredLevel: "VIEW_ACCESS" },
-    { href: "/quality/reviews", label: "Management Reviews", icon: "📈", group: "QUALITY MANAGEMENT", module: "quality", requiredLevel: "VIEW_ACCESS" },
+    { href: "/quality", label: "Quality Management System", icon: "⚙️", group: "QUALITY MANAGEMENT", module: ModuleName.quality, requiredLevel: PermissionLevel.VIEW_ACCESS },
+    { href: "/quality/qms-dashboard", label: "QMS Dashboard", icon: "📊", group: "QUALITY MANAGEMENT", module: ModuleName.quality, requiredLevel: PermissionLevel.VIEW_ACCESS },
+    { href: "/quality/hgqs-compliance", label: "HGQS Compliance Tracker", icon: "📊", group: "QUALITY MANAGEMENT", module: ModuleName.quality, requiredLevel: PermissionLevel.VIEW_ACCESS },
+    { href: "/quality/audits", label: "Internal Audits", icon: "🔍", group: "QUALITY MANAGEMENT", module: ModuleName.quality, requiredLevel: PermissionLevel.VIEW_ACCESS },
+    { href: "/quality/corrective-actions", label: "Corrective Actions", icon: "🔧", group: "QUALITY MANAGEMENT", module: ModuleName.quality, requiredLevel: PermissionLevel.VIEW_ACCESS },
+    { href: "/quality/reviews", label: "Management Reviews", icon: "📈", group: "QUALITY MANAGEMENT", module: ModuleName.quality, requiredLevel: PermissionLevel.VIEW_ACCESS },
   ];
 
   const navItems = navigationItems || defaultNavItems;

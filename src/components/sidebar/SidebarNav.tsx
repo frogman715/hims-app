@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useSession } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useSession as useSessionAuth } from "next-auth/react";
 import { hasPermission, ModuleName, PermissionLevel } from "@/lib/permissions";
 
