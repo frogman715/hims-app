@@ -276,6 +276,135 @@ enum RetentionPeriod {
 }
 
 // ==========================
+// POINT 4.3 - AUDIT & NONCONFORMITY SYSTEM
+// ==========================
+
+enum AuditType {
+  INTERNAL
+  EXTERNAL
+  COMPLIANCE
+  MANAGEMENT_REVIEW
+  RISK_ASSESSMENT
+}
+
+enum AuditStatus {
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+  CLOSED
+}
+
+enum NonConformityStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  VERIFIED
+  CLOSED
+}
+
+enum CorrectiveActionStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  VERIFIED
+  CLOSED
+}
+
+enum FindingSeverity {
+  CRITICAL
+  MAJOR
+  MINOR
+  OBSERVATION
+}
+
+// ==========================
+// POINT 4.4 - HR COMPLIANCE MANAGEMENT
+// ==========================
+
+enum TrainingType {
+  MANDATORY
+  RECOMMENDED
+  SKILL_DEVELOPMENT
+  INDUCTION
+  REFRESHER
+}
+
+enum TrainingStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  EXPIRED
+  OVERDUE
+}
+
+enum CertificationType {
+  STCW
+  PROFESSIONAL
+  SAFETY
+  MEDICAL
+  OPERATIONAL
+  COMPLIANCE
+}
+
+enum CertificationStatus {
+  ACTIVE
+  EXPIRING
+  EXPIRED
+  REVOKED
+  PENDING_RENEWAL
+}
+
+enum ComplianceGapType {
+  TRAINING
+  CERTIFICATION
+  DOCUMENTATION
+  COMPETENCY
+  AUDIT_FINDING
+}
+
+// ==========================
+// POINT 4.5 - SUPPLIER MANAGEMENT
+// ==========================
+
+enum SupplierStatus {
+  PROSPECT
+  APPROVED
+  CONDITIONAL
+  SUSPENDED
+  DEACTIVATED
+}
+
+enum SupplierType {
+  EQUIPMENT
+  SERVICE
+  CONSUMABLE
+  SPARE_PARTS
+  TRAINING
+  INSPECTION
+  OTHER
+}
+
+enum SupplierAuditStatus {
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+  PASSED
+  FAILED
+  CONDITIONAL_PASS
+}
+
+enum PurchaseOrderStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  ORDERED
+  DELIVERED
+  INVOICED
+  PAID
+  CANCELLED
+}
+
+// ==========================
 // AUTH / USER
 // ==========================
 
@@ -366,6 +495,25 @@ model User {
   documentApprovalsApprovedBy DocumentApproval[] @relation("DocumentApprovalApprovedBy")
   documentDistributionsReceived DocumentDistribution[] @relation("DocumentDistributionRecipient")
   documentAcknowledgements DocumentAcknowledgement[] @relation("DocumentAcknowledgement")
+
+  // Phase 4.3: Audit & Nonconformity System
+  auditLedBy                  Audit[]                    @relation("AuditLeadAuditor")
+  auditFindingsAssignedTo     AuditFinding[]             @relation("AuditFindingAssignedTo")
+  nonconformitiesAssignedToNC NonConformity[]            @relation("NonConformityAssignedTo")
+  nonconformitiesVerifiedBy   NonConformity[]            @relation("NonConformityVerifiedBy")
+  correctiveActionsAssignedTo CorrectiveAction[]         @relation("CorrectiveActionAssignedTo")
+  correctiveActionsVerifiedBy CorrectiveAction[]         @relation("CorrectiveActionVerifiedBy")
+
+  // Phase 4.4: HR Compliance Management
+  employeeTrainings           EmployeeTraining[]         @relation("EmployeeTraining")
+  employeeCertifications      Certification[]            @relation("EmployeeCertification")
+  complianceGapsAssignedTo    ComplianceGap[]            @relation("ComplianceGapAssignedTo")
+
+  // Phase 4.5: Supplier Management
+  suppliersApprovedBy         Supplier[]                 @relation("SupplierApprovedBy")
+  supplierAuditsPerformed     SupplierAudit[]            @relation("SupplierAuditor")
+  purchaseOrdersCreated       PurchaseOrder[]            @relation("POCreatedBy")
+  purchaseOrdersApproved      PurchaseOrder[]            @relation("POApprovedBy")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -3058,6 +3206,452 @@ model DocumentAcknowledgement {
   @@index([acknowledgedById])
   @@index([status])
   @@unique([documentId, acknowledgedById])
+}
+
+// ============================================================================
+// POINT 4.3 - AUDIT & NONCONFORMITY MODELS
+// ============================================================================
+
+model Audit {
+  id              String          @id @default(cuid())
+  
+  // Audit details
+  auditCode       String          @unique
+  auditType       AuditType
+  title           String
+  description     String?         @db.Text
+  status          AuditStatus     @default(PLANNED)
+  scope           String?         @db.Text
+  
+  // Audit team
+  leadAuditorId   String
+  leadAuditor     User            @relation("AuditLeadAuditor", fields: [leadAuditorId], references: [id])
+  
+  teamMembers     String[]        // Array of user IDs
+  
+  // Dates
+  plannedDate     DateTime
+  startDate       DateTime?
+  endDate         DateTime?
+  
+  // Results
+  findings        AuditFinding[]
+  nonConformities NonConformity[]
+  
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  @@index([auditType])
+  @@index([status])
+  @@index([leadAuditorId])
+}
+
+model AuditFinding {
+  id              String          @id @default(cuid())
+  
+  // Reference to audit
+  auditId         String
+  audit           Audit           @relation(fields: [auditId], references: [id], onDelete: Cascade)
+  
+  // Finding details
+  findingCode     String
+  description     String          @db.Text
+  severity        FindingSeverity @default(MINOR)
+  
+  // Related document/process
+  relatedDocId    String?
+  relatedProcess  String?
+  
+  // Assignment
+  assignedToId    String?
+  assignedTo      User?           @relation("AuditFindingAssignedTo", fields: [assignedToId], references: [id])
+  
+  dueDate         DateTime?
+  closedDate      DateTime?
+  
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  @@index([auditId])
+  @@index([severity])
+}
+
+model NonConformity {
+  id              String          @id @default(cuid())
+  
+  // Reference
+  ncNumber        String          @unique
+  auditId         String
+  audit           Audit           @relation(fields: [auditId], references: [id], onDelete: Cascade)
+  
+  // Details
+  description     String          @db.Text
+  rootCause       String?         @db.Text
+  status          NonConformityStatus @default(OPEN)
+  
+  // Assignment
+  assignedToId    String
+  assignedTo      User            @relation("NonConformityAssignedTo", fields: [assignedToId], references: [id])
+  
+  // Tracking
+  identifiedDate  DateTime        @default(now())
+  targetDate      DateTime
+  resolvedDate    DateTime?
+  verifiedDate    DateTime?
+  verifiedById    String?
+  verifiedBy      User?           @relation("NonConformityVerifiedBy", fields: [verifiedById], references: [id])
+  
+  // Corrective actions
+  correctiveActions CorrectiveAction[]
+  
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  @@index([auditId])
+  @@index([status])
+  @@index([assignedToId])
+}
+
+model CorrectiveAction {
+  id              String          @id @default(cuid())
+  
+  // Reference
+  caNumber        String          @unique
+  nonConformityId String
+  nonConformity   NonConformity   @relation(fields: [nonConformityId], references: [id], onDelete: Cascade)
+  
+  // Details
+  action          String          @db.Text
+  status          CorrectiveActionStatus @default(PENDING)
+  
+  // Assignment
+  assignedToId    String
+  assignedTo      User            @relation("CorrectiveActionAssignedTo", fields: [assignedToId], references: [id])
+  
+  // Tracking
+  dueDate         DateTime
+  completedDate   DateTime?
+  verifiedDate    DateTime?
+  verifiedById    String?
+  verifiedBy      User?           @relation("CorrectiveActionVerifiedBy", fields: [verifiedById], references: [id])
+  
+  // Evidence/Documents
+  evidenceDoc     String?         // Document URL or file path
+  
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  @@index([nonConformityId])
+  @@index([status])
+  @@index([assignedToId])
+}
+
+model AuditSchedule {
+  id              String          @id @default(cuid())
+  
+  // Schedule details
+  department      String
+  auditType       AuditType
+  frequency       String          // e.g., "QUARTERLY", "ANNUALLY", "BI-ANNUAL"
+  
+  // Dates
+  nextAuditDate   DateTime
+  lastAuditDate   DateTime?
+  
+  // Notes
+  notes           String?         @db.Text
+  
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  @@unique([department, auditType])
+  @@index([nextAuditDate])
+}
+
+// ============================================================================
+// POINT 4.4 - HR COMPLIANCE MODELS
+// ============================================================================
+
+model HRTraining {
+  id              String          @id @default(cuid())
+  
+  // Training details
+  trainingCode    String          @unique
+  title           String
+  description     String?         @db.Text
+  trainingType    TrainingType
+  
+  // Schedule
+  startDate       DateTime
+  endDate         DateTime
+  duration        Int             // Hours
+  
+  // Provider
+  provider        String
+  location        String?
+  
+  // Tracking
+  employees       EmployeeTraining[]
+  
+  isActive        Boolean         @default(true)
+  
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  @@index([trainingType])
+  @@index([isActive])
+}
+
+model EmployeeTraining {
+  id              String          @id @default(cuid())
+  
+  // Reference
+  employeeId      String
+  employee        User            @relation("EmployeeTraining", fields: [employeeId], references: [id], onDelete: Cascade)
+  
+  trainingId      String
+  training        HRTraining      @relation(fields: [trainingId], references: [id], onDelete: Cascade)
+  
+  // Tracking
+  status          TrainingStatus  @default(NOT_STARTED)
+  enrolledDate    DateTime        @default(now())
+  completedDate   DateTime?
+  expiryDate      DateTime?
+  
+  // Results
+  score           Float?
+  certificateUrl  String?
+  
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  @@unique([employeeId, trainingId])
+  @@index([employeeId])
+  @@index([trainingId])
+  @@index([status])
+}
+
+model Certification {
+  id              String          @id @default(cuid())
+  
+  // Reference
+  employeeId      String
+  employee        User            @relation("EmployeeCertification", fields: [employeeId], references: [id], onDelete: Cascade)
+  
+  // Details
+  certCode        String
+  title           String
+  certType        CertificationType
+  issuer          String
+  
+  // Tracking
+  issuedDate      DateTime
+  expiryDate      DateTime?
+  status          CertificationStatus @default(ACTIVE)
+  
+  // Document
+  certificateUrl  String?
+  
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  @@unique([employeeId, certCode])
+  @@index([employeeId])
+  @@index([certType])
+  @@index([status])
+  @@index([expiryDate])
+}
+
+model ComplianceGap {
+  id              String          @id @default(cuid())
+  
+  // Reference
+  employeeId      String
+  employee        User            @relation("EmployeeComplianceGap", fields: [employeeId], references: [id], onDelete: Cascade)
+  
+  // Gap details
+  gapType         ComplianceGapType
+  description     String          @db.Text
+  
+  // Assignment
+  assignedToId    String?
+  assignedTo      User?           @relation("ComplianceGapAssignedTo", fields: [assignedToId], references: [id])
+  
+  // Tracking
+  identifiedDate  DateTime        @default(now())
+  dueDate         DateTime
+  resolvedDate    DateTime?
+  
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  @@index([employeeId])
+  @@index([gapType])
+  @@index([dueDate])
+}
+
+// ============================================================================
+// POINT 4.5 - SUPPLIER MANAGEMENT MODELS
+// ============================================================================
+
+model Supplier {
+  id              String          @id @default(cuid())
+  
+  // Supplier details
+  supplierCode    String          @unique
+  name            String
+  supplierType    SupplierType
+  
+  // Contact
+  contactPerson   String?
+  email           String?
+  phone           String?
+  address         String?
+  
+  // Status
+  status          SupplierStatus  @default(PROSPECT)
+  approvedDate    DateTime?
+  approvedById    String?
+  approvedBy      User?           @relation("SupplierApprovedBy", fields: [approvedById], references: [id])
+  
+  // Assessment
+  assessmentScore Float?          // 0-100
+  lastAssessmentDate DateTime?
+  
+  // Relations
+  audits          SupplierAudit[]
+  compliance      SupplierCompliance[]
+  documents       SupplierDocument[]
+  purchaseOrders  PurchaseOrder[]
+  
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  @@index([status])
+  @@index([supplierType])
+}
+
+model SupplierAudit {
+  id              String          @id @default(cuid())
+  
+  // Reference
+  supplierId      String
+  supplier        Supplier        @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  
+  // Audit details
+  auditCode       String
+  status          SupplierAuditStatus @default(PLANNED)
+  title           String
+  scope           String?         @db.Text
+  
+  // Dates
+  plannedDate     DateTime
+  auditDate       DateTime?
+  
+  // Results
+  findings        String?         @db.Text
+  score           Float?
+  
+  // Assignment
+  auditorId       String
+  auditor         User            @relation("SupplierAuditor", fields: [auditorId], references: [id])
+  
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  @@unique([supplierId, auditCode])
+  @@index([supplierId])
+  @@index([status])
+}
+
+model SupplierCompliance {
+  id              String          @id @default(cuid())
+  
+  // Reference
+  supplierId      String
+  supplier        Supplier        @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  
+  // Compliance item
+  requirement     String
+  status          String          // COMPLIANT, NON_COMPLIANT, PENDING, N/A
+  
+  // Tracking
+  checkDate       DateTime        @default(now())
+  dueDate         DateTime?
+  
+  // Evidence
+  evidence        String?
+  notes           String?         @db.Text
+  
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  @@index([supplierId])
+  @@index([status])
+}
+
+model SupplierDocument {
+  id              String          @id @default(cuid())
+  
+  // Reference
+  supplierId      String
+  supplier        Supplier        @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  
+  // Document
+  docType         String          // CERTIFICATE, LICENSE, QUALITY_POLICY, etc
+  fileName        String
+  fileUrl         String
+  
+  // Tracking
+  uploadedDate    DateTime        @default(now())
+  expiryDate      DateTime?
+  
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  @@index([supplierId])
+  @@index([docType])
+}
+
+model PurchaseOrder {
+  id              String          @id @default(cuid())
+  
+  // PO details
+  poNumber        String          @unique
+  supplierId      String
+  supplier        Supplier        @relation(fields: [supplierId], references: [id])
+  
+  // Items
+  description     String          @db.Text
+  quantity        Int
+  unit            String          // pieces, kg, hours, etc
+  unitPrice       Float
+  totalAmount     Float
+  
+  // Status
+  status          PurchaseOrderStatus @default(DRAFT)
+  
+  // Dates
+  poDate          DateTime        @default(now())
+  dueDate         DateTime
+  deliveryDate    DateTime?
+  
+  // Assignment
+  createdById     String
+  createdBy       User            @relation("POCreatedBy", fields: [createdById], references: [id])
+  
+  approvedById    String?
+  approvedBy      User?           @relation("POApprovedBy", fields: [approvedById], references: [id])
+  
+  // Notes
+  notes           String?         @db.Text
+  
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  @@index([supplierId])
+  @@index([status])
+  @@index([poDate])
 }
 
 // ============================================================================

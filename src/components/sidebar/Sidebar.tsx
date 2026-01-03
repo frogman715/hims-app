@@ -39,6 +39,20 @@ export default function Sidebar({ navigationItems }: SidebarProps) {
     { href: "/quality/audits", label: "Internal Audits", icon: "🔍", group: "QUALITY MANAGEMENT", module: ModuleName.quality, requiredLevel: PermissionLevel.VIEW_ACCESS },
     { href: "/quality/corrective-actions", label: "Corrective Actions", icon: "🔧", group: "QUALITY MANAGEMENT", module: ModuleName.quality, requiredLevel: PermissionLevel.VIEW_ACCESS },
     { href: "/quality/reviews", label: "Management Reviews", icon: "📈", group: "QUALITY MANAGEMENT", module: ModuleName.quality, requiredLevel: PermissionLevel.VIEW_ACCESS },
+
+    // ========== POINT 4.3 - AUDIT & NONCONFORMITY ==========
+    { href: "/audit", label: "Audit Management", icon: "🔍", group: "AUDIT & COMPLIANCE", module: ModuleName.quality, requiredLevel: PermissionLevel.VIEW_ACCESS },
+    { href: "/nonconformity", label: "Non-Conformities", icon: "⚠️", group: "AUDIT & COMPLIANCE", module: ModuleName.quality, requiredLevel: PermissionLevel.VIEW_ACCESS },
+
+    // ========== POINT 4.4 - HR COMPLIANCE ==========
+    { href: "/compliance/training", label: "Training Management", icon: "📚", group: "HR COMPLIANCE", module: ModuleName.crew, requiredLevel: PermissionLevel.VIEW_ACCESS },
+    { href: "/compliance/certifications", label: "Certifications", icon: "🎖️", group: "HR COMPLIANCE", module: ModuleName.crew, requiredLevel: PermissionLevel.VIEW_ACCESS },
+    { href: "/compliance/gaps", label: "Compliance Gaps", icon: "🔔", group: "HR COMPLIANCE", module: ModuleName.crew, requiredLevel: PermissionLevel.VIEW_ACCESS },
+
+    // ========== POINT 4.5 - SUPPLIER MANAGEMENT ==========
+    { href: "/supplier", label: "Supplier Management", icon: "🏢", group: "PROCUREMENT", module: ModuleName.quality, requiredLevel: PermissionLevel.VIEW_ACCESS },
+    { href: "/supplier/audits", label: "Supplier Audits", icon: "✓", group: "PROCUREMENT", module: ModuleName.quality, requiredLevel: PermissionLevel.VIEW_ACCESS },
+    { href: "/supplier/purchase-orders", label: "Purchase Orders", icon: "📋", group: "PROCUREMENT", module: ModuleName.quality, requiredLevel: PermissionLevel.VIEW_ACCESS },
   ];
 
   const navItems = navigationItems || defaultNavItems;
