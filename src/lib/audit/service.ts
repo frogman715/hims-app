@@ -99,11 +99,13 @@ export async function listAudits(filters?: {
   limit?: number;
   offset?: number;
 }) {
+  // Build where clause - only include defined filters
+  const where: Record<string, unknown> = {};
+  if (filters?.status) where.status = filters.status;
+  if (filters?.auditType) where.auditType = filters.auditType;
+
   return prisma.complianceAudit.findMany({
-    where: {
-      status: filters?.status,
-      auditType: filters?.auditType,
-    },
+    where,
     include: {
       leadAuditor: { select: { id: true, name: true, email: true } },
       findings: { select: { id: true } },
