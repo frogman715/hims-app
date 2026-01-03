@@ -119,7 +119,7 @@ export async function listAudits(filters?: {
   }
 
   // With filters - build where clause
-  const where: Record<string, any> = {};
+  const where: any = {};
   if (filters?.status) where.status = filters.status;
   if (filters?.auditType) where.auditType = filters.auditType;
 
