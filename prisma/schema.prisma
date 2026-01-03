@@ -279,7 +279,7 @@ enum RetentionPeriod {
 // POINT 4.3 - AUDIT & NONCONFORMITY SYSTEM
 // ==========================
 
-enum AuditType {
+enum ComplianceAuditType {
   INTERNAL
   EXTERNAL
   COMPLIANCE
@@ -287,7 +287,7 @@ enum AuditType {
   RISK_ASSESSMENT
 }
 
-enum AuditStatus {
+enum ComplianceAuditStatus {
   PLANNED
   IN_PROGRESS
   COMPLETED
@@ -302,7 +302,7 @@ enum NonConformityStatus {
   CLOSED
 }
 
-enum CorrectiveActionStatus {
+enum NCCorrectiveActionStatus {
   PENDING
   IN_PROGRESS
   COMPLETED
@@ -310,7 +310,7 @@ enum CorrectiveActionStatus {
   CLOSED
 }
 
-enum FindingSeverity {
+enum NCFindingSeverity {
   CRITICAL
   MAJOR
   MINOR
@@ -393,7 +393,7 @@ enum SupplierAuditStatus {
   CONDITIONAL_PASS
 }
 
-enum PurchaseOrderStatus {
+enum SupplierPOStatus {
   DRAFT
   PENDING_APPROVAL
   APPROVED
@@ -497,23 +497,24 @@ model User {
   documentAcknowledgements DocumentAcknowledgement[] @relation("DocumentAcknowledgement")
 
   // Phase 4.3: Audit & Nonconformity System
-  auditLedBy                  Audit[]                    @relation("AuditLeadAuditor")
-  auditFindingsAssignedTo     AuditFinding[]             @relation("AuditFindingAssignedTo")
+  auditLedBy                  ComplianceAudit[]          @relation("AuditLeadAuditor")
+  auditFindingsAssignedTo     ComplianceAuditFinding[]   @relation("AuditFindingAssignedTo")
   nonconformitiesAssignedToNC NonConformity[]            @relation("NonConformityAssignedTo")
   nonconformitiesVerifiedBy   NonConformity[]            @relation("NonConformityVerifiedBy")
-  correctiveActionsAssignedTo CorrectiveAction[]         @relation("CorrectiveActionAssignedTo")
-  correctiveActionsVerifiedBy CorrectiveAction[]         @relation("CorrectiveActionVerifiedBy")
+  correctiveActionsAssignedTo NCCorrectiveAction[]       @relation("CorrectiveActionAssignedTo")
+  correctiveActionsVerifiedBy NCCorrectiveAction[]       @relation("CorrectiveActionVerifiedBy")
 
   // Phase 4.4: HR Compliance Management
   employeeTrainings           EmployeeTraining[]         @relation("EmployeeTraining")
   employeeCertifications      Certification[]            @relation("EmployeeCertification")
+  complianceGapsEmployee      ComplianceGap[]            @relation("ComplianceGapEmployee")
   complianceGapsAssignedTo    ComplianceGap[]            @relation("ComplianceGapAssignedTo")
 
   // Phase 4.5: Supplier Management
   suppliersApprovedBy         Supplier[]                 @relation("SupplierApprovedBy")
   supplierAuditsPerformed     SupplierAudit[]            @relation("SupplierAuditor")
-  purchaseOrdersCreated       PurchaseOrder[]            @relation("POCreatedBy")
-  purchaseOrdersApproved      PurchaseOrder[]            @relation("POApprovedBy")
+  purchaseOrdersCreated       SupplierPurchaseOrder[]    @relation("POCreatedBy")
+  purchaseOrdersApproved      SupplierPurchaseOrder[]    @relation("POApprovedBy")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -3212,15 +3213,15 @@ model DocumentAcknowledgement {
 // POINT 4.3 - AUDIT & NONCONFORMITY MODELS
 // ============================================================================
 
-model Audit {
+model ComplianceAudit {
   id              String          @id @default(cuid())
   
   // Audit details
   auditCode       String          @unique
-  auditType       AuditType
+  auditType       ComplianceAuditType
   title           String
   description     String?         @db.Text
-  status          AuditStatus     @default(PLANNED)
+  status          ComplianceAuditStatus     @default(PLANNED)
   scope           String?         @db.Text
   
   // Audit team
@@ -3235,7 +3236,7 @@ model Audit {
   endDate         DateTime?
   
   // Results
-  findings        AuditFinding[]
+  findings        ComplianceAuditFinding[]
   nonConformities NonConformity[]
   
   createdAt       DateTime        @default(now())
@@ -3246,17 +3247,17 @@ model Audit {
   @@index([leadAuditorId])
 }
 
-model AuditFinding {
+model ComplianceAuditFinding {
   id              String          @id @default(cuid())
   
   // Reference to audit
   auditId         String
-  audit           Audit           @relation(fields: [auditId], references: [id], onDelete: Cascade)
+  audit           ComplianceAudit @relation(fields: [auditId], references: [id], onDelete: Cascade)
   
   // Finding details
   findingCode     String
   description     String          @db.Text
-  severity        FindingSeverity @default(MINOR)
+  severity        NCFindingSeverity @default(MINOR)
   
   // Related document/process
   relatedDocId    String?
@@ -3282,7 +3283,7 @@ model NonConformity {
   // Reference
   ncNumber        String          @unique
   auditId         String
-  audit           Audit           @relation(fields: [auditId], references: [id], onDelete: Cascade)
+  audit           ComplianceAudit @relation(fields: [auditId], references: [id], onDelete: Cascade)
   
   // Details
   description     String          @db.Text
@@ -3302,7 +3303,7 @@ model NonConformity {
   verifiedBy      User?           @relation("NonConformityVerifiedBy", fields: [verifiedById], references: [id])
   
   // Corrective actions
-  correctiveActions CorrectiveAction[]
+  correctiveActions NCCorrectiveAction[]
   
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
@@ -3312,7 +3313,7 @@ model NonConformity {
   @@index([assignedToId])
 }
 
-model CorrectiveAction {
+model NCCorrectiveAction {
   id              String          @id @default(cuid())
   
   // Reference
@@ -3322,7 +3323,7 @@ model CorrectiveAction {
   
   // Details
   action          String          @db.Text
-  status          CorrectiveActionStatus @default(PENDING)
+  status          NCCorrectiveActionStatus @default(PENDING)
   
   // Assignment
   assignedToId    String
@@ -3344,28 +3345,6 @@ model CorrectiveAction {
   @@index([nonConformityId])
   @@index([status])
   @@index([assignedToId])
-}
-
-model AuditSchedule {
-  id              String          @id @default(cuid())
-  
-  // Schedule details
-  department      String
-  auditType       AuditType
-  frequency       String          // e.g., "QUARTERLY", "ANNUALLY", "BI-ANNUAL"
-  
-  // Dates
-  nextAuditDate   DateTime
-  lastAuditDate   DateTime?
-  
-  // Notes
-  notes           String?         @db.Text
-  
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-  
-  @@unique([department, auditType])
-  @@index([nextAuditDate])
 }
 
 // ============================================================================
@@ -3391,7 +3370,7 @@ model HRTraining {
   location        String?
   
   // Tracking
-  employees       EmployeeTraining[]
+  employeeTrainings EmployeeTraining[]
   
   isActive        Boolean         @default(true)
   
@@ -3467,7 +3446,7 @@ model ComplianceGap {
   
   // Reference
   employeeId      String
-  employee        User            @relation("EmployeeComplianceGap", fields: [employeeId], references: [id], onDelete: Cascade)
+  employee        User            @relation("ComplianceGapEmployee", fields: [employeeId], references: [id], onDelete: Cascade)
   
   // Gap details
   gapType         ComplianceGapType
@@ -3522,7 +3501,7 @@ model Supplier {
   audits          SupplierAudit[]
   compliance      SupplierCompliance[]
   documents       SupplierDocument[]
-  purchaseOrders  PurchaseOrder[]
+  purchaseOrders  SupplierPurchaseOrder[]
   
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
@@ -3613,7 +3592,7 @@ model SupplierDocument {
   @@index([docType])
 }
 
-model PurchaseOrder {
+model SupplierPurchaseOrder {
   id              String          @id @default(cuid())
   
   // PO details
@@ -3629,7 +3608,7 @@ model PurchaseOrder {
   totalAmount     Float
   
   // Status
-  status          PurchaseOrderStatus @default(DRAFT)
+  status          SupplierPOStatus @default(DRAFT)
   
   // Dates
   poDate          DateTime        @default(now())
