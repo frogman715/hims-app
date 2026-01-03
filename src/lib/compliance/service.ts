@@ -5,7 +5,9 @@ import {
   Certification,
   ComplianceGap,
   TrainingStatus,
+  TrainingType,
   CertificationStatus,
+  CertificationType,
   ComplianceGapType,
 } from '@prisma/client';
 
@@ -29,7 +31,7 @@ export async function createTraining(data: {
       trainingCode: data.trainingCode,
       title: data.title,
       description: data.description,
-      trainingType: data.trainingType as any,
+      trainingType: data.trainingType as TrainingType,
       startDate: data.startDate,
       endDate: data.endDate,
       duration: data.duration,
@@ -153,7 +155,7 @@ export async function recordCertification(data: {
       employeeId: data.employeeId,
       certCode: data.certCode,
       title: data.title,
-      certType: data.certType as any,
+      certType: data.certType as CertificationType,
       issuer: data.issuer,
       issuedDate: data.issuedDate,
       expiryDate: data.expiryDate,
@@ -270,7 +272,7 @@ export async function listOpenComplianceGaps(filters?: {
   assignedToId?: string;
   overdueOnly?: boolean;
 }) {
-  const where: any = {
+  const where: Record<string, unknown> = {
     resolvedDate: null,
     gapType: filters?.gapType,
     assignedToId: filters?.assignedToId,

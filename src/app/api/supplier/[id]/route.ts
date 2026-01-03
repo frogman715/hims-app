@@ -5,7 +5,7 @@ import * as supplierService from '@/lib/supplier/service';
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -13,7 +13,8 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const supplier = await supplierService.getSupplierWithDetails(params.id);
+    const { id } = await params;
+    const supplier = await supplierService.getSupplierWithDetails(id);
     if (!supplier) {
       return NextResponse.json(
         { error: 'Supplier not found' },
@@ -33,7 +34,7 @@ export async function GET(
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -42,17 +43,18 @@ export async function PUT(
     }
 
     const data = await req.json();
+    const { id } = await params;
     const { action } = data;
 
     let result;
     if (action === 'approve') {
       result = await supplierService.approveSupplier(
-        params.id,
+        id,
         session.user.id,
         data.score
       );
     } else if (action === 'updateStatus') {
-      result = await supplierService.updateSupplierStatus(params.id, data.status);
+      result = await supplierService.updateSupplierStatus(id, data.status);
     } else {
       return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
     }

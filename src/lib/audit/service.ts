@@ -1,14 +1,14 @@
 import { prisma } from '@/lib/prisma';
 import { 
-  Audit, 
-  AuditFinding, 
+  ComplianceAudit, 
+  ComplianceAuditFinding, 
   NonConformity, 
-  CorrectiveAction,
-  AuditStatus,
+  NCCorrectiveAction,
+  ComplianceAuditStatus,
   NonConformityStatus,
-  CorrectiveActionStatus,
-  FindingSeverity,
-  AuditType
+  NCCorrectiveActionStatus,
+  NCFindingSeverity,
+  ComplianceAuditType
 } from '@prisma/client';
 
 // ============================================================================
@@ -17,15 +17,15 @@ import {
 
 export async function createAudit(data: {
   auditCode: string;
-  auditType: AuditType;
+  auditType: ComplianceAuditType;
   title: string;
   description?: string;
   scope?: string;
   leadAuditorId: string;
   teamMembers?: string[];
   plannedDate: Date;
-}): Promise<Audit> {
-  return prisma.audit.create({
+}): Promise<ComplianceAudit> {
+  return prisma.complianceAudit.create({
     data: {
       auditCode: data.auditCode,
       auditType: data.auditType,
@@ -43,8 +43,8 @@ export async function createAudit(data: {
   });
 }
 
-export async function startAudit(auditId: string): Promise<Audit> {
-  return prisma.audit.update({
+export async function startAudit(auditId: string): Promise<ComplianceAudit> {
+  return prisma.complianceAudit.update({
     where: { id: auditId },
     data: {
       status: 'IN_PROGRESS',
@@ -53,8 +53,8 @@ export async function startAudit(auditId: string): Promise<Audit> {
   });
 }
 
-export async function completeAudit(auditId: string): Promise<Audit> {
-  return prisma.audit.update({
+export async function completeAudit(auditId: string): Promise<ComplianceAudit> {
+  return prisma.complianceAudit.update({
     where: { id: auditId },
     data: {
       status: 'COMPLETED',
@@ -63,8 +63,8 @@ export async function completeAudit(auditId: string): Promise<Audit> {
   });
 }
 
-export async function closeAudit(auditId: string): Promise<Audit> {
-  return prisma.audit.update({
+export async function closeAudit(auditId: string): Promise<ComplianceAudit> {
+  return prisma.complianceAudit.update({
     where: { id: auditId },
     data: {
       status: 'CLOSED',
@@ -73,7 +73,7 @@ export async function closeAudit(auditId: string): Promise<Audit> {
 }
 
 export async function getAuditWithDetails(auditId: string) {
-  return prisma.audit.findUnique({
+  return prisma.complianceAudit.findUnique({
     where: { id: auditId },
     include: {
       leadAuditor: { select: { id: true, name: true, email: true } },
@@ -94,12 +94,12 @@ export async function getAuditWithDetails(auditId: string) {
 }
 
 export async function listAudits(filters?: {
-  status?: AuditStatus;
-  auditType?: AuditType;
+  status?: ComplianceAuditStatus;
+  auditType?: ComplianceAuditType;
   limit?: number;
   offset?: number;
 }) {
-  return prisma.audit.findMany({
+  return prisma.complianceAudit.findMany({
     where: {
       status: filters?.status,
       auditType: filters?.auditType,
@@ -123,13 +123,13 @@ export async function createAuditFinding(data: {
   auditId: string;
   findingCode: string;
   description: string;
-  severity?: FindingSeverity;
+  severity?: NCFindingSeverity;
   relatedDocId?: string;
   relatedProcess?: string;
   assignedToId?: string;
   dueDate?: Date;
-}): Promise<AuditFinding> {
-  return prisma.auditFinding.create({
+}): Promise<ComplianceAuditFinding> {
+  return prisma.complianceAuditFinding.create({
     data: {
       auditId: data.auditId,
       findingCode: data.findingCode,
@@ -146,8 +146,8 @@ export async function createAuditFinding(data: {
   });
 }
 
-export async function closeFinding(findingId: string): Promise<AuditFinding> {
-  return prisma.auditFinding.update({
+export async function closeFinding(findingId: string): Promise<ComplianceAuditFinding> {
+  return prisma.complianceAuditFinding.update({
     where: { id: findingId },
     data: {
       closedDate: new Date(),
@@ -189,7 +189,7 @@ export async function updateNonConformityStatus(
   status: NonConformityStatus,
   verifiedById?: string
 ): Promise<NonConformity> {
-  const updateData: any = { status };
+  const updateData: Record<string, unknown> = { status };
   
   if (status === 'RESOLVED') {
     updateData.resolvedDate = new Date();
@@ -264,8 +264,8 @@ export async function createCorrectiveAction(data: {
   assignedToId: string;
   dueDate: Date;
   evidenceDoc?: string;
-}): Promise<CorrectiveAction> {
-  return prisma.correctiveAction.create({
+}): Promise<NCCorrectiveAction> {
+  return prisma.nCCorrectiveAction.create({
     data: {
       nonConformityId: data.nonConformityId,
       caNumber: data.caNumber,
@@ -283,11 +283,11 @@ export async function createCorrectiveAction(data: {
 
 export async function updateCAStatus(
   caId: string,
-  status: CorrectiveActionStatus,
+  status: NCCorrectiveActionStatus,
   verifiedById?: string,
   completedDate?: Date
-): Promise<CorrectiveAction> {
-  const updateData: any = { status };
+): Promise<NCCorrectiveAction> {
+  const updateData: Record<string, unknown> = { status };
 
   if (status === 'COMPLETED') {
     updateData.completedDate = completedDate || new Date();
@@ -299,7 +299,7 @@ export async function updateCAStatus(
     updateData.verifiedById = verifiedById;
   }
 
-  return prisma.correctiveAction.update({
+  return prisma.nCCorrectiveAction.update({
     where: { id: caId },
     data: updateData,
     include: {
@@ -311,13 +311,13 @@ export async function updateCAStatus(
 }
 
 export async function listCorrectiveActions(filters?: {
-  status?: CorrectiveActionStatus;
+  status?: NCCorrectiveActionStatus;
   assignedToId?: string;
   overduOnly?: boolean;
   limit?: number;
   offset?: number;
 }) {
-  const where: any = {
+  const where: Record<string, unknown> = {
     status: filters?.status,
     assignedToId: filters?.assignedToId,
   };
@@ -331,7 +331,7 @@ export async function listCorrectiveActions(filters?: {
     };
   }
 
-  return prisma.correctiveAction.findMany({
+  return prisma.nCCorrectiveAction.findMany({
     where,
     include: {
       assignedTo: { select: { id: true, name: true, email: true } },
@@ -362,12 +362,12 @@ export async function getAuditStats() {
     openCAs,
     overdueCAs,
   ] = await Promise.all([
-    prisma.audit.count(),
-    prisma.audit.count({ where: { status: 'PLANNED' } }),
-    prisma.audit.count({ where: { status: 'IN_PROGRESS' } }),
-    prisma.audit.count({ where: { status: 'COMPLETED' } }),
-    prisma.auditFinding.count(),
-    prisma.auditFinding.count({ where: { severity: 'CRITICAL' } }),
+    prisma.complianceAudit.count(),
+    prisma.complianceAudit.count({ where: { status: 'PLANNED' } }),
+    prisma.complianceAudit.count({ where: { status: 'IN_PROGRESS' } }),
+    prisma.complianceAudit.count({ where: { status: 'COMPLETED' } }),
+    prisma.complianceAuditFinding.count(),
+    prisma.complianceAuditFinding.count({ where: { severity: 'CRITICAL' } }),
     prisma.nonConformity.count(),
     prisma.nonConformity.count({ where: { status: 'OPEN' } }),
     prisma.nonConformity.count({
@@ -376,11 +376,11 @@ export async function getAuditStats() {
         targetDate: { lt: new Date() },
       },
     }),
-    prisma.correctiveAction.count(),
-    prisma.correctiveAction.count({
+    prisma.nCCorrectiveAction.count(),
+    prisma.nCCorrectiveAction.count({
       where: { status: { in: ['PENDING', 'IN_PROGRESS'] } },
     }),
-    prisma.correctiveAction.count({
+    prisma.nCCorrectiveAction.count({
       where: {
         status: { in: ['PENDING', 'IN_PROGRESS'] },
         dueDate: { lt: new Date() },
@@ -416,7 +416,7 @@ export async function getAuditTrendData(months: number = 6) {
   const startDate = new Date();
   startDate.setMonth(startDate.getMonth() - months);
 
-  const audits = await prisma.audit.groupBy({
+  const audits = await prisma.complianceAudit.groupBy({
     by: ['status'],
     where: {
       createdAt: { gte: startDate },

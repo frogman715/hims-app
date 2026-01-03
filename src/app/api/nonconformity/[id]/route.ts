@@ -5,7 +5,7 @@ import * as auditService from '@/lib/audit/service';
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -13,7 +13,8 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const nc = await auditService.getNonConformityWithActions(params.id);
+    const { id } = await params;
+    const nc = await auditService.getNonConformityWithActions(id);
     if (!nc) {
       return NextResponse.json(
         { error: 'Non-conformity not found' },
@@ -33,7 +34,7 @@ export async function GET(
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -42,10 +43,11 @@ export async function PUT(
     }
 
     const data = await req.json();
+    const { id } = await params;
     const { status } = data;
 
     const nc = await auditService.updateNonConformityStatus(
-      params.id,
+      id,
       status,
       session.user.id
     );

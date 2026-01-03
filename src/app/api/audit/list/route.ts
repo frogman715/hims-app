@@ -2,6 +2,7 @@ import { getServerSession } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
 import { authOptions } from '@/lib/auth';
 import * as auditService from '@/lib/audit/service';
+import { ComplianceAuditStatus, ComplianceAuditType } from '@prisma/client';
 
 export async function POST(req: NextRequest) {
   try {
@@ -47,8 +48,8 @@ export async function GET(req: NextRequest) {
     const offset = parseInt(searchParams.get('offset') || '0');
 
     const audits = await auditService.listAudits({
-      status: status as any,
-      auditType: auditType as any,
+      status: status as ComplianceAuditStatus | undefined,
+      auditType: auditType as ComplianceAuditType | undefined,
       limit,
       offset,
     });

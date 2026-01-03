@@ -5,7 +5,7 @@ import * as supplierService from '@/lib/supplier/service';
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -13,7 +13,8 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const compliance = await supplierService.listSupplierCompliance(params.id);
+    const { id } = await params;
+    const compliance = await supplierService.listSupplierCompliance(id);
     return NextResponse.json(compliance);
   } catch (error) {
     console.error('Error listing compliance:', error);
@@ -26,7 +27,7 @@ export async function GET(
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -35,9 +36,10 @@ export async function POST(
     }
 
     const data = await req.json();
+    const { id } = await params;
 
     const compliance = await supplierService.recordSupplierCompliance({
-      supplierId: params.id,
+      supplierId: id,
       requirement: data.requirement,
       status: data.status,
       dueDate: data.dueDate ? new Date(data.dueDate) : undefined,

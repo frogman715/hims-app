@@ -5,7 +5,7 @@ import * as auditService from '@/lib/audit/service';
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -13,7 +13,8 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const audit = await auditService.getAuditWithDetails(params.id);
+    const { id } = await params;
+    const audit = await auditService.getAuditWithDetails(id);
     if (!audit) {
       return NextResponse.json({ error: 'Audit not found' }, { status: 404 });
     }
@@ -30,7 +31,7 @@ export async function GET(
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -39,15 +40,16 @@ export async function PUT(
     }
 
     const data = await req.json();
+    const { id } = await params;
     const { action } = data;
 
     let result;
     if (action === 'start') {
-      result = await auditService.startAudit(params.id);
+      result = await auditService.startAudit(id);
     } else if (action === 'complete') {
-      result = await auditService.completeAudit(params.id);
+      result = await auditService.completeAudit(id);
     } else if (action === 'close') {
-      result = await auditService.closeAudit(params.id);
+      result = await auditService.closeAudit(id);
     } else {
       return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
     }

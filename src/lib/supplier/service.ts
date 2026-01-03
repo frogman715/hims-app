@@ -4,11 +4,11 @@ import {
   SupplierAudit,
   SupplierCompliance,
   SupplierDocument,
-  PurchaseOrder,
+  SupplierPurchaseOrder,
   SupplierStatus,
   SupplierType,
   SupplierAuditStatus,
-  PurchaseOrderStatus,
+  SupplierPOStatus,
 } from '@prisma/client';
 
 // ============================================================================
@@ -321,10 +321,10 @@ export async function createPurchaseOrder(data: {
   dueDate: Date;
   createdById: string;
   notes?: string;
-}): Promise<PurchaseOrder> {
+}): Promise<SupplierPurchaseOrder> {
   const totalAmount = data.quantity * data.unitPrice;
 
-  return prisma.purchaseOrder.create({
+  return prisma.supplierPurchaseOrder.create({
     data: {
       poNumber: data.poNumber,
       supplierId: data.supplierId,
@@ -345,8 +345,8 @@ export async function createPurchaseOrder(data: {
   });
 }
 
-export async function submitPurchaseOrder(poId: string): Promise<PurchaseOrder> {
-  return prisma.purchaseOrder.update({
+export async function submitPurchaseOrder(poId: string): Promise<SupplierPurchaseOrder> {
+  return prisma.supplierPurchaseOrder.update({
     where: { id: poId },
     data: { status: 'PENDING_APPROVAL' },
   });
@@ -355,8 +355,8 @@ export async function submitPurchaseOrder(poId: string): Promise<PurchaseOrder> 
 export async function approvePurchaseOrder(
   poId: string,
   approvedById: string
-): Promise<PurchaseOrder> {
-  return prisma.purchaseOrder.update({
+): Promise<SupplierPurchaseOrder> {
+  return prisma.supplierPurchaseOrder.update({
     where: { id: poId },
     data: {
       status: 'APPROVED',
@@ -372,15 +372,15 @@ export async function approvePurchaseOrder(
 
 export async function updatePOStatus(
   poId: string,
-  status: PurchaseOrderStatus,
+  status: SupplierPOStatus,
   deliveryDate?: Date
-): Promise<PurchaseOrder> {
-  const updateData: any = { status };
+): Promise<SupplierPurchaseOrder> {
+  const updateData: Record<string, unknown> = { status };
   if (status === 'DELIVERED' && deliveryDate) {
     updateData.deliveryDate = deliveryDate;
   }
 
-  return prisma.purchaseOrder.update({
+  return prisma.supplierPurchaseOrder.update({
     where: { id: poId },
     data: updateData,
   });
@@ -388,12 +388,12 @@ export async function updatePOStatus(
 
 export async function listPurchaseOrders(filters?: {
   supplierId?: string;
-  status?: PurchaseOrderStatus;
+  status?: SupplierPOStatus;
   createdById?: string;
   limit?: number;
   offset?: number;
-}) {
-  return prisma.purchaseOrder.findMany({
+}): Promise<SupplierPurchaseOrder[]> {
+  return prisma.supplierPurchaseOrder.findMany({
     where: {
       supplierId: filters?.supplierId,
       status: filters?.status,
@@ -410,8 +410,8 @@ export async function listPurchaseOrders(filters?: {
   });
 }
 
-export async function getPurchaseOrderWithDetails(poId: string) {
-  return prisma.purchaseOrder.findUnique({
+export async function getPurchaseOrderWithDetails(poId: string): Promise<SupplierPurchaseOrder | null> {
+  return prisma.supplierPurchaseOrder.findUnique({
     where: { id: poId },
     include: {
       supplier: {
@@ -455,11 +455,11 @@ export async function getSupplierStats() {
     prisma.supplierAudit.count(),
     prisma.supplierAudit.count({ where: { status: 'PASSED' } }),
     prisma.supplierAudit.count({ where: { status: 'FAILED' } }),
-    prisma.purchaseOrder.count(),
-    prisma.purchaseOrder.count({
+    prisma.supplierPurchaseOrder.count(),
+    prisma.supplierPurchaseOrder.count({
       where: { status: { in: ['DRAFT', 'PENDING_APPROVAL', 'APPROVED', 'ORDERED'] } },
     }),
-    prisma.purchaseOrder.count({ where: { status: 'DELIVERED' } }),
+    prisma.supplierPurchaseOrder.count({ where: { status: 'DELIVERED' } }),
   ]);
 
   return {

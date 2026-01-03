@@ -2,6 +2,7 @@ import { getServerSession } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
 import { authOptions } from '@/lib/auth';
 import * as supplierService from '@/lib/supplier/service';
+import { SupplierStatus, SupplierType } from '@prisma/client';
 
 export async function GET(req: NextRequest) {
   try {
@@ -17,8 +18,8 @@ export async function GET(req: NextRequest) {
     const offset = parseInt(searchParams.get('offset') || '0');
 
     const suppliers = await supplierService.listSuppliers({
-      status: status as any,
-      supplierType: type as any,
+      status: status as SupplierStatus | undefined,
+      supplierType: type as SupplierType | undefined,
       limit,
       offset,
     });

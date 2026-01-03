@@ -5,7 +5,7 @@ import * as supplierService from '@/lib/supplier/service';
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -14,9 +14,10 @@ export async function POST(
     }
 
     const data = await req.json();
+    const { id } = await params;
 
     const audit = await supplierService.scheduleSupplierAudit({
-      supplierId: params.id,
+      supplierId: id,
       auditCode: data.auditCode,
       title: data.title,
       scope: data.scope,
@@ -36,7 +37,7 @@ export async function POST(
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -44,8 +45,9 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { id } = await params;
     const audits = await supplierService.listSupplierAudits({
-      supplierId: params.id,
+      supplierId: id,
     });
 
     return NextResponse.json(audits);

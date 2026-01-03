@@ -5,7 +5,7 @@ import * as auditService from '@/lib/audit/service';
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -14,9 +14,10 @@ export async function POST(
     }
 
     const data = await req.json();
+    const { id } = await params;
 
     const nc = await auditService.createNonConformity({
-      auditId: params.id,
+      auditId: id,
       ncNumber: data.ncNumber,
       description: data.description,
       rootCause: data.rootCause,
