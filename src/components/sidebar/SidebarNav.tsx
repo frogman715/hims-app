@@ -35,6 +35,7 @@ export default function SidebarNav({ items }: SidebarNavProps) {
       ? session.user.roles 
       : [session.user.roles]) as string[];
     
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return hasPermission(
       userRoles as any,
       item.module,
