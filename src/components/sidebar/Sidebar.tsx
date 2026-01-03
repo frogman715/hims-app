@@ -23,36 +23,33 @@ export default function Sidebar({ navigationItems }: SidebarProps) {
     { href: "/crewing/form-reference", label: "Form References", icon: "📄", group: "CREWING DEPARTMENT", module: ModuleName.crewing, requiredLevel: PermissionLevel.VIEW_ACCESS },
     { href: "/crewing/principals", label: "Fleet Management", icon: "🚢", group: "CREWING DEPARTMENT", module: ModuleName.principals, requiredLevel: PermissionLevel.VIEW_ACCESS },
     
-    // ========== OPERATIONS & COMPLIANCE ==========
+    // ========== OPERATIONS ==========
     { href: "/insurance", label: "Insurance Management", icon: "🛡️", group: "OPERATIONS", module: ModuleName.insurance, requiredLevel: PermissionLevel.VIEW_ACCESS },
-    { href: "/compliance", label: "Compliance Tracking", icon: "✅", group: "OPERATIONS", module: ModuleName.compliance, requiredLevel: PermissionLevel.VIEW_ACCESS },
+    { href: "/quality", label: "Quality Management System", icon: "⚙️", group: "OPERATIONS", module: ModuleName.quality, requiredLevel: PermissionLevel.VIEW_ACCESS },
+    { href: "/quality/qms-dashboard", label: "QMS Dashboard", icon: "📊", group: "OPERATIONS", module: ModuleName.quality, requiredLevel: PermissionLevel.VIEW_ACCESS },
     
     // ========== HR & ADMINISTRATION ==========
     { href: "/hr", label: "HR Department", icon: "👔", group: "HR & ADMINISTRATION", module: ModuleName.crew, requiredLevel: PermissionLevel.VIEW_ACCESS },
     { href: "/accounting", label: "Finance & Accounting", icon: "💵", group: "HR & ADMINISTRATION", module: ModuleName.accounting, requiredLevel: PermissionLevel.VIEW_ACCESS },
     
-    // ========== QUALITY MANAGEMENT ==========
-    { href: "/quality", label: "Quality Management System", icon: "⚙️", group: "QUALITY MANAGEMENT", module: ModuleName.quality, requiredLevel: PermissionLevel.VIEW_ACCESS },
-    { href: "/quality/qms-dashboard", label: "QMS Dashboard", icon: "📊", group: "QUALITY MANAGEMENT", module: ModuleName.quality, requiredLevel: PermissionLevel.VIEW_ACCESS },
-    { href: "/documents", label: "Document Control", icon: "📋", group: "QUALITY MANAGEMENT", module: ModuleName.quality, requiredLevel: PermissionLevel.VIEW_ACCESS },
-    { href: "/quality/hgqs-compliance", label: "HGQS Compliance Tracker", icon: "📊", group: "QUALITY MANAGEMENT", module: ModuleName.quality, requiredLevel: PermissionLevel.VIEW_ACCESS },
-    { href: "/quality/audits", label: "Internal Audits", icon: "🔍", group: "QUALITY MANAGEMENT", module: ModuleName.quality, requiredLevel: PermissionLevel.VIEW_ACCESS },
-    { href: "/quality/corrective-actions", label: "Corrective Actions", icon: "🔧", group: "QUALITY MANAGEMENT", module: ModuleName.quality, requiredLevel: PermissionLevel.VIEW_ACCESS },
-    { href: "/quality/reviews", label: "Management Reviews", icon: "📈", group: "QUALITY MANAGEMENT", module: ModuleName.quality, requiredLevel: PermissionLevel.VIEW_ACCESS },
-
-    // ========== POINT 4.3 - AUDIT & NONCONFORMITY ==========
-    { href: "/audit", label: "Audit Management", icon: "🔍", group: "AUDIT & COMPLIANCE", module: ModuleName.quality, requiredLevel: PermissionLevel.VIEW_ACCESS },
+    // ========== QUALITY SYSTEMS ==========
+    { href: "/documents", label: "Document Control", icon: "📋", group: "QUALITY SYSTEMS", module: ModuleName.quality, requiredLevel: PermissionLevel.VIEW_ACCESS },
+    { href: "/quality/audits", label: "Internal Audits (QMS)", icon: "🔍", group: "QUALITY SYSTEMS", module: ModuleName.quality, requiredLevel: PermissionLevel.VIEW_ACCESS },
+    { href: "/quality/corrective-actions", label: "Corrective Actions (QMS)", icon: "🔧", group: "QUALITY SYSTEMS", module: ModuleName.quality, requiredLevel: PermissionLevel.VIEW_ACCESS },
+    
+    // ========== NEW: AUDIT & COMPLIANCE (POINT 4.3) ==========
+    { href: "/audit", label: "Audit Management", icon: "📋", group: "AUDIT & COMPLIANCE", module: ModuleName.quality, requiredLevel: PermissionLevel.VIEW_ACCESS },
     { href: "/nonconformity", label: "Non-Conformities", icon: "⚠️", group: "AUDIT & COMPLIANCE", module: ModuleName.quality, requiredLevel: PermissionLevel.VIEW_ACCESS },
 
-    // ========== POINT 4.4 - HR COMPLIANCE ==========
-    { href: "/compliance/training", label: "Training Management", icon: "📚", group: "HR COMPLIANCE", module: ModuleName.crew, requiredLevel: PermissionLevel.VIEW_ACCESS },
-    { href: "/compliance/certifications", label: "Certifications", icon: "🎖️", group: "HR COMPLIANCE", module: ModuleName.crew, requiredLevel: PermissionLevel.VIEW_ACCESS },
-    { href: "/compliance/gaps", label: "Compliance Gaps", icon: "🔔", group: "HR COMPLIANCE", module: ModuleName.crew, requiredLevel: PermissionLevel.VIEW_ACCESS },
+    // ========== NEW: HR COMPLIANCE (POINT 4.4) [COMING SOON] ==========
+    // { href: "/compliance/training", label: "Training Management", icon: "📚", group: "HR COMPLIANCE", module: ModuleName.crew, requiredLevel: PermissionLevel.VIEW_ACCESS },
+    // { href: "/compliance/certifications", label: "Certifications", icon: "🎖️", group: "HR COMPLIANCE", module: ModuleName.crew, requiredLevel: PermissionLevel.VIEW_ACCESS },
+    // { href: "/compliance/gaps", label: "Compliance Gaps", icon: "🔔", group: "HR COMPLIANCE", module: ModuleName.crew, requiredLevel: PermissionLevel.VIEW_ACCESS },
 
-    // ========== POINT 4.5 - SUPPLIER MANAGEMENT ==========
-    { href: "/supplier", label: "Supplier Management", icon: "🏢", group: "PROCUREMENT", module: ModuleName.quality, requiredLevel: PermissionLevel.VIEW_ACCESS },
-    { href: "/supplier/audits", label: "Supplier Audits", icon: "✓", group: "PROCUREMENT", module: ModuleName.quality, requiredLevel: PermissionLevel.VIEW_ACCESS },
-    { href: "/supplier/purchase-orders", label: "Purchase Orders", icon: "📋", group: "PROCUREMENT", module: ModuleName.quality, requiredLevel: PermissionLevel.VIEW_ACCESS },
+    // ========== NEW: SUPPLIER MANAGEMENT (POINT 4.5) [COMING SOON] ==========
+    // { href: "/supplier", label: "Supplier Management", icon: "🏢", group: "PROCUREMENT", module: ModuleName.quality, requiredLevel: PermissionLevel.VIEW_ACCESS },
+    // { href: "/supplier/audits", label: "Supplier Audits", icon: "✓", group: "PROCUREMENT", module: ModuleName.quality, requiredLevel: PermissionLevel.VIEW_ACCESS },
+    // { href: "/supplier/purchase-orders", label: "Purchase Orders", icon: "📋", group: "PROCUREMENT", module: ModuleName.quality, requiredLevel: PermissionLevel.VIEW_ACCESS },
   ];
 
   const navItems = navigationItems || defaultNavItems;
