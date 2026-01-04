@@ -49,4 +49,3 @@ _legacy/
 _tools/
 scripts/seed-*.ts
 scripts/seed-test.mjs
-prisma.config.*
