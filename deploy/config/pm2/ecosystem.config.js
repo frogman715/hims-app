@@ -13,7 +13,7 @@ module.exports = {
     {
       name: "hims-app",
       script: "node",
-      args: ".next/standalone/server.js",
+      args: ".next/standalone/index.js",
       cwd: projectRoot,
       env_file: envFile,
       env: {
