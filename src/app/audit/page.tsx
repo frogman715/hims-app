@@ -86,7 +86,7 @@ export default function AuditManagementPage() {
     if (status === 'authenticated' && session?.user) {
       fetchAudits();
     }
-  }, [status, session, filters]);
+  }, [status, session, filters, fetchAudits]);
 
   const handleCreateSuccess = () => {
     setShowCreateForm(false);

@@ -34,7 +34,7 @@ export default function NonConformityPage() {
     if (status === 'authenticated') {
       fetchNonconformities();
     }
-  }, [status]);
+  }, [status, fetchNonconformities]);
 
   const fetchNonconformities = async () => {
     try {

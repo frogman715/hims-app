@@ -62,7 +62,7 @@ export default function Seafarers() {
     if (session) {
       fetchSeafarers();
     }
-  }, [session]);
+  }, [session, fetchSeafarers]);
 
   const fetchSeafarers = async () => {
     try {

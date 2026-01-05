@@ -102,7 +102,7 @@ export function DocumentUploadZone({
         uploadFile_async(uploadFile);
       });
     },
-    [files, maxFiles, onError]
+    [files, maxFiles, onError, uploadFile_async, validateFile]
   );
 
   // Upload file to server
