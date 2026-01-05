@@ -16,29 +16,36 @@ import {
 // ============================================================================
 
 export async function createAudit(data: {
-  auditCode: string;
-  auditType: ComplianceAuditType;
-  title: string;
-  description?: string;
+  auditNumber: string;
+  auditType: string;
   scope?: string;
+  objectives?: string;
+  auditCriteria?: string;
   leadAuditorId: string;
-  teamMembers?: string[];
-  plannedDate: Date;
+  assistantAuditors?: string;
+  auditeeContactPerson?: string;
+  auditeeContactEmail?: string;
+  auditeeContactPhone?: string;
+  estimatedDuration?: number;
+  location?: string;
+  auditDate?: Date;
 }): Promise<ComplianceAudit> {
   return prisma.complianceAudit.create({
     data: {
-      auditCode: data.auditCode,
+      auditNumber: data.auditNumber,
       auditType: data.auditType,
-      title: data.title,
-      description: data.description,
-      scope: data.scope,
+      scope: data.scope || '',
+      objectives: data.objectives || '',
+      auditCriteria: data.auditCriteria || '',
       leadAuditorId: data.leadAuditorId,
-      teamMembers: data.teamMembers || [],
-      plannedDate: data.plannedDate,
+      assistantAuditors: data.assistantAuditors || '',
+      auditeeContactPerson: data.auditeeContactPerson || '',
+      auditeeContactEmail: data.auditeeContactEmail || '',
+      auditeeContactPhone: data.auditeeContactPhone || '',
+      estimatedDuration: data.estimatedDuration || 0,
+      location: data.location || '',
+      auditDate: data.auditDate || new Date(),
       status: 'PLANNED',
-    },
-    include: {
-      leadAuditor: { select: { id: true, name: true, email: true } },
     },
   });
 }
@@ -67,7 +74,7 @@ export async function closeAudit(auditId: string): Promise<ComplianceAudit> {
   return prisma.complianceAudit.update({
     where: { id: auditId },
     data: {
-      status: 'CLOSED',
+      status: 'CANCELLED',
     },
   });
 }
@@ -75,43 +82,22 @@ export async function closeAudit(auditId: string): Promise<ComplianceAudit> {
 export async function getAuditWithDetails(auditId: string) {
   return prisma.complianceAudit.findUnique({
     where: { id: auditId },
-    include: {
-      leadAuditor: { select: { id: true, name: true, email: true } },
-      findings: {
-        include: {
-          assignedTo: { select: { id: true, name: true, email: true } },
-        },
-      },
-      nonConformities: {
-        include: {
-          assignedTo: { select: { id: true, name: true, email: true } },
-          verifiedBy: { select: { id: true, name: true } },
-          correctiveActions: true,
-        },
-      },
-    },
   });
 }
 
 export async function listAudits(filters?: {
   status?: ComplianceAuditStatus;
-  auditType?: ComplianceAuditType;
+  auditType?: string;
   limit?: number;
   offset?: number;
 }) {
-  const include = {
-    leadAuditor: { select: { id: true, name: true, email: true } },
-    findings: { select: { id: true } },
-    nonConformities: { select: { id: true } },
-  };
   const take = filters?.limit || 20;
   const skip = filters?.offset || 0;
-  const orderBy = { plannedDate: 'desc' as const };
+  const orderBy = { auditDate: 'desc' as const };
 
   // No filters - return all audits
   if (!filters?.status && !filters?.auditType) {
     return prisma.complianceAudit.findMany({
-      include,
       take,
       skip,
       orderBy,
@@ -126,7 +112,6 @@ export async function listAudits(filters?: {
 
   return prisma.complianceAudit.findMany({
     where,
-    include,
     take,
     skip,
     orderBy,

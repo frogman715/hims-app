@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { Plus, Edit2, Eye, Download } from 'lucide-react';
+import Link from 'next/link';
+import { Plus, Edit2, Eye, Download, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import CreateAuditForm from '@/components/audit/CreateAuditForm';
 import AuditTable from '@/components/audit/AuditTable';
@@ -111,9 +112,15 @@ export default function AuditManagementPage() {
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
+        {/* Header with Back Button */}
+        <div className="flex items-center gap-4 mb-8">
+          <Link href="/dashboard">
+            <button className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-100 transition-colors">
+              <ArrowLeft size={20} />
+              <span>Back to Dashboard</span>
+            </button>
+          </Link>
+          <div className="flex-1">
             <h1 className="text-3xl font-bold text-gray-900">Audit Management</h1>
             <p className="text-gray-600 mt-2">Create and manage audit activities</p>
           </div>
