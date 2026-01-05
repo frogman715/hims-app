@@ -291,7 +291,7 @@ enum ComplianceAuditStatus {
   PLANNED
   IN_PROGRESS
   COMPLETED
-  CLOSED
+  CANCELLED
 }
 
 enum NonConformityStatus {
@@ -3214,33 +3214,35 @@ model DocumentAcknowledgement {
 // ============================================================================
 
 model ComplianceAudit {
-  id              String          @id @default(cuid())
+  id                    String                   @id @default(cuid())
+  auditNumber           String                   @unique
+  auditDate             DateTime
+  status                ComplianceAuditStatus
+  auditType             String
+  scope                 String?
+  objectives            String?
+  auditCriteria         String?
+  leadAuditorId         String
+  assistantAuditors     String?
+  auditeeContactPerson  String?
+  auditeeContactEmail   String?
+  auditeeContactPhone   String?
+  estimatedDuration     Int?
+  startDate             DateTime?
+  endDate               DateTime?
+  location              String?
+  findings              Int?
+  nonConformities       Int?
+  observations          Int?
+  remarks               String?
+  createdAt             DateTime                 @default(now())
+  updatedAt             DateTime                 @updatedAt
+  deletedAt             DateTime?
   
-  // Audit details
-  auditCode       String          @unique
-  auditType       ComplianceAuditType
-  title           String
-  description     String?         @db.Text
-  status          ComplianceAuditStatus     @default(PLANNED)
-  scope           String?         @db.Text
-  
-  // Audit team
-  leadAuditorId   String
-  leadAuditor     User            @relation("AuditLeadAuditor", fields: [leadAuditorId], references: [id])
-  
-  teamMembers     String[]        // Array of user IDs
-  
-  // Dates
-  plannedDate     DateTime
-  startDate       DateTime?
-  endDate         DateTime?
-  
-  // Results
-  findings        ComplianceAuditFinding[]
-  nonConformities NonConformity[]
-  
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
+  // Relations
+  leadAuditor           User                     @relation("AuditLeadAuditor", fields: [leadAuditorId], references: [id])
+  findingsList          ComplianceAuditFinding[]
+  nonConformityList     NonConformity[]
   
   @@index([auditType])
   @@index([status])
