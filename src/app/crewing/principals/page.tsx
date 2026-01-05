@@ -113,8 +113,11 @@ export default function PrincipalsPage() {
 
       if (response.ok) {
         resetForm();
-        fetchPrincipals();
         alert(`Principal ${editingPrincipal ? "updated" : "created"} successfully!`);
+        // Refresh data after successful update
+        setTimeout(() => {
+          fetchPrincipals();
+        }, 500);
       } else {
         const error = await response.json();
         alert(`Error: ${error.error || "Failed to save principal"}`);
@@ -149,8 +152,11 @@ export default function PrincipalsPage() {
 
       if (response.ok) {
         resetVesselForm();
-        fetchPrincipals();
         alert(`Vessel ${editingVessel ? "updated" : "created"} successfully!`);
+        // Refresh data after successful update
+        setTimeout(() => {
+          fetchPrincipals();
+        }, 500);
       } else {
         const error = await response.json();
         alert(`Error: ${error.error || "Failed to save vessel"}`);
