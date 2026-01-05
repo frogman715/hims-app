@@ -84,73 +84,13 @@ export async function GET(req: NextRequest) {
 /**
  * POST /api/crewing/checklists
  * Create a new checklist for an application or crew member
+ * 
+ * TEMPORARILY DISABLED - CrewingChecklist table missing from production database
+ * TODO: Run Prisma migration to create table
  */
-export async function POST(req: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session || !session.user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    const body = await req.json();
-    const { applicationId, crewId, procedureId, checklistCode, itemsJson = [] } = body;
-
-    // Validate required fields
-    if (!applicationId && !crewId) {
-      return NextResponse.json(
-        { error: 'Either applicationId or crewId is required' },
-        { status: 400 }
-      );
-    }
-
-    if (!procedureId) {
-      return NextResponse.json(
-        { error: 'procedureId is required' },
-        { status: 400 }
-      );
-    }
-
-    if (!checklistCode) {
-      return NextResponse.json(
-        { error: 'checklistCode is required' },
-        { status: 400 }
-      );
-    }
-
-    const checklist = await prisma.crewingChecklist.create({
-      data: {
-        procedureId,
-        checklistCode,
-        applicationId: applicationId || null,
-        crewId: crewId || null,
-        status: 'NOT_STARTED',
-        itemsJson: itemsJson || [],
-        submittedById: session.user.id || null,
-      },
-      include: {
-        application: { select: { id: true, position: true } },
-        crew: { select: { id: true, fullName: true } },
-        submittedBy: { select: { id: true, name: true } },
-      }
-    });
-
-    return NextResponse.json(
-      {
-        success: true,
-        message: 'Checklist created successfully',
-        data: checklist,
-      },
-      { status: 201 }
-    );
-  } catch (error) {
-    console.error('Error creating checklist:', error);
-    return NextResponse.json(
-      { error: 'Failed to create checklist' },
-      { status: 500 }
-    );
-  }
+export async function POST() {
+  return NextResponse.json(
+    { error: 'CrewingChecklist feature temporarily disabled. Database table is missing.' },
+    { status: 503 }
+  );
 }
