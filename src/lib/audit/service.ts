@@ -227,7 +227,7 @@ export async function getNonConformityWithActions(ncId: string) {
         },
       },
       audit: {
-        select: { id: true, auditCode: true, title: true },
+        select: { id: true, auditNumber: true, auditType: true },
       },
     },
   });
