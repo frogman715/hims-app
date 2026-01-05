@@ -246,7 +246,7 @@ export async function listNonConformities(filters?: {
     },
     include: {
       assignedTo: { select: { id: true, name: true, email: true } },
-      audit: { select: { id: true, auditCode: true } },
+      audit: { select: { id: true, auditNumber: true } },
       correctiveActions: { select: { id: true } },
     },
     take: filters?.limit || 20,
