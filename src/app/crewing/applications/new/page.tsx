@@ -141,20 +141,20 @@ export default function NewApplicationPage() {
 
   // Auto-populate vessel type when vessel is selected
   useEffect(() => {
-    if (!formData.vesselId) {
-      setFormData(prev => ({
-        ...prev,
-        vesselType: '',
-      }));
+    if (!formData.vesselId || vessels.length === 0) {
       return;
     }
 
     const selectedVessel = vessels.find(v => v.id === formData.vesselId);
     if (selectedVessel && selectedVessel.type) {
+      console.log('Auto-populating vessel type:', selectedVessel.type, 'for vessel:', selectedVessel.name);
       setFormData(prev => ({
         ...prev,
         vesselType: selectedVessel.type || '',
       }));
+    } else {
+      console.log('Selected vessel:', selectedVessel);
+      console.log('Available vessels:', vessels);
     }
   }, [formData.vesselId, vessels]);
 
