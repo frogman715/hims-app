@@ -141,6 +141,20 @@ const OFFICE_NAV_ITEMS: OfficeNavigationItem[] = [
     icon: '📊',
     requiredLevel: PermissionLevel.VIEW_ACCESS,
   },
+  {
+    module: ModuleName.quality,
+    href: '/audit',
+    label: 'Audit Management',
+    icon: '📋',
+    requiredLevel: PermissionLevel.VIEW_ACCESS,
+  },
+  {
+    module: ModuleName.quality,
+    href: '/nonconformity',
+    label: 'Non-Conformities',
+    icon: '⚠️',
+    requiredLevel: PermissionLevel.VIEW_ACCESS,
+  },
 ];
 
 const CREW_PORTAL_NAV_ITEMS: Array<{ href: string; label: string; icon: string }> = [
