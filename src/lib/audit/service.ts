@@ -7,8 +7,7 @@ import {
   ComplianceAuditStatus,
   NonConformityStatus,
   NCCorrectiveActionStatus,
-  NCFindingSeverity,
-  ComplianceAuditType
+  NCFindingSeverity
 } from '@prisma/client';
 
 // ============================================================================
