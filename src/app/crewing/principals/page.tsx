@@ -619,6 +619,7 @@ export default function PrincipalsPage() {
                     <option value="BAHAMAS">Bahamas</option>
                     <option value="MALTA">Malta</option>
                     <option value="INDONESIA">Indonesia</option>
+                    <option value="SOUTH_KOREA">South Korea</option>
                   </select>
                 </div>
 
