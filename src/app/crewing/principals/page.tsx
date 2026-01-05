@@ -130,17 +130,21 @@ export default function PrincipalsPage() {
 
   const handleVesselSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("handleVesselSubmit called with data:", vesselFormData);
     try {
       const url = editingVessel
         ? `/api/vessels/${editingVessel.id}`
         : "/api/vessels";
       const method = editingVessel ? "PUT" : "POST";
+      console.log(`Sending ${method} request to ${url}`);
 
       const payload = {
         ...vesselFormData,
         dwt: vesselFormData.dwt ? parseFloat(vesselFormData.dwt) : null,
         gt: vesselFormData.gt ? parseFloat(vesselFormData.gt) : null,
       };
+
+      console.log("Payload:", payload);
 
       const response = await fetch(url, {
         method,
@@ -149,6 +153,8 @@ export default function PrincipalsPage() {
         },
         body: JSON.stringify(payload),
       });
+
+      console.log("Response status:", response.status);
 
       if (response.ok) {
         resetVesselForm();
@@ -159,6 +165,7 @@ export default function PrincipalsPage() {
         }, 500);
       } else {
         const error = await response.json();
+        console.error("Error response:", error);
         alert(`Error: ${error.error || "Failed to save vessel"}`);
       }
     } catch (error) {
@@ -248,6 +255,7 @@ export default function PrincipalsPage() {
   };
 
   const handleAddVessel = (principal: Principal) => {
+    console.log("handleAddVessel called with principal:", principal);
     setSelectedPrincipal(principal);
     setVesselFormData({
       name: "",
@@ -261,6 +269,7 @@ export default function PrincipalsPage() {
     });
     setEditingVessel(null);
     setShowVesselForm(true);
+    console.log("showVesselForm set to true");
   };
 
   const resetForm = () => {
