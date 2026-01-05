@@ -14,11 +14,23 @@ export async function PUT(
     }
 
     const { id } = await params;
-    const { name, address } = await request.json();
+    const {
+      name,
+      country,
+      address,
+      contactPerson,
+      phone,
+      email,
+      taxId,
+      registrationNumber,
+      agreementDate,
+      agreementExpiry,
+      status,
+    } = await request.json();
 
-    if (!name || !address) {
+    if (!name) {
       return NextResponse.json(
-        { error: 'Name and address are required' },
+        { error: 'Name is required' },
         { status: 400 }
       );
     }
@@ -27,7 +39,16 @@ export async function PUT(
       where: { id: id },
       data: {
         name,
-        address,
+        country: country || undefined,
+        address: address || undefined,
+        contactPerson: contactPerson || undefined,
+        phone: phone || undefined,
+        email: email || undefined,
+        taxId: taxId || undefined,
+        registrationNumber: registrationNumber || undefined,
+        agreementDate: agreementDate ? new Date(agreementDate) : undefined,
+        agreementExpiry: agreementExpiry ? new Date(agreementExpiry) : undefined,
+        status: status || undefined,
       },
     });
 
