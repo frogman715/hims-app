@@ -30,12 +30,6 @@ export default function NonConformityPage() {
     }
   }, [status, router]);
 
-  useEffect(() => {
-    if (status === 'authenticated') {
-      fetchNonconformities();
-    }
-  }, [status, fetchNonconformities]);
-
   const fetchNonconformities = async () => {
     try {
       setLoading(true);
@@ -68,6 +62,12 @@ export default function NonConformityPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (status === 'authenticated') {
+      fetchNonconformities();
+    }
+  }, [status, fetchNonconformities]);
 
   const getSeverityColor = (severity: string) => {
     switch (severity?.toUpperCase()) {

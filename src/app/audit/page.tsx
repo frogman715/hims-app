@@ -37,13 +37,6 @@ export default function AuditManagementPage() {
     auditType: '',
   });
 
-  // Redirect if not authenticated
-  useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/auth/signin');
-    }
-  }, [status, router]);
-
   // Fetch audits
   const fetchAudits = async () => {
     try {
@@ -81,6 +74,13 @@ export default function AuditManagementPage() {
       setLoading(false);
     }
   };
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/auth/signin');
+    }
+  }, [status, router]);
 
   useEffect(() => {
     if (status === 'authenticated' && session?.user) {

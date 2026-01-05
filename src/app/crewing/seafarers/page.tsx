@@ -51,19 +51,6 @@ export default function Seafarers() {
   const [seafarers, setSeafarers] = useState<Seafarer[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (status === "loading") return;
-    if (!session) {
-      router.push("/auth/signin");
-    }
-  }, [session, status, router]);
-
-  useEffect(() => {
-    if (session) {
-      fetchSeafarers();
-    }
-  }, [session, fetchSeafarers]);
-
   const fetchSeafarers = async () => {
     try {
       const response = await fetch("/api/seafarers");
@@ -83,6 +70,19 @@ export default function Seafarers() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (status === "loading") return;
+    if (!session) {
+      router.push("/auth/signin");
+    }
+  }, [session, status, router]);
+
+  useEffect(() => {
+    if (session) {
+      fetchSeafarers();
+    }
+  }, [session, fetchSeafarers]);
 
   const tableRows = seafarers.map((seafarer) => {
     const latestAssignment = seafarer.assignments[0];

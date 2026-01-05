@@ -39,6 +39,59 @@ export function DocumentUploadZone({
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Upload file to server
+  const uploadFile_async = async (uploadFile: UploadedFile) => {
+    try {
+      setFiles((prev) =>
+        prev.map((f) =>
+          f.file === uploadFile.file ? { ...f, status: 'uploading' } : f
+        )
+      );
+
+      const formData = new FormData();
+      formData.append('file', uploadFile.file);
+      formData.append('submissionId', submissionId);
+      formData.append(
+        'documentType',
+        uploadFile.file.name.split('.')[0].toUpperCase()
+      );
+
+      const response = await fetch('/api/hgf/documents/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Upload failed');
+      }
+
+      const data = (await response.json()) as { fileUrl: string };
+
+      setFiles((prev) =>
+        prev.map((f) =>
+          f.file === uploadFile.file
+            ? { ...f, status: 'success', uploadProgress: 100 }
+            : f
+        )
+      );
+
+      onUploadComplete?.(data.fileUrl, uploadFile);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Upload failed';
+
+      setFiles((prev) =>
+        prev.map((f) =>
+          f.file === uploadFile.file
+            ? { ...f, status: 'error', error: errorMessage }
+            : f
+        )
+      );
+
+      onError?.(errorMessage);
+    }
+  };
+
   // Validate file
   const validateFile = (file: File): { valid: boolean; error?: string } => {
     const fileSizeMB = file.size / (1024 * 1024);
@@ -104,59 +157,6 @@ export function DocumentUploadZone({
     },
     [files, maxFiles, onError, uploadFile_async, validateFile]
   );
-
-  // Upload file to server
-  const uploadFile_async = async (uploadFile: UploadedFile) => {
-    try {
-      setFiles((prev) =>
-        prev.map((f) =>
-          f.file === uploadFile.file ? { ...f, status: 'uploading' } : f
-        )
-      );
-
-      const formData = new FormData();
-      formData.append('file', uploadFile.file);
-      formData.append('submissionId', submissionId);
-      formData.append(
-        'documentType',
-        uploadFile.file.name.split('.')[0].toUpperCase()
-      );
-
-      const response = await fetch('/api/hgf/documents/upload', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Upload failed');
-      }
-
-      const data = (await response.json()) as { fileUrl: string };
-
-      setFiles((prev) =>
-        prev.map((f) =>
-          f.file === uploadFile.file
-            ? { ...f, status: 'success', uploadProgress: 100 }
-            : f
-        )
-      );
-
-      onUploadComplete?.(data.fileUrl, uploadFile);
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Upload failed';
-
-      setFiles((prev) =>
-        prev.map((f) =>
-          f.file === uploadFile.file
-            ? { ...f, status: 'error', error: errorMessage }
-            : f
-        )
-      );
-
-      onError?.(errorMessage);
-    }
-  };
 
   // Handle drag & drop
   const handleDragOver = (e: React.DragEvent) => {
