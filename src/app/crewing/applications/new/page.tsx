@@ -26,6 +26,10 @@ interface Vessel {
   id: string;
   name: string;
   principalId: string;
+  type?: string;
+  imoNumber?: string;
+  flag?: string;
+  status?: string;
 }
 
 const VESSEL_TYPES = [
@@ -106,6 +110,12 @@ export default function NewApplicationPage() {
     const fetchVessels = async () => {
       if (!formData.principalId) {
         setVessels([]);
+        // Reset vessel type when principal is cleared
+        setFormData(prev => ({
+          ...prev,
+          vesselId: undefined,
+          vesselType: '',
+        }));
         return;
       }
 
@@ -114,6 +124,12 @@ export default function NewApplicationPage() {
         if (response.ok) {
           const data = await response.json();
           setVessels(data);
+          // Reset vessel selection and type when principal changes
+          setFormData(prev => ({
+            ...prev,
+            vesselId: undefined,
+            vesselType: '',
+          }));
         }
       } catch (err) {
         console.error('Error fetching vessels:', err);
@@ -122,6 +138,25 @@ export default function NewApplicationPage() {
 
     fetchVessels();
   }, [formData.principalId]);
+
+  // Auto-populate vessel type when vessel is selected
+  useEffect(() => {
+    if (!formData.vesselId) {
+      setFormData(prev => ({
+        ...prev,
+        vesselType: '',
+      }));
+      return;
+    }
+
+    const selectedVessel = vessels.find(v => v.id === formData.vesselId);
+    if (selectedVessel && selectedVessel.type) {
+      setFormData(prev => ({
+        ...prev,
+        vesselType: selectedVessel.type || '',
+      }));
+    }
+  }, [formData.vesselId, vessels]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -307,6 +342,9 @@ export default function NewApplicationPage() {
             <div>
               <label htmlFor="vesselType" className="block text-sm font-semibold text-gray-900 mb-2">
                 Preferred Vessel Type
+                {formData.vesselId && formData.vesselType && (
+                  <span className="text-xs font-normal text-gray-500 ml-2">(auto-populated from vessel)</span>
+                )}
               </label>
               <select
                 id="vesselType"
