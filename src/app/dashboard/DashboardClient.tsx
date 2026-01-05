@@ -77,68 +77,86 @@ interface OfficeNavigationItem {
   label: string;
   icon: string;
   requiredLevel?: PermissionLevel;
+  group?: string;
 }
 
 const OFFICE_NAV_ITEMS: OfficeNavigationItem[] = [
+  // CREWING OPERATIONS
   {
     module: ModuleName.crewing,
     href: '/crewing',
     label: 'Crewing Department',
     icon: '⚓',
+    group: 'CREWING OPERATIONS',
   },
   {
     module: ModuleName.contracts,
     href: '/contracts',
     label: 'Contracts',
-    icon: '📋',
+    icon: '📝',
+    group: 'CREWING OPERATIONS',
   },
   {
     module: ModuleName.documents,
     href: '/crewing/documents',
     label: 'Documents',
     icon: '📁',
-  },
-  {
-    module: ModuleName.insurance,
-    href: '/insurance',
-    label: 'Insurance',
-    icon: '⚡',
+    group: 'CREWING OPERATIONS',
   },
   {
     module: ModuleName.principals,
     href: '/crewing/principals',
     label: 'Fleet Management',
     icon: '🚢',
+    group: 'CREWING OPERATIONS',
   },
+
+  // FINANCE & ADMIN
   {
     module: ModuleName.accounting,
     href: '/accounting',
     label: 'Accounting',
-    icon: '💵',
+    icon: '💰',
+    group: 'FINANCE & ADMINISTRATION',
   },
   {
     module: ModuleName.agencyFees,
     href: '/agency-fees',
     label: 'Agency Fees',
-    icon: '💲',
+    icon: '💵',
+    group: 'FINANCE & ADMINISTRATION',
   },
+  {
+    module: ModuleName.insurance,
+    href: '/insurance',
+    label: 'Insurance',
+    icon: '🛡️',
+    group: 'FINANCE & ADMINISTRATION',
+  },
+
+  // HR & PERSONNEL
   {
     module: ModuleName.crew,
     href: '/hr',
-    label: 'HR',
+    label: 'HR Management',
     icon: '👔',
+    group: 'HR & PERSONNEL',
   },
   {
     module: ModuleName.disciplinary,
     href: '/disciplinary',
     label: 'Disciplinary',
     icon: '⚖️',
+    group: 'HR & PERSONNEL',
   },
+
+  // QUALITY & COMPLIANCE
   {
     module: ModuleName.quality,
     href: '/quality/qms-dashboard',
     label: 'QMS Dashboard',
     icon: '📊',
+    group: 'QUALITY & COMPLIANCE',
     requiredLevel: PermissionLevel.VIEW_ACCESS,
   },
   {
@@ -146,6 +164,7 @@ const OFFICE_NAV_ITEMS: OfficeNavigationItem[] = [
     href: '/audit',
     label: 'Audit Management',
     icon: '📋',
+    group: 'QUALITY & COMPLIANCE',
     requiredLevel: PermissionLevel.VIEW_ACCESS,
   },
   {
@@ -153,6 +172,7 @@ const OFFICE_NAV_ITEMS: OfficeNavigationItem[] = [
     href: '/nonconformity',
     label: 'Non-Conformities',
     icon: '⚠️',
+    group: 'QUALITY & COMPLIANCE',
     requiredLevel: PermissionLevel.VIEW_ACCESS,
   },
 ];
@@ -351,16 +371,53 @@ export default function DashboardClient() {
       )
     );
 
-    return items.map((item) => (
-      <Link
-        key={item.href}
-        href={item.href}
-        className="flex items-center gap-3 rounded-xl border border-transparent bg-white/75 px-4 py-3 font-medium text-slate-800 shadow-sm transition-all duration-200 hover:border-blue-200 hover:bg-white"
-      >
-        <span className="text-xl text-current" aria-hidden="true">{item.icon}</span>
-        <span className="text-current">{item.label}</span>
-      </Link>
-    ));
+    // Group items by their group property
+    const groupedItems = items.reduce((acc, item) => {
+      const group = item.group || 'OTHER';
+      if (!acc[group]) {
+        acc[group] = [];
+      }
+      acc[group].push(item);
+      return acc;
+    }, {} as Record<string, OfficeNavigationItem[]>);
+
+    // Define group order
+    const groupOrder = [
+      'CREWING OPERATIONS',
+      'FINANCE & ADMINISTRATION',
+      'HR & PERSONNEL',
+      'QUALITY & COMPLIANCE',
+      'OTHER',
+    ];
+
+    return (
+      <>
+        {groupOrder.map((group) => {
+          const groupItems = groupedItems[group];
+          if (!groupItems || groupItems.length === 0) return null;
+
+          return (
+            <div key={group} className="space-y-1">
+              <div className="px-4 py-2 text-xs font-semibold uppercase tracking-wider text-gray-500">
+                {group}
+              </div>
+              <div className="space-y-1 pl-2">
+                {groupItems.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className="flex items-center gap-3 rounded-lg border border-transparent bg-white/50 px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition-all duration-200 hover:border-blue-200 hover:bg-white hover:text-blue-600"
+                  >
+                    <span className="text-lg text-current" aria-hidden="true">{item.icon}</span>
+                    <span className="text-current">{item.label}</span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </>
+    );
   };
 
   const handleLogout = async () => {
