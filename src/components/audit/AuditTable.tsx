@@ -5,13 +5,12 @@ import { Button } from '@/components/ui/Button';
 
 interface Audit {
   id: string;
-  auditCode: string;
-  title: string;
+  auditNumber: string;
   auditType: string;
   status: string;
-  plannedDate: string;
+  auditDate: string;
   startDate: string | null;
-  completionDate: string | null;
+  endDate: string | null;
   createdAt: string;
 }
 
@@ -71,10 +70,7 @@ export default function AuditTable({
         <thead>
           <tr className="bg-gray-100 border-b">
             <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
-              Code
-            </th>
-            <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
-              Title
+              Audit Number
             </th>
             <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
               Type
@@ -83,7 +79,7 @@ export default function AuditTable({
               Status
             </th>
             <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
-              Planned Date
+              Audit Date
             </th>
             <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
               Actions
@@ -94,10 +90,7 @@ export default function AuditTable({
           {audits.map((audit) => (
             <tr key={audit.id} className="border-b hover:bg-gray-50">
               <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                {audit.auditCode}
-              </td>
-              <td className="px-6 py-4 text-sm text-gray-700">
-                {audit.title}
+                {audit.auditNumber}
               </td>
               <td className="px-6 py-4 text-sm">
                 <span className={`px-3 py-1 rounded-full text-xs font-medium ${getTypeColor(audit.auditType)}`}>
@@ -110,7 +103,7 @@ export default function AuditTable({
                 </span>
               </td>
               <td className="px-6 py-4 text-sm text-gray-700">
-                {formatDate(audit.plannedDate)}
+                {formatDate(audit.auditDate)}
               </td>
               <td className="px-6 py-4 text-sm">
                 <div className="flex gap-2">

@@ -11,14 +11,16 @@ import AuditTable from '@/components/audit/AuditTable';
 
 interface Audit {
   id: string;
-  auditCode: string;
-  title: string;
+  auditNumber: string;
   auditType: string;
   status: string;
+  scope?: string;
+  objectives?: string;
+  auditCriteria?: string;
+  auditDate: string;
   leadAuditorId: string;
-  plannedDate: string;
   startDate: string | null;
-  completionDate: string | null;
+  endDate: string | null;
   createdAt: string;
 }
 
