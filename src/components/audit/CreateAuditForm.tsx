@@ -6,13 +6,13 @@ import { Button } from '@/components/ui/Button';
 
 interface Audit {
   id: string;
-  auditCode: string;
-  title: string;
+  auditNumber: string;
   auditType: string;
   status: string;
-  description?: string;
   scope?: string;
-  plannedDate: string;
+  objectives?: string;
+  auditCriteria?: string;
+  auditDate: string;
   leadAuditorId: string;
 }
 
@@ -26,12 +26,12 @@ export default function CreateAuditForm({ audit, onSuccess }: CreateAuditFormPro
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
-    auditCode: audit?.auditCode || '',
-    title: audit?.title || '',
-    auditType: audit?.auditType || 'INTERNAL',
-    description: audit?.description || '',
+    auditNumber: audit?.auditNumber || '',
+    auditType: audit?.auditType || '',
     scope: audit?.scope || '',
-    plannedDate: audit?.plannedDate ? new Date(audit.plannedDate).toISOString().split('T')[0] : '',
+    objectives: audit?.objectives || '',
+    auditCriteria: audit?.auditCriteria || '',
+    auditDate: audit?.auditDate ? new Date(audit.auditDate).toISOString().split('T')[0] : '',
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -52,8 +52,7 @@ export default function CreateAuditForm({ audit, onSuccess }: CreateAuditFormPro
         },
         body: JSON.stringify({
           ...formData,
-          plannedDate: new Date(formData.plannedDate),
-          teamMembers: [],
+          auditDate: formData.auditDate ? new Date(formData.auditDate) : undefined,
         }),
       });
 
@@ -79,15 +78,15 @@ export default function CreateAuditForm({ audit, onSuccess }: CreateAuditFormPro
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Audit Code */}
+        {/* Audit Number */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Audit Code
+            Audit Number
           </label>
           <input
             type="text"
-            name="auditCode"
-            value={formData.auditCode}
+            name="auditNumber"
+            value={formData.auditNumber}
             onChange={handleChange}
             placeholder="e.g., AUD-2024-001"
             required
@@ -100,63 +99,58 @@ export default function CreateAuditForm({ audit, onSuccess }: CreateAuditFormPro
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Audit Type
           </label>
-          <select
+          <input
+            type="text"
             name="auditType"
             value={formData.auditType}
             onChange={handleChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="INTERNAL">Internal</option>
-            <option value="EXTERNAL">External</option>
-            <option value="COMPLIANCE">Compliance</option>
-            <option value="MANAGEMENT_REVIEW">Management Review</option>
-            <option value="RISK_ASSESSMENT">Risk Assessment</option>
-          </select>
-        </div>
-
-        {/* Title */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Title
-          </label>
-          <input
-            type="text"
-            name="title"
-            value={formData.title}
-            onChange={handleChange}
-            placeholder="Audit title"
+            placeholder="e.g., ISO 9001, Internal Quality"
             required
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
 
-        {/* Planned Date */}
+        {/* Audit Date */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Planned Date
+            Audit Date
           </label>
           <input
             type="date"
-            name="plannedDate"
-            value={formData.plannedDate}
+            name="auditDate"
+            value={formData.auditDate}
             onChange={handleChange}
-            required
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
       </div>
 
-      {/* Description */}
+      {/* Objectives */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Description
+          Audit Objectives
         </label>
         <textarea
-          name="description"
-          value={formData.description}
+          name="objectives"
+          value={formData.objectives}
           onChange={handleChange}
-          placeholder="Audit description and context"
-          rows={4}
+          placeholder="What are the objectives of this audit?"
+          rows={3}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        />
+      </div>
+
+      {/* Audit Criteria */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Audit Criteria
+        </label>
+        <textarea
+          name="auditCriteria"
+          value={formData.auditCriteria}
+          onChange={handleChange}
+          placeholder="Standards, regulations, or internal procedures to be used as audit basis"
+          rows={3}
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         />
       </div>

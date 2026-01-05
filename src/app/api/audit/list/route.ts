@@ -14,14 +14,19 @@ export async function POST(req: NextRequest) {
     const data = await req.json();
 
     const audit = await auditService.createAudit({
-      auditCode: data.auditCode,
+      auditNumber: data.auditNumber,
       auditType: data.auditType,
-      title: data.title,
-      description: data.description,
       scope: data.scope,
+      objectives: data.objectives,
+      auditCriteria: data.auditCriteria,
       leadAuditorId: session.user.id,
-      teamMembers: data.teamMembers,
-      plannedDate: new Date(data.plannedDate),
+      assistantAuditors: data.assistantAuditors,
+      auditeeContactPerson: data.auditeeContactPerson,
+      auditeeContactEmail: data.auditeeContactEmail,
+      auditeeContactPhone: data.auditeeContactPhone,
+      estimatedDuration: data.estimatedDuration,
+      location: data.location,
+      auditDate: data.auditDate ? new Date(data.auditDate) : undefined,
     });
 
     return NextResponse.json(audit, { status: 201 });
