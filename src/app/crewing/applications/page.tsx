@@ -33,6 +33,7 @@ function ApplicationsContent() {
   const searchParams = useSearchParams();
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<string>(searchParams.get('status') || 'ALL');
 
   const fetchApplications = useCallback(async () => {
@@ -44,6 +45,7 @@ function ApplicationsContent() {
       return;
     }
     setLoading(true);
+    setError(null);
     try {
       const url = selectedStatus === 'ALL' 
         ? '/api/applications'
@@ -52,9 +54,12 @@ function ApplicationsContent() {
       if (response.ok) {
         const data = await response.json();
         setApplications(data.data || data);
+      } else {
+        setError("Failed to fetch applications");
       }
     } catch (error) {
       console.error("Error fetching applications:", error);
+      setError(error instanceof Error ? error.message : "Failed to fetch applications");
     } finally {
       setLoading(false);
     }
@@ -90,6 +95,25 @@ function ApplicationsContent() {
 
   if (!session) {
     return null;
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 p-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-red-800 mb-2">Error Loading Applications</h3>
+            <p className="text-red-700 mb-4">{error}</p>
+            <button
+              onClick={() => fetchApplications()}
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const statusOptions = [

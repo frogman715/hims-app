@@ -50,9 +50,11 @@ export default function Seafarers() {
   const router = useRouter();
   const [seafarers, setSeafarers] = useState<Seafarer[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchSeafarers = async () => {
     try {
+      setError(null);
       const response = await fetch("/api/seafarers");
       if (response.ok) {
         const data = await response.json();
@@ -63,9 +65,11 @@ export default function Seafarers() {
         router.push("/auth/signin");
       } else {
         console.error("Error fetching seafarers:", response.status, response.statusText);
+        setError("Failed to fetch seafarers");
       }
     } catch (error) {
       console.error("Error fetching seafarers:", error);
+      setError(error instanceof Error ? error.message : "Failed to fetch seafarers");
     } finally {
       setLoading(false);
     }
@@ -99,6 +103,33 @@ export default function Seafarers() {
 
   if (!session) {
     return null;
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-slate-50">
+        <header className="border-b border-slate-200 bg-white">
+          <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-12">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-widest text-emerald-600">Crewing</p>
+              <h1 className="mt-3 text-3xl font-bold text-slate-900">Seafarers List</h1>
+            </div>
+          </div>
+        </header>
+        <div className="mx-auto max-w-6xl px-6 py-8">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-red-800 mb-2">Error Loading Seafarers</h3>
+            <p className="text-red-700 mb-4">{error}</p>
+            <button
+              onClick={() => fetchSeafarers()}
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
