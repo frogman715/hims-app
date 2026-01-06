@@ -23,6 +23,7 @@ interface Procedure {
 export default function ProceduresPage() {
   const [procedures, setProcedures] = useState<Procedure[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedPhase, setSelectedPhase] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedProcedure, setSelectedProcedure] = useState<Procedure | null>(null);
@@ -31,6 +32,7 @@ export default function ProceduresPage() {
   useEffect(() => {
     const fetchProcedures = async () => {
       try {
+        setError(null);
         const url = new URL('/api/crewing/procedures', window.location.origin);
         if (selectedPhase) url.searchParams.append('phase', selectedPhase);
         if (searchTerm) url.searchParams.append('search', searchTerm);
@@ -41,6 +43,7 @@ export default function ProceduresPage() {
         setProcedures(data.data);
       } catch (error) {
         console.error('Error:', error);
+        setError(error instanceof Error ? error.message : 'Failed to load procedures');
       } finally {
         setLoading(false);
       }
@@ -51,6 +54,33 @@ export default function ProceduresPage() {
 
   const phases = ['Pre-Deployment', 'Deployment', 'Post-Deployment', 'General'];
   const uniquePhases = [...new Set(procedures.map(p => p.phase))].sort();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-600"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-red-800 mb-2">Error Loading Procedures</h3>
+            <p className="text-red-700 mb-4">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">

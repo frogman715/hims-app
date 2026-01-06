@@ -29,6 +29,7 @@ const statusConfig = {
 export default function ChecklistsDashboard() {
   const [checklists, setChecklists] = useState<Checklist[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedStatus, setSelectedStatus] = useState('PENDING_REVIEW');
   const [searchTerm, setSearchTerm] = useState('');
   const [approvingId, setApprovingId] = useState<string | null>(null);
@@ -38,6 +39,7 @@ export default function ChecklistsDashboard() {
   useEffect(() => {
     const fetchChecklists = async () => {
       try {
+        setError(null);
         const url = new URL('/api/crewing/checklists', window.location.origin);
         if (selectedStatus) url.searchParams.append('status', selectedStatus);
         if (searchTerm) url.searchParams.append('search', searchTerm);
@@ -48,8 +50,14 @@ export default function ChecklistsDashboard() {
         setChecklists(data.data);
       } catch (error) {
         console.error('Error:', error);
+        setError(error instanceof Error ? error.message : 'Failed to load checklists');
       } finally {
         setLoading(false);
+      }
+    };
+
+    fetchChecklists();
+  }, [selectedStatus, searchTerm]);
       }
     };
 
@@ -83,6 +91,33 @@ export default function ChecklistsDashboard() {
   };
 
   const statuses = Object.keys(statusConfig);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-600"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-red-800 mb-2">Error Loading Checklists</h3>
+            <p className="text-red-700 mb-4">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
