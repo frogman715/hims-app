@@ -49,6 +49,7 @@ export default function FormManagementPage() {
   const [templates, setTemplates] = useState<FormTemplate[]>([]);
   const [forms, setForms] = useState<PrepareJoiningForm[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"templates" | "submissions">("submissions");
 
   useEffect(() => {
@@ -62,6 +63,7 @@ export default function FormManagementPage() {
 
   const fetchData = async () => {
     try {
+      setError(null);
       const [templatesRes, formsRes] = await Promise.all([
         fetch("/api/form-templates"),
         fetch("/api/form-submissions"),
@@ -70,14 +72,19 @@ export default function FormManagementPage() {
       if (templatesRes.ok) {
         const templatesData = await templatesRes.json();
         setTemplates(templatesData.data || []);
+      } else {
+        setError("Failed to fetch form templates");
       }
 
       if (formsRes.ok) {
         const formsData = await formsRes.json();
         setForms(formsData.data || []);
+      } else {
+        setError("Failed to fetch form submissions");
       }
     } catch (error) {
       console.error("Error fetching data:", error);
+      setError(error instanceof Error ? error.message : "Failed to fetch data");
     } finally {
       setLoading(false);
     }
@@ -93,6 +100,25 @@ export default function FormManagementPage() {
 
   if (!session) {
     return null;
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 p-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-red-800 mb-2">Error Loading Forms</h3>
+            <p className="text-red-700 mb-4">{error}</p>
+            <button
+              onClick={() => fetchData()}
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const getStatusBadge = (status: string) => {

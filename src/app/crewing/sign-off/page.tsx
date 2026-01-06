@@ -27,10 +27,12 @@ interface CrewSignOffSummary {
 export default function CrewSignOffPage() {
   const [signOffs, setSignOffs] = useState<CrewSignOffSummary[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState("ALL");
 
   const fetchSignOffs = useCallback(async () => {
     try {
+      setError(null);
       const url = filter === "ALL" 
         ? "/api/crewing/sign-off"
         : `/api/crewing/sign-off?status=${filter}`;
@@ -41,9 +43,12 @@ export default function CrewSignOffPage() {
           ? (data.signOffs as CrewSignOffSummary[])
           : [];
         setSignOffs(signOffData);
+      } else {
+        setError("Failed to fetch sign-off data");
       }
     } catch (error) {
       console.error("Failed to fetch sign-offs:", error);
+      setError(error instanceof Error ? error.message : "Failed to fetch sign-off data");
     } finally {
       setLoading(false);
     }
@@ -73,6 +78,33 @@ export default function CrewSignOffPage() {
     { step: 5, title: "Payment", icon: "💰", status: "WAGES_PAID" },
     { step: 6, title: "Document Withdrawal", icon: "✅", status: "COMPLETED" }
   ];
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-100 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-red-800 mb-2">Error Loading Sign-Off Data</h3>
+            <p className="text-red-700 mb-4">{error}</p>
+            <button
+              onClick={() => fetchSignOffs()}
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-100 py-8 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-100 py-8">

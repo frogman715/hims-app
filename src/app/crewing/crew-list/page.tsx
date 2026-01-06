@@ -50,7 +50,11 @@ export default function CrewListPage() {
       setError(null);
       // Fetch assignments with related data
       const assignmentsRes = await fetch('/api/assignments');
-      if (!assignmentsRes.ok) throw new Error('Failed to fetch assignments');
+      if (!assignmentsRes.ok) {
+        setError("Failed to fetch crew assignments");
+        setLoading(false);
+        return;
+      }
 
       const assignments = await assignmentsRes.json();
 
@@ -144,6 +148,26 @@ export default function CrewListPage() {
 
   if (!session) {
     return null;
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-red-800 mb-2">Error Loading Crew List</h3>
+            <p className="text-red-700 mb-4">{error}</p>
+            <button
+              onClick={() => fetchCrewList()}
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
   }
 
   return (
