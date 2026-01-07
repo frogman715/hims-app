@@ -12,7 +12,6 @@ import {
   CheckCircle,
   XCircle,
   ChevronRight,
-  Filter,
   Search,
   Loader,
 } from 'lucide-react';
