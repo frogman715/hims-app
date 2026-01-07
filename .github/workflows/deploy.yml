@@ -8,7 +8,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -21,6 +21,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
 
       - name: Build application
         run: npm run build
@@ -36,17 +39,20 @@ jobs:
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H $VPS_IP >> ~/.ssh/known_hosts
-          
-          # Deploy
-          ssh -i ~/.ssh/id_rsa $VPS_USER@$VPS_IP << 'EOF'
+
+          ssh -i ~/.ssh/id_rsa $VPS_USER@$VPS_IP << EOF
           set -e
-          cd $VPS_APP_DIR
+          cd ${VPS_APP_DIR}
+
           git fetch origin
           git reset --hard origin/main
-          npm ci --production
+
+          npm ci
+          npx prisma generate
           npm run build
           npm run postbuild
           npx prisma migrate deploy
+
           pm2 delete hims-app || true
           pm2 start ecosystem.config.js
           sleep 2
