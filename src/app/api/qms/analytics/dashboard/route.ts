@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import { checkPermission, PermissionLevel } from '@/lib/permission-middleware';
 import { QMSAdvancedAnalytics } from '@/lib/qms/advanced-analytics';
 
 /**
@@ -7,6 +10,21 @@ import { QMSAdvancedAnalytics } from '@/lib/qms/advanced-analytics';
  */
 export async function GET(request: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    if (!checkPermission(session, 'quality', PermissionLevel.VIEW_ACCESS)) {
+      return NextResponse.json(
+        { error: 'Insufficient permissions' },
+        { status: 403 }
+      );
+    }
+
     const metrics = await QMSAdvancedAnalytics.getDashboardMetrics();
 
     return NextResponse.json({
