@@ -41,27 +41,23 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H $VPS_IP >> ~/.ssh/known_hosts
 
-          # Upload build artifacts using rsync (faster than rebuilding on VPS)
-          rsync -avz --delete \
-            -e "ssh -o ServerAliveInterval=30 -o ServerAliveCountMax=10 -o ConnectTimeout=30 -i ~/.ssh/id_rsa" \
-            --exclude='.git' --exclude='node_modules' --exclude='.next/cache' \
-            .next/ $VPS_USER@$VPS_IP:$VPS_APP_DIR/.next/
-
-          rsync -avz \
-            -e "ssh -o ServerAliveInterval=30 -o ServerAliveCountMax=10 -o ConnectTimeout=30 -i ~/.ssh/id_rsa" \
-            --exclude='.git' --exclude='node_modules' --exclude='.next' \
-            package*.json prisma/ public/ $VPS_USER@$VPS_IP:$VPS_APP_DIR/
-
           # Execute deployment commands on VPS
           ssh -o ServerAliveInterval=30 -o ServerAliveCountMax=10 -o ConnectTimeout=30 -i ~/.ssh/id_rsa $VPS_USER@$VPS_IP << 'EOFSH'
           set -e
           cd /var/www/hims-app
 
-          # Install production dependencies only
-          npm ci --omit=dev
+          # Pull latest code
+          git fetch origin
+          git reset --hard origin/main
+
+          # Install all dependencies (including dev for build)
+          npm install
 
           # Generate Prisma client
           npx prisma generate
+
+          # Build application
+          npm run build
 
           # Restart PM2
           pm2 delete hims-app || true
