@@ -58,11 +58,6 @@ export default function ChecklistsDashboard() {
 
     fetchChecklists();
   }, [selectedStatus, searchTerm]);
-      }
-    };
-
-    fetchChecklists();
-  }, [selectedStatus, searchTerm]);
 
   const handleApprove = async (checklistId: string, action: 'approve' | 'reject') => {
     setApprovingId(checklistId);
