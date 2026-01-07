@@ -53,6 +53,9 @@ jobs:
           # Install all dependencies (including dev for build)
           npm install
 
+          # Remove problematic config files that may cause parse errors
+          rm -f prisma.config.ts prisma/prisma.config.ts || true
+
           # Generate Prisma client
           npx prisma generate
 
