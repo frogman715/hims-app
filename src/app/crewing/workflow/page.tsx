@@ -26,6 +26,7 @@ export default function CrewManningWorkflow() {
     ready: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (status === "loading") return;
@@ -38,13 +39,17 @@ export default function CrewManningWorkflow() {
 
   const fetchStats = async () => {
     try {
+      setError(null);
       const res = await fetch("/api/crewing/workflow/stats");
       if (res.ok) {
         const data = await res.json();
         setStats(data);
+      } else {
+        setError("Failed to fetch workflow statistics");
       }
     } catch (error) {
       console.error("Error fetching stats:", error);
+      setError(error instanceof Error ? error.message : "Failed to fetch workflow statistics");
     } finally {
       setLoading(false);
     }
@@ -60,6 +65,25 @@ export default function CrewManningWorkflow() {
 
   if (!session) {
     return null;
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 p-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-red-800 mb-2">Error Loading Workflow</h3>
+            <p className="text-red-700 mb-4">{error}</p>
+            <button
+              onClick={() => fetchStats()}
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const workflowSteps = [
