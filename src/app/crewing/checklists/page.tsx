@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { CheckCircle2, Clock, AlertCircle, Filter, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
 
 interface Checklist {
   id: string;

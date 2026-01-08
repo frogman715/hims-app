@@ -2,7 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 interface Assignment {
   id: number;
@@ -29,20 +29,7 @@ export default function Assignments() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (status === "loading") return;
-    if (!session) {
-      router.push("/auth/signin");
-    }
-  }, [session, status, router]);
-
-  useEffect(() => {
-    if (session) {
-      fetchAssignments();
-    }
-  }, [session]);
-
-  const fetchAssignments = async () => {
+  const fetchAssignments = useCallback(async () => {
     try {
       setError(null);
       const response = await fetch("/api/assignments");
@@ -61,7 +48,20 @@ export default function Assignments() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [router]);
+
+  useEffect(() => {
+    if (status === "loading") return;
+    if (!session) {
+      router.push("/auth/signin");
+    }
+  }, [session, status, router]);
+
+  useEffect(() => {
+    if (session) {
+      fetchAssignments();
+    }
+  }, [session, fetchAssignments]);
 
   if (status === "loading" || loading) {
     return <div>Loading...</div>;

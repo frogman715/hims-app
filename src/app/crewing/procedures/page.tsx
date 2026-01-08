@@ -52,7 +52,6 @@ export default function ProceduresPage() {
     fetchProcedures();
   }, [selectedPhase, searchTerm]);
 
-  const phases = ['Pre-Deployment', 'Deployment', 'Post-Deployment', 'General'];
   const uniquePhases = [...new Set(procedures.map(p => p.phase))].sort();
 
   if (loading) {

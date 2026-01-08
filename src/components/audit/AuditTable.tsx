@@ -1,7 +1,6 @@
 'use client';
 
-import { Eye, Edit2, Trash2 } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
+import { Eye, Edit2 } from 'lucide-react';
 
 interface Audit {
   id: string;

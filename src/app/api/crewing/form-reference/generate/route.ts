@@ -6,7 +6,6 @@ import { readFileSync } from "fs";
 import { join } from "path";
 import { existsSync } from "fs";
 import * as XLSX from "xlsx";
-import { Document, Packer, Paragraph } from "docx";
 
 interface Crew {
   fullName: string;
@@ -103,10 +102,10 @@ async function fillExcelForm(filePath: string, crewData: Crew): Promise<Buffer> 
   }
 }
 
-async function fillWordForm(filePath: string, crewData: Crew): Promise<Buffer> {
+async function fillWordForm(filePath: string): Promise<Buffer> {
   try {
     return readFileSync(filePath);
-  } catch (error) {
+  } catch {
     return readFileSync(filePath);
   }
 }

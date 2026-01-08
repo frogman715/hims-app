@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
 
 interface ComplianceItem {
   id: string;
@@ -150,9 +149,8 @@ const STATUS_COLORS = {
 };
 
 export default function HGQSCompliancePage() {
-  const { data: session } = useSession();
   const router = useRouter();
-  const [items, setItems] = useState<ComplianceItem[]>(HGQS_REQUIREMENTS);
+  const [items] = useState<ComplianceItem[]>(HGQS_REQUIREMENTS);
   const [filterCategory, setFilterCategory] = useState<string>("All");
   const [filterStatus, setFilterStatus] = useState<string>("All");
 

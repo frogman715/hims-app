@@ -3,7 +3,6 @@ import { requireUserApi } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
 import { writeFile, mkdir } from "fs/promises";
 import { join, extname } from "path";
-import { randomUUID } from "crypto";
 
 // Configure max body size for file uploads
 export const config = {
