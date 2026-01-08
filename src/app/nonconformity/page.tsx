@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Plus, AlertCircle } from 'lucide-react';
@@ -18,11 +18,11 @@ interface NonConformity {
 }
 
 export default function NonConformityPage() {
-  const { data: session, status } = useSession();
   const router = useRouter();
   const [nonconformities, setNonconformities] = useState<NonConformity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { status } = useSession();
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -30,7 +30,7 @@ export default function NonConformityPage() {
     }
   }, [status, router]);
 
-  const fetchNonconformities = async () => {
+  const fetchNonconformities = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -61,7 +61,7 @@ export default function NonConformityPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [router]);
 
   useEffect(() => {
     if (status === 'authenticated') {

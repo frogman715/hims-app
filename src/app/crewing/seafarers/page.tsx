@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -52,7 +52,7 @@ export default function Seafarers() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchSeafarers = async () => {
+  const fetchSeafarers = useCallback(async () => {
     try {
       setError(null);
       const response = await fetch("/api/seafarers");
@@ -73,7 +73,7 @@ export default function Seafarers() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [router]);
 
   useEffect(() => {
     if (status === "loading") return;

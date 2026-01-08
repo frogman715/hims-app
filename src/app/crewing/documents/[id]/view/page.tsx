@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { formatDocumentDate, getExpiryStatus } from '@/lib/date-utils';
+import { formatDocumentDate } from '@/lib/date-utils';
 
 interface DocumentDetail {
   id: string;

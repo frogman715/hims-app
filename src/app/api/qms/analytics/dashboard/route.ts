@@ -1,11 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { QMSAdvancedAnalytics } from '@/lib/qms/advanced-analytics';
 
 /**
  * GET /api/qms/analytics/dashboard
  * Get complete dashboard metrics and KPIs
  */
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const metrics = await QMSAdvancedAnalytics.getDashboardMetrics();
 

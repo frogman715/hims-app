@@ -39,8 +39,30 @@ export function DocumentUploadZone({
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Validate file
+  const validateFile = useCallback((file: File): { valid: boolean; error?: string } => {
+    const fileSizeMB = file.size / (1024 * 1024);
+    const fileExtension = file.name.split('.').pop()?.toLowerCase();
+
+    if (fileSizeMB > maxFileSize) {
+      return {
+        valid: false,
+        error: `File size must be less than ${maxFileSize}MB`,
+      };
+    }
+
+    if (!fileExtension || !acceptedFormats.includes(fileExtension)) {
+      return {
+        valid: false,
+        error: `Only ${acceptedFormats.join(', ').toUpperCase()} files allowed`,
+      };
+    }
+
+    return { valid: true };
+  }, [maxFileSize, acceptedFormats]);
+
   // Upload file to server
-  const uploadFile_async = async (uploadFile: UploadedFile) => {
+  const uploadFile_async = useCallback(async (uploadFile: UploadedFile) => {
     try {
       setFiles((prev) =>
         prev.map((f) =>
@@ -90,29 +112,7 @@ export function DocumentUploadZone({
 
       onError?.(errorMessage);
     }
-  };
-
-  // Validate file
-  const validateFile = (file: File): { valid: boolean; error?: string } => {
-    const fileSizeMB = file.size / (1024 * 1024);
-    const fileExtension = file.name.split('.').pop()?.toLowerCase();
-
-    if (fileSizeMB > maxFileSize) {
-      return {
-        valid: false,
-        error: `File size must be less than ${maxFileSize}MB`,
-      };
-    }
-
-    if (!fileExtension || !acceptedFormats.includes(fileExtension)) {
-      return {
-        valid: false,
-        error: `Only ${acceptedFormats.join(', ').toUpperCase()} files allowed`,
-      };
-    }
-
-    return { valid: true };
-  };
+  }, [submissionId, onUploadComplete, onError]);
 
   // Handle file selection
   const handleFiles = useCallback(

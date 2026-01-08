@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Plus, Edit2, Eye, Download, ArrowLeft } from 'lucide-react';
+import { Plus, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import CreateAuditForm from '@/components/audit/CreateAuditForm';
 import AuditTable from '@/components/audit/AuditTable';
@@ -38,7 +38,7 @@ export default function AuditManagementPage() {
   });
 
   // Fetch audits
-  const fetchAudits = async () => {
+  const fetchAudits = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -73,7 +73,7 @@ export default function AuditManagementPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters.status, filters.auditType, router]);
 
   // Redirect if not authenticated
   useEffect(() => {

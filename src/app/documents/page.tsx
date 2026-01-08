@@ -11,24 +11,6 @@ import {
   AcknowledgeModal,
 } from '@/components/documents';
 
-interface Document {
-  id: string;
-  code: string;
-  title: string;
-  documentType: string;
-  department: string;
-  status: string;
-  createdAt: string;
-  createdBy: {
-    name: string;
-    email: string;
-  };
-  approvals: Array<{
-    status: string;
-    assignedTo?: { name: string };
-  }>;
-}
-
 export default function DocumentManagementPage() {
   const [activeTab, setActiveTab] = useState<
     'documents' | 'approvals'
@@ -39,32 +21,25 @@ export default function DocumentManagementPage() {
 
   // Distribute Modal
   const [showDistributeModal, setShowDistributeModal] = useState(false);
-  const [selectedDocumentId, setSelectedDocumentId] = useState<string>('');
-  const [selectedDocumentTitle, setSelectedDocumentTitle] = useState('');
 
   // Acknowledge Modal
   const [showAcknowledgeModal, setShowAcknowledgeModal] = useState(false);
-  const [selectedDocCode, setSelectedDocCode] = useState('');
 
   // Refresh trigger
   const [refreshKey, setRefreshKey] = useState(0);
 
-  const handleCreateDocument = (document: Record<string, unknown>) => {
+  const handleCreateDocument = () => {
     setShowCreateModal(false);
     setRefreshKey((prev) => prev + 1);
   };
 
-  const handleSelectDocument = (document: Document) => {
+  const handleSelectDocument = () => {
     // Could open detail view here
-    console.log('Selected document:', document);
+    // console.log('Selected document:', document);
   };
 
-  const handleApprovalAction = (
-    documentId: string,
-    approvalId: string,
-    action: 'approve' | 'reject'
-  ) => {
-    console.log(`${action} document ${documentId}`);
+  const handleApprovalAction = () => {
+    // console.log(`${action} document ${documentId}`);
     setRefreshKey((prev) => prev + 1);
   };
 
@@ -133,8 +108,8 @@ export default function DocumentManagementPage() {
           <DocumentList
             key={refreshKey}
             onSelectDocument={handleSelectDocument}
-            onEditDocument={(id) => console.log('Edit:', id)}
-            onApproveDocument={(id) => setActiveTab('approvals')}
+            onEditDocument={() => console.log('Edit')}
+            onApproveDocument={() => setActiveTab('approvals')}
           />
         )}
 

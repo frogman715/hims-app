@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/Button';
 
 interface Audit {
@@ -22,7 +21,6 @@ interface CreateAuditFormProps {
 }
 
 export default function CreateAuditForm({ audit, onSuccess }: CreateAuditFormProps) {
-  const { data: session } = useSession();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
