@@ -102,11 +102,6 @@ async function fillExcelForm(filePath: string, crewData: Crew): Promise<Buffer> 
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-async function fillWordForm(filePath: string, _crewData: Crew): Promise<Buffer> {
-  try {
-    // TODO: Implement Word form filling logic similar to Excel
-    // For now, return original file
 async function fillWordForm(filePath: string, crewData: Crew): Promise<Buffer> {
   try {
     // TODO: Implement Word document filling with crew data similar to fillExcelForm
