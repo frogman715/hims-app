@@ -76,11 +76,12 @@ export async function GET(
         id: assignment.id,
         rank: assignment.rank,
         signOnDate: assignment.startDate,
-        signOffPlan: assignment.endDate || assignment.startDate, // Use endDate as signOffPlan, fallback to startDate
-        signOffDate: assignment.endDate,
+        signOffPlan: assignment.endDate || assignment.startDate, // Use endDate as plan, fallback needed for UI
+        signOffDate: assignment.endDate, // Actual sign-off date (can be null if still onboard)
         status: assignment.status,
         vessel: assignment.vessel,
         principal: assignment.principal,
+        remarks: assignment.remarks,
       })),
     };
 
