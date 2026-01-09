@@ -128,10 +128,17 @@ export async function resetRateLimit(identifier: string): Promise<void> {
 }
 
 /**
+ * Default rate limit for status queries
+ * Can be overridden per endpoint
+ */
+const DEFAULT_RATE_LIMIT = 60;
+
+/**
  * Get current rate limit status for an identifier
  */
 export async function getRateLimitStatus(
-  identifier: string
+  identifier: string,
+  limit: number = DEFAULT_RATE_LIMIT
 ): Promise<{ count: number; limit: number; remaining: number } | null> {
   if (!redisAvailable || !redisClient) {
     return null; // In-memory doesn't support status queries
@@ -142,8 +149,6 @@ export async function getRateLimitStatus(
     const currentCount = await redisClient.get(key);
     const count = currentCount ? parseInt(currentCount) : 0;
     
-    // This is a simplified version - in production you'd want to track the limit per key
-    const limit = 60; // Default limit
     const remaining = Math.max(0, limit - count);
     
     return { count, limit, remaining };

@@ -8,9 +8,10 @@ import { distributedRateLimit } from "@/lib/rate-limit-redis";
 import { env } from "@/lib/env";
 
 /**
- * Request size limit (10MB by default)
+ * Request size limit (configurable via environment variable)
+ * Default: 10MB
  */
-const MAX_REQUEST_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_REQUEST_SIZE = parseInt(process.env.MAX_REQUEST_SIZE || '10485760'); // 10MB default
 
 /**
  * Check request size to prevent oversized payloads
@@ -20,7 +21,7 @@ async function validateRequestSize(req: NextRequest): Promise<void> {
   if (contentLength && parseInt(contentLength) > MAX_REQUEST_SIZE) {
     throw new ApiError(
       413,
-      "Request payload too large",
+      `Request payload too large. Maximum size: ${Math.floor(MAX_REQUEST_SIZE / 1024 / 1024)}MB`,
       "PAYLOAD_TOO_LARGE"
     );
   }

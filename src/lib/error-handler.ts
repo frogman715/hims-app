@@ -256,10 +256,15 @@ export function validateEmail(email: string): boolean {
 
 /**
  * Sanitize string input to prevent XSS
+ * Note: For production, consider using a dedicated library like DOMPurify
+ * This is a basic implementation for server-side sanitization
  */
 export function sanitizeString(input: string): string {
   return input
     .replace(/[<>]/g, "") // Remove < and > to prevent HTML injection
+    .replace(/['"]/g, "") // Remove quotes to prevent attribute injection
+    .replace(/javascript:/gi, "") // Remove javascript: protocol
+    .replace(/on\w+=/gi, "") // Remove event handlers
     .trim();
 }
 
