@@ -16,7 +16,7 @@ export default function Sidebar({ navigationItems }: SidebarProps) {
 
   const defaultNavItems: NavItem[] = [
     // ========== DASHBOARD ==========
-    { href: "/dashboard", label: "Dashboard", icon: "📊", group: "MAIN", module: ModuleName.crewing, requiredLevel: PermissionLevel.VIEW_ACCESS },
+    { href: "/dashboard", label: "Dashboard", icon: "📊", group: "MAIN", module: ModuleName.dashboard, requiredLevel: PermissionLevel.VIEW_ACCESS },
     
     // ========== CREWING OPERATIONS ==========
     { href: "/crewing", label: "Crewing Department", icon: "👥", group: "CREWING OPERATIONS", module: ModuleName.crewing, requiredLevel: PermissionLevel.VIEW_ACCESS },
