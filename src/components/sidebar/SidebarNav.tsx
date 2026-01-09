@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession as useSessionAuth } from "next-auth/react";
 import { hasPermission, ModuleName, PermissionLevel } from "@/lib/permissions";
+import { normalizeToUserRoles, isSystemAdmin } from "@/lib/type-guards";
 
 export interface NavItem {
   href: string;
@@ -28,22 +29,16 @@ export default function SidebarNav({ items }: SidebarNavProps) {
     if (!item.module) return true;
     
     // System admins see EVERYTHING - bypass all permission checks
-    if (session?.user?.isSystemAdmin) return true;
+    if (isSystemAdmin(session)) return true;
     
     // If session not loaded, show nothing to be safe
     if (!session?.user) return false;
     
-    // System admins have access to all menus
-    if (session.user.isSystemAdmin) return true;
-    
-    // Check permission - cast roles to UserRole array
-    const userRoles = (Array.isArray(session.user.roles) 
-      ? session.user.roles 
-      : [session.user.roles]) as string[];
+    // Normalize roles to ensure type safety
+    const userRoles = normalizeToUserRoles(session.user.roles);
     
     return hasPermission(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      userRoles as any,
+      userRoles,
       item.module,
       item.requiredLevel ?? PermissionLevel.VIEW_ACCESS
     );

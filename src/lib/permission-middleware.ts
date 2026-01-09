@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 import { UserRole, hasPermission, PermissionLevel, RolePermissionOverride } from '@/lib/permissions';
+import { normalizeToUserRoles, hasValidSession, isSystemAdmin } from '@/lib/type-guards';
 
 export { PermissionLevel };
 
@@ -62,9 +63,12 @@ export function withPermission(
         );
       }
 
-      // Check permission - pass all user roles
+      // Normalize roles to ensure type safety
+      const normalizedRoles = normalizeToUserRoles(user.roles);
+
+      // Check permission - pass normalized user roles
       const hasAccess = hasPermission(
-        user.roles as UserRole[],
+        normalizedRoles,
         module,
         requiredPermission,
         user.permissionOverrides ?? overrideList
@@ -145,9 +149,12 @@ export async function checkUserPermission(
       return { allowed: false, error: 'Invalid user session' };
     }
 
-    // Check permission using all user roles
+    // Normalize roles to ensure type safety
+    const normalizedRoles = normalizeToUserRoles(user.roles);
+
+    // Check permission using normalized user roles
     const hasAccess = hasPermission(
-      user.roles as UserRole[],
+      normalizedRoles,
       module,
       requiredPermission,
       user.permissionOverrides ?? overrideList
@@ -189,15 +196,22 @@ interface SessionUser {
 
 interface Session {
   user?: SessionUser;
+  expires?: string; // NextAuth Session requires expires field
 }
 
-// Simplified guard functions for API routes
+// Simplified guard functions for API routes with type safety
 export function checkPermission(session: Session | null, module: string, requiredLevel: PermissionLevel): boolean {
+  // System admins bypass all permission checks
+  if (isSystemAdmin(session)) return true;
+  
   if (!session?.user?.roles || session.user.roles.length === 0) return false;
 
-  // Check permission using all user roles
+  // Normalize roles to ensure type safety
+  const normalizedRoles = normalizeToUserRoles(session.user.roles);
+
+  // Check permission using normalized user roles
   const overrides = session.user.permissionOverrides;
-  return hasPermission(session.user.roles as UserRole[], module, requiredLevel, overrides);
+  return hasPermission(normalizedRoles, module, requiredLevel, overrides);
 }
 
 // Module-specific guard functions
