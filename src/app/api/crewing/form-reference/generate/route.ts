@@ -107,8 +107,15 @@ async function fillWordForm(filePath: string, _crewData: Crew): Promise<Buffer> 
   try {
     // TODO: Implement Word form filling logic similar to Excel
     // For now, return original file
+async function fillWordForm(filePath: string, crewData: Crew): Promise<Buffer> {
+  try {
+    // TODO: Implement Word document filling with crew data similar to fillExcelForm
+    // For now, return the original file as-is
+    // This will require docxtemplater or similar library for proper implementation
+    console.log('fillWordForm: Returning original Word file for crew:', crewData.fullName);
     return readFileSync(filePath);
-  } catch {
+  } catch (error) {
+    console.error("Error filling Word form:", error);
     return readFileSync(filePath);
   }
 }

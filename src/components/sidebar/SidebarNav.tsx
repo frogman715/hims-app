@@ -27,9 +27,8 @@ export default function SidebarNav({ items }: SidebarNavProps) {
     // If no module specified, always show (no permission check needed)
     if (!item.module) return true;
     
-    // Temporarily allow quality items to show for debugging
-    // TODO: Fix permission filtering logic
-    if (item.module === ModuleName.quality) return true;
+    // System admins see EVERYTHING - bypass all permission checks
+    if (session?.user?.isSystemAdmin) return true;
     
     // If session not loaded, show nothing to be safe
     if (!session?.user) return false;
@@ -76,32 +75,34 @@ export default function SidebarNav({ items }: SidebarNavProps) {
       <div className="h-px bg-white/10 my-2"></div>
 
       {/* Grouped Navigation Items */}
-      {Object.entries(groupedItems).map(([group, groupItems]) => (
-        <div key={group} className="pt-1">
-          <div className="px-3 py-1.5 text-xs font-bold text-white/50 uppercase tracking-wider">
-            {group}
+      {Object.entries(groupedItems)
+        .filter(([group]) => group !== "MAIN") // Exclude MAIN group since Dashboard is hardcoded above
+        .map(([group, groupItems]) => (
+          <div key={group} className="pt-1">
+            <div className="px-3 py-1.5 text-xs font-bold text-white/50 uppercase tracking-wider">
+              {group}
+            </div>
+            <div className="space-y-1 pl-1">
+              {groupItems.map((item, index) => {
+                const isActive = pathname.startsWith(item.href);
+                return (
+                  <Link
+                    key={index}
+                    href={item.href}
+                    className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all duration-200 border border-transparent text-sm font-medium ${
+                      isActive
+                        ? "bg-white text-slate-900 shadow-md hover:border-blue-200"
+                        : "bg-blue-500/20 text-white/90 hover:bg-blue-500/35 hover:text-white"
+                    }`}
+                  >
+                    <span className="text-lg">{item.icon}</span>
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
           </div>
-          <div className="space-y-1 pl-1">
-            {groupItems.map((item, index) => {
-              const isActive = pathname.startsWith(item.href);
-              return (
-                <Link
-                  key={index}
-                  href={item.href}
-                  className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all duration-200 border border-transparent text-sm font-medium ${
-                    isActive
-                      ? "bg-white text-slate-900 shadow-md hover:border-blue-200"
-                      : "bg-blue-500/20 text-white/90 hover:bg-blue-500/35 hover:text-white"
-                  }`}
-                >
-                  <span className="text-lg">{item.icon}</span>
-                  <span>{item.label}</span>
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-      ))}
+        ))}
     </nav>
   );
 }

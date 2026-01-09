@@ -21,6 +21,9 @@ export default function DocumentManagementPage() {
 
   // Distribute Modal
   const [showDistributeModal, setShowDistributeModal] = useState(false);
+  const [selectedDocumentId, setSelectedDocumentId] = useState<string>('');
+  const [selectedDocumentTitle, setSelectedDocumentTitle] = useState<string>('');
+  const [selectedDocCode, setSelectedDocCode] = useState<string>('');
 
   // Acknowledge Modal
   const [showAcknowledgeModal, setShowAcknowledgeModal] = useState(false);

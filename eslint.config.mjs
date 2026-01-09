@@ -14,9 +14,13 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     "backup/**",
     ".next-backup-broken/**",
+    // Migrated from .eslintignore:
+    "scripts/**",
+    // Additional ignores:
+    "deploy/**",
   ]),
   {
-    files: ["scripts/**/*.js", "update-passwords.js"],
+    files: ["scripts/**/*.js", "update-passwords.js", "deploy/**/*.js", "ecosystem.config.js", "*.config.js"],
     rules: {
       "@typescript-eslint/no-require-imports": "off",
     },
