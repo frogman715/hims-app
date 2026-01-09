@@ -14,6 +14,8 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     "backup/**",
     ".next-backup-broken/**",
+    // Migrated from .eslintignore:
+    "scripts/**",
   ]),
   {
     files: ["scripts/**/*.js", "update-passwords.js"],
