@@ -44,6 +44,9 @@ export default function Sidebar({ navigationItems }: SidebarProps) {
     // ========== AUDIT & COMPLIANCE (NEW - POINT 4.3) ==========
     { href: "/audit", label: "Audit Management", icon: "📋", group: "AUDIT & COMPLIANCE", module: ModuleName.quality, requiredLevel: PermissionLevel.VIEW_ACCESS },
     { href: "/nonconformity", label: "Non-Conformities", icon: "⚠️", group: "AUDIT & COMPLIANCE", module: ModuleName.quality, requiredLevel: PermissionLevel.VIEW_ACCESS },
+
+    // ========== SYSTEM ADMINISTRATION ==========
+    { href: "/admin/system-health", label: "System Health", icon: "⚙️", group: "SYSTEM ADMINISTRATION", module: ModuleName.dashboard, requiredLevel: PermissionLevel.FULL_ACCESS },
   ];
 
   const navItems = navigationItems || defaultNavItems;

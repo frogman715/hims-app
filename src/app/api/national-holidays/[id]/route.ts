@@ -12,6 +12,21 @@ interface RouteParams {
 
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    if (!checkPermission(session, 'nationalHolidays', PermissionLevel.VIEW_ACCESS)) {
+      return NextResponse.json(
+        { error: 'Insufficient permissions' },
+        { status: 403 }
+      );
+    }
+
     const { id } = await params;
     const holiday = await prisma.nationalHoliday.findUnique({
       where: {

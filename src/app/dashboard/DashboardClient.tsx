@@ -175,6 +175,16 @@ const OFFICE_NAV_ITEMS: OfficeNavigationItem[] = [
     group: 'QUALITY & COMPLIANCE',
     requiredLevel: PermissionLevel.VIEW_ACCESS,
   },
+
+  // SYSTEM ADMINISTRATION
+  {
+    module: ModuleName.dashboard,
+    href: '/admin/system-health',
+    label: 'System Health',
+    icon: '⚙️',
+    group: 'SYSTEM ADMINISTRATION',
+    requiredLevel: PermissionLevel.FULL_ACCESS,
+  },
 ];
 
 const CREW_PORTAL_NAV_ITEMS: Array<{ href: string; label: string; icon: string }> = [
@@ -387,6 +397,7 @@ export default function DashboardClient() {
       'FINANCE & ADMINISTRATION',
       'HR & PERSONNEL',
       'QUALITY & COMPLIANCE',
+      'SYSTEM ADMINISTRATION',
       'OTHER',
     ];
 
