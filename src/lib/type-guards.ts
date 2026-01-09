@@ -96,9 +96,12 @@ export function getSessionPrimaryRole(session: Session | null): UserRole {
 
 /**
  * Type guard for system admin check
+ * Accepts any object with user.isSystemAdmin property
  */
-export function isSystemAdmin(session: { user?: { isSystemAdmin?: boolean } } | null): boolean {
-  return !!(session?.user && 'isSystemAdmin' in session.user && session.user.isSystemAdmin === true);
+export function isSystemAdmin(session: unknown): boolean {
+  if (!session || typeof session !== 'object') return false;
+  const s = session as { user?: { isSystemAdmin?: boolean } };
+  return !!(s.user && 'isSystemAdmin' in s.user && s.user.isSystemAdmin === true);
 }
 
 /**

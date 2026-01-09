@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
-import { UserRole, hasPermission, PermissionLevel, RolePermissionOverride } from '@/lib/permissions';
-import { normalizeToUserRoles, hasValidSession, isSystemAdmin } from '@/lib/type-guards';
+import { hasPermission, PermissionLevel, RolePermissionOverride } from '@/lib/permissions';
+import { normalizeToUserRoles, isSystemAdmin } from '@/lib/type-guards';
 
 export { PermissionLevel };
 
@@ -192,6 +192,7 @@ interface SessionUser {
   roles: string[];
   name?: string;
   permissionOverrides?: RolePermissionOverride[];
+  isSystemAdmin?: boolean; // Add this field
 }
 
 interface Session {
