@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+- **CRITICAL**: Updated actions/download-artifact from v4 to v4.1.3 to fix arbitrary file write vulnerability (CVE-2024-XXXX)
+- Pinned actions/upload-artifact to v4.4.3 for consistency and security
+
 ### Added
 - Comprehensive deployment guide in `docs/deployment/DEPLOYMENT.md`
 - New deployment helper script `deploy-helper.sh` with commands: setup, deploy, rollback, status, logs
