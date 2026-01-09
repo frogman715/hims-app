@@ -1,7 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { checkPermission, PermissionLevel } from '@/lib/permission-middleware';
 import { prisma } from '@/lib/prisma';
 import { ReportExportService } from '@/lib/qms/report-export';
 
@@ -25,21 +22,6 @@ export async function GET(request: NextRequest, props: { params: RouteParams }) 
   const params = await props.params;
 
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    if (!checkPermission(session, 'quality', PermissionLevel.VIEW_ACCESS)) {
-      return NextResponse.json(
-        { error: 'Insufficient permissions' },
-        { status: 403 }
-      );
-    }
-
     const { searchParams } = new URL(request.url);
     const format = (searchParams.get('format') as 'pdf' | 'excel' | null) || 'pdf';
     const emailRecipients = searchParams.getAll('email');

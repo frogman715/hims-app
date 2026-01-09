@@ -1,7 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { checkPermission, PermissionLevel } from '@/lib/permission-middleware';
 import { prisma } from '@/lib/prisma';
 import { EmailDistributionService } from '@/lib/qms/email-distribution';
 
@@ -16,21 +13,6 @@ export async function GET(request: NextRequest, props: { params: RouteParams }) 
   const params = await props.params;
 
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    if (!checkPermission(session, 'quality', PermissionLevel.VIEW_ACCESS)) {
-      return NextResponse.json(
-        { error: 'Insufficient permissions' },
-        { status: 403 }
-      );
-    }
-
     // Verify report exists
     const report = await prisma.qMSReport.findUnique({
       where: { id: params.id },
@@ -61,21 +43,6 @@ export async function POST(request: NextRequest, props: { params: RouteParams })
   const params = await props.params;
 
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    if (!checkPermission(session, 'quality', PermissionLevel.EDIT_ACCESS)) {
-      return NextResponse.json(
-        { error: 'Insufficient permissions' },
-        { status: 403 }
-      );
-    }
-
     const body = (await request.json()) as Record<string, unknown>;
     const { recipients, schedule, provider } = body;
 
