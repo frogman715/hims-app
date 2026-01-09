@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { checkPermission, principalsGuard, PermissionLevel } from "@/lib/permission-middleware";
+import { handleApiError, ApiError } from "@/lib/error-handler";
 
 export async function GET() {
   try {
@@ -37,11 +38,7 @@ export async function GET() {
 
     return NextResponse.json(principals);
   } catch (error) {
-    console.error("Error fetching principals:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
 
@@ -72,10 +69,7 @@ export async function POST(request: Request) {
     } = body;
 
     if (!name) {
-      return NextResponse.json(
-        { error: "Company name is required" },
-        { status: 400 }
-      );
+      throw new ApiError(400, "Company name is required", "VALIDATION_ERROR");
     }
 
     const principal = await prisma.principal.create({
@@ -96,11 +90,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(principal);
   } catch (error) {
-    console.error("Error creating principal:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
 
@@ -162,11 +152,7 @@ export async function PUT(request: Request) {
 
     return NextResponse.json(principal);
   } catch (error) {
-    console.error("Error updating principal:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
 
@@ -186,7 +172,7 @@ export async function DELETE(request: Request) {
     const id = url.pathname.split('/').pop();
 
     if (!id) {
-      return NextResponse.json({ error: "ID is required" }, { status: 400 });
+      throw new ApiError(400, "ID is required", "VALIDATION_ERROR");
     }
 
     await prisma.principal.delete({
@@ -195,10 +181,6 @@ export async function DELETE(request: Request) {
 
     return NextResponse.json({ message: "Principal deleted successfully" });
   } catch (error) {
-    console.error("Error deleting principal:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
