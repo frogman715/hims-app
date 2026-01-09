@@ -13,7 +13,7 @@ export default async function UserManagementPage() {
 
   // Only DIRECTOR and System Admins can access this page
   const hasAccess = 
-    session.user.roles.includes('DIRECTOR') || 
+    session.user.roles?.includes('DIRECTOR') || 
     session.user.isSystemAdmin;
 
   if (!hasAccess) {
