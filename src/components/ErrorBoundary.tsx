@@ -28,13 +28,30 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    // Detect authentication errors
+    const isAuthError = 
+      error.message.includes('authentication') ||
+      error.message.includes('session') ||
+      error.message.includes('unauthorized') ||
+      error.message.includes('login') ||
+      error.message.toLowerCase().includes('oauth');
+
     // Log to monitoring service in production
     console.error('[Error Boundary]', {
       error: error.message,
       stack: error.stack,
       componentStack: errorInfo.componentStack,
       timestamp: new Date().toISOString(),
+      isAuthError,
     });
+
+    // Redirect to login for auth errors
+    if (isAuthError && typeof window !== 'undefined') {
+      console.warn('[Error Boundary] Authentication error detected, redirecting to login');
+      setTimeout(() => {
+        window.location.href = '/auth/signin?error=SessionExpired';
+      }, 2000);
+    }
 
     this.setState({
       errorInfo: errorInfo.componentStack || undefined,
@@ -73,11 +90,17 @@ export class ErrorBoundary extends Component<Props, State> {
             </div>
 
             <h2 className="text-xl font-bold text-gray-900 text-center mb-2">
-              Oops! Something went wrong
+              {this.state.error?.message.toLowerCase().includes('auth') || 
+               this.state.error?.message.toLowerCase().includes('session')
+                ? 'Authentication Error'
+                : 'Oops! Something went wrong'}
             </h2>
 
             <p className="text-gray-600 text-center mb-4">
-              We encountered an unexpected error. Please try again.
+              {this.state.error?.message.toLowerCase().includes('auth') || 
+               this.state.error?.message.toLowerCase().includes('session')
+                ? 'Your session may have expired. Please log in again.'
+                : 'We encountered an unexpected error. Please try again.'}
             </p>
 
             {process.env.NODE_ENV === 'development' && this.state.error && (

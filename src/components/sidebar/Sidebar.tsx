@@ -48,8 +48,7 @@ export default function Sidebar({ navigationItems }: SidebarProps) {
     // ========== SYSTEM ADMINISTRATION ==========
     { href: "/admin/users", label: "User Management", icon: "👥", group: "SYSTEM ADMINISTRATION", module: ModuleName.dashboard, requiredLevel: PermissionLevel.FULL_ACCESS },
     { href: "/admin/roles", label: "Role Management", icon: "🔐", group: "SYSTEM ADMINISTRATION", module: ModuleName.dashboard, requiredLevel: PermissionLevel.FULL_ACCESS },
-    { href: "/admin/system-health", label: "System Health", icon: "⚙️", group: "SYSTEM ADMINISTRATION", module: ModuleName.dashboard, requiredLevel: PermissionLevel.FULL_ACCESS },
-    { href: "/admin/users", label: "User Management", icon: "👥", group: "SYSTEM ADMINISTRATION", module: ModuleName.dashboard, requiredLevel: PermissionLevel.FULL_ACCESS },
+    { href: "/admin/system-health", label: "System Health", icon: "💚", group: "SYSTEM ADMINISTRATION", module: ModuleName.dashboard, requiredLevel: PermissionLevel.FULL_ACCESS },
     { href: "/admin/settings", label: "System Settings", icon: "⚙️", group: "SYSTEM ADMINISTRATION", module: ModuleName.dashboard, requiredLevel: PermissionLevel.FULL_ACCESS },
     { href: "/admin/audit-logs", label: "Audit Logs", icon: "📜", group: "SYSTEM ADMINISTRATION", module: ModuleName.dashboard, requiredLevel: PermissionLevel.FULL_ACCESS },
     { href: "/admin/database", label: "Database Management", icon: "🗄️", group: "SYSTEM ADMINISTRATION", module: ModuleName.dashboard, requiredLevel: PermissionLevel.FULL_ACCESS },

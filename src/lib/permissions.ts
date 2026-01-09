@@ -129,6 +129,26 @@ function resolveRolePermission(
   return overrideLevel ?? fallbackLevel;
 }
 
+/**
+ * Gets the effective permission level for a user across multiple roles.
+ * 
+ * When a user has multiple roles, this function determines the highest
+ * permission level they have for a given module. This ensures users can
+ * access all functionality they're entitled to through any of their roles.
+ * 
+ * @param userRoles - Single role or array of roles for the user
+ * @param module - The module name to check
+ * @param overrides - Optional database-stored permission overrides
+ * @returns The highest permission level the user has for the module
+ * 
+ * @example
+ * ```typescript
+ * // User with HR and ACCOUNTING roles
+ * getEffectivePermissionLevel([UserRole.HR, UserRole.ACCOUNTING], 'contracts', null)
+ * // Returns FULL_ACCESS (from ACCOUNTING) even though HR only has VIEW_ACCESS
+ * ```
+ */
+
 export function getEffectivePermissionLevel(
   userRoles: UserRole | UserRole[],
   module: string,
@@ -480,6 +500,31 @@ export const SENSITIVITY_ACCESS_MATRIX: Record<UserRole, Record<DataSensitivity,
 // UTILITY FUNCTIONS
 // ==========================================
 
+/**
+ * Checks if a user (with given roles) has the required permission level for a module.
+ * 
+ * This is the main permission check function used throughout the application.
+ * It supports both single roles and multiple roles, taking the highest permission
+ * level when multiple roles are present.
+ * 
+ * @param userRoles - Single role or array of roles for the user
+ * @param module - The module name to check permissions for (e.g., 'crew', 'contracts')
+ * @param requiredLevel - The minimum permission level required (NO_ACCESS, VIEW_ACCESS, EDIT_ACCESS, FULL_ACCESS)
+ * @param overrides - Optional role-specific permission overrides from database
+ * @returns true if user has sufficient permission, false otherwise
+ * 
+ * @example
+ * ```typescript
+ * // Check if DIRECTOR has VIEW access to crew module
+ * hasPermission([UserRole.DIRECTOR], 'crew', PermissionLevel.VIEW_ACCESS) // true
+ * 
+ * // Check if CREW_PORTAL has FULL access to accounting
+ * hasPermission([UserRole.CREW_PORTAL], 'accounting', PermissionLevel.FULL_ACCESS) // false
+ * 
+ * // Check with multiple roles (takes highest permission)
+ * hasPermission([UserRole.HR, UserRole.ACCOUNTING], 'contracts', PermissionLevel.EDIT_ACCESS) // true
+ * ```
+ */
 export function hasPermission(
   userRoles: UserRole | UserRole[],
   module: string,
@@ -489,6 +534,26 @@ export function hasPermission(
   const effectiveLevel = getEffectivePermissionLevel(userRoles, module, overrides);
   return comparePermissionLevels(effectiveLevel, requiredLevel) >= 0;
 }
+
+/**
+ * Checks if a user has access to data with a specific sensitivity level.
+ * 
+ * Data sensitivity levels (RED, AMBER, GREEN) control access to sensitive information
+ * like medical records, salaries, and personal data.
+ * 
+ * @param userRoles - Single role or array of roles for the user
+ * @param sensitivity - The data sensitivity level (RED, AMBER, or GREEN)
+ * @returns true if user can access data at this sensitivity level
+ * 
+ * @example
+ * ```typescript
+ * // Check if HR can access RED (medical) data
+ * hasSensitivityAccess([UserRole.HR], DataSensitivity.RED) // true
+ * 
+ * // Check if OPERATIONAL can access RED data
+ * hasSensitivityAccess([UserRole.OPERATIONAL], DataSensitivity.RED) // false
+ * ```
+ */
 
 export function hasSensitivityAccess(
   userRoles: UserRole | UserRole[],
