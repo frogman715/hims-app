@@ -26,9 +26,9 @@ export default function DocumentManagementPage() {
   const [showAcknowledgeModal, setShowAcknowledgeModal] = useState(false);
 
   // Selected document for modals
-  const [selectedDocumentId, setSelectedDocumentId] = useState<string>('');
-  const [selectedDocumentTitle, setSelectedDocumentTitle] = useState<string>('');
-  const [selectedDocCode, setSelectedDocCode] = useState<string>('');
+  const [selectedDocumentId] = useState<string>('');
+  const [selectedDocumentTitle] = useState<string>('');
+  const [selectedDocCode] = useState<string>('');
 
   // Refresh trigger
   const [refreshKey, setRefreshKey] = useState(0);
