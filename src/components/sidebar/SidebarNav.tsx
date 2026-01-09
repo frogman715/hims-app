@@ -33,6 +33,9 @@ export default function SidebarNav({ items }: SidebarNavProps) {
     // If session not loaded, show nothing to be safe
     if (!session?.user) return false;
     
+    // System admins have access to all menus
+    if (session.user.isSystemAdmin) return true;
+    
     // Check permission - cast roles to UserRole array
     const userRoles = (Array.isArray(session.user.roles) 
       ? session.user.roles 
