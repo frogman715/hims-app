@@ -28,11 +28,6 @@ export default function DocumentManagementPage() {
   // Acknowledge Modal
   const [showAcknowledgeModal, setShowAcknowledgeModal] = useState(false);
 
-  // Selected document for modals
-  const [selectedDocumentId] = useState<string>('');
-  const [selectedDocumentTitle] = useState<string>('');
-  const [selectedDocCode] = useState<string>('');
-
   // Refresh trigger
   const [refreshKey, setRefreshKey] = useState(0);
 
