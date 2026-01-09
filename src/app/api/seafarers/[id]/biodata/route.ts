@@ -69,7 +69,22 @@ export async function GET(
       return NextResponse.json({ error: "Seafarer not found" }, { status: 404 });
     }
 
-    return NextResponse.json(crew);
+    // Transform assignments to match frontend interface expectations
+    const transformedCrew = {
+      ...crew,
+      assignments: crew.assignments.map(assignment => ({
+        id: assignment.id,
+        rank: assignment.rank,
+        signOnDate: assignment.startDate,
+        signOffPlan: assignment.endDate || assignment.startDate, // Use endDate as signOffPlan, fallback to startDate
+        signOffDate: assignment.endDate,
+        status: assignment.status,
+        vessel: assignment.vessel,
+        principal: assignment.principal,
+      })),
+    };
+
+    return NextResponse.json(transformedCrew);
   } catch (error) {
     console.error("Error fetching seafarer biodata:", error);
     return NextResponse.json(
