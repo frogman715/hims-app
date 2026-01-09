@@ -182,138 +182,41 @@ The system includes comprehensive models for:
 ## API Routes
 
 - `/api/auth/[...nextauth]` - Authentication
-## API Routes
-
-- `/api/auth/[...nextauth]` - Authentication
-- `/api/health` - Health check endpoint
 - Additional API routes for CRUD operations on each module
 
 ## Deployment
 
-For comprehensive deployment instructions, see [docs/deployment/DEPLOYMENT.md](docs/deployment/DEPLOYMENT.md).
-
-### Quick Start - VPS Deployment
-
-Use the deployment helper script:
-
+1. Build the application:
 ```bash
-# Setup environment
-export VPS_IP=your-vps-ip
-export VPS_USER=your-ssh-user
+npm run build
+```
 
-# Initial setup (first time only)
-bash deploy-helper.sh setup
-
-# Deploy application
-bash deploy-helper.sh deploy
-
-# Check status
-bash deploy-helper.sh status
+2. Start production server:
+```bash
+node .next/standalone/server.js
 ```
 
 ### Docker Deployment
 
-```bash
-# 1. Configure environment
-cp .env.docker.example .env.docker
-nano .env.docker  # Edit with your values
+1. Copy the template: `cp .env.docker.example .env.docker` and update the secrets.
+2. Build and start the stack: `docker compose up -d --build`.
+3. Apply migrations and seed accounts (inside the running container):
+	```bash
+	docker compose exec app node scripts/create-users.js
+	```
+4. Check health status: `docker compose ps` and `docker compose logs app`.
 
-# 2. Start containers
-docker-compose up -d --build
+The application will be available on [http://localhost:3000](http://localhost:3000). Adjust `NEXTAUTH_URL` in `.env.docker` when exposing the container behind a reverse proxy.
 
-# 3. Run migrations
-docker-compose exec app npx prisma migrate deploy
-
-# 4. Seed database
-docker-compose exec app npm run seed
-
-# 5. Check status
-docker-compose ps
-docker-compose logs -f app
-```
-
-### GitHub Actions CI/CD
-
-Automated deployment is configured via `.github/workflows/deploy.yml`:
-
-1. Push to `main` branch triggers automatic build and deployment
-2. Manual deployment via GitHub Actions UI
-3. Includes retry logic and health checks
-4. Build artifacts cached for faster deployments
-
-See [docs/deployment/DEPLOYMENT.md](docs/deployment/DEPLOYMENT.md) for setup instructions.
-
-## Documentation
-
-### Guides
-- [Getting Started](docs/guides/GETTING_STARTED.md) - Local development setup
-- [Seeding Guide](docs/guides/SEEDING_GUIDE.md) - Database initialization
-
-### Deployment
-- [Deployment Guide](docs/deployment/DEPLOYMENT.md) - Comprehensive deployment instructions
-- [Deployment Checklist](docs/deployment/DEPLOYMENT_CHECKLIST.md) - Pre-deployment verification
-
-### Reference
-- [Permission Matrix](docs/reference/PERMISSION_MATRIX.md) - RBAC rules and access levels
-- [Quick Reference](docs/reference/QUICK_REFERENCE.md) - Common commands and patterns
-- [Validation Rules](docs/reference/VALIDATION_RULES.md) - Input validation standards
-
-### Security
-- [Security Audit](docs/security/) - Security assessment reports
-
-## Project Structure
-
-```
-hims-app/
-├── src/
-│   ├── app/                    # Next.js App Router (pages & API routes)
-│   ├── components/             # Reusable React components
-│   ├── lib/                    # Core utilities (auth, RBAC, crypto)
-│   └── styles/                 # Global styles
-├── prisma/
-│   ├── schema.prisma           # Database schema (single source of truth)
-│   └── migrations/             # Migration history
-├── docs/
-│   ├── deployment/             # Deployment guides and checklists
-│   ├── guides/                 # User guides and tutorials
-│   ├── reference/              # Technical reference docs
-│   └── security/               # Security audits and findings
-├── public/                     # Static assets
-├── tests/                      # Test files and fixtures
-├── deploy-helper.sh            # Deployment helper script
-├── backup-uploads.sh           # Automated backup script
-├── monitor-disk.sh             # Disk monitoring script
-└── .github/workflows/          # CI/CD pipeline
-
-```
-
-## Maintenance Scripts
-
-Essential scripts for operations:
-
-- `deploy-helper.sh` - Comprehensive deployment helper
-- `backup-uploads.sh` - Automated uploads backup (schedule with cron)
-- `monitor-disk.sh` - Disk space monitoring (schedule with cron)
+> **Note**: Set `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` (32-byte base64) in every environment before building. Reuse the same key across deployments so server actions stay valid between restarts.
 
 ## Contributing
 
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Run tests and linting:
-   ```bash
-   npm run lint
-   npm run typecheck
-   npm run build
-   ```
+4. Run tests and linting
 5. Submit a pull request
-
-## Support
-
-For issues or questions:
-1. Check documentation in `docs/` folder
-2. Review [GitHub Issues](https://github.com/frogman715/hims-app/issues)
-3. Check application logs: `pm2 logs hims-app` (VPS) or `docker-compose logs -f app` (Docker)
 
 ## License
 
