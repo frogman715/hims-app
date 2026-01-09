@@ -47,6 +47,7 @@ export default function Sidebar({ navigationItems }: SidebarProps) {
 
     // ========== SYSTEM ADMINISTRATION ==========
     { href: "/admin/system-health", label: "System Health", icon: "⚙️", group: "SYSTEM ADMINISTRATION", module: ModuleName.dashboard, requiredLevel: PermissionLevel.FULL_ACCESS },
+    { href: "/admin/users", label: "User Management", icon: "👥", group: "SYSTEM ADMINISTRATION", module: ModuleName.dashboard, requiredLevel: PermissionLevel.FULL_ACCESS },
   ];
 
   const navItems = navigationItems || defaultNavItems;
