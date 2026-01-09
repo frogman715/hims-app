@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { checkPermission, PermissionLevel } from "@/lib/permission-middleware";
+import { handleApiError, ApiError } from "@/lib/error-handler";
 
 export async function GET(req: NextRequest) {
   try {
@@ -60,11 +61,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(contracts);
   } catch (error) {
-    console.error("Error fetching contracts:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
 
@@ -81,6 +78,12 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
+
+    // Validate required fields
+    if (!body.contractNumber || !body.crewId || !body.rank || !body.contractStart || !body.contractEnd) {
+      throw new ApiError(400, "Required fields are missing: contractNumber, crewId, rank, contractStart, contractEnd", "VALIDATION_ERROR");
+    }
+
     const {
       contractNumber,
       crewId,
@@ -103,13 +106,6 @@ export async function POST(request: Request) {
       specialAllowance,
       templateVersion
     } = body;
-
-    if (!contractNumber || !crewId || !rank || !contractStart || !contractEnd) {
-      return NextResponse.json(
-        { error: "Required fields are missing" },
-        { status: 400 }
-      );
-    }
 
     const contract = await prisma.employmentContract.create({
       data: {
@@ -139,10 +135,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json(contract);
   } catch (error) {
-    console.error("Error creating contract:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withPermission } from "@/lib/api-middleware";
 import { PermissionLevel } from "@/lib/permission-middleware";
+import { handleApiError, ApiError } from "@/lib/error-handler";
 enum CrewStatus {
   ACTIVE = "ACTIVE",
   INACTIVE = "INACTIVE",
@@ -105,11 +106,7 @@ export const GET = withPermission(
         },
       });
     } catch (error) {
-      console.error("Error fetching crews:", error);
-      return NextResponse.json(
-        { error: "Internal server error" },
-        { status: 500 }
-      );
+      return handleApiError(error);
     }
   }
 );
@@ -122,7 +119,7 @@ export const POST = withPermission(
       const payload = (await req.json()) as unknown;
 
       if (!isCreateCrewPayload(payload)) {
-        return NextResponse.json({ error: "Invalid crew payload" }, { status: 400 });
+        throw new ApiError(400, "Invalid crew payload", "VALIDATION_ERROR");
       }
 
       const crew = await prisma.crew.create({
@@ -136,11 +133,7 @@ export const POST = withPermission(
 
       return NextResponse.json(crew, { status: 201 });
     } catch (error) {
-      console.error("Error creating crew:", error);
-      return NextResponse.json(
-        { error: "Internal server error" },
-        { status: 500 }
-      );
+      return handleApiError(error);
     }
   }
 );

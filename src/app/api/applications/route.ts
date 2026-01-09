@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { checkPermission, applicationsGuard, PermissionLevel } from "@/lib/permission-middleware";
+import { handleApiError, ApiError } from "@/lib/error-handler";
 
 // Define ApplicationStatus enum locally since it's not in Prisma schema
 enum ApplicationStatus {
@@ -128,11 +129,7 @@ export async function GET(req: NextRequest) {
       total: applications.length
     });
   } catch (error) {
-    console.error("Error fetching applications:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
 
@@ -151,7 +148,7 @@ export async function POST(request: NextRequest) {
     const payload = (await request.json()) as unknown;
 
     if (!isCreateApplicationPayload(payload)) {
-      return NextResponse.json({ error: "Invalid application payload" }, { status: 400 });
+      throw new ApiError(400, "Invalid application payload", "VALIDATION_ERROR");
     }
 
     const normalizedDate = parseDate(payload.applicationDate) ?? new Date();
@@ -191,10 +188,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(application, { status: 201 });
   } catch (error) {
-    console.error("Error creating application:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }

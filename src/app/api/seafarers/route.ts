@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { checkPermission, PermissionLevel } from "@/lib/permission-middleware";
+import { handleApiError, ApiError } from "@/lib/error-handler";
 
 interface CreateSeafarerPayload {
   fullName: string;
@@ -109,11 +110,7 @@ export async function GET() {
 
     return NextResponse.json(seafarers);
   } catch (error) {
-    console.error("Error fetching seafarers:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
 
@@ -131,7 +128,7 @@ export async function POST(request: NextRequest) {
     const payload = (await request.json()) as unknown;
 
     if (!isCreateSeafarerPayload(payload)) {
-      return NextResponse.json({ error: "Invalid seafarer payload" }, { status: 400 });
+      throw new ApiError(400, "Invalid seafarer payload", "VALIDATION_ERROR");
     }
 
     const combinedAddress = [
@@ -176,10 +173,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(seafarer, { status: 201 });
   } catch (error) {
-    console.error("Error creating seafarer:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
