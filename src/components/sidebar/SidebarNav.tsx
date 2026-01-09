@@ -27,9 +27,8 @@ export default function SidebarNav({ items }: SidebarNavProps) {
     // If no module specified, always show (no permission check needed)
     if (!item.module) return true;
     
-    // Temporarily allow quality items to show for debugging
-    // TODO: Fix permission filtering logic
-    if (item.module === ModuleName.quality) return true;
+    // System admins see EVERYTHING - bypass all permission checks
+    if (session?.user?.isSystemAdmin) return true;
     
     // If session not loaded, show nothing to be safe
     if (!session?.user) return false;

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Image from "next/image";
 
 interface PhotoUploadProps {
   seafarerId: string;
@@ -83,10 +84,12 @@ export default function PhotoUpload({
       {/* Photo Display */}
       <div className="relative w-32 h-32 rounded-lg overflow-hidden bg-gray-100 border-2 border-gray-200">
         {preview ? (
-          <img
+          <Image
             src={preview}
             alt="Crew photo"
-            className="w-full h-full object-cover"
+            width={128}
+            height={128}
+            className="object-cover"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">

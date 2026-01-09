@@ -3,6 +3,7 @@
 import { Suspense, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
 
 function SignInForm() {
   const [email, setEmail] = useState("");
@@ -49,10 +50,12 @@ function SignInForm() {
           {/* Logo Section */}
           <div className="flex justify-center">
             <div className="h-28 w-28 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 p-2 flex items-center justify-center">
-              <img
+              <Image
                 src="/hanmarinereal.png"
                 alt="HANMARINE Global Indonesia"
-                className="h-24 w-24 object-contain drop-shadow-2xl"
+                width={96}
+                height={96}
+                className="object-contain drop-shadow-2xl"
               />
             </div>
           </div>
@@ -107,10 +110,12 @@ function SignInForm() {
           <div className="lg:hidden text-center mb-10 space-y-4">
             <div className="flex justify-center">
               <div className="h-20 w-20 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 p-2 flex items-center justify-center">
-                <img
+                <Image
                   src="/hanmarinereal.png"
                   alt="HANMARINE Global Indonesia"
-                  className="h-16 w-16 object-contain"
+                  width={64}
+                  height={64}
+                  className="object-contain"
                 />
               </div>
             </div>
