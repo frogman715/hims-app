@@ -102,10 +102,13 @@ async function fillExcelForm(filePath: string, crewData: Crew): Promise<Buffer> 
   }
 }
 
-async function fillWordForm(filePath: string): Promise<Buffer> {
+async function fillWordForm(filePath: string, crewData: Crew): Promise<Buffer> {
   try {
+    // TODO: Implement Word document filling with crew data
+    // For now, return the original file
     return readFileSync(filePath);
-  } catch {
+  } catch (error) {
+    console.error("Error filling Word form:", error);
     return readFileSync(filePath);
   }
 }

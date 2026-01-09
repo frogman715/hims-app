@@ -16,7 +16,7 @@ export default function Sidebar({ navigationItems }: SidebarProps) {
 
   const defaultNavItems: NavItem[] = [
     // ========== DASHBOARD ==========
-    { href: "/", label: "Dashboard", icon: "📊", group: "MAIN", module: ModuleName.crewing, requiredLevel: PermissionLevel.VIEW_ACCESS },
+    { href: "/dashboard", label: "Dashboard", icon: "📊", group: "MAIN", module: ModuleName.crewing, requiredLevel: PermissionLevel.VIEW_ACCESS },
     
     // ========== CREWING OPERATIONS ==========
     { href: "/crewing", label: "Crewing Department", icon: "👥", group: "CREWING OPERATIONS", module: ModuleName.crewing, requiredLevel: PermissionLevel.VIEW_ACCESS },
@@ -46,7 +46,12 @@ export default function Sidebar({ navigationItems }: SidebarProps) {
     { href: "/nonconformity", label: "Non-Conformities", icon: "⚠️", group: "AUDIT & COMPLIANCE", module: ModuleName.quality, requiredLevel: PermissionLevel.VIEW_ACCESS },
 
     // ========== SYSTEM ADMINISTRATION ==========
-    { href: "/admin/system-health", label: "System Health", icon: "⚙️", group: "SYSTEM ADMINISTRATION", module: ModuleName.dashboard, requiredLevel: PermissionLevel.FULL_ACCESS },
+    { href: "/admin/users", label: "User Management", icon: "👥", group: "SYSTEM ADMINISTRATION", requiredLevel: PermissionLevel.FULL_ACCESS },
+    { href: "/admin/roles", label: "Role Management", icon: "🔐", group: "SYSTEM ADMINISTRATION", requiredLevel: PermissionLevel.FULL_ACCESS },
+    { href: "/admin/system-health", label: "System Health", icon: "⚙️", group: "SYSTEM ADMINISTRATION", requiredLevel: PermissionLevel.FULL_ACCESS },
+    { href: "/admin/settings", label: "System Settings", icon: "⚙️", group: "SYSTEM ADMINISTRATION", requiredLevel: PermissionLevel.FULL_ACCESS },
+    { href: "/admin/audit-logs", label: "Audit Logs", icon: "📜", group: "SYSTEM ADMINISTRATION", requiredLevel: PermissionLevel.FULL_ACCESS },
+    { href: "/admin/database", label: "Database Management", icon: "🗄️", group: "SYSTEM ADMINISTRATION", requiredLevel: PermissionLevel.FULL_ACCESS },
   ];
 
   const navItems = navigationItems || defaultNavItems;
