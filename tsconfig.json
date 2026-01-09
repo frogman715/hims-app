@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "ES2017",
+    "target": "ES2020",
     "lib": [
       "dom",
       "dom.iterable",
@@ -17,6 +17,8 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
+    "forceConsistentCasingInFileNames": true,
+    "sourceMap": false,
     "plugins": [
       {
         "name": "next"
@@ -40,6 +42,10 @@
     "node_modules",
     "REFACTORED_EXAMPLE_contracts_route.ts",
     "**/*EXAMPLE*",
-    "scripts/**/*"
+    "scripts/**/*",
+    ".next",
+    "dist",
+    "build",
+    "out"
   ]
 }

@@ -32,6 +32,8 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
+!.env.docker.example
 
 # vercel
 .vercel
@@ -44,8 +46,32 @@ next-env.d.ts
 
 # local backups
 backup/
-*.md
+backups/
+*.backup
+*.sql
+
+# legacy/archived files
 _legacy/
 _tools/
-scripts/seed-*.ts
-scripts/seed-test.mjs
+archived/
+deprecated/
+
+# temporary build artifacts
+*.log
+.tmp/
+tmp/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Deployment artifacts
+pm2.log
+.pm2/
