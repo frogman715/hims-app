@@ -102,8 +102,10 @@ async function fillExcelForm(filePath: string, crewData: Crew): Promise<Buffer> 
   }
 }
 
-async function fillWordForm(filePath: string): Promise<Buffer> {
+async function fillWordForm(filePath: string, crewData: Crew): Promise<Buffer> {
   try {
+    // TODO: Implement Word form filling logic similar to Excel
+    // For now, return original file
     return readFileSync(filePath);
   } catch {
     return readFileSync(filePath);
