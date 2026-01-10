@@ -28,6 +28,20 @@ jobs:
 
       - name: Build application
         run: npm run build
+        env:
+          NODE_OPTIONS: "--max-old-space-size=4096"
+
+      - name: Create deployment archive
+        run: |
+          tar -czf deploy.tar.gz \
+            .next/standalone \
+            .next/static \
+            public \
+            prisma/schema.prisma \
+            package.json \
+            package-lock.json \
+            ecosystem.config.js \
+            deploy/config/pm2/ecosystem.config.js
 
       - name: Deploy to VPS
         env:
@@ -41,31 +55,37 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H $VPS_IP >> ~/.ssh/known_hosts
 
+          # Transfer deployment archive to VPS
+          scp -i ~/.ssh/id_rsa deploy.tar.gz $VPS_USER@$VPS_IP:/tmp/deploy.tar.gz
+
           # Execute deployment commands on VPS
           ssh -o ServerAliveInterval=30 -o ServerAliveCountMax=10 -o ConnectTimeout=30 -i ~/.ssh/id_rsa $VPS_USER@$VPS_IP << 'EOFSH'
           set -e
           cd /var/www/hims-app
 
-          # Pull latest code
-          git fetch origin
-          git reset --hard origin/main
+          # Backup current deployment
+          if [ -d ".next" ]; then
+            mv .next .next.backup.$(date +%Y%m%d_%H%M%S) || true
+          fi
 
-          # Install all dependencies (including dev for build)
-          npm install
+          # Extract new deployment
+          tar -xzf /tmp/deploy.tar.gz
+          rm /tmp/deploy.tar.gz
 
-          # Remove problematic config files that may cause parse errors
-          rm -f prisma.config.ts prisma/prisma.config.ts || true
+          # Verify .env file exists
+          if [ ! -f ".env" ]; then
+            echo "✗ Error: .env file not found on VPS"
+            echo "Please create .env file with required environment variables"
+            exit 1
+          fi
 
-          # Generate Prisma client
+          # Generate Prisma client for production
           npx prisma generate
-
-          # Build application
-          npm run build
 
           # Restart PM2
           pm2 delete hims-app || true
           pm2 start ecosystem.config.js
-          sleep 3
+          sleep 5
 
           # Health check
           if ! curl -f http://localhost:3000/api/health; then
@@ -73,6 +93,9 @@ jobs:
             pm2 logs hims-app --lines 50
             exit 1
           fi
+
+          # Clean up old backups (keep last 3)
+          ls -dt .next.backup.* 2>/dev/null | tail -n +4 | xargs rm -rf || true
 
           echo "✓ Deployment successful!"
           EOFSH
