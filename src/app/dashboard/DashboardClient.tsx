@@ -241,7 +241,12 @@ export default function DashboardClient() {
       try {
         const response = await fetch('/api/dashboard/stats', { cache: 'no-store' });
         if (!response.ok) {
-          throw new Error('Failed to load dashboard data');
+          if (response.status === 403) {
+            console.warn('Dashboard access denied - insufficient permissions');
+          } else if (response.status === 401) {
+            console.warn('Dashboard access denied - not authenticated');
+          }
+          throw new Error(`Failed to load dashboard data: ${response.status}`);
         }
 
         const payload = await response.json();
@@ -259,7 +264,13 @@ export default function DashboardClient() {
         setRecentActivity(Array.isArray(payload.recentActivity) ? payload.recentActivity : []);
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
-        setData(null);
+        // Set empty states to prevent undefined errors
+        setData({
+          totalCrew: 0,
+          activeVessels: 0,
+          pendingApplications: 0,
+          expiringDocuments: 0,
+        });
         setCrewMovement([]);
         setExpiringItems([]);
         setPendingTasks([]);
@@ -272,7 +283,12 @@ export default function DashboardClient() {
     if (status === 'authenticated') {
       loadDashboard();
     } else if (status === 'unauthenticated') {
-      setData(null);
+      setData({
+        totalCrew: 0,
+        activeVessels: 0,
+        pendingApplications: 0,
+        expiringDocuments: 0,
+      });
       setCrewMovement([]);
       setExpiringItems([]);
       setPendingTasks([]);
@@ -332,7 +348,15 @@ export default function DashboardClient() {
   }
 
   if (status === 'authenticated' && userRole === APP_ROLES.CREW_PORTAL) {
-    return null;
+    // Crew portal users should be redirected, but render nothing while redirecting
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-700">Redirecting...</h2>
+        </div>
+      </div>
+    );
   }
 
   const renderRoleBasedDashboard = () => {
