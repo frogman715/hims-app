@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { prisma } from '@/lib/prisma';
 import { authOptions } from '@/lib/auth';
+import { env } from '@/lib/env';
 import { getEmailServiceInstance } from '@/lib/email';
 import { createHGFEmailNotifications } from '@/lib/email/hgf-notifications';
 
@@ -96,7 +97,7 @@ export async function POST(
       const notifications = createHGFEmailNotifications({
         emailService,
         prisma,
-        appBaseUrl: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+        appBaseUrl: env.NEXTAUTH_URL || 'http://localhost:3000',
       });
 
       // Send approval notification email to crew

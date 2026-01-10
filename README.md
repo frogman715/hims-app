@@ -213,6 +213,24 @@ The application will be available on [http://localhost:3000](http://localhost:30
 
 > **Note**: Set `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` (32-byte base64) in every environment before building. Reuse the same key across deployments so server actions stay valid between restarts.
 
+### Domain Setup & Production Deployment
+
+For production deployment with a custom domain (e.g., `https://app.hanmarine.co`):
+
+**📖 See [DOMAIN_SETUP_GUIDE.md](./DOMAIN_SETUP_GUIDE.md) for comprehensive setup instructions**
+
+Quick checklist:
+- ✅ Update `NEXTAUTH_URL` to your production domain (use `https://`)
+- ✅ Configure DNS A records pointing to your VPS
+- ✅ Setup Nginx reverse proxy with SSL (Let's Encrypt)
+- ✅ Generate unique production secrets (never reuse dev secrets)
+- ✅ Verify all environment variables are set correctly
+
+Common production deployment guides:
+- [VPS Deployment](./docs/deployment/DEPLOY_TO_VPS.md)
+- [Niagahoster/Hostinger](./docs/deployment/DEPLOYMENT_PRODUCTION_NIAGAHOSTER.md)
+- [General Production Guide](./docs/deployment/DEPLOYMENT_PRODUCTION_GUIDE.md)
+
 ## Contributing
 
 1. Fork the repository
