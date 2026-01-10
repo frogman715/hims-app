@@ -200,7 +200,9 @@ HIMS_CRYPTO_KEY="GENERATE_WITH_openssl_rand_base64_32"
 
 # App
 NODE_ENV="production"
-NEXT_PUBLIC_APP_URL="https://app.hanmarine.co"
+
+# Note: NEXT_PUBLIC_APP_URL is deprecated, use NEXTAUTH_URL instead
+# NEXTAUTH_URL is already set above and serves as the primary domain configuration
 ```
 
 **Generate secrets**:

@@ -2161,7 +2161,7 @@ ADMIN_EMAIL="admin@hanmarine.com"
 
 # Application
 NODE_ENV="production"
-NEXT_PUBLIC_APP_URL="https://hims.hanmarine.com"
+# Note: NEXT_PUBLIC_APP_URL is deprecated, NEXTAUTH_URL (set above) is used instead
 ```
 
 ### 3.3 Database Setup

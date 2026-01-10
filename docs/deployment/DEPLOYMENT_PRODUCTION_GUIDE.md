@@ -67,7 +67,7 @@ HIMS_CRYPTO_KEY="GENERATE_NEW_KEY_32_CHARS_MINIMUM"
 
 # App
 NODE_ENV="production"
-NEXT_PUBLIC_APP_URL="https://your-domain.com"
+# Note: NEXT_PUBLIC_APP_URL is deprecated, NEXTAUTH_URL (set above) is used instead
 ```
 
 ### **4. Generate Production Secrets**
@@ -230,7 +230,7 @@ HIMS_CRYPTO_KEY="YOUR_GENERATED_KEY_FROM_OPENSSL"
 
 # App
 NODE_ENV="production"
-NEXT_PUBLIC_APP_URL="https://hims.yourdomain.com"
+# Note: NEXT_PUBLIC_APP_URL is deprecated, NEXTAUTH_URL (set above) is used instead
 ```
 
 ```bash
@@ -657,7 +657,7 @@ HIMS_CRYPTO_KEY="YOUR_ENCRYPTION_KEY_32_CHARS_MINIMUM"
 # APPLICATION
 # ====================
 NODE_ENV="production"
-NEXT_PUBLIC_APP_URL="https://hims.yourdomain.com"
+# Note: NEXT_PUBLIC_APP_URL is deprecated, NEXTAUTH_URL (set above) is used instead
 
 # ====================
 # OPTIONAL: Email (for notifications)
