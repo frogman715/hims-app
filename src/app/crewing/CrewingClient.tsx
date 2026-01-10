@@ -372,7 +372,7 @@ export default function CrewingClient() {
     "Ensure medical check results are valid for ≤ 12 months.",
     "Upload scan of passport and seaman book with high resolution.",
     "Confirm Letter Guarantee before ticket issuance.",
-    "Update emergency contact before crew sign-on.",,
+    "Update emergency contact before crew sign-on.",
   ];
 
   const moduleCategories: ModuleCategory[] = [
