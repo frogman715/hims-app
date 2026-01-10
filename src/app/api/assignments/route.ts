@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withPermission } from "@/lib/api-middleware";
 import { PermissionLevel } from "@/lib/permission-middleware";
+import { handleApiError, ApiError } from "@/lib/error-handler";
 
 export const GET = withPermission(
   "assignments",
@@ -45,11 +46,7 @@ export const GET = withPermission(
 
       return NextResponse.json(assignments);
     } catch (error) {
-      console.error("Error fetching assignments:", error);
-      return NextResponse.json(
-        { error: "Internal server error" },
-        { status: 500 }
-      );
+      return handleApiError(error);
     }
   }
 );
@@ -63,10 +60,7 @@ export const POST = withPermission(
       const { crewId, vesselId, principalId, rank, startDate, endDate } = body;
 
       if (!crewId || !vesselId || !principalId || !startDate) {
-        return NextResponse.json(
-          { error: "Crew, vessel, principal IDs, and start date are required" },
-          { status: 400 }
-        );
+        throw new ApiError(400, "Crew, vessel, principal IDs, and start date are required", "VALIDATION_ERROR");
       }
 
       const assignment = await prisma.assignment.create({
@@ -99,11 +93,7 @@ export const POST = withPermission(
 
       return NextResponse.json(assignment, { status: 201 });
     } catch (error) {
-      console.error("Error creating assignment:", error);
-      return NextResponse.json(
-        { error: "Internal server error" },
-        { status: 500 }
-      );
+      return handleApiError(error);
     }
   }
 );

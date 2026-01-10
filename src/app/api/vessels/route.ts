@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { checkPermission, vesselsGuard, PermissionLevel } from "@/lib/permission-middleware";
+import { handleApiError, ApiError } from "@/lib/error-handler";
 
 export async function GET() {
   try {
@@ -31,11 +32,7 @@ export async function GET() {
 
     return NextResponse.json(vessels);
   } catch (error) {
-    console.error("Error fetching vessels:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
 
@@ -64,10 +61,7 @@ export async function POST(request: Request) {
     } = body;
 
     if (!name) {
-      return NextResponse.json(
-        { error: "Name is required" },
-        { status: 400 }
-      );
+      throw new ApiError(400, "Vessel name is required", "VALIDATION_ERROR");
     }
 
     const vessel = await prisma.vessel.create({
@@ -85,10 +79,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json(vessel, { status: 201 });
   } catch (error) {
-    console.error("Error creating vessel:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
