@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { handleApiError, ApiError } from "@/lib/error-handler";
+import { handleApiError } from "@/lib/error-handler";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 
@@ -12,9 +12,10 @@ import crypto from "crypto";
  */
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
 
     if (!session) {
@@ -29,7 +30,7 @@ export async function POST(
 
     // Get user
     const user = await prisma.user.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: {
         id: true,
         name: true,
@@ -47,7 +48,7 @@ export async function POST(
 
     // Update user password
     await prisma.user.update({
-      where: { id: params.id },
+      where: { id },
       data: { password: hashedPassword },
     });
 

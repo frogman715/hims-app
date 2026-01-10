@@ -132,13 +132,8 @@ export default function EditUserModal({ isOpen, onClose, onUserUpdated, user, ca
             value={formData.role}
             onChange={(e) => setFormData({ ...formData, role: e.target.value })}
             required
-          >
-            {ROLES.map((role) => (
-              <option key={role.value} value={role.value}>
-                {role.label}
-              </option>
-            ))}
-          </Select>
+            options={ROLES}
+          />
         </div>
 
         {canSetSystemAdmin && (
@@ -159,7 +154,7 @@ export default function EditUserModal({ isOpen, onClose, onUserUpdated, user, ca
         <div className="flex justify-end gap-3 pt-4 border-t">
           <Button
             type="button"
-            variant="outline"
+            variant="secondary"
             onClick={onClose}
             disabled={loading}
           >

@@ -1,6 +1,20 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+
+interface AuditLogValues {
+  name?: string;
+  email?: string;
+  role?: string;
+  isSystemAdmin?: boolean;
+  [key: string]: unknown;
+}
+
+interface AuditLogMetadata {
+  newStatus?: string;
+  resetBy?: string;
+  [key: string]: unknown;
+}
 
 interface AuditLog {
   id: string;
@@ -14,9 +28,9 @@ interface AuditLog {
     email: string;
     role: string;
   };
-  oldValuesJson?: any;
-  newValuesJson?: any;
-  metadataJson?: any;
+  oldValuesJson?: AuditLogValues;
+  newValuesJson?: AuditLogValues;
+  metadataJson?: AuditLogMetadata;
 }
 
 interface AuditLogTableProps {
@@ -29,11 +43,7 @@ export default function AuditLogTable({ entityType = 'User', refreshTrigger }: A
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    fetchLogs();
-  }, [entityType, refreshTrigger]);
-
-  const fetchLogs = async () => {
+  const fetchLogs = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`/api/admin/audit-logs?entityType=${entityType}&limit=50`);
@@ -49,7 +59,11 @@ export default function AuditLogTable({ entityType = 'User', refreshTrigger }: A
     } finally {
       setLoading(false);
     }
-  };
+  }, [entityType]);
+
+  useEffect(() => {
+    fetchLogs();
+  }, [fetchLogs, refreshTrigger]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);

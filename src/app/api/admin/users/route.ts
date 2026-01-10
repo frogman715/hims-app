@@ -4,12 +4,13 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { handleApiError, ApiError, validateRequired } from "@/lib/error-handler";
 import bcrypt from "bcryptjs";
+import { Role } from "@prisma/client";
 
 /**
  * GET /api/admin/users
  * List all users (System Admin and DIRECTOR only)
  */
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     const session = await getServerSession(authOptions);
 
@@ -72,20 +73,25 @@ export async function POST(req: NextRequest) {
     validateRequired(role, "role");
     validateRequired(password, "password");
 
+    // Type checks and validation
+    if (typeof name !== 'string') {
+      throw new ApiError(400, "Name must be a string", "INVALID_NAME");
+    }
+
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    if (typeof email !== 'string' || !emailRegex.test(email)) {
       throw new ApiError(400, "Invalid email format", "INVALID_EMAIL");
     }
 
     // Validate password strength (minimum 6 characters)
-    if (password.length < 6) {
+    if (typeof password !== 'string' || password.length < 6) {
       throw new ApiError(400, "Password must be at least 6 characters", "WEAK_PASSWORD");
     }
 
     // Validate role
     const validRoles = ["DIRECTOR", "CDMO", "OPERATIONAL", "ACCOUNTING", "HR", "CREW_PORTAL", "QMR", "HR_ADMIN", "SECTION_HEAD", "STAFF"];
-    if (!validRoles.includes(role)) {
+    if (typeof role !== 'string' || !validRoles.includes(role)) {
       throw new ApiError(400, `Invalid role. Must be one of: ${validRoles.join(", ")}`, "INVALID_ROLE");
     }
 
@@ -101,7 +107,7 @@ export async function POST(req: NextRequest) {
       data: {
         name,
         email: email.toLowerCase(),
-        role,
+        role: role as Role,
         password: hashedPassword,
         isSystemAdmin: systemAdminValue,
         isActive: true,
