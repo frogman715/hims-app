@@ -81,8 +81,11 @@ bash scripts/verify-env.sh
 
 4. Install dependencies:
 ```bash
-npm install
+# Note: Use PUPPETEER_SKIP_DOWNLOAD if you encounter network issues
+PUPPETEER_SKIP_DOWNLOAD=true npm install
 ```
+
+> **Troubleshooting**: If you encounter errors during installation, see [TROUBLESHOOTING.md](./TROUBLESHOOTING.md)
 
 5. Start the database:
 ```bash
