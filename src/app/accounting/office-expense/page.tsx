@@ -199,7 +199,7 @@ export default function OfficeExpensePage() {
                   {expenses.length === 0 && (
                     <tr>
                       <td className="px-6 py-8 text-center text-gray-500" colSpan={5}>
-                        No expenses recorded yet. Click "Add Expense" to create your first entry.
+                        No expenses recorded yet. Click &quot;Add Expense&quot; to create your first entry.
                       </td>
                     </tr>
                   )}

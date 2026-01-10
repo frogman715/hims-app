@@ -34,9 +34,12 @@ export default function LeavePayPage() {
     if (!session) {
       router.push("/auth/signin");
     } else {
-      // Simulate loading data - replace with actual API call when available
-      setLoading(false);
-      setLeavePays([]);
+      const loadData = async () => {
+        // Simulate loading data - replace with actual API call when available
+        setLoading(false);
+        setLeavePays([]);
+      };
+      loadData();
     }
   }, [session, status, router]);
 
@@ -256,7 +259,7 @@ export default function LeavePayPage() {
               </div>
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
                 <p className="text-xs text-gray-700">
-                  <strong>Note:</strong> Ensure all leave pay calculations comply with the seafarer's contract terms 
+                  <strong>Note:</strong> Ensure all leave pay calculations comply with the seafarer&apos;s contract terms 
                   and applicable maritime regulations before processing payment.
                 </p>
               </div>
