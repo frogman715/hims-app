@@ -34,14 +34,25 @@ export default function LeavePayPage() {
     if (!session) {
       router.push("/auth/signin");
     } else {
-      const loadData = async () => {
-        // Simulate loading data - replace with actual API call when available
-        setLoading(false);
-        setLeavePays([]);
-      };
-      loadData();
+      fetchLeavePays();
     }
   }, [session, status, router]);
+
+  const fetchLeavePays = async () => {
+    try {
+      // TODO: Replace with actual API call when available
+      // const response = await fetch("/api/accounting/leave-pay");
+      // if (response.ok) {
+      //   const data = await response.json();
+      //   setLeavePays(data);
+      // }
+      setLeavePays([]);
+    } catch (error) {
+      console.error("Error fetching leave pays:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

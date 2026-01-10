@@ -38,14 +38,25 @@ export default function ExchangeExpensePage() {
     if (!session) {
       router.push("/auth/signin");
     } else {
-      const loadData = async () => {
-        // Simulate loading data - replace with actual API call when available
-        setLoading(false);
-        setExpenses([]);
-      };
-      loadData();
+      fetchExpenses();
     }
   }, [session, status, router]);
+
+  const fetchExpenses = async () => {
+    try {
+      // TODO: Replace with actual API call when available
+      // const response = await fetch("/api/accounting/exchange-expense");
+      // if (response.ok) {
+      //   const data = await response.json();
+      //   setExpenses(data);
+      // }
+      setExpenses([]);
+    } catch (error) {
+      console.error("Error fetching exchange expenses:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
