@@ -1,39 +1,135 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-import { redirect } from "next/navigation";
-import Link from "next/link";
+'use client';
 
-export default async function UserManagementPage() {
-  const session = await getServerSession(authOptions);
+import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import AddUserModal from '@/components/admin/AddUserModal';
+import EditUserModal from '@/components/admin/EditUserModal';
+import ResetPasswordModal from '@/components/admin/ResetPasswordModal';
+import AuditLogTable from '@/components/admin/AuditLogTable';
 
-  if (!session) {
-    redirect("/auth/signin");
-  }
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  isSystemAdmin: boolean;
+  isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
 
-  // Only DIRECTOR and System Admins can access this page
-  const hasAccess = 
-    session.user.roles?.includes('DIRECTOR') || 
-    session.user.isSystemAdmin;
+export default function UserManagementPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showResetPasswordModal, setShowResetPasswordModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [showAuditLogs, setShowAuditLogs] = useState(false);
+  const [auditLogRefresh, setAuditLogRefresh] = useState(0);
 
-  if (!hasAccess) {
-    redirect("/403");
-  }
-
-  // Get all users
-  const users = await prisma.user.findMany({
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      role: true,
-      isSystemAdmin: true,
-      isActive: true,
-    },
-    orderBy: {
-      name: 'asc'
+  // Check authentication and authorization
+  useEffect(() => {
+    if (status === 'loading') return;
+    
+    if (!session) {
+      router.push('/auth/signin');
+      return;
     }
-  });
+
+    const hasAccess = 
+      session.user.roles?.includes('DIRECTOR') || 
+      session.user.isSystemAdmin;
+
+    if (!hasAccess) {
+      router.push('/403');
+      return;
+    }
+
+    fetchUsers();
+  }, [session, status, router]);
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/admin/users');
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch users');
+      }
+
+      setUsers(data.users);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      alert('Failed to fetch users');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleToggleStatus = async (user: User) => {
+    const newStatus = !user.isActive;
+    const confirmMessage = newStatus 
+      ? `Are you sure you want to activate ${user.name}?`
+      : `Are you sure you want to deactivate ${user.name}? They will no longer be able to access the system.`;
+
+    if (!confirm(confirmMessage)) return;
+
+    try {
+      const response = await fetch(`/api/admin/users/${user.id}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ isActive: newStatus }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to update user status');
+      }
+
+      fetchUsers();
+      setAuditLogRefresh(prev => prev + 1);
+      alert(`User ${newStatus ? 'activated' : 'deactivated'} successfully`);
+    } catch (error) {
+      console.error('Error updating user status:', error);
+      alert(error instanceof Error ? error.message : 'Failed to update user status');
+    }
+  };
+
+  const handleUserAdded = () => {
+    fetchUsers();
+    setAuditLogRefresh(prev => prev + 1);
+  };
+
+  const handleUserUpdated = () => {
+    fetchUsers();
+    setAuditLogRefresh(prev => prev + 1);
+  };
+
+  const handlePasswordReset = () => {
+    setAuditLogRefresh(prev => prev + 1);
+  };
+
+  const canSetSystemAdmin = session?.user.isSystemAdmin || false;
+
+  if (status === 'loading' || loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -109,9 +205,18 @@ export default async function UserManagementPage() {
         </div>
 
         {/* Users Table */}
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200">
+        <div className="bg-white rounded-lg shadow-md overflow-hidden mb-8">
+          <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
             <h2 className="text-xl font-semibold text-gray-900">All Users</h2>
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-2 rounded-lg font-medium transition-all duration-300 shadow-lg hover:shadow-xl flex items-center space-x-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              <span>Add User</span>
+            </button>
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
@@ -131,6 +236,9 @@ export default async function UserManagementPage() {
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Admin
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
                   </th>
                 </tr>
               </thead>
@@ -175,6 +283,33 @@ export default async function UserManagementPage() {
                         <span className="text-gray-400">-</span>
                       )}
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                      <button
+                        onClick={() => {
+                          setSelectedUser(user);
+                          setShowEditModal(true);
+                        }}
+                        className="text-blue-600 hover:text-blue-900"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSelectedUser(user);
+                          setShowResetPasswordModal(true);
+                        }}
+                        className="text-yellow-600 hover:text-yellow-900"
+                      >
+                        Reset Password
+                      </button>
+                      <button
+                        onClick={() => handleToggleStatus(user)}
+                        className={user.isActive ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'}
+                        disabled={session?.user.id === user.id}
+                      >
+                        {user.isActive ? 'Deactivate' : 'Activate'}
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -182,34 +317,53 @@ export default async function UserManagementPage() {
           </div>
         </div>
 
-        {/* Note about future enhancements */}
-        <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-blue-800">
-                User Management Features
-              </h3>
-              <div className="mt-2 text-sm text-blue-700">
-                <p>
-                  This is a read-only view of system users. Future enhancements will include:
-                </p>
-                <ul className="list-disc list-inside mt-2 space-y-1">
-                  <li>Add new users</li>
-                  <li>Edit user roles and permissions</li>
-                  <li>Activate/deactivate users</li>
-                  <li>Reset user passwords</li>
-                  <li>Audit log of user activities</li>
-                </ul>
-              </div>
-            </div>
+        {/* Audit Logs Section */}
+        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+            <h2 className="text-xl font-semibold text-gray-900">Audit Logs</h2>
+            <button
+              onClick={() => setShowAuditLogs(!showAuditLogs)}
+              className="text-blue-600 hover:text-blue-900 font-medium"
+            >
+              {showAuditLogs ? 'Hide' : 'Show'} Logs
+            </button>
           </div>
+          {showAuditLogs && (
+            <div className="p-6">
+              <AuditLogTable entityType="User" refreshTrigger={auditLogRefresh} />
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Modals */}
+      <AddUserModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onUserAdded={handleUserAdded}
+        canSetSystemAdmin={canSetSystemAdmin}
+      />
+
+      <EditUserModal
+        isOpen={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setSelectedUser(null);
+        }}
+        onUserUpdated={handleUserUpdated}
+        user={selectedUser}
+        canSetSystemAdmin={canSetSystemAdmin}
+      />
+
+      <ResetPasswordModal
+        isOpen={showResetPasswordModal}
+        onClose={() => {
+          setShowResetPasswordModal(false);
+          setSelectedUser(null);
+        }}
+        onPasswordReset={handlePasswordReset}
+        user={selectedUser}
+      />
     </div>
   );
 }
