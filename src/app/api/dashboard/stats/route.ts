@@ -264,7 +264,94 @@ export async function GET() {
     // const complaints = await prisma.complaint.count();
     const complaints = 0;
 
-    const pendingTasks = pendingApplications + complaints;
+    // Transform pending tasks into array format expected by frontend
+    const pendingTasks: Array<{
+      dueDate: string;
+      type: string;
+      description: string;
+      status: string;
+    }> = [];
+
+    // Add applications as pending tasks
+    const pendingApps = await prisma.application.findMany({
+      where: { status: { in: ['RECEIVED', 'REVIEWING'] } },
+      include: {
+        crew: {
+          select: {
+            fullName: true
+          }
+        }
+      },
+      take: 5,
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+
+    pendingApps.forEach(app => {
+      pendingTasks.push({
+        dueDate: app.createdAt.toISOString(),
+        type: 'Application Review',
+        description: `Review application from ${app.crew.fullName}`,
+        status: 'OPEN'
+      });
+    });
+
+    // Crew Movement: Get recent assignments
+    const crewMovement: Array<{
+      seafarer: string;
+      rank: string;
+      principal: string;
+      vessel: string;
+      status: string;
+      nextAction: string;
+    }> = [];
+
+    const recentAssignments = await prisma.assignment.findMany({
+      where: {
+        status: { in: ['PLANNED', 'ONBOARD'] }
+      },
+      include: {
+        crew: {
+          select: {
+            fullName: true,
+            rank: true
+          }
+        },
+        vessel: {
+          select: {
+            name: true,
+            principal: {
+              select: {
+                name: true
+              }
+            }
+          }
+        }
+      },
+      take: 10,
+      orderBy: {
+        startDate: 'asc'
+      }
+    });
+
+    recentAssignments.forEach(assignment => {
+      crewMovement.push({
+        seafarer: assignment.crew.fullName,
+        rank: assignment.crew.rank || 'N/A',
+        principal: assignment.vessel.principal.name,
+        vessel: assignment.vessel.name,
+        status: assignment.status,
+        nextAction: assignment.status === 'PLANNED' ? 'Prepare for sign-on' : 'Onboard'
+      });
+    });
+
+    // Recent Activity: Placeholder for now
+    const recentActivity: Array<{
+      timestamp: string;
+      user: string;
+      action: string;
+    }> = [];
 
     // Count total crew and active vessels
     const totalCrew = await prisma.crew.count();
@@ -287,7 +374,9 @@ export async function GET() {
       crewOnboard: crewOnBoard,
       contractsExpiringSoon,
       expiringItems,
+      crewMovement,
       pendingTasks,
+      recentActivity,
     });
   } catch (error) {
     console.error("Error fetching dashboard stats:", error);
