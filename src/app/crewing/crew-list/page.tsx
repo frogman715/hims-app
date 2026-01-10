@@ -80,19 +80,19 @@ export default function CrewListPage() {
         // Add crew member data
         const crewMember = {
           id: assignment.id,
-          seafarerName: assignment.seafarer?.fullName || 'Unknown',
+          seafarerName: assignment.crew?.fullName || 'Unknown',
           rank: assignment.rank,
-          signOnDate: assignment.signOnDate,
-          signOffDate: assignment.signOffDate,
+          signOnDate: assignment.signOnDate || assignment.startDate,
+          signOffDate: assignment.signOffDate || assignment.endDate,
              status: assignment.status === 'ONBOARD' || assignment.status === 'ACTIVE' ? 'ONBOARD' :
                assignment.status === 'COMPLETED' ? 'DEPARTED' :
                assignment.status === 'PLANNED' || assignment.status === 'ASSIGNED' ? 'PLANNED' : 'UNKNOWN',
           vesselName,
           vesselId,
           // Additional data from related models
-          nationality: assignment.seafarer?.nationality || '',
-          documents: assignment.seafarer?.documents || [],
-          application: assignment.seafarer?.applications?.[0] || null
+          nationality: assignment.crew?.nationality || '',
+          documents: assignment.crew?.documents || [],
+          application: assignment.crew?.applications?.[0] || null
         };
 
         vesselData.crewMembers.push(crewMember);

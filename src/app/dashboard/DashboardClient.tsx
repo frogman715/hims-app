@@ -185,6 +185,14 @@ const OFFICE_NAV_ITEMS: OfficeNavigationItem[] = [
     group: 'SYSTEM ADMINISTRATION',
     requiredLevel: PermissionLevel.FULL_ACCESS,
   },
+  {
+    module: ModuleName.dashboard,
+    href: '/admin/users',
+    label: 'User Management',
+    icon: '👥',
+    group: 'SYSTEM ADMINISTRATION',
+    requiredLevel: PermissionLevel.FULL_ACCESS,
+  },
 ];
 
 const CREW_PORTAL_NAV_ITEMS: Array<{ href: string; label: string; icon: string }> = [
