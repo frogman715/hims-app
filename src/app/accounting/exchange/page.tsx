@@ -38,9 +38,12 @@ export default function ExchangeExpensePage() {
     if (!session) {
       router.push("/auth/signin");
     } else {
-      // Simulate loading data - replace with actual API call when available
-      setLoading(false);
-      setExpenses([]);
+      const loadData = async () => {
+        // Simulate loading data - replace with actual API call when available
+        setLoading(false);
+        setExpenses([]);
+      };
+      loadData();
     }
   }, [session, status, router]);
 
