@@ -10,9 +10,10 @@ import { handleApiError, ApiError } from "@/lib/error-handler";
  */
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
 
     if (!session) {
@@ -26,7 +27,7 @@ export async function PATCH(
     }
 
     // Prevent self-deactivation
-    if (session.user.id === params.id) {
+    if (session.user.id === id) {
       throw new ApiError(400, "Cannot deactivate your own account", "SELF_DEACTIVATE");
     }
 
@@ -38,7 +39,7 @@ export async function PATCH(
     }
 
     const user = await prisma.user.update({
-      where: { id: params.id },
+      where: { id },
       data: { isActive },
       select: {
         id: true,

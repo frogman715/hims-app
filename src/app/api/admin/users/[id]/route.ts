@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { handleApiError, ApiError, validateRequired } from "@/lib/error-handler";
-import bcrypt from "bcryptjs";
+import { handleApiError, ApiError } from "@/lib/error-handler";
+import { Role } from "@prisma/client";
 
 /**
  * GET /api/admin/users/[id]
@@ -11,9 +11,10 @@ import bcrypt from "bcryptjs";
  */
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
 
     if (!session) {
@@ -27,7 +28,7 @@ export async function GET(
     }
 
     const user = await prisma.user.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: {
         id: true,
         name: true,
@@ -56,9 +57,10 @@ export async function GET(
  */
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
 
     if (!session) {
@@ -73,7 +75,7 @@ export async function PUT(
 
     // Get existing user
     const existingUser = await prisma.user.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: {
         id: true,
         name: true,
@@ -108,7 +110,7 @@ export async function PUT(
     // Prepare update data
     const updateData: {
       name?: string;
-      role?: string;
+      role?: Role;
       isSystemAdmin?: boolean;
     } = {};
 
@@ -116,7 +118,7 @@ export async function PUT(
       updateData.name = name;
     }
     if (role && role !== existingUser.role) {
-      updateData.role = role;
+      updateData.role = role as Role;
     }
     if (canSetSystemAdmin && typeof isSystemAdmin === 'boolean' && isSystemAdmin !== existingUser.isSystemAdmin) {
       updateData.isSystemAdmin = systemAdminValue;
@@ -124,7 +126,7 @@ export async function PUT(
 
     // Update user
     const user = await prisma.user.update({
-      where: { id: params.id },
+      where: { id },
       data: updateData,
       select: {
         id: true,
@@ -169,9 +171,10 @@ export async function PUT(
  */
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
 
     if (!session) {
@@ -185,12 +188,12 @@ export async function DELETE(
     }
 
     // Prevent self-deletion
-    if (session.user.id === params.id) {
+    if (session.user.id === id) {
       throw new ApiError(400, "Cannot delete your own account", "SELF_DELETE");
     }
 
     const user = await prisma.user.update({
-      where: { id: params.id },
+      where: { id },
       data: { isActive: false },
       select: {
         id: true,

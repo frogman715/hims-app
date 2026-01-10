@@ -109,7 +109,7 @@ export default function ResetPasswordModal({ isOpen, onClose, onPasswordReset, u
             <div className="flex justify-end gap-3 pt-4 border-t">
               <Button
                 type="button"
-                variant="outline"
+                variant="secondary"
                 onClick={handleClose}
                 disabled={loading}
               >
@@ -159,7 +159,7 @@ export default function ResetPasswordModal({ isOpen, onClose, onPasswordReset, u
                 />
                 <Button
                   type="button"
-                  variant="outline"
+                  variant="secondary"
                   onClick={copyToClipboard}
                 >
                   Copy

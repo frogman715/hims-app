@@ -129,13 +129,8 @@ export default function AddUserModal({ isOpen, onClose, onUserAdded, canSetSyste
             value={formData.role}
             onChange={(e) => setFormData({ ...formData, role: e.target.value })}
             required
-          >
-            {ROLES.map((role) => (
-              <option key={role.value} value={role.value}>
-                {role.label}
-              </option>
-            ))}
-          </Select>
+            options={ROLES}
+          />
         </div>
 
         <div>
@@ -152,7 +147,7 @@ export default function AddUserModal({ isOpen, onClose, onUserAdded, canSetSyste
             />
             <Button
               type="button"
-              variant="outline"
+              variant="secondary"
               onClick={generatePassword}
             >
               Generate
@@ -179,7 +174,7 @@ export default function AddUserModal({ isOpen, onClose, onUserAdded, canSetSyste
         <div className="flex justify-end gap-3 pt-4 border-t">
           <Button
             type="button"
-            variant="outline"
+            variant="secondary"
             onClick={onClose}
             disabled={loading}
           >
