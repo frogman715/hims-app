@@ -201,11 +201,6 @@ export async function updateNonConformityStatus(
     data: updateData,
   });
 }
-      verifiedBy: { select: { id: true, name: true } },
-      correctiveActions: true,
-    },
-  });
-}
 
 export async function getNonConformityWithActions(ncId: string) {
   return prisma.nonConformity.findUnique({
