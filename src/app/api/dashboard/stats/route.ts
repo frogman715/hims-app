@@ -272,6 +272,11 @@ export async function GET() {
       status: string;
     }> = [];
 
+    // Helper function to calculate days until a date
+    const calculateDaysUntil = (targetDate: Date): number => {
+      return Math.ceil((targetDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+    };
+
     // Add applications as pending tasks
     const pendingApps = await prisma.application.findMany({
       where: { status: { in: ['RECEIVED', 'REVIEWING'] } },
@@ -312,7 +317,7 @@ export async function GET() {
     });
 
     upcomingAudits.forEach(audit => {
-      const daysUntil = Math.ceil((audit.startDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+      const daysUntil = calculateDaysUntil(audit.startDate);
       pendingTasks.push({
         dueDate: audit.startDate.toISOString(),
         type: 'Audit Scheduled',
@@ -343,11 +348,12 @@ export async function GET() {
     });
 
     openNonConformities.forEach(nc => {
-      const daysUntil = Math.ceil((nc.targetDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+      const daysUntil = calculateDaysUntil(nc.targetDate);
+      const assignedToName = nc.assignedTo?.name ?? 'Unassigned';
       pendingTasks.push({
         dueDate: nc.targetDate.toISOString(),
         type: 'Non-Conformity',
-        description: `${nc.ncNumber}: ${nc.description.substring(0, 80)}${nc.description.length > 80 ? '...' : ''} (Assigned: ${nc.assignedTo.name})`,
+        description: `${nc.ncNumber}: ${nc.description.substring(0, 80)}${nc.description.length > 80 ? '...' : ''} (Assigned: ${assignedToName})`,
         status: nc.status === 'IN_PROGRESS' ? 'IN_PROGRESS' : 'OPEN'
       });
     });
