@@ -16,6 +16,34 @@ export class ApiError extends Error {
 }
 
 /**
+ * Detect if an error is related to authentication/session
+ * 
+ * Note: Uses string matching on error messages as NextAuth and Prisma
+ * don't always provide specific error types/codes for authentication failures.
+ * This is a pragmatic approach that catches common auth error scenarios.
+ * 
+ * Future enhancement: If NextAuth/Prisma add error codes, migrate to code-based detection.
+ */
+function isAuthenticationError(error: unknown): boolean {
+  if (!error || typeof error !== "object") {
+    return false;
+  }
+
+  const err = error as Record<string, unknown>;
+  const message = String(err.message || "").toLowerCase();
+
+  return (
+    message.includes("authentication") ||
+    message.includes("session") ||
+    message.includes("unauthorized") ||
+    message.includes("nextauth") ||
+    message.includes("signin") ||
+    message.includes("token") ||
+    (err.name === "PrismaClientInitializationError" && message.includes("authentication"))
+  );
+}
+
+/**
  * Centralized error handler for API routes
  * Provides consistent error responses and logging
  */
@@ -25,7 +53,19 @@ export function handleApiError(error: unknown): NextResponse {
     error: error instanceof Error ? error.message : String(error),
     stack: error instanceof Error ? error.stack : undefined,
     timestamp: new Date().toISOString(),
+    isAuthError: isAuthenticationError(error),
   });
+
+  // Handle authentication errors
+  if (isAuthenticationError(error)) {
+    return NextResponse.json(
+      {
+        error: "Authentication required. Please sign in again.",
+        code: "AUTHENTICATION_ERROR",
+      },
+      { status: 401 }
+    );
+  }
 
   // Handle custom ApiError
   if (error instanceof ApiError) {
@@ -75,6 +115,20 @@ export function handleApiError(error: unknown): NextResponse {
       return NextResponse.json(
         { error: "Invalid data provided", code: "VALIDATION_ERROR" },
         { status: 400 }
+      );
+    }
+
+    // Check for database connection errors
+    if (
+      err.name === "PrismaClientInitializationError" ||
+      err.name === "PrismaClientRustPanicError"
+    ) {
+      return NextResponse.json(
+        {
+          error: "Database service temporarily unavailable",
+          code: "DATABASE_UNAVAILABLE",
+        },
+        { status: 503 }
       );
     }
   }
@@ -130,4 +184,22 @@ export function validatePagination(limit?: string, offset?: string) {
   const safeLimit = Math.min(parsedLimit, 100);
 
   return { limit: safeLimit, offset: parsedOffset };
+}
+
+/**
+ * Helper to handle session errors gracefully in API routes
+ */
+export function handleSessionError(context: string): NextResponse {
+  console.error("[API Error] Session error", {
+    context,
+    timestamp: new Date().toISOString(),
+  });
+
+  return NextResponse.json(
+    {
+      error: "Your session has expired. Please sign in again.",
+      code: "SESSION_EXPIRED",
+    },
+    { status: 401 }
+  );
 }

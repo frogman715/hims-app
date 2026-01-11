@@ -11,30 +11,52 @@ interface State {
   hasError: boolean;
   error?: Error;
   errorInfo?: string;
+  /** Number of consecutive errors for retry limiting (max 3 attempts) */
+  errorCount: number;
 }
+
+// Constants for error recovery behavior
+const MAX_RETRY_ATTEMPTS = 3;
+const RETRY_DELAY_MS = 3000;
+const AUTH_ERROR_REDIRECT_DELAY_MS = 2000;
 
 /**
  * Error Boundary component to catch React errors and prevent full app crashes
  * Wrap this around page sections or the entire app
+ * Enhanced with retry logic and better error recovery
  */
 export class ErrorBoundary extends Component<Props, State> {
+  private retryTimeout?: NodeJS.Timeout;
+
   constructor(props: Props) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { hasError: false, errorCount: 0 };
   }
 
-  static getDerivedStateFromError(error: Error): State {
+  static getDerivedStateFromError(error: Error): Partial<State> {
     return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    // Increment error count for rate limiting recovery attempts
+    this.setState((prev) => ({ errorCount: prev.errorCount + 1 }));
+
     // Detect authentication errors
     const isAuthError = 
       error.message.includes('authentication') ||
       error.message.includes('session') ||
       error.message.includes('unauthorized') ||
+      error.message.includes('requireUser') ||
       error.message.includes('login') ||
-      error.message.toLowerCase().includes('oauth');
+      error.message.toLowerCase().includes('oauth') ||
+      error.message.includes('NEXT_REDIRECT');
+
+    // Detect database/connection errors (may be transient)
+    const isDatabaseError = 
+      error.message.includes('prisma') ||
+      error.message.includes('database') ||
+      error.message.includes('ECONNREFUSED') ||
+      error.message.includes('connection');
 
     // Log to monitoring service in production
     console.error('[Error Boundary]', {
@@ -43,14 +65,24 @@ export class ErrorBoundary extends Component<Props, State> {
       componentStack: errorInfo.componentStack,
       timestamp: new Date().toISOString(),
       isAuthError,
+      isDatabaseError,
+      errorCount: this.state.errorCount,
     });
 
-    // Redirect to login for auth errors
+    // For transient errors (like database connection issues), attempt auto-recovery
+    if (isDatabaseError && this.state.errorCount < MAX_RETRY_ATTEMPTS) {
+      console.warn(`[Error Boundary] Transient error detected, will auto-retry in ${RETRY_DELAY_MS}ms`);
+      this.retryTimeout = setTimeout(() => {
+        this.handleReset();
+      }, RETRY_DELAY_MS);
+    }
+
+    // Redirect to login for auth errors (after showing message briefly)
     if (isAuthError && typeof window !== 'undefined') {
-      console.warn('[Error Boundary] Authentication error detected, redirecting to login');
-      setTimeout(() => {
+      console.warn(`[Error Boundary] Authentication error detected, redirecting to login in ${AUTH_ERROR_REDIRECT_DELAY_MS}ms`);
+      this.retryTimeout = setTimeout(() => {
         window.location.href = '/auth/signin?error=SessionExpired';
-      }, 2000);
+      }, AUTH_ERROR_REDIRECT_DELAY_MS);
     }
 
     this.setState({
@@ -58,8 +90,26 @@ export class ErrorBoundary extends Component<Props, State> {
     });
   }
 
+  componentWillUnmount() {
+    // Clean up timeout on unmount
+    if (this.retryTimeout) {
+      clearTimeout(this.retryTimeout);
+    }
+  }
+
   handleReset = () => {
+    // Clear timeout if manual reset
+    if (this.retryTimeout) {
+      clearTimeout(this.retryTimeout);
+    }
     this.setState({ hasError: false, error: undefined, errorInfo: undefined });
+  };
+
+  handleReload = () => {
+    // Full page reload for persistent errors
+    if (typeof window !== 'undefined') {
+      window.location.reload();
+    }
   };
 
   render() {
@@ -68,6 +118,16 @@ export class ErrorBoundary extends Component<Props, State> {
       if (this.props.fallback) {
         return this.props.fallback;
       }
+
+      const isAuthError = 
+        this.state.error?.message.includes('authentication') ||
+        this.state.error?.message.includes('session') ||
+        this.state.error?.message.includes('unauthorized');
+
+      const isDatabaseError = 
+        this.state.error?.message.includes('prisma') ||
+        this.state.error?.message.includes('database') ||
+        this.state.error?.message.includes('connection');
 
       // Default error UI
       return (
@@ -90,17 +150,27 @@ export class ErrorBoundary extends Component<Props, State> {
             </div>
 
             <h2 className="text-xl font-bold text-gray-900 text-center mb-2">
-              {this.state.error?.message.toLowerCase().includes('auth') || 
-               this.state.error?.message.toLowerCase().includes('session')
+              {isAuthError
                 ? 'Authentication Error'
+                : isDatabaseError
+                ? 'Connection Error'
                 : 'Oops! Something went wrong'}
             </h2>
 
             <p className="text-gray-600 text-center mb-4">
-              {this.state.error?.message.toLowerCase().includes('auth') || 
-               this.state.error?.message.toLowerCase().includes('session')
-                ? 'Your session may have expired. Please log in again.'
-                : 'We encountered an unexpected error. Please try again.'}
+              {isAuthError ? (
+                <>
+                  Your session may have expired. Redirecting to sign in...
+                </>
+              ) : isDatabaseError ? (
+                <>
+                  {this.state.errorCount < 3
+                    ? 'Temporary connection issue. Retrying...'
+                    : 'Unable to connect to the database. Please check your connection and try again.'}
+                </>
+              ) : (
+                'We encountered an unexpected error. Please try again.'
+              )}
             </p>
 
             {process.env.NODE_ENV === 'development' && this.state.error && (
@@ -121,20 +191,25 @@ export class ErrorBoundary extends Component<Props, State> {
               </div>
             )}
 
-            <div className="flex gap-3">
-              <button
-                onClick={this.handleReset}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-              >
-                Try Again
-              </button>
-              <button
-                onClick={() => window.location.href = '/dashboard'}
-                className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition"
-              >
-                Go to Dashboard
-              </button>
-            </div>
+            {!isAuthError && (
+              <div className="flex gap-3">
+                <button
+                  onClick={this.handleReset}
+                  disabled={isDatabaseError && this.state.errorCount < MAX_RETRY_ATTEMPTS}
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isDatabaseError && this.state.errorCount < MAX_RETRY_ATTEMPTS ? 'Retrying...' : 'Try Again'}
+                </button>
+                {this.state.errorCount >= MAX_RETRY_ATTEMPTS && (
+                  <button
+                    onClick={this.handleReload}
+                    className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition"
+                  >
+                    Reload Page
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         </div>
       );
