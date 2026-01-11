@@ -1,0 +1,41 @@
+[Unit]
+Description=HIMS - Hanmarine Integrated Management System
+Documentation=https://github.com/frogman715/hims-app
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=hanmarine
+Group=hanmarine
+WorkingDirectory=/home/hanmarine/hims-app
+Environment="NODE_ENV=production"
+Environment="PORT=3000"
+
+# Load environment variables from .env.production file
+EnvironmentFile=/home/hanmarine/hims-app/.env.production
+
+# Start the Next.js standalone server
+ExecStart=/usr/bin/node /home/hanmarine/hims-app/.next/standalone/server.js
+
+# Restart policy
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=hims-app
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/hanmarine/hims-app/public/uploads
+ReadWritePaths=/home/hanmarine/hims-app/.next
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=4096
+
+[Install]
+WantedBy=multi-user.target
