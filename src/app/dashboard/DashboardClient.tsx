@@ -773,7 +773,14 @@ function PendingTasksSection({ tasks, className = '' }: { tasks: PendingTask[]; 
     <section className={`surface-card p-6 ${className}`}>
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-lg font-semibold text-slate-900">Pending Tasks</h3>
+          <h3 className="text-lg font-semibold text-slate-900">
+            Pending Tasks
+            {tasks.length > 0 && (
+              <span className="ml-2 inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-semibold text-blue-800">
+                {tasks.length}
+              </span>
+            )}
+          </h3>
           <p className="text-sm text-slate-600">Operational, audit, and compliance follow ups</p>
         </div>
         <Link href="/quality" className="text-sm font-semibold text-blue-600 hover:text-blue-700">

@@ -297,6 +297,67 @@ export async function GET() {
       });
     });
 
+    // Add scheduled audits as pending tasks
+    const upcomingAudits = await prisma.auditSchedule.findMany({
+      where: {
+        status: { in: ['SCHEDULED', 'IN_PROGRESS'] },
+        startDate: {
+          lte: new Date(new Date().getTime() + 30 * 24 * 60 * 60 * 1000) // Within 30 days
+        }
+      },
+      take: 5,
+      orderBy: {
+        startDate: 'asc'
+      }
+    });
+
+    upcomingAudits.forEach(audit => {
+      const daysUntil = Math.ceil((audit.startDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+      pendingTasks.push({
+        dueDate: audit.startDate.toISOString(),
+        type: 'Audit Scheduled',
+        description: `${audit.title} - ${audit.auditType}${daysUntil > 0 ? ` (in ${daysUntil} days)` : ' (today)'}`,
+        status: audit.status === 'IN_PROGRESS' ? 'IN_PROGRESS' : 'OPEN'
+      });
+    });
+
+    // Add open non-conformities as pending tasks
+    const openNonConformities = await prisma.nonConformity.findMany({
+      where: {
+        status: { in: ['OPEN', 'IN_PROGRESS'] },
+        targetDate: {
+          gte: new Date()
+        }
+      },
+      include: {
+        assignedTo: {
+          select: {
+            name: true
+          }
+        }
+      },
+      take: 5,
+      orderBy: {
+        targetDate: 'asc'
+      }
+    });
+
+    openNonConformities.forEach(nc => {
+      const daysUntil = Math.ceil((nc.targetDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+      pendingTasks.push({
+        dueDate: nc.targetDate.toISOString(),
+        type: 'Non-Conformity',
+        description: `${nc.ncNumber}: ${nc.description.substring(0, 80)}${nc.description.length > 80 ? '...' : ''} (Assigned: ${nc.assignedTo.name})`,
+        status: nc.status === 'IN_PROGRESS' ? 'IN_PROGRESS' : 'OPEN'
+      });
+    });
+
+    // Sort all pending tasks by due date (most urgent first)
+    pendingTasks.sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
+
+    // Limit to 10 most urgent tasks
+    pendingTasks.splice(10);
+
     // Crew Movement: Get recent assignments
     const crewMovement: Array<{
       seafarer: string;
