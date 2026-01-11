@@ -268,6 +268,8 @@ export async function GET() {
     const MAX_DESCRIPTION_LENGTH = 80;
     const MAX_PENDING_TASKS = 10;
     const ITEMS_PER_QUERY = 5;
+    const DAYS_TO_MILLISECONDS = 24 * 60 * 60 * 1000;
+    const AUDIT_LOOKAHEAD_DAYS = 30;
 
     // Transform pending tasks into array format expected by frontend
     const pendingTasks: Array<{
@@ -279,7 +281,7 @@ export async function GET() {
 
     // Helper function to calculate days until a date
     const calculateDaysUntil = (targetDate: Date): number => {
-      return Math.ceil((targetDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+      return Math.ceil((targetDate.getTime() - new Date().getTime()) / DAYS_TO_MILLISECONDS);
     };
 
     // Add applications as pending tasks
@@ -312,7 +314,7 @@ export async function GET() {
       where: {
         status: { in: ['SCHEDULED', 'IN_PROGRESS'] },
         startDate: {
-          lte: new Date(new Date().getTime() + 30 * 24 * 60 * 60 * 1000) // Within 30 days
+          lte: new Date(new Date().getTime() + AUDIT_LOOKAHEAD_DAYS * DAYS_TO_MILLISECONDS)
         }
       },
       take: ITEMS_PER_QUERY,
@@ -370,8 +372,10 @@ export async function GET() {
     // Sort all pending tasks by due date (most urgent first)
     pendingTasks.sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
 
-    // Limit to most urgent tasks
-    pendingTasks.splice(MAX_PENDING_TASKS);
+    // Limit to most urgent tasks (keep only first MAX_PENDING_TASKS items)
+    if (pendingTasks.length > MAX_PENDING_TASKS) {
+      pendingTasks.length = MAX_PENDING_TASKS;
+    }
 
     // Crew Movement: Get recent assignments
     const crewMovement: Array<{

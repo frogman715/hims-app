@@ -11,7 +11,7 @@ interface Seafarer {
   fullName: string;
   nationality: string;
   dateOfBirth: string | null;
-  rank: string;
+  rank: string | null;
   photoUrl?: string;
   assignments: Array<{
     id: number;
