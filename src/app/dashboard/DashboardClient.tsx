@@ -808,13 +808,11 @@ function PendingTasksSection({ tasks, className = '' }: { tasks: PendingTask[]; 
       ) : (
         <div className="space-y-3">
           {tasks.map((task, index) => {
-            const TaskWrapper = task.link ? Link : 'div';
-            const wrapperProps = task.link 
-              ? { href: task.link, className: "border border-gray-200 rounded-lg p-4 flex items-start gap-4 hover:border-blue-300 hover:bg-blue-50/50 transition-all cursor-pointer" }
-              : { className: "border border-gray-200 rounded-lg p-4 flex items-start gap-4" };
+            const baseClassName = "border border-gray-200 rounded-lg p-4 flex items-start gap-4";
+            const hoverClassName = "hover:border-blue-300 hover:bg-blue-50/50 transition-all cursor-pointer";
             
-            return (
-              <TaskWrapper key={`${task.description}-${index}`} {...wrapperProps}>
+            const taskContent = (
+              <>
                 <div className="text-sm font-semibold text-gray-900 w-24">
                   <div>{formatDate(task.dueDate)}</div>
                   <span className={`inline-flex mt-2 items-center px-2 py-0.5 rounded-full text-xs font-semibold ${getTaskStatusBadge(task.status)}`}>
@@ -825,7 +823,21 @@ function PendingTasksSection({ tasks, className = '' }: { tasks: PendingTask[]; 
                   <p className="text-sm font-semibold text-gray-900">{task.type}</p>
                   <p className="text-sm text-gray-600 mt-1">{task.description}</p>
                 </div>
-              </TaskWrapper>
+              </>
+            );
+            
+            return task.link ? (
+              <Link 
+                key={`${task.description}-${index}`} 
+                href={task.link} 
+                className={`${baseClassName} ${hoverClassName}`}
+              >
+                {taskContent}
+              </Link>
+            ) : (
+              <div key={`${task.description}-${index}`} className={baseClassName}>
+                {taskContent}
+              </div>
             );
           })}
         </div>

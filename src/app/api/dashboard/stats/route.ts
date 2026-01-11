@@ -273,10 +273,12 @@ export async function GET() {
 
     // Transform pending tasks into array format expected by frontend
     const pendingTasks: Array<{
+      id?: string;
       dueDate: string;
       type: string;
       description: string;
       status: string;
+      link?: string;
     }> = [];
 
     // Helper function to calculate days until a date
