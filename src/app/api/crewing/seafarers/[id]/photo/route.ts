@@ -87,7 +87,6 @@ export async function POST(
     
     console.log('[PHOTO_UPLOAD] Attempting to write file:', {
       filepath,
-      uploadsDir,
       filename,
       bufferSize: buffer.length,
       timestamp: new Date().toISOString()
