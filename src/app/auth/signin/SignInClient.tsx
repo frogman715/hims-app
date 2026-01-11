@@ -1,9 +1,29 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useState, useEffect, useRef } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
+
+// Error message mapping for URL query parameters
+const ERROR_MESSAGES: Record<string, string> = {
+  SessionError: "Your session has expired or is invalid. Please sign in again.",
+  CredentialsSignin: "Invalid email or password. Please try again.",
+  OAuthSignin: "Error signing in with OAuth provider.",
+  OAuthCallback: "Error in OAuth callback.",
+  OAuthCreateAccount: "Could not create OAuth account.",
+  EmailCreateAccount: "Could not create email account.",
+  Callback: "Error in callback handler.",
+  OAuthAccountNotLinked: "Email already in use with a different provider.",
+  EmailSignin: "Error sending email verification.",
+  CredentialsSignup: "Error creating account.",
+  SessionRequired: "Please sign in to access this page.",
+  Default: "An error occurred during authentication. Please try again.",
+};
+
+// Form-specific error messages
+const FORM_ERROR_INVALID_CREDENTIALS = "Invalid email or password";
+const FORM_ERROR_GENERAL = "An error occurred. Please try again.";
 
 function SignInForm() {
   const [email, setEmail] = useState("");
@@ -12,14 +32,42 @@ function SignInForm() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
+  const urlErrorProcessedRef = useRef(false);
   const desiredTarget =
     searchParams.get("callbackUrl") ?? searchParams.get("redirect") ?? undefined;
   const safeTarget =
     desiredTarget && desiredTarget.startsWith("/") ? desiredTarget : "/";
 
+  // Helper to determine if an error is from form submission (not URL)
+  const isFormError = (errorMsg: string): boolean => {
+    return errorMsg === FORM_ERROR_INVALID_CREDENTIALS || errorMsg === FORM_ERROR_GENERAL;
+  };
+
+  // Handle error from URL query parameter (only once on mount)
+  useEffect(() => {
+    // Only process URL error once to prevent race conditions
+    if (urlErrorProcessedRef.current) return;
+    
+    const urlError = searchParams.get("error");
+    if (urlError) {
+      const errorMessage = ERROR_MESSAGES[urlError] || ERROR_MESSAGES.Default;
+      setError(errorMessage);
+      urlErrorProcessedRef.current = true;
+      
+      // Clear the error from URL to prevent it from showing on page reload
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.delete("error");
+      window.history.replaceState({}, "", newUrl.toString());
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run once on mount, not when searchParams changes
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    // Only clear form errors, preserve URL-based errors (SessionError, etc.)
+    if (!urlErrorProcessedRef.current || isFormError(error)) {
+      setError("");
+    }
     setIsLoading(true);
 
     try {
@@ -31,12 +79,12 @@ function SignInForm() {
       });
 
       if (result?.error) {
-        setError("Invalid email or password");
+        setError(FORM_ERROR_INVALID_CREDENTIALS);
       } else {
         router.push(safeTarget);
       }
     } catch {
-      setError("An error occurred. Please try again.");
+      setError(FORM_ERROR_GENERAL);
     } finally {
       setIsLoading(false);
     }
