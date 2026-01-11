@@ -45,6 +45,7 @@ function SignInForm() {
 
   // Handle error from URL query parameter (only once on mount)
   useEffect(() => {
+    // Only process URL error once to prevent race conditions
     if (urlErrorProcessedRef.current) return;
     
     const urlError = searchParams.get("error");
@@ -58,7 +59,8 @@ function SignInForm() {
       newUrl.searchParams.delete("error");
       window.history.replaceState({}, "", newUrl.toString());
     }
-  }, [searchParams]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run once on mount, not when searchParams changes
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
