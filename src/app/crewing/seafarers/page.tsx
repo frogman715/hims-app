@@ -200,7 +200,7 @@ export default function Seafarers() {
                       </div>
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-sm">
-                      <span className="font-semibold text-slate-900">{seafarer.rank || "—"}</span>
+                      <span className="font-semibold text-slate-900">{seafarer.rank ?? "—"}</span>
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-sm text-slate-600">{seafarer.nationality}</td>
                     <td className="whitespace-nowrap px-6 py-4 text-sm text-slate-600">{formatDate(seafarer.dateOfBirth)}</td>

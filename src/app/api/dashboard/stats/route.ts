@@ -355,9 +355,10 @@ export async function GET() {
     openNonConformities.forEach(nc => {
       const daysUntil = calculateDaysUntil(nc.targetDate);
       const assignedToName = nc.assignedTo?.name ?? 'Unassigned';
-      const truncatedDescription = nc.description.length > MAX_DESCRIPTION_LENGTH 
-        ? `${nc.description.substring(0, MAX_DESCRIPTION_LENGTH)}...` 
-        : nc.description;
+      const description = nc.description ?? '';
+      const truncatedDescription = description.length > MAX_DESCRIPTION_LENGTH 
+        ? `${description.substring(0, MAX_DESCRIPTION_LENGTH)}...` 
+        : description;
       pendingTasks.push({
         dueDate: nc.targetDate.toISOString(),
         type: 'Non-Conformity',
