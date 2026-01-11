@@ -54,6 +54,7 @@ backup/
 !QUICK_REFERENCE.md
 !DEPLOYMENT_VPS.md
 !PRISMA_7_CONFIGURATION.md
+!DEPLOYMENT_IMPLEMENTATION_SUMMARY.md
 _legacy/
 _tools/
 scripts/seed-*.ts
