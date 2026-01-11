@@ -262,7 +262,6 @@ export async function GET() {
 
     // TODO: Add Complaint model when needed
     // const complaints = await prisma.complaint.count();
-    const complaints = 0;
 
     // Configuration constants
     const MAX_DESCRIPTION_LENGTH = 80;
