@@ -144,7 +144,10 @@ sudo apt update && sudo apt upgrade -y
 #### 1.3 Install Required Software
 ```bash
 # Install Node.js 20.x LTS (or use nvm for v24.12.0)
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+# For security, download and inspect the script first:
+curl -fsSL https://deb.nodesource.com/setup_20.x -o /tmp/nodesource_setup.sh
+# Review the script content if needed: less /tmp/nodesource_setup.sh
+sudo -E bash /tmp/nodesource_setup.sh
 sudo apt install -y nodejs
 
 # Verify Node.js version
@@ -261,7 +264,8 @@ Save and exit (Ctrl+X, Y, Enter)
 #### 3.4 Install Dependencies & Build
 ```bash
 # Install production dependencies (this may take 5-10 minutes)
-npm install --production
+# Using npm ci for reproducible builds
+npm ci --omit=dev
 
 # Build application
 npm run build
@@ -270,13 +274,13 @@ npm run build
 npx prisma generate
 ```
 
-**Note**: If SSH times out during `npm install`, use `screen`:
+**Note**: If SSH times out during `npm ci`, use `screen`:
 ```bash
 # Start screen session
 screen -S build
 
 # Run commands inside screen
-npm install --production
+npm ci --omit=dev
 npm run build
 npx prisma generate
 
