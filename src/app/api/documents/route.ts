@@ -8,7 +8,6 @@ import { hasSensitivityAccess, UserRole, DataSensitivity } from "@/lib/permissio
 import { maskDocumentNumber } from "@/lib/masking";
 import {
   buildCrewFilePath,
-  generateSafeFilename,
   getRelativePath,
   getMaxFileSize,
 } from "@/lib/upload-path";

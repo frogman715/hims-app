@@ -3,7 +3,6 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { writeFile } from "fs/promises";
-import path from "path";
 import {
   buildCrewFilePath,
   generateSafeFilename,

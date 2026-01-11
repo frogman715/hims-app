@@ -5,7 +5,7 @@ import { authOptions } from '@/lib/auth';
 import { writeFile } from 'fs/promises';
 import {
   buildCrewFilePath,
-  generateSafeFilename,
+
   getRelativePath,
   getMaxFileSize,
 } from '@/lib/upload-path';
