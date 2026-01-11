@@ -1,11 +1,13 @@
 const MIN_SECRET_LENGTH = 32;
 const MIN_CRYPTO_KEY_LENGTH = 32;
+const MIN_SERVER_ACTIONS_KEY_LENGTH = 32;
 
 const raw = {
   NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET?.trim(),
   NEXTAUTH_URL: process.env.NEXTAUTH_URL?.trim(),
   DATABASE_URL: process.env.DATABASE_URL?.trim(),
-  HIMS_CRYPTO_KEY: process.env.HIMS_CRYPTO_KEY,
+  HIMS_CRYPTO_KEY: process.env.HIMS_CRYPTO_KEY?.trim(),
+  NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: process.env.NEXT_SERVER_ACTIONS_ENCRYPTION_KEY?.trim(),
 };
 
 const issues: string[] = [];
@@ -27,6 +29,13 @@ if (!hasCryptoKey) {
   issues.push(`HIMS_CRYPTO_KEY must be set and at least ${MIN_CRYPTO_KEY_LENGTH} characters.`);
 }
 
+const hasServerActionsKey =
+  typeof raw.NEXT_SERVER_ACTIONS_ENCRYPTION_KEY === "string" && 
+  raw.NEXT_SERVER_ACTIONS_ENCRYPTION_KEY.length >= MIN_SERVER_ACTIONS_KEY_LENGTH;
+if (!hasServerActionsKey && process.env.NODE_ENV === "production") {
+  issues.push(`NEXT_SERVER_ACTIONS_ENCRYPTION_KEY must be set and at least ${MIN_SERVER_ACTIONS_KEY_LENGTH} characters in production.`);
+}
+
 if (issues.length > 0 && process.env.NODE_ENV !== "test") {
   console.error("[env] configuration issues detected", { issues });
 }
@@ -36,9 +45,11 @@ export const env = Object.freeze({
   NEXTAUTH_URL: raw.NEXTAUTH_URL,
   DATABASE_URL: hasDatabaseUrl ? raw.DATABASE_URL! : undefined,
   HIMS_CRYPTO_KEY: hasCryptoKey ? raw.HIMS_CRYPTO_KEY! : undefined,
+  NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: hasServerActionsKey ? raw.NEXT_SERVER_ACTIONS_ENCRYPTION_KEY! : undefined,
   hasNextAuthSecret,
   hasDatabaseUrl,
   hasCryptoKey,
+  hasServerActionsKey,
   issues,
 });
 
