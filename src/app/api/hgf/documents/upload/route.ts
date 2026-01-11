@@ -2,11 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { prisma } from '@/lib/prisma';
 import { authOptions } from '@/lib/auth';
-import { writeFile, mkdir } from 'fs/promises';
-import { join } from 'path';
-import { existsSync } from 'fs';
-
-const UPLOAD_DIR = join(process.cwd(), 'public', 'uploads', 'documents');
+import { writeFile } from 'fs/promises';
+import {
+  buildCrewFilePath,
+  generateSafeFilename,
+  getRelativePath,
+  getMaxFileSize,
+} from '@/lib/upload-path';
 
 export async function POST(request: NextRequest) {
   try {
@@ -40,20 +42,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate file size (max 10MB)
-    const MAX_FILE_SIZE = 10 * 1024 * 1024;
-    if (file.size > MAX_FILE_SIZE) {
+    // Validate file size using centralized config
+    const maxFileSize = getMaxFileSize();
+    if (file.size > maxFileSize) {
+      const maxSizeMB = (maxFileSize / (1024 * 1024)).toFixed(0);
       return NextResponse.json(
         {
-          error: 'File too large. Maximum size: 10MB',
+          error: `File too large. Maximum size: ${maxSizeMB}MB`,
         },
         { status: 400 }
       );
     }
 
-    // Check submission exists
+    // Check submission exists and get crew info
     const submission = await prisma.hGFSubmission.findUnique({
       where: { id: submissionId },
+      include: {
+        crew: {
+          select: { fullName: true },
+        },
+      },
     });
 
     if (!submission) {
@@ -63,21 +71,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create upload directory if it doesn't exist
-    if (!existsSync(UPLOAD_DIR)) {
-      await mkdir(UPLOAD_DIR, { recursive: true });
-    }
+    // Generate crew slug from full name
+    const crewSlug = submission.crew.fullName
+      .toUpperCase()
+      .replace(/[^A-Z0-9\s]/g, "")
+      .replace(/\s+/g, "_");
 
-    // Generate unique filename
+    // Generate unique filename with timestamp and document code
     const timestamp = Date.now();
     const ext = file.name.split('.').pop();
     const fileName = `${submissionId}-${documentCode || documentType}-${timestamp}.${ext}`;
-    const filePath = join(UPLOAD_DIR, fileName);
-    const fileUrl = `/uploads/documents/${fileName}`;
+    
+    // Build full file path using centralized utility
+    const filePath = buildCrewFilePath(submission.crewId, crewSlug, fileName);
 
     // Save file
     const bytes = await file.arrayBuffer();
     await writeFile(filePath, Buffer.from(bytes));
+
+    // Store relative path in database for portability
+    const relativePath = getRelativePath(filePath);
+    const fileUrl = `/api/files/${relativePath}`;
 
     // Create document record
     const documentRecord = await prisma.documentUpload.create({
