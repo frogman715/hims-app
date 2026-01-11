@@ -109,7 +109,7 @@ export async function PUT(
     // Prepare update data
     const updateData: {
       name?: string;
-      role?: Role;
+      role?: string;
       isSystemAdmin?: boolean;
     } = {};
 
@@ -117,7 +117,7 @@ export async function PUT(
       updateData.name = name;
     }
     if (role && role !== existingUser.role) {
-      updateData.role = role as Role;
+      updateData.role = role;
     }
     if (canSetSystemAdmin && typeof isSystemAdmin === 'boolean' && isSystemAdmin !== existingUser.isSystemAdmin) {
       updateData.isSystemAdmin = systemAdminValue;
