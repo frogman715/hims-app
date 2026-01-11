@@ -344,8 +344,7 @@ export async function GET() {
         status: { in: ['OPEN', 'IN_PROGRESS'] },
         targetDate: {
           gte: new Date()
-        },
-        deletedAt: null
+        }
       },
       take: ITEMS_PER_QUERY,
       orderBy: {
