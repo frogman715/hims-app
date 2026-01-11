@@ -2,8 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { writeFile, mkdir } from "fs/promises";
+import { writeFile } from "fs/promises";
 import path from "path";
+import {
+  buildCrewFilePath,
+  generateSafeFilename,
+  getRelativePath,
+  getMaxFileSize,
+} from "@/lib/upload-path";
 
 // Configure max body size for file uploads
 export const config = {
@@ -40,30 +46,40 @@ export async function POST(
       );
     }
 
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
+    // Validate file size using centralized config
+    const maxFileSize = getMaxFileSize();
+    if (file.size > maxFileSize) {
+      const maxSizeMB = (maxFileSize / (1024 * 1024)).toFixed(0);
       return NextResponse.json(
-        { error: "File size must be less than 5MB" },
+        { error: `File size must be less than ${maxSizeMB}MB` },
         { status: 400 }
       );
     }
 
-    // Create uploads directory if it doesn't exist
-    // Use absolute path: in standalone mode process.cwd() is .next/standalone, not app root
-    const uploadsDir = process.env.UPLOADS_DIR ? path.join(process.env.UPLOADS_DIR, '../photos') : path.join('/var/www/hims-app', 'public/uploads/photos');
-    try {
-      await mkdir(uploadsDir, { recursive: true });
-    } catch {
-      // Directory might already exist
+    // Get crew info for directory name
+    const crew = await prisma.crew.findUnique({
+      where: { id: seafarerId },
+      select: { fullName: true },
+    });
+
+    if (!crew) {
+      return NextResponse.json(
+        { error: "Seafarer not found" },
+        { status: 404 }
+      );
     }
 
-    // Generate professional filename: {date}_{seafarerid}_{hash}.{ext}
-    // Format: 20251230_cm123abc_a7f2e.jpg
-    const timestamp = new Date().toISOString().split('T')[0].replace(/-/g, '');
-    const randomHash = Math.random().toString(36).substring(2, 7);
-    const extension = file.name.split(".").pop()?.toLowerCase() || "jpg";
-    const filename = `${timestamp}_${seafarerId}_${randomHash}.${extension}`;
-    const filepath = path.join(uploadsDir, filename);
+    // Generate crew slug from full name
+    const crewSlug = crew.fullName
+      .toUpperCase()
+      .replace(/[^A-Z0-9\s]/g, "")
+      .replace(/\s+/g, "_");
+
+    // Generate safe filename
+    const filename = generateSafeFilename(seafarerId, "photo", file.name);
+
+    // Build full file path using centralized utility
+    const filepath = buildCrewFilePath(seafarerId, crewSlug, filename);
 
     // Save file with error handling and logging
     const bytes = await file.arrayBuffer();
@@ -98,7 +114,9 @@ export async function POST(
       );
     }
 
-    const photoUrl = `/uploads/photos/${filename}`;
+    // Store relative path in database for portability
+    const relativePath = getRelativePath(filepath);
+    const photoUrl = `/api/files/${relativePath}`;
 
     // Update crew/seafarer with photoUrl
     await prisma.crew.update({

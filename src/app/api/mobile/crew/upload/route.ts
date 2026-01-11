@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireUserApi } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
-import { writeFile, mkdir } from "fs/promises";
-import { join, extname } from "path";
+import { writeFile } from "fs/promises";
+import { extname } from "path";
+import {
+  buildCrewFilePath,
+  generateSafeFilename,
+  getRelativePath,
+  getMaxFileSize,
+} from "@/lib/upload-path";
 
 // Configure max body size for file uploads
 export const config = {
@@ -53,7 +59,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Validate file
-    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+    const maxFileSize = getMaxFileSize();
     const ALLOWED_MIME_TYPES: Record<string, string> = {
       "application/pdf": ".pdf",
       "image/jpeg": ".jpg",
@@ -70,18 +76,26 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unsupported file type" }, { status: 415 });
     }
 
-    if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json({ error: "File size exceeds maximum allowed (10MB)" }, { status: 413 });
+    if (file.size > maxFileSize) {
+      const maxSizeMB = (maxFileSize / (1024 * 1024)).toFixed(0);
+      return NextResponse.json({ error: `File size exceeds maximum allowed (${maxSizeMB}MB)` }, { status: 413 });
     }
 
-    // Create uploads directory if it doesn't exist
-    // Use absolute path: in standalone mode process.cwd() is .next/standalone, not app root
-    const uploadsDir = process.env.UPLOADS_DIR || join('/var/www/hims-app', "public", "uploads", "documents");
-    try {
-      await mkdir(uploadsDir, { recursive: true });
-    } catch {
-      // Directory might already exist
+    // Get crew info for directory structure
+    const crewData = await prisma.crew.findUnique({
+      where: { id: crew.id },
+      select: { fullName: true },
+    });
+
+    if (!crewData) {
+      return NextResponse.json({ error: "Crew data not found" }, { status: 404 });
     }
+
+    // Generate crew slug from full name
+    const crewSlug = crewData.fullName
+      .toUpperCase()
+      .replace(/[^A-Z0-9\s]/g, "")
+      .replace(/\s+/g, "_");
 
     // Generate professional filename: {date}_{crewid}_{uploadtype}_{hash}.{ext}
     // Format: 20251230_cm123abc_medical_a7f2e.jpg
@@ -89,7 +103,9 @@ export async function POST(req: NextRequest) {
     const randomHash = Math.random().toString(36).substring(2, 7);
     const uploadTypeSafe = uploadType.toLowerCase().replace(/\s+/g, '_');
     const fileName = `${timestamp}_${crew.id}_${uploadTypeSafe}_${randomHash}${allowedExtension}`;
-    const filePath = join(uploadsDir, fileName);
+    
+    // Build full file path using centralized utility
+    const filePath = buildCrewFilePath(crew.id, crewSlug, fileName);
 
     // Save file with error handling and logging
     const bytes = await file.arrayBuffer();
@@ -97,7 +113,6 @@ export async function POST(req: NextRequest) {
     
     console.log('[MOBILE_UPLOAD] Attempting to write file:', {
       filePath,
-      uploadsDir,
       fileName,
       bufferSize: buffer.length,
       timestamp: new Date().toISOString()
@@ -124,7 +139,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const publicUrl = `/uploads/documents/${fileName}`;
+    // Store relative path in database for portability
+    const relativePath = getRelativePath(filePath);
+    const publicUrl = `/api/files/${relativePath}`;
 
     // Save document record to database with PENDING status
     const document = await prisma.crewDocument.create({

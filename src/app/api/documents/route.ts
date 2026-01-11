@@ -1,11 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { writeFile, mkdir } from "fs/promises";
-import { join, extname } from "path";
+import { writeFile } from "fs/promises";
+import { extname } from "path";
 import { withPermission } from "@/lib/api-middleware";
 import { PermissionLevel } from "@/lib/permission-middleware";
 import { hasSensitivityAccess, UserRole, DataSensitivity } from "@/lib/permissions";
 import { maskDocumentNumber } from "@/lib/masking";
+import {
+  buildCrewFilePath,
+  generateSafeFilename,
+  getRelativePath,
+  getMaxFileSize,
+} from "@/lib/upload-path";
 
 // Configure max body size for file uploads
 export const config = {
@@ -148,7 +154,7 @@ export const POST = withPermission(
       );
     }
 
-    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+    const MAX_FILE_SIZE = getMaxFileSize();
     const ALLOWED_MIME_TYPES: Record<string, string> = {
       "application/pdf": ".pdf",
       "image/jpeg": ".jpg",
@@ -178,31 +184,7 @@ export const POST = withPermission(
       );
     }
 
-    // Create uploads directory if it doesn't exist
-    // In standalone mode, try multiple paths to find the right one
-    let uploadsDir = process.env.UPLOADS_DIR;
-    if (!uploadsDir) {
-      // Try relative path first (for standalone mode where cwd is project root)
-      uploadsDir = join(process.cwd(), 'public', 'uploads', 'documents');
-      // If cwd is .next/standalone, go up two levels
-      if (process.cwd().endsWith('.next/standalone')) {
-        uploadsDir = join(process.cwd(), '..', '..', 'public', 'uploads', 'documents');
-      }
-    }
-    try {
-      await mkdir(uploadsDir, { recursive: true });
-    } catch (mkdirError) {
-      console.error('[UPLOAD] mkdir failed:', mkdirError);
-      // Try fallback path
-      uploadsDir = '/var/www/hims-app/public/uploads/documents';
-      try {
-        await mkdir(uploadsDir, { recursive: true });
-      } catch {
-        // Will handle in writeFile error
-      }
-    }
-
-    // Get crew name for readable filename
+    // Get crew name for directory structure
     const crew = await prisma.crew.findUnique({
       where: { id: crewId },
       select: { fullName: true }
@@ -212,13 +194,21 @@ export const POST = withPermission(
       return NextResponse.json({ error: "Crew not found" }, { status: 404 });
     }
 
+    // Generate crew slug from full name
+    const crewSlug = crew.fullName
+      .toUpperCase()
+      .replace(/[^A-Z0-9\s]/g, "")
+      .replace(/\s+/g, "_");
+
     // Generate professional filename: {date}_{crewid}_{doctype}_{docnumber}.{ext}
     // Format: 20251230_clxuser001_coc_620027165IN20225.jpg
     const timestamp = new Date().toISOString().split('T')[0].replace(/-/g, '');
     const docNumberSafe = docNumber.toLowerCase().replace(/[^a-z0-9]/g, '');
     const docTypeSafe = docType.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
     const fileName = `${timestamp}_${crewId}_${docTypeSafe}_${docNumberSafe}${allowedExtension}`;
-    const filePath = join(uploadsDir, fileName);
+    
+    // Build full file path using centralized utility
+    const filePath = buildCrewFilePath(crewId, crewSlug, fileName);
 
     // Save file with error handling and logging
     const bytes = await file.arrayBuffer();
@@ -226,7 +216,6 @@ export const POST = withPermission(
     
     console.log('[UPLOAD] Attempting to write file:', {
       filePath,
-      uploadsDir,
       fileName,
       bufferSize: buffer.length,
       timestamp: new Date().toISOString()
@@ -253,7 +242,9 @@ export const POST = withPermission(
       );
     }
 
-    const publicUrl = `/uploads/documents/${fileName}`;
+    // Store relative path in database for portability
+    const relativePath = getRelativePath(filePath);
+    const publicUrl = `/api/files/${relativePath}`;
 
     const normalizedDocType = docType.toUpperCase();
 
