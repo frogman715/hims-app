@@ -6,8 +6,8 @@ const raw = {
   NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET?.trim(),
   NEXTAUTH_URL: process.env.NEXTAUTH_URL?.trim(),
   DATABASE_URL: process.env.DATABASE_URL?.trim(),
-  HIMS_CRYPTO_KEY: process.env.HIMS_CRYPTO_KEY,
-  NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: process.env.NEXT_SERVER_ACTIONS_ENCRYPTION_KEY,
+  HIMS_CRYPTO_KEY: process.env.HIMS_CRYPTO_KEY?.trim(),
+  NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: process.env.NEXT_SERVER_ACTIONS_ENCRYPTION_KEY?.trim(),
 };
 
 const issues: string[] = [];

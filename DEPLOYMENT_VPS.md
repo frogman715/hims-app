@@ -75,7 +75,7 @@ sudo -u postgres psql
 
 # In PostgreSQL shell, run:
 CREATE DATABASE hims_prod;
-CREATE USER hims_prod_user WITH ENCRYPTED PASSWORD 'YOUR_SECURE_PASSWORD_HERE';
+CREATE USER hims_prod_user WITH ENCRYPTED PASSWORD 'REPLACE_WITH_SECURE_PASSWORD_HERE';
 GRANT ALL PRIVILEGES ON DATABASE hims_prod TO hims_prod_user;
 \q
 ```
@@ -137,7 +137,7 @@ nano .env.production
 
 ```bash
 # Database
-DATABASE_URL="postgresql://hims_prod_user:YOUR_SECURE_PASSWORD@localhost:5432/hims_prod?schema=public"
+DATABASE_URL="postgresql://hims_prod_user:REPLACE_WITH_SECURE_PASSWORD@localhost:5432/hims_prod?schema=public"
 
 # Authentication (generate with: openssl rand -base64 32)
 NEXTAUTH_SECRET="<32+ character secret>"
@@ -171,12 +171,17 @@ npx prisma migrate deploy
 ```bash
 # Create initial admin user
 npm run seed
-
-# Default credentials:
-# Email: admin@hanmarine.com
-# Password: admin123
-# ⚠️ CHANGE THIS PASSWORD IMMEDIATELY AFTER FIRST LOGIN
 ```
+
+**⚠️ CRITICAL SECURITY WARNING:**
+
+Default credentials created:
+- **Email:** `admin@hanmarine.com`
+- **Password:** `admin123`
+
+**YOU MUST CHANGE THIS PASSWORD IMMEDIATELY AFTER FIRST LOGIN!**
+
+Failure to change the default password is a critical security vulnerability that could compromise your entire system.
 
 ### 4.6 Build Application
 
