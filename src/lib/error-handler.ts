@@ -17,6 +17,12 @@ export class ApiError extends Error {
 
 /**
  * Detect if an error is related to authentication/session
+ * 
+ * Note: Uses string matching on error messages as NextAuth and Prisma
+ * don't always provide specific error types/codes for authentication failures.
+ * This is a pragmatic approach that catches common auth error scenarios.
+ * 
+ * Future enhancement: If NextAuth/Prisma add error codes, migrate to code-based detection.
  */
 function isAuthenticationError(error: unknown): boolean {
   if (!error || typeof error !== "object") {

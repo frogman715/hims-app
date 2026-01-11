@@ -33,6 +33,12 @@ export const metadata: Metadata = {
 };
 
 // Validate critical environment variables at startup
+// Note: We log errors but don't throw to allow for:
+// 1. Container orchestration systems that inject env vars post-startup
+// 2. Cloud platforms with dynamic configuration loading
+// 3. Graceful degradation (some features may work without all variables)
+// The individual services (auth, database) will fail appropriately if their
+// specific variables are missing when they attempt to use them.
 if (process.env.NODE_ENV !== "test" && env.issues.length > 0) {
   console.error("[RootLayout] Critical environment configuration issues detected:", env.issues);
   
@@ -40,6 +46,7 @@ if (process.env.NODE_ENV !== "test" && env.issues.length > 0) {
   // In production, this should be caught before deployment
   if (process.env.NODE_ENV === "production") {
     console.error("[RootLayout] Application may not function correctly due to missing environment variables");
+    console.error("[RootLayout] Ensure all required variables are set before deployment");
   }
 }
 

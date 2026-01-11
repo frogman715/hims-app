@@ -176,17 +176,18 @@ export async function requireUser(options: RequireUserOptions = {}) {
     };
   } catch (error) {
     // Handle session fetch errors gracefully
-    if (error && typeof error === "object" && "message" in error) {
-      const errorMessage = String(error.message);
-      
+    if (error && typeof error === "object") {
       // Allow Next.js redirects to pass through
-      if (errorMessage.includes("NEXT_REDIRECT")) {
+      // Next.js redirect errors have a specific digest property pattern
+      const errorObj = error as { digest?: string; message?: string };
+      if (errorObj.digest?.startsWith("NEXT_REDIRECT") || 
+          (errorObj.message && errorObj.message.includes("NEXT_REDIRECT"))) {
         throw error;
       }
 
       // Log authentication errors for debugging
       console.error("[authz] requireUser failed", {
-        error: errorMessage,
+        error: String(errorObj.message || error),
         timestamp: new Date().toISOString(),
       });
     }
@@ -233,17 +234,18 @@ export async function requireCrew() {
     };
   } catch (error) {
     // Handle session fetch errors gracefully
-    if (error && typeof error === "object" && "message" in error) {
-      const errorMessage = String(error.message);
-      
+    if (error && typeof error === "object") {
       // Allow Next.js redirects to pass through
-      if (errorMessage.includes("NEXT_REDIRECT")) {
+      // Next.js redirect errors have a specific digest property pattern
+      const errorObj = error as { digest?: string; message?: string };
+      if (errorObj.digest?.startsWith("NEXT_REDIRECT") || 
+          (errorObj.message && errorObj.message.includes("NEXT_REDIRECT"))) {
         throw error;
       }
 
       // Log authentication errors for debugging
       console.error("[authz] requireCrew failed", {
-        error: errorMessage,
+        error: String(errorObj.message || error),
         timestamp: new Date().toISOString(),
       });
     }

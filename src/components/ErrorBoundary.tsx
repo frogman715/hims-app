@@ -11,8 +11,14 @@ interface State {
   hasError: boolean;
   error?: Error;
   errorInfo?: string;
+  /** Number of consecutive errors for retry limiting (max 3 attempts) */
   errorCount: number;
 }
+
+// Constants for error recovery behavior
+const MAX_RETRY_ATTEMPTS = 3;
+const RETRY_DELAY_MS = 3000;
+const AUTH_ERROR_REDIRECT_DELAY_MS = 2000;
 
 /**
  * Error Boundary component to catch React errors and prevent full app crashes
@@ -64,19 +70,19 @@ export class ErrorBoundary extends Component<Props, State> {
     });
 
     // For transient errors (like database connection issues), attempt auto-recovery
-    if (isDatabaseError && this.state.errorCount < 3) {
-      console.warn('[Error Boundary] Transient error detected, will auto-retry in 3 seconds');
+    if (isDatabaseError && this.state.errorCount < MAX_RETRY_ATTEMPTS) {
+      console.warn(`[Error Boundary] Transient error detected, will auto-retry in ${RETRY_DELAY_MS}ms`);
       this.retryTimeout = setTimeout(() => {
         this.handleReset();
-      }, 3000);
+      }, RETRY_DELAY_MS);
     }
 
     // Redirect to login for auth errors (after showing message briefly)
     if (isAuthError && typeof window !== 'undefined') {
-      console.warn('[Error Boundary] Authentication error detected, redirecting to login in 2 seconds');
+      console.warn(`[Error Boundary] Authentication error detected, redirecting to login in ${AUTH_ERROR_REDIRECT_DELAY_MS}ms`);
       this.retryTimeout = setTimeout(() => {
         window.location.href = '/auth/signin?error=SessionExpired';
-      }, 2000);
+      }, AUTH_ERROR_REDIRECT_DELAY_MS);
     }
 
     this.setState({
@@ -189,12 +195,12 @@ export class ErrorBoundary extends Component<Props, State> {
               <div className="flex gap-3">
                 <button
                   onClick={this.handleReset}
-                  disabled={isDatabaseError && this.state.errorCount < 3}
+                  disabled={isDatabaseError && this.state.errorCount < MAX_RETRY_ATTEMPTS}
                   className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isDatabaseError && this.state.errorCount < 3 ? 'Retrying...' : 'Try Again'}
+                  {isDatabaseError && this.state.errorCount < MAX_RETRY_ATTEMPTS ? 'Retrying...' : 'Try Again'}
                 </button>
-                {this.state.errorCount >= 3 && (
+                {this.state.errorCount >= MAX_RETRY_ATTEMPTS && (
                   <button
                     onClick={this.handleReload}
                     className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition"
