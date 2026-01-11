@@ -32,6 +32,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.production.example
 
 # vercel
 .vercel
@@ -45,6 +46,12 @@ next-env.d.ts
 # local backups
 backup/
 *.md
+!PRODUCTION_DEPLOYMENT.md
+!PRODUCTION_CHECKLIST.md
+!README.md
+!GETTING_STARTED.md
+!VALIDATION_RULES.md
+!QUICK_REFERENCE.md
 _legacy/
 _tools/
 scripts/seed-*.ts
