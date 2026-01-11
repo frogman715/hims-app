@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState, useEffect } from "react";
+import { Suspense, useState, useEffect, useRef } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
@@ -28,17 +28,21 @@ function SignInForm() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
+  const urlErrorProcessedRef = useRef(false);
   const desiredTarget =
     searchParams.get("callbackUrl") ?? searchParams.get("redirect") ?? undefined;
   const safeTarget =
     desiredTarget && desiredTarget.startsWith("/") ? desiredTarget : "/";
 
-  // Handle error from URL query parameter
+  // Handle error from URL query parameter (only once on mount)
   useEffect(() => {
+    if (urlErrorProcessedRef.current) return;
+    
     const urlError = searchParams.get("error");
     if (urlError) {
       const errorMessage = ERROR_MESSAGES[urlError] || ERROR_MESSAGES.Default;
       setError(errorMessage);
+      urlErrorProcessedRef.current = true;
       
       // Clear the error from URL to prevent it from showing on page reload
       const newUrl = new URL(window.location.href);
@@ -49,7 +53,10 @@ function SignInForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    // Only clear form errors, not URL-based errors
+    if (!urlErrorProcessedRef.current || error === "Invalid email or password" || error === "An error occurred. Please try again.") {
+      setError("");
+    }
     setIsLoading(true);
 
     try {
