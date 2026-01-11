@@ -3281,73 +3281,34 @@ model ComplianceAuditFinding {
 }
 
 model NonConformity {
-  id              String          @id @default(cuid())
+  id                  String          @id
   
   // Reference
-  ncNumber        String          @unique
-  auditId         String
-  audit           ComplianceAudit @relation(fields: [auditId], references: [id], onDelete: Cascade)
+  auditId             String
+  audit               ComplianceAudit @relation(fields: [auditId], references: [id], onDelete: Cascade)
+  findingId           String?
+  finding             ComplianceAuditFinding? @relation(fields: [findingId], references: [id], onDelete: SetNull)
   
   // Details
-  description     String          @db.Text
-  rootCause       String?         @db.Text
-  status          NonConformityStatus @default(OPEN)
-  
-  // Assignment
-  assignedToId    String
-  assignedTo      User            @relation("NonConformityAssignedTo", fields: [assignedToId], references: [id])
+  description         String          @db.Text
+  rootCause           String?         @db.Text
+  correctionAction    String?         @db.Text
+  preventionAction    String?         @db.Text
+  status              String          @default("OPEN")
+  remarks             String?         @db.Text
   
   // Tracking
-  identifiedDate  DateTime        @default(now())
-  targetDate      DateTime
-  resolvedDate    DateTime?
-  verifiedDate    DateTime?
-  verifiedById    String?
-  verifiedBy      User?           @relation("NonConformityVerifiedBy", fields: [verifiedById], references: [id])
+  targetDate          DateTime?
+  completionDate      DateTime?
+  responsiblePersonId String?
   
-  // Corrective actions
-  correctiveActions NCCorrectiveAction[]
-  
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+  deletedAt           DateTime?
   
   @@index([auditId])
+  @@index([findingId])
   @@index([status])
-  @@index([assignedToId])
-}
-
-model NCCorrectiveAction {
-  id              String          @id @default(cuid())
-  
-  // Reference
-  caNumber        String          @unique
-  nonConformityId String
-  nonConformity   NonConformity   @relation(fields: [nonConformityId], references: [id], onDelete: Cascade)
-  
-  // Details
-  action          String          @db.Text
-  status          NCCorrectiveActionStatus @default(PENDING)
-  
-  // Assignment
-  assignedToId    String
-  assignedTo      User            @relation("CorrectiveActionAssignedTo", fields: [assignedToId], references: [id])
-  
-  // Tracking
-  dueDate         DateTime
-  completedDate   DateTime?
-  verifiedDate    DateTime?
-  verifiedById    String?
-  verifiedBy      User?           @relation("CorrectiveActionVerifiedBy", fields: [verifiedById], references: [id])
-  
-  // Evidence/Documents
-  evidenceDoc     String?         // Document URL or file path
-  
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-  
-  @@index([nonConformityId])
-  @@index([status])
-  @@index([assignedToId])
 }
 
 // ============================================================================

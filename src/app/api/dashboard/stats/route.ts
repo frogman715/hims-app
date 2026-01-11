@@ -344,14 +344,8 @@ export async function GET() {
         status: { in: ['OPEN', 'IN_PROGRESS'] },
         targetDate: {
           gte: new Date()
-        }
-      },
-      include: {
-        assignedTo: {
-          select: {
-            name: true
-          }
-        }
+        },
+        deletedAt: null
       },
       take: ITEMS_PER_QUERY,
       orderBy: {
@@ -360,17 +354,16 @@ export async function GET() {
     });
 
     openNonConformities.forEach(nc => {
-      const daysUntil = calculateDaysUntil(nc.targetDate);
-      const assignedToName = nc.assignedTo?.name ?? 'Unassigned';
+      const daysUntil = nc.targetDate ? calculateDaysUntil(nc.targetDate) : 0;
       const description = nc.description ?? '';
       const truncatedDescription = description.length > MAX_DESCRIPTION_LENGTH 
         ? `${description.substring(0, MAX_DESCRIPTION_LENGTH)}...` 
         : description;
       pendingTasks.push({
         id: nc.id,
-        dueDate: nc.targetDate.toISOString(),
+        dueDate: nc.targetDate?.toISOString() ?? new Date().toISOString(),
         type: 'Non-Conformity',
-        description: `${nc.ncNumber}: ${truncatedDescription} - Due ${daysUntil > 0 ? `in ${daysUntil} days` : 'today'} (Assigned: ${assignedToName})`,
+        description: `${truncatedDescription} - Due ${daysUntil > 0 ? `in ${daysUntil} days` : 'today'}`,
         status: nc.status === 'IN_PROGRESS' ? 'IN_PROGRESS' : 'OPEN',
         link: `/nonconformity/${nc.id}`
       });
