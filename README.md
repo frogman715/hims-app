@@ -185,7 +185,12 @@ The system includes comprehensive models for:
 ## API Routes
 
 - `/api/auth/[...nextauth]` - Authentication
+- `/api/documents` - Document upload and management
+- `/api/crewing/seafarers/[id]/photo` - Seafarer photo uploads
+- `/api/mobile/crew/upload` - Mobile app file uploads
 - Additional API routes for CRUD operations on each module
+
+**📖 File Upload System**: See [UPLOAD_SYSTEM_GUIDE_ID.md](./UPLOAD_SYSTEM_GUIDE_ID.md) for comprehensive upload documentation (Indonesian) or [UPLOAD_QUICK_REFERENCE.md](./UPLOAD_QUICK_REFERENCE.md) for quick reference.
 
 ## Deployment
 
