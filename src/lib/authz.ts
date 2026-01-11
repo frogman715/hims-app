@@ -111,102 +111,146 @@ export function resolveDefaultRoute(role: AppRole): string {
 }
 
 export async function requireUser(options: RequireUserOptions = {}) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
-    redirect("/auth/signin");
-  }
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      logAuthEvent("session-missing", { reason: "no-session-or-user-id" });
+      redirect("/auth/signin");
+    }
 
-  const normalized = normalizeUser(session.user as Partial<AppUser>);
-  const isCrew = isCrewRole(normalized.role, normalized.roles);
+    const normalized = normalizeUser(session.user as Partial<AppUser>);
+    const isCrew = isCrewRole(normalized.role, normalized.roles);
 
-  session.user.role = normalized.role;
-  session.user.roles = normalized.roles;
+    session.user.role = normalized.role;
+    session.user.roles = normalized.roles;
 
-  logAuthEvent("require-user", {
-    userId: normalized.id,
-    role: normalized.role,
-    roles: normalized.roles,
-    isCrew,
-    redirectIfCrew: options.redirectIfCrew ?? null,
-    redirectIfOffice: options.redirectIfOffice ?? null,
-    allowedRoles: options.allowedRoles ?? null,
-  });
-
-  if (isCrew && options.redirectIfCrew) {
-    logAuthEvent("redirect-crew", {
+    logAuthEvent("require-user", {
       userId: normalized.id,
       role: normalized.role,
       roles: normalized.roles,
-      target: options.redirectIfCrew,
+      isCrew,
+      redirectIfCrew: options.redirectIfCrew ?? null,
+      redirectIfOffice: options.redirectIfOffice ?? null,
+      allowedRoles: options.allowedRoles ?? null,
     });
-    redirect(options.redirectIfCrew);
-  }
 
-  if (!isCrew && options.redirectIfOffice) {
-    logAuthEvent("redirect-office", {
-      userId: normalized.id,
-      role: normalized.role,
-      roles: normalized.roles,
-      target: options.redirectIfOffice,
-    });
-    redirect(options.redirectIfOffice);
-  }
+    if (isCrew && options.redirectIfCrew) {
+      logAuthEvent("redirect-crew", {
+        userId: normalized.id,
+        role: normalized.role,
+        roles: normalized.roles,
+        target: options.redirectIfCrew,
+      });
+      redirect(options.redirectIfCrew);
+    }
 
-  if (
-    options.allowedRoles &&
-    options.allowedRoles.length > 0 &&
-    !options.allowedRoles.some((role) => normalized.roles.includes(role))
-  ) {
-    logAuthEvent("redirect-disallowed", {
-      userId: normalized.id,
-      role: normalized.role,
-      roles: normalized.roles,
-      target: options.redirectOnDisallowed ?? "/dashboard",
-      allowedRoles: options.allowedRoles,
-    });
-    redirect(options.redirectOnDisallowed ?? "/dashboard");
-  }
+    if (!isCrew && options.redirectIfOffice) {
+      logAuthEvent("redirect-office", {
+        userId: normalized.id,
+        role: normalized.role,
+        roles: normalized.roles,
+        target: options.redirectIfOffice,
+      });
+      redirect(options.redirectIfOffice);
+    }
 
-  return {
-    session: session as Session,
-    user: normalized,
-    isCrew,
-  };
+    if (
+      options.allowedRoles &&
+      options.allowedRoles.length > 0 &&
+      !options.allowedRoles.some((role) => normalized.roles.includes(role))
+    ) {
+      logAuthEvent("redirect-disallowed", {
+        userId: normalized.id,
+        role: normalized.role,
+        roles: normalized.roles,
+        target: options.redirectOnDisallowed ?? "/dashboard",
+        allowedRoles: options.allowedRoles,
+      });
+      redirect(options.redirectOnDisallowed ?? "/dashboard");
+    }
+
+    return {
+      session: session as Session,
+      user: normalized,
+      isCrew,
+    };
+  } catch (error) {
+    // Handle session fetch errors gracefully
+    if (error && typeof error === "object" && "message" in error) {
+      const errorMessage = String(error.message);
+      
+      // Allow Next.js redirects to pass through
+      if (errorMessage.includes("NEXT_REDIRECT")) {
+        throw error;
+      }
+
+      // Log authentication errors for debugging
+      console.error("[authz] requireUser failed", {
+        error: errorMessage,
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    // For any other error, redirect to login with error indication
+    redirect("/auth/signin?error=SessionError");
+  }
 }
 
 export async function requireCrew() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
-    redirect("/auth/signin");
-  }
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      logAuthEvent("session-missing", { reason: "no-session-or-user-id", context: "requireCrew" });
+      redirect("/auth/signin");
+    }
 
-  const normalized = normalizeUser(session.user as Partial<AppUser>);
-  const isCrew = isCrewRole(normalized.role, normalized.roles);
+    const normalized = normalizeUser(session.user as Partial<AppUser>);
+    const isCrew = isCrewRole(normalized.role, normalized.roles);
 
-  session.user.role = normalized.role;
-  session.user.roles = normalized.roles;
+    session.user.role = normalized.role;
+    session.user.roles = normalized.roles;
 
-  logAuthEvent("require-crew", {
-    userId: normalized.id,
-    role: normalized.role,
-    roles: normalized.roles,
-    isCrew,
-  });
-
-  if (!isCrew) {
-    logAuthEvent("redirect-non-crew", {
+    logAuthEvent("require-crew", {
       userId: normalized.id,
       role: normalized.role,
       roles: normalized.roles,
-      target: "/dashboard",
+      isCrew,
     });
-    redirect("/dashboard");
-  }
 
-  return {
-    session: session as Session,
-    user: normalized,
-  };
+    if (!isCrew) {
+      logAuthEvent("redirect-non-crew", {
+        userId: normalized.id,
+        role: normalized.role,
+        roles: normalized.roles,
+        target: "/dashboard",
+      });
+      redirect("/dashboard");
+    }
+
+    return {
+      session: session as Session,
+      user: normalized,
+    };
+  } catch (error) {
+    // Handle session fetch errors gracefully
+    if (error && typeof error === "object" && "message" in error) {
+      const errorMessage = String(error.message);
+      
+      // Allow Next.js redirects to pass through
+      if (errorMessage.includes("NEXT_REDIRECT")) {
+        throw error;
+      }
+
+      // Log authentication errors for debugging
+      console.error("[authz] requireCrew failed", {
+        error: errorMessage,
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    // For any other error, redirect to login with error indication
+    redirect("/auth/signin?error=SessionError");
+  }
 }
 
 export type RequireUserApiResult =
@@ -214,29 +258,41 @@ export type RequireUserApiResult =
   | { ok: false; status: number; message: string };
 
 export async function requireUserApi(allowedRoles?: AppRole[]): Promise<RequireUserApiResult> {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
-    return { ok: false, status: 401, message: "UNAUTHORIZED" };
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return { ok: false, status: 401, message: "UNAUTHORIZED" };
+    }
+
+    const normalized = normalizeUser(session.user as Partial<AppUser>);
+    const isCrew = isCrewRole(normalized.role, normalized.roles);
+
+    if (
+      allowedRoles &&
+      allowedRoles.length > 0 &&
+      !allowedRoles.some((role) => normalized.roles.includes(role))
+    ) {
+      return { ok: false, status: 403, message: "FORBIDDEN" };
+    }
+
+    session.user.role = normalized.role;
+    session.user.roles = normalized.roles;
+
+    return {
+      ok: true,
+      session: session as Session,
+      user: normalized,
+      isCrew,
+    };
+  } catch (error) {
+    // Log API authentication errors
+    console.error("[authz] requireUserApi failed", {
+      error: error instanceof Error ? error.message : String(error),
+      timestamp: new Date().toISOString(),
+      allowedRoles: allowedRoles ?? null,
+    });
+
+    // Return unauthorized for session errors
+    return { ok: false, status: 401, message: "AUTHENTICATION_ERROR" };
   }
-
-  const normalized = normalizeUser(session.user as Partial<AppUser>);
-  const isCrew = isCrewRole(normalized.role, normalized.roles);
-
-  if (
-    allowedRoles &&
-    allowedRoles.length > 0 &&
-    !allowedRoles.some((role) => normalized.roles.includes(role))
-  ) {
-    return { ok: false, status: 403, message: "FORBIDDEN" };
-  }
-
-  session.user.role = normalized.role;
-  session.user.roles = normalized.roles;
-
-  return {
-    ok: true,
-    session: session as Session,
-    user: normalized,
-    isCrew,
-  };
 }

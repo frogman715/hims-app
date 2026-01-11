@@ -159,155 +159,234 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async jwt({ token, user, trigger }) {
-      const previousRoles = Array.isArray(token.roles) ? [...token.roles] : [];
-      let resolvedRoles = uniqueRolesFrom(token.roles, token.role);
-      let primaryRole = resolvedRoles[0];
-      let userIdFromSource: string | undefined;
+      try {
+        const previousRoles = Array.isArray(token.roles) ? [...token.roles] : [];
+        let resolvedRoles = uniqueRolesFrom(token.roles, token.role);
+        let primaryRole = resolvedRoles[0];
+        let userIdFromSource: string | undefined;
 
-      if (user) {
-        const rawId = (user as { id?: unknown }).id;
-        const userId = typeof rawId === "string" ? rawId : typeof rawId === "number" ? rawId.toString() : undefined;
-        userIdFromSource = userId ?? undefined;
-        let dbRole: string | undefined;
-        if (userId) {
-          dbRole = await fetchUserRole(userId, "jwt:user-role");
+        if (user) {
+          const rawId = (user as { id?: unknown }).id;
+          const userId = typeof rawId === "string" ? rawId : typeof rawId === "number" ? rawId.toString() : undefined;
+          userIdFromSource = userId ?? undefined;
+          let dbRole: string | undefined;
+          if (userId) {
+            try {
+              dbRole = await fetchUserRole(userId, "jwt:user-role");
+            } catch (error) {
+              console.error("[auth] jwt: failed to fetch user role", {
+                userId,
+                error: error instanceof Error ? error.message : String(error),
+              });
+              // Continue with roles from user object if DB fetch fails
+            }
+          }
+
+          resolvedRoles = uniqueRolesFrom(user.roles, user.role, dbRole);
+          if (resolvedRoles.length === 0) {
+            resolvedRoles = ["CREW_PORTAL"];
+          }
+          primaryRole = resolvedRoles[0];
         }
 
-        resolvedRoles = uniqueRolesFrom(user.roles, user.role, dbRole);
+        const tokenSubject = token.sub ?? userIdFromSource;
+
+        if ((!primaryRole || resolvedRoles.length === 0) && tokenSubject) {
+          try {
+            const dbRole = await fetchUserRole(tokenSubject, "jwt:token-subject");
+            const dbRoles = uniqueRolesFrom(dbRole);
+            if (dbRoles.length > 0) {
+              resolvedRoles = dbRoles;
+              primaryRole = dbRoles[0];
+            }
+          } catch (error) {
+            console.error("[auth] jwt: failed to fetch role for token subject", {
+              tokenSubject,
+              error: error instanceof Error ? error.message : String(error),
+            });
+            // Continue with default roles if DB fetch fails
+          }
+        }
+
+        if (!primaryRole) {
+          primaryRole = resolvedRoles[0];
+        }
+
+        if (!primaryRole) {
+          primaryRole = "CREW_PORTAL";
+        }
+
         if (resolvedRoles.length === 0) {
-          resolvedRoles = ["CREW_PORTAL"];
-        }
-        primaryRole = resolvedRoles[0];
-      }
-
-      const tokenSubject = token.sub ?? userIdFromSource;
-
-      if ((!primaryRole || resolvedRoles.length === 0) && tokenSubject) {
-        const dbRole = await fetchUserRole(tokenSubject, "jwt:token-subject");
-        const dbRoles = uniqueRolesFrom(dbRole);
-        if (dbRoles.length > 0) {
-          resolvedRoles = dbRoles;
-          primaryRole = dbRoles[0];
-        }
-      }
-
-      if (!primaryRole) {
-        primaryRole = resolvedRoles[0];
-      }
-
-      if (!primaryRole) {
-        primaryRole = "CREW_PORTAL";
-      }
-
-      if (resolvedRoles.length === 0) {
-        resolvedRoles = [primaryRole];
-      }
-
-      const rolesChanged =
-        resolvedRoles.length !== previousRoles.length ||
-        resolvedRoles.some((role, index) => role !== previousRoles[index]);
-
-      let permissionOverrides = Array.isArray(token.permissionOverrides)
-        ? token.permissionOverrides
-        : [];
-
-      if (user || rolesChanged || permissionOverrides.length === 0) {
-        permissionOverrides = await loadPermissionOverrides(resolvedRoles);
-      }
-
-      token.role = primaryRole;
-      token.roles = resolvedRoles;
-      token.permissionOverrides = permissionOverrides;
-
-      let isSystemAdmin = false;
-      const userWithSystemAdmin = user as unknown as Record<string, unknown>;
-      if (user && typeof userWithSystemAdmin['isSystemAdmin'] === "boolean") {
-        isSystemAdmin = userWithSystemAdmin['isSystemAdmin'] as boolean;
-      } else if (tokenSubject) {
-        const dbUser = await safePrismaCall("jwt:isSystemAdmin", () =>
-          prisma.user.findUnique({
-            where: { id: tokenSubject },
-            select: { isSystemAdmin: true },
-          })
-        ) as { isSystemAdmin: boolean } | null;
-        isSystemAdmin = dbUser?.isSystemAdmin ?? false;
-      }
-      token.isSystemAdmin = isSystemAdmin;
-
-      const tokenUser = {
-        id: tokenSubject ?? "",
-        email: user?.email ?? token.email ?? null,
-        name: user?.name ?? token.name ?? null,
-        role: primaryRole,
-        roles: resolvedRoles,
-        permissionOverrides,
-        isSystemAdmin,
-      };
-
-      token.user = tokenUser;
-
-      if (shouldLogAuth) {
-        console.info("[auth] jwt-callback", {
-          trigger: trigger ?? null,
-          tokenSub: tokenSubject ?? null,
-          hasUser: Boolean(user),
-          hasTokenUser: Boolean(token.user),
-          role: token.role,
-          roles: token.roles,
-        });
-      }
-
-      return token;
-    },
-    async session({ session, token }) {
-      if (token && session.user) {
-        const fallbackId = session.user.id ?? "";
-        const tokenUser = token.user;
-        session.user.id = tokenUser?.id ?? token.sub ?? fallbackId;
-
-        if (tokenUser?.email && !session.user.email) {
-          session.user.email = tokenUser.email;
-        }
-        if (tokenUser?.name && !session.user.name) {
-          session.user.name = tokenUser.name;
+          resolvedRoles = [primaryRole];
         }
 
-        let normalizedRoles = uniqueRolesFrom(
-          tokenUser?.roles,
-          token.roles,
-          token.role,
-          session.user.role
-        );
+        const rolesChanged =
+          resolvedRoles.length !== previousRoles.length ||
+          resolvedRoles.some((role, index) => role !== previousRoles[index]);
 
-        if (normalizedRoles.length === 0 && session.user.id) {
-          const dbRole = await fetchUserRole(session.user.id, "session:user-role");
-          normalizedRoles = uniqueRolesFrom(dbRole);
+        let permissionOverrides = Array.isArray(token.permissionOverrides)
+          ? token.permissionOverrides
+          : [];
+
+        if (user || rolesChanged || permissionOverrides.length === 0) {
+          try {
+            permissionOverrides = await loadPermissionOverrides(resolvedRoles);
+          } catch (error) {
+            console.error("[auth] jwt: failed to load permission overrides", {
+              roles: resolvedRoles,
+              error: error instanceof Error ? error.message : String(error),
+            });
+            // Continue with empty overrides if load fails
+            permissionOverrides = [];
+          }
         }
 
-        if (normalizedRoles.length === 0) {
-          normalizedRoles = ["CREW_PORTAL"];
+        token.role = primaryRole;
+        token.roles = resolvedRoles;
+        token.permissionOverrides = permissionOverrides;
+
+        let isSystemAdmin = false;
+        const userWithSystemAdmin = user as unknown as Record<string, unknown>;
+        if (user && typeof userWithSystemAdmin['isSystemAdmin'] === "boolean") {
+          isSystemAdmin = userWithSystemAdmin['isSystemAdmin'] as boolean;
+        } else if (tokenSubject) {
+          try {
+            const dbUser = await safePrismaCall("jwt:isSystemAdmin", () =>
+              prisma.user.findUnique({
+                where: { id: tokenSubject },
+                select: { isSystemAdmin: true },
+              })
+            ) as { isSystemAdmin: boolean } | null;
+            isSystemAdmin = dbUser?.isSystemAdmin ?? false;
+          } catch (error) {
+            console.error("[auth] jwt: failed to fetch isSystemAdmin", {
+              tokenSubject,
+              error: error instanceof Error ? error.message : String(error),
+            });
+            // Continue with false if DB fetch fails
+          }
         }
+        token.isSystemAdmin = isSystemAdmin;
 
-        const primaryRole = tokenUser?.role ?? normalizedRoles[0];
+        const tokenUser = {
+          id: tokenSubject ?? "",
+          email: user?.email ?? token.email ?? null,
+          name: user?.name ?? token.name ?? null,
+          role: primaryRole,
+          roles: resolvedRoles,
+          permissionOverrides,
+          isSystemAdmin,
+        };
 
-        session.user.role = primaryRole;
-        session.user.roles = normalizedRoles;
-        session.user.permissionOverrides = token.permissionOverrides ?? [];
-        session.user.isSystemAdmin = token.isSystemAdmin ?? false;
+        token.user = tokenUser;
 
         if (shouldLogAuth) {
-          console.info("[auth] session-callback", {
-            userId: session.user.id,
-            role: session.user.role,
-            roles: session.user.roles,
-            isSystemAdmin: session.user.isSystemAdmin,
-            tokenRole: token.role ?? null,
-            tokenRoles: token.roles ?? null,
-            tokenIsSystemAdmin: token.isSystemAdmin ?? null,
+          console.info("[auth] jwt-callback", {
+            trigger: trigger ?? null,
+            tokenSub: tokenSubject ?? null,
+            hasUser: Boolean(user),
+            hasTokenUser: Boolean(token.user),
+            role: token.role,
+            roles: token.roles,
           });
         }
+
+        return token;
+      } catch (error) {
+        // Log critical JWT callback errors
+        console.error("[auth] jwt callback failed", {
+          error: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined,
+          timestamp: new Date().toISOString(),
+        });
+        
+        // Return token with minimal safe defaults to prevent complete auth failure
+        return {
+          ...token,
+          role: token.role ?? "CREW_PORTAL",
+          roles: Array.isArray(token.roles) && token.roles.length > 0 ? token.roles : ["CREW_PORTAL"],
+          permissionOverrides: [],
+          isSystemAdmin: false,
+        };
       }
-      return session;
+    },
+    async session({ session, token }) {
+      try {
+        if (token && session.user) {
+          const fallbackId = session.user.id ?? "";
+          const tokenUser = token.user;
+          session.user.id = tokenUser?.id ?? token.sub ?? fallbackId;
+
+          if (tokenUser?.email && !session.user.email) {
+            session.user.email = tokenUser.email;
+          }
+          if (tokenUser?.name && !session.user.name) {
+            session.user.name = tokenUser.name;
+          }
+
+          let normalizedRoles = uniqueRolesFrom(
+            tokenUser?.roles,
+            token.roles,
+            token.role,
+            session.user.role
+          );
+
+          if (normalizedRoles.length === 0 && session.user.id) {
+            try {
+              const dbRole = await fetchUserRole(session.user.id, "session:user-role");
+              normalizedRoles = uniqueRolesFrom(dbRole);
+            } catch (error) {
+              console.error("[auth] session: failed to fetch user role", {
+                userId: session.user.id,
+                error: error instanceof Error ? error.message : String(error),
+              });
+              // Continue with default role if DB fetch fails
+            }
+          }
+
+          if (normalizedRoles.length === 0) {
+            normalizedRoles = ["CREW_PORTAL"];
+          }
+
+          const primaryRole = tokenUser?.role ?? normalizedRoles[0];
+
+          session.user.role = primaryRole;
+          session.user.roles = normalizedRoles;
+          session.user.permissionOverrides = token.permissionOverrides ?? [];
+          session.user.isSystemAdmin = token.isSystemAdmin ?? false;
+
+          if (shouldLogAuth) {
+            console.info("[auth] session-callback", {
+              userId: session.user.id,
+              role: session.user.role,
+              roles: session.user.roles,
+              isSystemAdmin: session.user.isSystemAdmin,
+              tokenRole: token.role ?? null,
+              tokenRoles: token.roles ?? null,
+              tokenIsSystemAdmin: token.isSystemAdmin ?? null,
+            });
+          }
+        }
+        return session;
+      } catch (error) {
+        // Log critical session callback errors
+        console.error("[auth] session callback failed", {
+          error: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined,
+          timestamp: new Date().toISOString(),
+        });
+        
+        // Return session with minimal safe values to prevent complete auth failure
+        if (session.user && token) {
+          session.user.role = token.role ?? session.user.role ?? "CREW_PORTAL";
+          session.user.roles = Array.isArray(token.roles) && token.roles.length > 0 
+            ? token.roles 
+            : (session.user.role ? [session.user.role] : ["CREW_PORTAL"]);
+          session.user.permissionOverrides = [];
+          session.user.isSystemAdmin = false;
+        }
+        return session;
+      }
     },
   },
   pages: {
