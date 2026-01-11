@@ -21,6 +21,10 @@ const ERROR_MESSAGES: Record<string, string> = {
   Default: "An error occurred during authentication. Please try again.",
 };
 
+// Form-specific error messages
+const FORM_ERROR_INVALID_CREDENTIALS = "Invalid email or password";
+const FORM_ERROR_GENERAL = "An error occurred. Please try again.";
+
 function SignInForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -33,6 +37,11 @@ function SignInForm() {
     searchParams.get("callbackUrl") ?? searchParams.get("redirect") ?? undefined;
   const safeTarget =
     desiredTarget && desiredTarget.startsWith("/") ? desiredTarget : "/";
+
+  // Helper to determine if an error is from form submission (not URL)
+  const isFormError = (errorMsg: string): boolean => {
+    return errorMsg === FORM_ERROR_INVALID_CREDENTIALS || errorMsg === FORM_ERROR_GENERAL;
+  };
 
   // Handle error from URL query parameter (only once on mount)
   useEffect(() => {
@@ -53,8 +62,8 @@ function SignInForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Only clear form errors, not URL-based errors
-    if (!urlErrorProcessedRef.current || error === "Invalid email or password" || error === "An error occurred. Please try again.") {
+    // Only clear form errors, preserve URL-based errors (SessionError, etc.)
+    if (!urlErrorProcessedRef.current || isFormError(error)) {
       setError("");
     }
     setIsLoading(true);
@@ -68,12 +77,12 @@ function SignInForm() {
       });
 
       if (result?.error) {
-        setError("Invalid email or password");
+        setError(FORM_ERROR_INVALID_CREDENTIALS);
       } else {
         router.push(safeTarget);
       }
     } catch {
-      setError("An error occurred. Please try again.");
+      setError(FORM_ERROR_GENERAL);
     } finally {
       setIsLoading(false);
     }
