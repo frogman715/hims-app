@@ -48,8 +48,7 @@ export async function PUT(
 
     const nc = await auditService.updateNonConformityStatus(
       id,
-      status,
-      session.user.id
+      status
     );
 
     return NextResponse.json(nc);
