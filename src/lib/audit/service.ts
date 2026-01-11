@@ -2,8 +2,7 @@ import { prisma } from '@/lib/prisma';
 import { 
   ComplianceAudit, 
   ComplianceAuditFinding, 
-  NonConformity, 
-  NCCorrectiveAction,
+  NonConformity,
   ComplianceAuditStatus,
   NCCorrectiveActionStatus,
   NCFindingSeverity

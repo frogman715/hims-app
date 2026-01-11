@@ -10,7 +10,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url = env("DATABASE_URL")
 }
 
 // ==========================
@@ -502,8 +502,6 @@ model User {
   auditFindingsAssignedTo     ComplianceAuditFinding[]   @relation("AuditFindingAssignedTo")
   nonconformitiesAssignedToNC NonConformity[]            @relation("NonConformityAssignedTo")
   nonconformitiesVerifiedBy   NonConformity[]            @relation("NonConformityVerifiedBy")
-  correctiveActionsAssignedTo NCCorrectiveAction[]       @relation("CorrectiveActionAssignedTo")
-  correctiveActionsVerifiedBy NCCorrectiveAction[]       @relation("CorrectiveActionVerifiedBy")
 
   // Phase 4.4: HR Compliance Management
   employeeTrainings           EmployeeTraining[]         @relation("EmployeeTraining")
