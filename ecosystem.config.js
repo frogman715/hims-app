@@ -4,8 +4,7 @@ module.exports = {
     {
       name: 'hims-app',
       cwd: '/home/hanmarine/projects/hims-app',
-      script: 'node_modules/next/dist/bin/next',
-      args: 'start -p 3000',
+      script: '.next/standalone/server.js',
       instances: 1,
       exec_mode: 'fork',
       env: {
@@ -25,3 +24,4 @@ module.exports = {
     },
   ],
 };
+
