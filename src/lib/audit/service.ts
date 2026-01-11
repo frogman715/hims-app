@@ -5,7 +5,6 @@ import {
   NonConformity, 
   NCCorrectiveAction,
   ComplianceAuditStatus,
-  NonConformityStatus,
   NCCorrectiveActionStatus,
   NCFindingSeverity
 } from '@prisma/client';
