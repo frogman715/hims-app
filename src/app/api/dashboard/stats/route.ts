@@ -264,6 +264,11 @@ export async function GET() {
     // const complaints = await prisma.complaint.count();
     const complaints = 0;
 
+    // Configuration constants
+    const MAX_DESCRIPTION_LENGTH = 80;
+    const MAX_PENDING_TASKS = 10;
+    const ITEMS_PER_QUERY = 5;
+
     // Transform pending tasks into array format expected by frontend
     const pendingTasks: Array<{
       dueDate: string;
@@ -287,7 +292,7 @@ export async function GET() {
           }
         }
       },
-      take: 5,
+      take: ITEMS_PER_QUERY,
       orderBy: {
         createdAt: 'desc'
       }
@@ -310,7 +315,7 @@ export async function GET() {
           lte: new Date(new Date().getTime() + 30 * 24 * 60 * 60 * 1000) // Within 30 days
         }
       },
-      take: 5,
+      take: ITEMS_PER_QUERY,
       orderBy: {
         startDate: 'asc'
       }
@@ -341,7 +346,7 @@ export async function GET() {
           }
         }
       },
-      take: 5,
+      take: ITEMS_PER_QUERY,
       orderBy: {
         targetDate: 'asc'
       }
@@ -350,10 +355,13 @@ export async function GET() {
     openNonConformities.forEach(nc => {
       const daysUntil = calculateDaysUntil(nc.targetDate);
       const assignedToName = nc.assignedTo?.name ?? 'Unassigned';
+      const truncatedDescription = nc.description.length > MAX_DESCRIPTION_LENGTH 
+        ? `${nc.description.substring(0, MAX_DESCRIPTION_LENGTH)}...` 
+        : nc.description;
       pendingTasks.push({
         dueDate: nc.targetDate.toISOString(),
         type: 'Non-Conformity',
-        description: `${nc.ncNumber}: ${nc.description.substring(0, 80)}${nc.description.length > 80 ? '...' : ''} (Assigned: ${assignedToName})`,
+        description: `${nc.ncNumber}: ${truncatedDescription} - Due ${daysUntil > 0 ? `in ${daysUntil} days` : 'today'} (Assigned: ${assignedToName})`,
         status: nc.status === 'IN_PROGRESS' ? 'IN_PROGRESS' : 'OPEN'
       });
     });
@@ -361,8 +369,8 @@ export async function GET() {
     // Sort all pending tasks by due date (most urgent first)
     pendingTasks.sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
 
-    // Limit to 10 most urgent tasks
-    pendingTasks.splice(10);
+    // Limit to most urgent tasks
+    pendingTasks.splice(MAX_PENDING_TASKS);
 
     // Crew Movement: Get recent assignments
     const crewMovement: Array<{
