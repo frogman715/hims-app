@@ -36,10 +36,12 @@ interface ExpiringItem {
 }
 
 interface PendingTask {
+  id?: string;
   dueDate: string;
   type: string;
   description: string;
   status: string;
+  link?: string;
 }
 
 interface RecentActivity {
@@ -797,7 +799,7 @@ function PendingTasksSection({ tasks, className = '' }: { tasks: PendingTask[]; 
           </h3>
           <p className="text-sm text-slate-600">Operational, audit, and compliance follow ups</p>
         </div>
-        <Link href="/quality" className="text-sm font-semibold text-blue-600 hover:text-blue-700">
+        <Link href="/crewing/applications" className="text-sm font-semibold text-blue-600 hover:text-blue-700">
           View All Tasks →
         </Link>
       </div>
@@ -805,20 +807,39 @@ function PendingTasksSection({ tasks, className = '' }: { tasks: PendingTask[]; 
         <EmptyState message="No tasks registered yet." />
       ) : (
         <div className="space-y-3">
-          {tasks.map((task, index) => (
-            <div key={`${task.description}-${index}`} className="border border-gray-200 rounded-lg p-4 flex items-start gap-4">
-              <div className="text-sm font-semibold text-gray-900 w-24">
-                <div>{formatDate(task.dueDate)}</div>
-                <span className={`inline-flex mt-2 items-center px-2 py-0.5 rounded-full text-xs font-semibold ${getTaskStatusBadge(task.status)}`}>
-                  {formatStatusLabel(task.status)}
-                </span>
+          {tasks.map((task, index) => {
+            const baseClassName = "border border-gray-200 rounded-lg p-4 flex items-start gap-4";
+            const hoverClassName = "hover:border-blue-300 hover:bg-blue-50/50 transition-all cursor-pointer";
+            
+            const taskContent = (
+              <>
+                <div className="text-sm font-semibold text-gray-900 w-24">
+                  <div>{formatDate(task.dueDate)}</div>
+                  <span className={`inline-flex mt-2 items-center px-2 py-0.5 rounded-full text-xs font-semibold ${getTaskStatusBadge(task.status)}`}>
+                    {formatStatusLabel(task.status)}
+                  </span>
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-gray-900">{task.type}</p>
+                  <p className="text-sm text-gray-600 mt-1">{task.description}</p>
+                </div>
+              </>
+            );
+            
+            return task.link ? (
+              <Link 
+                key={`${task.description}-${index}`} 
+                href={task.link} 
+                className={`${baseClassName} ${hoverClassName}`}
+              >
+                {taskContent}
+              </Link>
+            ) : (
+              <div key={`${task.description}-${index}`} className={baseClassName}>
+                {taskContent}
               </div>
-              <div className="flex-1">
-                <p className="text-sm font-semibold text-gray-900">{task.type}</p>
-                <p className="text-sm text-gray-600 mt-1">{task.description}</p>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </section>

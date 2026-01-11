@@ -273,10 +273,12 @@ export async function GET() {
 
     // Transform pending tasks into array format expected by frontend
     const pendingTasks: Array<{
+      id?: string;
       dueDate: string;
       type: string;
       description: string;
       status: string;
+      link?: string;
     }> = [];
 
     // Helper function to calculate days until a date
@@ -302,10 +304,12 @@ export async function GET() {
 
     pendingApps.forEach(app => {
       pendingTasks.push({
+        id: app.id,
         dueDate: app.createdAt.toISOString(),
         type: 'Application Review',
         description: `Review application from ${app.crew.fullName}`,
-        status: 'OPEN'
+        status: 'OPEN',
+        link: `/crewing/applications/${app.id}`
       });
     });
 
@@ -326,10 +330,12 @@ export async function GET() {
     upcomingAudits.forEach(audit => {
       const daysUntil = calculateDaysUntil(audit.startDate);
       pendingTasks.push({
+        id: audit.id,
         dueDate: audit.startDate.toISOString(),
         type: 'Audit Scheduled',
         description: `${audit.title} - ${audit.auditType}${daysUntil > 0 ? ` (in ${daysUntil} days)` : ' (today)'}`,
-        status: audit.status === 'IN_PROGRESS' ? 'IN_PROGRESS' : 'OPEN'
+        status: audit.status === 'IN_PROGRESS' ? 'IN_PROGRESS' : 'OPEN',
+        link: `/audit/${audit.id}`
       });
     });
 
@@ -362,10 +368,12 @@ export async function GET() {
         ? `${description.substring(0, MAX_DESCRIPTION_LENGTH)}...` 
         : description;
       pendingTasks.push({
+        id: nc.id,
         dueDate: nc.targetDate.toISOString(),
         type: 'Non-Conformity',
         description: `${nc.ncNumber}: ${truncatedDescription} - Due ${daysUntil > 0 ? `in ${daysUntil} days` : 'today'} (Assigned: ${assignedToName})`,
-        status: nc.status === 'IN_PROGRESS' ? 'IN_PROGRESS' : 'OPEN'
+        status: nc.status === 'IN_PROGRESS' ? 'IN_PROGRESS' : 'OPEN',
+        link: `/nonconformity/${nc.id}`
       });
     });
 
