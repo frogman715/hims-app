@@ -11,6 +11,7 @@ interface Seafarer {
   fullName: string;
   nationality: string;
   dateOfBirth: string | null;
+  rank: string | null;
   photoUrl?: string;
   assignments: Array<{
     id: number;
@@ -162,6 +163,7 @@ export default function Seafarers() {
               <thead className="bg-slate-50">
                 <tr>
                   <th scope="col" className="whitespace-nowrap px-6 py-3 text-left text-xs font-semibold uppercase tracking-widest text-slate-500">Name</th>
+                  <th scope="col" className="whitespace-nowrap px-6 py-3 text-left text-xs font-semibold uppercase tracking-widest text-slate-500">Position/Rank</th>
                   <th scope="col" className="whitespace-nowrap px-6 py-3 text-left text-xs font-semibold uppercase tracking-widest text-slate-500">Nationality</th>
                   <th scope="col" className="whitespace-nowrap px-6 py-3 text-left text-xs font-semibold uppercase tracking-widest text-slate-500">Date of Birth</th>
                   <th scope="col" className="whitespace-nowrap px-6 py-3 text-left text-xs font-semibold uppercase tracking-widest text-slate-500">Assignment</th>
@@ -197,13 +199,16 @@ export default function Seafarers() {
                         </button>
                       </div>
                     </td>
+                    <td className="whitespace-nowrap px-6 py-4 text-sm">
+                      <span className="font-semibold text-slate-900">{seafarer.rank ?? "—"}</span>
+                    </td>
                     <td className="whitespace-nowrap px-6 py-4 text-sm text-slate-600">{seafarer.nationality}</td>
                     <td className="whitespace-nowrap px-6 py-4 text-sm text-slate-600">{formatDate(seafarer.dateOfBirth)}</td>
                     <td className="whitespace-nowrap px-6 py-4 text-sm text-slate-600">
                       {seafarer.latestAssignment ? (
                         <div className="space-y-1">
-                          <p className="font-semibold text-slate-900">{seafarer.latestAssignment.rank ?? "—"}</p>
-                          <p className="text-sm text-slate-500">{seafarer.latestAssignment.vessel.name}</p>
+                          <p className="font-semibold text-slate-900">{seafarer.latestAssignment.vessel.name}</p>
+                          <p className="text-xs text-slate-500">{seafarer.latestAssignment.rank ?? "—"}</p>
                         </div>
                       ) : (
                         <span className="text-slate-400">No assignment</span>
@@ -250,7 +255,7 @@ export default function Seafarers() {
                 ))}
                 {tableRows.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-sm text-slate-500">
+                    <td colSpan={7} className="px-6 py-12 text-center text-sm text-slate-500">
                       No seafarers found. Add your first seafarer to get started.
                     </td>
                   </tr>

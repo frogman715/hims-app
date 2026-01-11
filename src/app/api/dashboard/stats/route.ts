@@ -264,6 +264,13 @@ export async function GET() {
     // const complaints = await prisma.complaint.count();
     const complaints = 0;
 
+    // Configuration constants
+    const MAX_DESCRIPTION_LENGTH = 80;
+    const MAX_PENDING_TASKS = 10;
+    const ITEMS_PER_QUERY = 5;
+    const DAYS_TO_MILLISECONDS = 24 * 60 * 60 * 1000;
+    const AUDIT_LOOKAHEAD_DAYS = 30;
+
     // Transform pending tasks into array format expected by frontend
     const pendingTasks: Array<{
       dueDate: string;
@@ -271,6 +278,11 @@ export async function GET() {
       description: string;
       status: string;
     }> = [];
+
+    // Helper function to calculate days until a date
+    const calculateDaysUntil = (targetDate: Date): number => {
+      return Math.ceil((targetDate.getTime() - new Date().getTime()) / DAYS_TO_MILLISECONDS);
+    };
 
     // Add applications as pending tasks
     const pendingApps = await prisma.application.findMany({
@@ -282,7 +294,7 @@ export async function GET() {
           }
         }
       },
-      take: 5,
+      take: ITEMS_PER_QUERY,
       orderBy: {
         createdAt: 'desc'
       }
@@ -296,6 +308,74 @@ export async function GET() {
         status: 'OPEN'
       });
     });
+
+    // Add scheduled audits as pending tasks
+    const upcomingAudits = await prisma.auditSchedule.findMany({
+      where: {
+        status: { in: ['SCHEDULED', 'IN_PROGRESS'] },
+        startDate: {
+          lte: new Date(new Date().getTime() + AUDIT_LOOKAHEAD_DAYS * DAYS_TO_MILLISECONDS)
+        }
+      },
+      take: ITEMS_PER_QUERY,
+      orderBy: {
+        startDate: 'asc'
+      }
+    });
+
+    upcomingAudits.forEach(audit => {
+      const daysUntil = calculateDaysUntil(audit.startDate);
+      pendingTasks.push({
+        dueDate: audit.startDate.toISOString(),
+        type: 'Audit Scheduled',
+        description: `${audit.title} - ${audit.auditType}${daysUntil > 0 ? ` (in ${daysUntil} days)` : ' (today)'}`,
+        status: audit.status === 'IN_PROGRESS' ? 'IN_PROGRESS' : 'OPEN'
+      });
+    });
+
+    // Add open non-conformities as pending tasks
+    const openNonConformities = await prisma.nonConformity.findMany({
+      where: {
+        status: { in: ['OPEN', 'IN_PROGRESS'] },
+        targetDate: {
+          gte: new Date()
+        }
+      },
+      include: {
+        assignedTo: {
+          select: {
+            name: true
+          }
+        }
+      },
+      take: ITEMS_PER_QUERY,
+      orderBy: {
+        targetDate: 'asc'
+      }
+    });
+
+    openNonConformities.forEach(nc => {
+      const daysUntil = calculateDaysUntil(nc.targetDate);
+      const assignedToName = nc.assignedTo?.name ?? 'Unassigned';
+      const description = nc.description ?? '';
+      const truncatedDescription = description.length > MAX_DESCRIPTION_LENGTH 
+        ? `${description.substring(0, MAX_DESCRIPTION_LENGTH)}...` 
+        : description;
+      pendingTasks.push({
+        dueDate: nc.targetDate.toISOString(),
+        type: 'Non-Conformity',
+        description: `${nc.ncNumber}: ${truncatedDescription} - Due ${daysUntil > 0 ? `in ${daysUntil} days` : 'today'} (Assigned: ${assignedToName})`,
+        status: nc.status === 'IN_PROGRESS' ? 'IN_PROGRESS' : 'OPEN'
+      });
+    });
+
+    // Sort all pending tasks by due date (most urgent first)
+    pendingTasks.sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
+
+    // Limit to most urgent tasks (keep only first MAX_PENDING_TASKS items)
+    if (pendingTasks.length > MAX_PENDING_TASKS) {
+      pendingTasks.length = MAX_PENDING_TASKS;
+    }
 
     // Crew Movement: Get recent assignments
     const crewMovement: Array<{

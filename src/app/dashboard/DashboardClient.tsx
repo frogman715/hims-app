@@ -683,7 +683,14 @@ function CrewMovementSection({ crewMovement, className = '' }: { crewMovement: C
     <section className={`surface-card p-6 ${className}`}>
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-lg font-semibold text-slate-900">Crew Movement</h3>
+          <h3 className="text-lg font-semibold text-slate-900">
+            Crew Movement
+            {crewMovement.length > 0 && (
+              <span className="ml-2 inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-semibold text-blue-800">
+                {crewMovement.length}
+              </span>
+            )}
+          </h3>
           <p className="text-sm text-slate-600">Assignments, sign-on readiness, and sign-off schedule</p>
         </div>
         <Link href="/crewing/prepare-joining" className="text-sm font-semibold text-blue-600 hover:text-blue-700">
@@ -735,7 +742,14 @@ function ExpiringItemsSection({ items, className = '' }: { items: ExpiringItem[]
     <section className={`surface-card p-6 ${className}`}>
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-lg font-semibold text-slate-900">Expiring Items</h3>
+          <h3 className="text-lg font-semibold text-slate-900">
+            Expiring Items
+            {items.length > 0 && (
+              <span className="ml-2 inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-800">
+                {items.length}
+              </span>
+            )}
+          </h3>
           <p className="text-sm text-slate-600">Documents and contracts requiring follow up</p>
         </div>
         <Link href="/crewing/documents?filter=expiring" className="text-sm font-semibold text-blue-600 hover:text-blue-700">
@@ -773,7 +787,14 @@ function PendingTasksSection({ tasks, className = '' }: { tasks: PendingTask[]; 
     <section className={`surface-card p-6 ${className}`}>
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-lg font-semibold text-slate-900">Pending Tasks</h3>
+          <h3 className="text-lg font-semibold text-slate-900">
+            Pending Tasks
+            {tasks.length > 0 && (
+              <span className="ml-2 inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-semibold text-blue-800">
+                {tasks.length}
+              </span>
+            )}
+          </h3>
           <p className="text-sm text-slate-600">Operational, audit, and compliance follow ups</p>
         </div>
         <Link href="/quality" className="text-sm font-semibold text-blue-600 hover:text-blue-700">
@@ -807,7 +828,14 @@ function PendingTasksSection({ tasks, className = '' }: { tasks: PendingTask[]; 
 function RecentActivitySection({ events, className = '' }: { events: RecentActivity[]; className?: string }) {
   return (
     <section className={`surface-card p-6 ${className}`}>
-      <h3 className="text-lg font-semibold text-slate-900 mb-4">Recent Activity</h3>
+      <h3 className="text-lg font-semibold text-slate-900 mb-4">
+        Recent Activity
+        {events.length > 0 && (
+          <span className="ml-2 inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-semibold text-gray-700">
+            {events.length}
+          </span>
+        )}
+      </h3>
       {events.length === 0 ? (
         <EmptyState message="Latest activity will appear after system receives updates." />
       ) : (
