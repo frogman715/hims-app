@@ -1,9 +1,25 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
+
+// Error message mapping for URL query parameters
+const ERROR_MESSAGES: Record<string, string> = {
+  SessionError: "Your session has expired or is invalid. Please sign in again.",
+  CredentialsSignin: "Invalid email or password. Please try again.",
+  OAuthSignin: "Error signing in with OAuth provider.",
+  OAuthCallback: "Error in OAuth callback.",
+  OAuthCreateAccount: "Could not create OAuth account.",
+  EmailCreateAccount: "Could not create email account.",
+  Callback: "Error in callback handler.",
+  OAuthAccountNotLinked: "Email already in use with a different provider.",
+  EmailSignin: "Error sending email verification.",
+  CredentialsSignup: "Error creating account.",
+  SessionRequired: "Please sign in to access this page.",
+  Default: "An error occurred during authentication. Please try again.",
+};
 
 function SignInForm() {
   const [email, setEmail] = useState("");
@@ -16,6 +32,20 @@ function SignInForm() {
     searchParams.get("callbackUrl") ?? searchParams.get("redirect") ?? undefined;
   const safeTarget =
     desiredTarget && desiredTarget.startsWith("/") ? desiredTarget : "/";
+
+  // Handle error from URL query parameter
+  useEffect(() => {
+    const urlError = searchParams.get("error");
+    if (urlError) {
+      const errorMessage = ERROR_MESSAGES[urlError] || ERROR_MESSAGES.Default;
+      setError(errorMessage);
+      
+      // Clear the error from URL to prevent it from showing on page reload
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.delete("error");
+      window.history.replaceState({}, "", newUrl.toString());
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
