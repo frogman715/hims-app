@@ -12,8 +12,9 @@ import { isValidStateTransition } from "@/types/crewing";
 export const POST = withPermission(
   "applications",
   PermissionLevel.EDIT_ACCESS,
-  async (req: NextRequest, session, { params }: { params: { id: string } }) => {
+  async (req: NextRequest, session, context: { params: Promise<{ id: string }> }) => {
     try {
+      const params = await context.params;
       const { id } = params;
       const body = await req.json();
       const { newStatus, remarks } = body;

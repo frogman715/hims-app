@@ -12,8 +12,9 @@ import { updateSeafarerSchema } from "@/types/crewing";
 export const GET = withPermission(
   "crew",
   PermissionLevel.VIEW_ACCESS,
-  async (req: NextRequest, session, { params }: { params: { id: string } }) => {
+  async (req: NextRequest, session, context: { params: Promise<{ id: string }> }) => {
     try {
+      const params = await context.params;
       const { id } = params;
 
       const seafarer = await prisma.crew.findUnique({
@@ -69,8 +70,9 @@ export const GET = withPermission(
 export const PUT = withPermission(
   "crew",
   PermissionLevel.EDIT_ACCESS,
-  async (req: NextRequest, session, { params }: { params: { id: string } }) => {
+  async (req: NextRequest, session, context: { params: Promise<{ id: string }> }) => {
     try {
+      const params = await context.params;
       const { id } = params;
       const body = await req.json();
 
@@ -130,7 +132,7 @@ export const PUT = withPermission(
 
       const updated = await prisma.crew.update({
         where: { id },
-        data: updateData as any,
+        data: updateData,
       });
 
       return NextResponse.json(updated);
@@ -147,8 +149,9 @@ export const PUT = withPermission(
 export const DELETE = withPermission(
   "crew",
   PermissionLevel.FULL_ACCESS,
-  async (req: NextRequest, session, { params }: { params: { id: string } }) => {
+  async (req: NextRequest, session, context: { params: Promise<{ id: string }> }) => {
     try {
+      const params = await context.params;
       const { id } = params;
 
       // Check if seafarer exists

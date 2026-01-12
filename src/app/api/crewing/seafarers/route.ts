@@ -144,7 +144,7 @@ export const POST = withPermission(
       }
 
       const seafarer = await prisma.crew.create({
-        data: seafarerData as any,
+        data: seafarerData,
       });
 
       return NextResponse.json(seafarer, { status: 201 });
