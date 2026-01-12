@@ -3,7 +3,6 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { writeFile } from "fs/promises";
-import path from "path";
 import {
   buildCrewFilePath,
   generateSafeFilename,
@@ -87,7 +86,6 @@ export async function POST(
     
     console.log('[PHOTO_UPLOAD] Attempting to write file:', {
       filepath,
-      uploadsDir,
       filename,
       bufferSize: buffer.length,
       timestamp: new Date().toISOString()

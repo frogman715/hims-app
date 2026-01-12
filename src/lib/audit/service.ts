@@ -2,10 +2,8 @@ import { prisma } from '@/lib/prisma';
 import { 
   ComplianceAudit, 
   ComplianceAuditFinding, 
-  NonConformity, 
-  NCCorrectiveAction,
+  NonConformity,
   ComplianceAuditStatus,
-  NonConformityStatus,
   NCCorrectiveActionStatus,
   NCFindingSeverity
 } from '@prisma/client';
@@ -163,54 +161,42 @@ export async function closeFinding(findingId: string): Promise<ComplianceAuditFi
 
 export async function createNonConformity(data: {
   auditId: string;
-  ncNumber: string;
+  findingId?: string;
   description: string;
   rootCause?: string;
-  assignedToId: string;
-  targetDate: Date;
+  correctionAction?: string;
+  preventionAction?: string;
+  targetDate?: Date;
 }): Promise<NonConformity> {
   return prisma.nonConformity.create({
     data: {
+      id: `nc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       auditId: data.auditId,
-      ncNumber: data.ncNumber,
+      findingId: data.findingId,
       description: data.description,
       rootCause: data.rootCause,
-      assignedToId: data.assignedToId,
+      correctionAction: data.correctionAction,
+      preventionAction: data.preventionAction,
       targetDate: data.targetDate,
       status: 'OPEN',
-    },
-    include: {
-      assignedTo: { select: { id: true, name: true, email: true } },
-      correctiveActions: true,
     },
   });
 }
 
 export async function updateNonConformityStatus(
   ncId: string,
-  status: NonConformityStatus,
-  verifiedById?: string
+  status: string,
+  completedDate?: Date
 ): Promise<NonConformity> {
   const updateData: Record<string, unknown> = { status };
   
-  if (status === 'RESOLVED') {
-    updateData.resolvedDate = new Date();
-  } else if (status === 'VERIFIED') {
-    updateData.verifiedDate = new Date();
-    updateData.verifiedById = verifiedById;
-  } else if (status === 'CLOSED') {
-    updateData.verifiedDate = new Date();
-    updateData.verifiedById = verifiedById;
+  if (status === 'RESOLVED' || status === 'VERIFIED' || status === 'CLOSED') {
+    updateData.completionDate = completedDate || new Date();
   }
 
   return prisma.nonConformity.update({
     where: { id: ncId },
     data: updateData,
-    include: {
-      assignedTo: { select: { id: true, name: true, email: true } },
-      verifiedBy: { select: { id: true, name: true } },
-      correctiveActions: true,
-    },
   });
 }
 
@@ -218,36 +204,28 @@ export async function getNonConformityWithActions(ncId: string) {
   return prisma.nonConformity.findUnique({
     where: { id: ncId },
     include: {
-      assignedTo: { select: { id: true, name: true, email: true } },
-      verifiedBy: { select: { id: true, name: true } },
-      correctiveActions: {
-        include: {
-          assignedTo: { select: { id: true, name: true, email: true } },
-          verifiedBy: { select: { id: true, name: true } },
-        },
-      },
       audit: {
         select: { id: true, auditNumber: true, auditType: true },
+      },
+      finding: {
+        select: { id: true, findingNumber: true, description: true },
       },
     },
   });
 }
 
 export async function listNonConformities(filters?: {
-  status?: NonConformityStatus;
-  assignedToId?: string;
+  status?: string;
   limit?: number;
   offset?: number;
 }) {
   return prisma.nonConformity.findMany({
     where: {
       status: filters?.status,
-      assignedToId: filters?.assignedToId,
     },
     include: {
-      assignedTo: { select: { id: true, name: true, email: true } },
       audit: { select: { id: true, auditNumber: true } },
-      correctiveActions: { select: { id: true } },
+      finding: { select: { id: true, findingNumber: true } },
     },
     take: filters?.limit || 20,
     skip: filters?.offset || 0,

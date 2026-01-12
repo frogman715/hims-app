@@ -18,11 +18,12 @@ export async function POST(
 
     const nc = await auditService.createNonConformity({
       auditId: id,
-      ncNumber: data.ncNumber,
+      findingId: data.findingId,
       description: data.description,
       rootCause: data.rootCause,
-      assignedToId: data.assignedToId,
-      targetDate: new Date(data.targetDate),
+      correctionAction: data.correctionAction,
+      preventionAction: data.preventionAction,
+      targetDate: data.targetDate ? new Date(data.targetDate) : undefined,
     });
 
     return NextResponse.json(nc, { status: 201 });

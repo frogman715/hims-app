@@ -5,7 +5,6 @@ import { writeFile } from "fs/promises";
 import { extname } from "path";
 import {
   buildCrewFilePath,
-  generateSafeFilename,
   getRelativePath,
   getMaxFileSize,
 } from "@/lib/upload-path";
