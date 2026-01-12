@@ -10,6 +10,7 @@ import { hasPermission, ModuleName, PermissionLevel, UserRole } from '@/lib/perm
 import SidebarHeader from '@/components/sidebar/SidebarHeader';
 import ComplianceStatusWidget from '@/components/compliance/ComplianceStatusWidget';
 import ExternalComplianceWidget from '@/components/compliance/ExternalComplianceWidget';
+import { getRoleDisplayName } from '@/lib/role-display';
 
 interface DashboardData {
   totalCrew: number;
@@ -499,7 +500,7 @@ export default function DashboardClient() {
             </div>
             <div className="flex-1 min-w-0">
               <div className="font-medium text-gray-900 text-sm truncate">{userName}</div>
-              <div className="text-xs text-gray-600">{userRole}</div>
+              <div className="text-xs text-gray-600">{getRoleDisplayName(userRole)}</div>
             </div>
           </div>
           {session ? (
