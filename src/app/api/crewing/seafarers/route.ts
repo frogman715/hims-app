@@ -4,6 +4,7 @@ import { withPermission } from "@/lib/api-middleware";
 import { PermissionLevel } from "@/lib/permission-middleware";
 import { handleApiError, ApiError, validatePagination } from "@/lib/error-handler";
 import { createSeafarerSchema } from "@/types/crewing";
+import type { Prisma } from "@prisma/client";
 
 /**
  * GET /api/crewing/seafarers
@@ -109,39 +110,30 @@ export const POST = withPermission(
       const data = validationResult.data;
 
       // Convert string dates to Date objects
-      const seafarerData: Record<string, unknown> = {
+      const seafarerData: Prisma.CrewCreateInput = {
         fullName: data.fullName,
         rank: data.rank,
         nationality: data.nationality,
-        phone: data.phone,
+        phone: data.phone || null,
         email: data.email || null,
-        address: data.address,
-        emergencyContactName: data.emergencyContactName,
-        emergencyContactRelation: data.emergencyContactRelation,
-        emergencyContactPhone: data.emergencyContactPhone,
-        bloodType: data.bloodType,
-        heightCm: data.heightCm,
-        weightKg: data.weightKg,
-        coverallSize: data.coverallSize,
-        shoeSize: data.shoeSize,
-        waistSize: data.waistSize,
-        passportNumber: data.passportNumber,
-        seamanBookNumber: data.seamanBookNumber,
-        placeOfBirth: data.placeOfBirth,
+        address: data.address || null,
+        emergencyContactName: data.emergencyContactName || null,
+        emergencyContactRelation: data.emergencyContactRelation || null,
+        emergencyContactPhone: data.emergencyContactPhone || null,
+        bloodType: data.bloodType || null,
+        heightCm: data.heightCm || null,
+        weightKg: data.weightKg || null,
+        coverallSize: data.coverallSize || null,
+        shoeSize: data.shoeSize || null,
+        waistSize: data.waistSize || null,
+        passportNumber: data.passportNumber || null,
+        seamanBookNumber: data.seamanBookNumber || null,
+        placeOfBirth: data.placeOfBirth || null,
         status: "STANDBY",
+        dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth) : null,
+        passportExpiry: data.passportExpiry ? new Date(data.passportExpiry) : null,
+        seamanBookExpiry: data.seamanBookExpiry ? new Date(data.seamanBookExpiry) : null,
       };
-
-      if (data.dateOfBirth) {
-        seafarerData.dateOfBirth = new Date(data.dateOfBirth);
-      }
-
-      if (data.passportExpiry) {
-        seafarerData.passportExpiry = new Date(data.passportExpiry);
-      }
-
-      if (data.seamanBookExpiry) {
-        seafarerData.seamanBookExpiry = new Date(data.seamanBookExpiry);
-      }
 
       const seafarer = await prisma.crew.create({
         data: seafarerData,

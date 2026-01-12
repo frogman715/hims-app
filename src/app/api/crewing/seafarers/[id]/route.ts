@@ -4,6 +4,7 @@ import { withPermission } from "@/lib/api-middleware";
 import { PermissionLevel } from "@/lib/permission-middleware";
 import { handleApiError, ApiError } from "@/lib/error-handler";
 import { updateSeafarerSchema } from "@/types/crewing";
+import type { Prisma } from "@prisma/client";
 
 /**
  * GET /api/crewing/seafarers/[id]
@@ -42,7 +43,7 @@ export const GET = withPermission(
             take: 5,
           },
           visaApplications: {
-            orderBy: { appliedDate: "desc" },
+            orderBy: { applicationDate: "desc" },
             take: 5,
           },
           contracts: {
@@ -97,7 +98,7 @@ export const PUT = withPermission(
       }
 
       // Build update data
-      const updateData: Record<string, unknown> = {};
+      const updateData: Prisma.CrewUpdateInput = {};
       
       if (data.fullName !== undefined) updateData.fullName = data.fullName;
       if (data.rank !== undefined) updateData.rank = data.rank;
