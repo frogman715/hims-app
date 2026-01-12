@@ -22,7 +22,7 @@ interface EditUserModalProps {
 }
 
 const ROLES = [
-  { value: 'DIRECTOR', label: 'Director' },
+  { value: 'DIRECTOR', label: 'Admin' },
   { value: 'CDMO', label: 'CDMO' },
   { value: 'OPERATIONAL', label: 'Operational' },
   { value: 'ACCOUNTING', label: 'Accounting' },
