@@ -1,36 +1,15 @@
 import { getServerSession } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
 import { authOptions } from '@/lib/auth';
-import * as auditService from '@/lib/audit/service';
+// import * as auditService from '@/lib/audit/service'; // Disabled - schema mismatch
 
+// TODO: FIXME - This route is disabled because createCorrectiveAction doesn't match schema
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const data = await req.json();
-    const { id } = await params;
-
-    const ca = await auditService.createCorrectiveAction({
-      nonConformityId: id,
-      caNumber: data.caNumber,
-      action: data.action,
-      assignedToId: data.assignedToId,
-      dueDate: new Date(data.dueDate),
-      evidenceDoc: data.evidenceDoc,
-    });
-
-    return NextResponse.json(ca, { status: 201 });
-  } catch (error) {
-    console.error('Error creating corrective action:', error);
-    return NextResponse.json(
-      { error: 'Failed to create corrective action' },
-      { status: 500 }
-    );
-  }
+  return NextResponse.json(
+    { error: 'createCorrectiveAction disabled due to schema mismatch - needs refactoring' },
+    { status: 501 }
+  );
 }

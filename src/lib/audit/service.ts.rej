@@ -1,0 +1,20 @@
+--- service.ts
++++ service.ts
+@@ -267,7 +267,7 @@
+ */
+ 
+ // export async function updateCAStatus(
+-export async function updateCAStatus(
++/* export async function updateCAStatus(
+   caId: string,
+   status: CorrectiveActionStatus,
+   verifiedById?: string,
+@@ -294,7 +294,7 @@
+       verifiedBy: { select: { id: true, name: true } },
+       nonConformity: { select: { id: true, ncNumber: true } },
+     },
+   });
+-}
++} */
+ 
+ 
