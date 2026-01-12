@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { getRoleDisplayName } from '@/lib/role-display';
 
 interface AuditLogValues {
   name?: string;
@@ -165,7 +166,7 @@ export default function AuditLogTable({ entityType = 'User', refreshTrigger }: A
                   <div>
                     Created user: <strong>{log.newValuesJson.name}</strong> ({log.newValuesJson.email})
                     <br />
-                    Role: <strong>{log.newValuesJson.role}</strong>
+                    Role: <strong>{getRoleDisplayName(log.newValuesJson.role)}</strong>
                   </div>
                 )}
                 {log.action === 'USER_UPDATED' && log.oldValuesJson && log.newValuesJson && (
@@ -174,7 +175,7 @@ export default function AuditLogTable({ entityType = 'User', refreshTrigger }: A
                       <div>Name: {log.oldValuesJson.name} → {log.newValuesJson.name}</div>
                     )}
                     {log.oldValuesJson.role !== log.newValuesJson.role && (
-                      <div>Role: {log.oldValuesJson.role} → {log.newValuesJson.role}</div>
+                      <div>Role: {getRoleDisplayName(log.oldValuesJson.role)} → {getRoleDisplayName(log.newValuesJson.role)}</div>
                     )}
                     {log.oldValuesJson.isSystemAdmin !== log.newValuesJson.isSystemAdmin && (
                       <div>

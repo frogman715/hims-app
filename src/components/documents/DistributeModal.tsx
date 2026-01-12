@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Loader, AlertCircle, CheckCircle } from 'lucide-react';
 import Modal from '../Modal';
+import { getRoleDisplayName } from '@/lib/role-display';
 
 interface User {
   id: string;
@@ -233,7 +234,7 @@ export default function DistributeModal({
                     <p className="text-xs text-gray-500">{user.email}</p>
                   </div>
                   <span className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded">
-                    {user.role}
+                    {getRoleDisplayName(user.role)}
                   </span>
                 </label>
               ))}
