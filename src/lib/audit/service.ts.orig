@@ -268,35 +268,32 @@ export async function createCorrectiveAction(data: {
 }
 */
 
-// // TODO: FIXME - All CorrectiveAction functions disabled - schema mismatch
-// /*
-// export async function updateCAStatus(
-//   caId: string,
-//   status: CorrectiveActionStatus,
-//   verifiedById?: string,
-//   completedDate?: Date
-// ): Promise<CorrectiveAction> {
-//   const updateData: Record<string, unknown> = { status };
-// 
-//   if (status === 'COMPLETED') {
-//     updateData.completedDate = completedDate || new Date();
-//   } else if (status === 'VERIFIED') {
-//     updateData.verifiedDate = new Date();
-//     updateData.verifiedById = verifiedById;
-//   } else if (status === 'CLOSED') {
-//     updateData.verifiedDate = new Date();
-//     updateData.verifiedById = verifiedById;
-//   }
-// 
-//   return prisma.correctiveAction.update({
-//     where: { id: caId },
-//     data: updateData,
-//     include: {
-//       assignedTo: { select: { id: true, name: true, email: true } },
-//       verifiedBy: { select: { id: true, name: true } },
-//       nonConformity: { select: { id: true, ncNumber: true } },
+export async function updateCAStatus(
+  caId: string,
+  status: CorrectiveActionStatus,
+  verifiedById?: string,
+  completedDate?: Date
+): Promise<CorrectiveAction> {
+  const updateData: Record<string, unknown> = { status };
+
+  if (status === 'COMPLETED') {
+    updateData.completedDate = completedDate || new Date();
+  } else if (status === 'VERIFIED') {
+    updateData.verifiedDate = new Date();
+    updateData.verifiedById = verifiedById;
+  } else if (status === 'CLOSED') {
+    updateData.verifiedDate = new Date();
+    updateData.verifiedById = verifiedById;
+  }
+
+  return prisma.correctiveAction.update({
+    where: { id: caId },
+    data: updateData,
+    include: {
+      assignedTo: { select: { id: true, name: true, email: true } },
+      verifiedBy: { select: { id: true, name: true } },
+      nonConformity: { select: { id: true, ncNumber: true } },
     },
-*/
   });
 }
 

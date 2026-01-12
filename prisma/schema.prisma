@@ -590,6 +590,14 @@ model Crew {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  // Indexes for search performance
+  @@index([fullName])
+  @@index([rank])
+  @@index([status])
+  @@index([passportNumber])
+  @@index([seamanBookNumber])
+  @@index([nationality])
 }
 
 model DocumentType {
@@ -624,6 +632,11 @@ model CrewDocument {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  // Indexes for document queries
+  @@index([crewId, docType])
+  @@index([expiryDate])
+  @@index([isActive])
 }
 
 // ==========================
@@ -829,6 +842,12 @@ model Assignment {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  // Indexes for assignment queries
+  @@index([crewId, status])
+  @@index([vesselId, status])
+  @@index([startDate])
+  @@index([endDate])
 }
 
 model Application {
@@ -851,6 +870,11 @@ model Application {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  // Indexes for application queries
+  @@index([crewId, status])
+  @@index([applicationDate])
+  @@index([status])
 }
 
 model Interview {
@@ -3268,6 +3292,9 @@ model ComplianceAuditFinding {
   assignedToId    String?
   assignedTo      User?           @relation("AuditFindingAssignedTo", fields: [assignedToId], references: [id])
   
+  // Relation back to NonConformity
+  nonConformities NonConformity[] @relation("NonConformityFinding")
+  
   dueDate         DateTime?
   closedDate      DateTime?
   
@@ -3285,7 +3312,7 @@ model NonConformity {
   auditId             String
   audit               ComplianceAudit @relation(fields: [auditId], references: [id], onDelete: Cascade)
   findingId           String?
-  finding             ComplianceAuditFinding? @relation(fields: [findingId], references: [id], onDelete: SetNull)
+  finding             ComplianceAuditFinding? @relation("NonConformityFinding", fields: [findingId], references: [id], onDelete: SetNull)
   
   // Details
   description         String          @db.Text
@@ -3299,6 +3326,10 @@ model NonConformity {
   targetDate          DateTime?
   completionDate      DateTime?
   responsiblePersonId String?
+  assignedToId        String?
+  assignedTo          User?           @relation("NonConformityAssignedTo", fields: [assignedToId], references: [id])
+  verifiedById        String?
+  verifiedBy          User?           @relation("NonConformityVerifiedBy", fields: [verifiedById], references: [id])
   
   createdAt           DateTime        @default(now())
   updatedAt           DateTime        @updatedAt
