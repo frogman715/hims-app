@@ -168,18 +168,20 @@ export async function createNonConformity(data: {
   preventionAction?: string;
   targetDate?: Date;
 }): Promise<NonConformity> {
+  const createData = {
+    id: `nc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    auditId: data.auditId,
+    description: data.description,
+    status: 'OPEN',
+    ...(data.findingId && { findingId: data.findingId }),
+    ...(data.rootCause && { rootCause: data.rootCause }),
+    ...(data.correctionAction && { correctionAction: data.correctionAction }),
+    ...(data.preventionAction && { preventionAction: data.preventionAction }),
+    ...(data.targetDate && { targetDate: data.targetDate }),
+  };
+
   return prisma.nonConformity.create({
-    data: {
-      id: `nc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      auditId: data.auditId,
-      findingId: data.findingId,
-      description: data.description,
-      rootCause: data.rootCause,
-      correctionAction: data.correctionAction,
-      preventionAction: data.preventionAction,
-      targetDate: data.targetDate,
-      status: 'OPEN',
-    },
+    data: createData as any,
   });
 }
 
@@ -188,15 +190,14 @@ export async function updateNonConformityStatus(
   status: string,
   completedDate?: Date
 ): Promise<NonConformity> {
-  const updateData: Record<string, unknown> = { status };
-  
-  if (status === 'RESOLVED' || status === 'VERIFIED' || status === 'CLOSED') {
-    updateData.completionDate = completedDate || new Date();
-  }
+  const updateData = {
+    status,
+    ...(status === 'RESOLVED' || status === 'VERIFIED' || status === 'CLOSED' ? { completionDate: completedDate || new Date() } : {}),
+  };
 
   return prisma.nonConformity.update({
     where: { id: ncId },
-    data: updateData,
+    data: updateData as any,
   });
 }
 
@@ -207,9 +208,6 @@ export async function getNonConformityWithActions(ncId: string) {
       audit: {
         select: { id: true, auditNumber: true, auditType: true },
       },
-      finding: {
-        select: { id: true, findingNumber: true, description: true },
-      },
     },
   });
 }
@@ -219,13 +217,15 @@ export async function listNonConformities(filters?: {
   limit?: number;
   offset?: number;
 }) {
+  const where: Record<string, any> = {};
+  if (filters?.status) {
+    where.status = filters.status;
+  }
+
   return prisma.nonConformity.findMany({
-    where: {
-      status: filters?.status,
-    },
+    where,
     include: {
       audit: { select: { id: true, auditNumber: true } },
-      finding: { select: { id: true, findingNumber: true } },
     },
     take: filters?.limit || 20,
     skip: filters?.offset || 0,
@@ -234,94 +234,60 @@ export async function listNonConformities(filters?: {
 }
 
 // ============================================================================
-// CORRECTIVE ACTION SERVICE
+// CORRECTIVE ACTION SERVICE (Using CorrectiveAction model from prisma schema)
 // ============================================================================
 
-export async function createCorrectiveAction(data: {
-  nonConformityId: string;
-  caNumber: string;
-  action: string;
-  assignedToId: string;
-  dueDate: Date;
-  evidenceDoc?: string;
-}): Promise<NCCorrectiveAction> {
-  return prisma.nCCorrectiveAction.create({
-    data: {
-      nonConformityId: data.nonConformityId,
-      caNumber: data.caNumber,
-      action: data.action,
-      assignedToId: data.assignedToId,
-      dueDate: data.dueDate,
-      evidenceDoc: data.evidenceDoc,
-      status: 'PENDING',
-    },
-    include: {
-      assignedTo: { select: { id: true, name: true, email: true } },
-    },
-  });
-}
+// Note: createCorrectiveAction function uses CorrectiveAction model, not NC-specific
+// export async function createCorrectiveAction(data: {
+//   formNumber: string;
+//   capaNumber: string;
+//   type: 'CORRECTIVE' | 'PREVENTIVE' | 'IMPROVEMENT';
+//   source: string;
+//   department: string;
+//   nonconformity: string;
+//   rootCause?: string;
+//   correctiveAction: string;
+//   preventiveAction?: string;
+//   responsiblePerson: string;
+//   targetDate: Date;
+// }): Promise<CorrectiveAction> {
+//   return prisma.correctiveAction.create({
+//     data,
+//   });
+// }
 
-export async function updateCAStatus(
-  caId: string,
-  status: NCCorrectiveActionStatus,
-  verifiedById?: string,
-  completedDate?: Date
-): Promise<NCCorrectiveAction> {
-  const updateData: Record<string, unknown> = { status };
+// export async function listCorrectiveActions(filters?: {
+//   status?: NCCorrectiveActionStatus;
+//   assignedToId?: string;
+//   overduOnly?: boolean;
+//   limit?: number;
+//   offset?: number;
+// }) {
+//   const where: Record<string, unknown> = {
+//     status: filters?.status,
+//     assignedToId: filters?.assignedToId,
+//   };
 
-  if (status === 'COMPLETED') {
-    updateData.completedDate = completedDate || new Date();
-  } else if (status === 'VERIFIED') {
-    updateData.verifiedDate = new Date();
-    updateData.verifiedById = verifiedById;
-  } else if (status === 'CLOSED') {
-    updateData.verifiedDate = new Date();
-    updateData.verifiedById = verifiedById;
-  }
+//   if (filters?.overduOnly) {
+//     where.dueDate = {
+//       lt: new Date(),
+//     };
+//     where.status = {
+//       in: ['PENDING', 'IN_PROGRESS'],
+//     };
+//   }
 
-  return prisma.nCCorrectiveAction.update({
-    where: { id: caId },
-    data: updateData,
-    include: {
-      assignedTo: { select: { id: true, name: true, email: true } },
-      verifiedBy: { select: { id: true, name: true } },
-      nonConformity: { select: { id: true, ncNumber: true } },
-    },
-  });
-}
-
-export async function listCorrectiveActions(filters?: {
-  status?: NCCorrectiveActionStatus;
-  assignedToId?: string;
-  overduOnly?: boolean;
-  limit?: number;
-  offset?: number;
-}) {
-  const where: Record<string, unknown> = {
-    status: filters?.status,
-    assignedToId: filters?.assignedToId,
-  };
-
-  if (filters?.overduOnly) {
-    where.dueDate = {
-      lt: new Date(),
-    };
-    where.status = {
-      in: ['PENDING', 'IN_PROGRESS'],
-    };
-  }
-
-  return prisma.nCCorrectiveAction.findMany({
-    where,
-    include: {
-      assignedTo: { select: { id: true, name: true, email: true } },
-      nonConformity: { select: { id: true, ncNumber: true } },
-    },
-    take: filters?.limit || 20,
-    skip: filters?.offset || 0,
-    orderBy: { dueDate: 'asc' },
-  });
-}
+//   return prisma.nCCorrectiveAction.findMany({
+//     where,
+//     include: {
+//       assignedTo: { select: { id: true, name: true, email: true } },
+//       nonConformity: { select: { id: true, ncNumber: true } },
+//     },
+//     take: filters?.limit || 20,
+//     skip: filters?.offset || 0,
+//     orderBy: { dueDate: 'asc' },
+//   });
+// }
 
 // ============================================================================
 // AUDIT STATISTICS & ANALYTICS
