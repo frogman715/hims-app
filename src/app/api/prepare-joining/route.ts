@@ -4,16 +4,18 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { checkPermission, PermissionLevel } from "@/lib/permission-middleware";
 
-enum PrepareJoiningStatus {
-  PREPARING = "PREPARING",
-  DOCUMENTS_READY = "DOCUMENTS_READY",
-  READY = "READY",
-  CANCELLED = "CANCELLED",
-  COMPLETED = "COMPLETED",
-}
+// Use Prisma enum instead of local enum
+type PrepareJoiningStatus = "PENDING" | "DOCUMENTS" | "MEDICAL" | "TRAINING" | "TRAVEL" | "READY" | "DISPATCHED" | "CANCELLED";
 
 const prepareJoiningStatuses = new Set<PrepareJoiningStatus>([
-  ...Object.values(PrepareJoiningStatus),
+  "PENDING",
+  "DOCUMENTS",
+  "MEDICAL",
+  "TRAINING",
+  "TRAVEL",
+  "READY",
+  "DISPATCHED",
+  "CANCELLED",
 ]);
 
 // GET /api/prepare-joining - List all prepare joining records

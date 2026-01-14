@@ -155,6 +155,7 @@ export default function PrepareJoiningPage() {
     { value: "TRAVEL", label: "Travel", icon: "✈️" },
     { value: "READY", label: "Ready", icon: "✅" },
     { value: "DISPATCHED", label: "Dispatched", icon: "🚢" },
+    { value: "CANCELLED", label: "Cancelled", icon: "❌" },
   ];
 
   const getStatusBadge = (status: string) => {
@@ -166,6 +167,7 @@ export default function PrepareJoiningPage() {
       TRAVEL: { accent: "bg-orange-500/10 text-orange-600", text: "Travel" },
       READY: { accent: "bg-teal-500/10 text-teal-600", text: "Ready to Join" },
       DISPATCHED: { accent: "bg-indigo-500/10 text-indigo-600", text: "Dispatched" },
+      CANCELLED: { accent: "bg-red-500/10 text-red-600", text: "Cancelled" },
     };
 
     const item = config[status] || { accent: "bg-slate-500/10 text-slate-700", text: status };
@@ -386,6 +388,19 @@ export default function PrepareJoiningPage() {
                             />
                             <span>Medical Valid</span>
                           </label>
+                          {pj.medicalCheckDate && (
+                            <div className="ml-7">
+                              <input
+                                type="date"
+                                value={pj.medicalCheckDate ? new Date(pj.medicalCheckDate).toISOString().split('T')[0] : ''}
+                                onChange={(e) =>
+                                  updateChecklistItem(pj.id, "medicalCheckDate", e.target.value)
+                                }
+                                className="text-xs w-full px-2 py-1 rounded border border-slate-300 focus:ring-2 focus:ring-emerald-500"
+                                placeholder="Check Date"
+                              />
+                            </div>
+                          )}
                           {pj.medicalExpiry ? (
                             <div className="ml-7 text-xs font-medium text-slate-500">
                               Exp: {new Date(pj.medicalExpiry).toLocaleDateString("id-ID")}
@@ -402,6 +417,19 @@ export default function PrepareJoiningPage() {
                             />
                             <span>Orientation Complete</span>
                           </label>
+                          {pj.orientationDate && (
+                            <div className="ml-7">
+                              <input
+                                type="date"
+                                value={pj.orientationDate ? new Date(pj.orientationDate).toISOString().split('T')[0] : ''}
+                                onChange={(e) =>
+                                  updateChecklistItem(pj.id, "orientationDate", e.target.value)
+                                }
+                                className="text-xs w-full px-2 py-1 rounded border border-slate-300 focus:ring-2 focus:ring-emerald-500"
+                                placeholder="Orientation Date"
+                              />
+                            </div>
+                          )}
                         </div>
                       </div>
 
@@ -423,8 +451,16 @@ export default function PrepareJoiningPage() {
                             <span>Ticket Booked</span>
                           </label>
                           {pj.flightNumber ? (
-                            <div className="ml-7 text-xs font-medium text-slate-500">
-                              Flight: {pj.flightNumber}
+                            <div className="ml-7">
+                              <input
+                                type="text"
+                                value={pj.flightNumber}
+                                onChange={(e) =>
+                                  updateChecklistItem(pj.id, "flightNumber", e.target.value)
+                                }
+                                className="text-xs w-full px-2 py-1 rounded border border-slate-300 focus:ring-2 focus:ring-emerald-500"
+                                placeholder="Flight Number"
+                              />
                             </div>
                           ) : null}
                           <label className="flex items-center gap-3 text-sm text-slate-700">
@@ -438,6 +474,19 @@ export default function PrepareJoiningPage() {
                             />
                             <span>Hotel Booked</span>
                           </label>
+                          {pj.hotelName ? (
+                            <div className="ml-7">
+                              <input
+                                type="text"
+                                value={pj.hotelName}
+                                onChange={(e) =>
+                                  updateChecklistItem(pj.id, "hotelName", e.target.value)
+                                }
+                                className="text-xs w-full px-2 py-1 rounded border border-slate-300 focus:ring-2 focus:ring-emerald-500"
+                                placeholder="Hotel Name"
+                              />
+                            </div>
+                          ) : null}
                           <label className="flex items-center gap-3 text-sm text-slate-700">
                             <input
                               type="checkbox"
@@ -449,6 +498,45 @@ export default function PrepareJoiningPage() {
                             />
                             <span>Transport Arranged</span>
                           </label>
+                          {pj.departurePort && (
+                            <div className="ml-7">
+                              <input
+                                type="text"
+                                value={pj.departurePort}
+                                onChange={(e) =>
+                                  updateChecklistItem(pj.id, "departurePort", e.target.value)
+                                }
+                                className="text-xs w-full px-2 py-1 rounded border border-slate-300 focus:ring-2 focus:ring-emerald-500"
+                                placeholder="Departure Port"
+                              />
+                            </div>
+                          )}
+                          {pj.arrivalPort && (
+                            <div className="ml-7">
+                              <input
+                                type="text"
+                                value={pj.arrivalPort}
+                                onChange={(e) =>
+                                  updateChecklistItem(pj.id, "arrivalPort", e.target.value)
+                                }
+                                className="text-xs w-full px-2 py-1 rounded border border-slate-300 focus:ring-2 focus:ring-emerald-500"
+                                placeholder="Arrival Port"
+                              />
+                            </div>
+                          )}
+                          {pj.departureDate && (
+                            <div className="ml-7">
+                              <input
+                                type="date"
+                                value={pj.departureDate ? new Date(pj.departureDate).toISOString().split('T')[0] : ''}
+                                onChange={(e) =>
+                                  updateChecklistItem(pj.id, "departureDate", e.target.value)
+                                }
+                                className="text-xs w-full px-2 py-1 rounded border border-slate-300 focus:ring-2 focus:ring-emerald-500"
+                                placeholder="Departure Date"
+                              />
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
