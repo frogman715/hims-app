@@ -1,17 +1,24 @@
 // src/lib/role-display.ts
-export function getRoleDisplayName(role: string): string {
+export function getRoleDisplayName(role: string, isSystemAdmin?: boolean): string {
   const roleMap: Record<string, string> = {
-    'DIRECTOR': 'Admin',
+    'DIRECTOR': 'Director',
     'CDMO': 'CDMO',
     'OPERATIONAL': 'Operational',
     'ACCOUNTING': 'Accounting',
     'HR': 'HR',
-    'HR_ADMIN': 'HR Admin',
+    'CREW_PORTAL': 'Crew Portal',
     'QMR': 'QMR',
+    'HR_ADMIN': 'HR Admin',
     'SECTION_HEAD': 'Section Head',
     'STAFF': 'Staff',
-    'CREW_PORTAL': 'Crew Portal'
   };
   
-  return roleMap[role] || role;
+  const displayName = roleMap[role] || role;
+  
+  // Add system admin indicator if applicable
+  if (isSystemAdmin) {
+    return `${displayName} (System Admin)`;
+  }
+  
+  return displayName;
 }

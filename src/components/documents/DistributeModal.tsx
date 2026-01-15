@@ -234,7 +234,7 @@ export default function DistributeModal({
                     <p className="text-xs text-gray-500">{user.email}</p>
                   </div>
                   <span className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded">
-                    {getRoleDisplayName(user.role)}
+                    {getRoleDisplayName(user.role, user.isSystemAdmin)}
                   </span>
                 </label>
               ))}
