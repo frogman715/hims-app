@@ -4,13 +4,8 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { checkPermission, PermissionLevel } from "@/lib/permission-middleware";
 
-enum PrepareJoiningStatus {
-  PREPARING = "PREPARING",
-  DOCUMENTS_READY = "DOCUMENTS_READY",
-  READY = "READY",
-  CANCELLED = "CANCELLED",
-  COMPLETED = "COMPLETED",
-}
+// Use Prisma enum instead of local enum
+type PrepareJoiningStatus = "PENDING" | "DOCUMENTS" | "MEDICAL" | "TRAINING" | "TRAVEL" | "READY" | "DISPATCHED" | "CANCELLED";
 
 type UpdatePrepareJoiningPayload = {
   status?: string;
@@ -34,10 +29,70 @@ type UpdatePrepareJoiningPayload = {
   remarks?: string | null;
   vesselId?: string | null;
   principalId?: string | null;
+  
+  // MCU
+  mcuScheduled?: boolean;
+  mcuScheduledDate?: string | null;
+  mcuCompleted?: boolean;
+  mcuCompletedDate?: string | null;
+  mcuDoctorName?: string | null;
+  mcuClinicName?: string | null;
+  mcuResult?: string | null;
+  mcuRestrictions?: string | null;
+  mcuRemarks?: string | null;
+  vaccineYellowFever?: boolean;
+  vaccineHepatitisA?: boolean;
+  vaccineHepatitisB?: boolean;
+  vaccineTyphoid?: boolean;
+  vaccineOther?: string | null;
+  vaccineExpiryDate?: string | null;
+
+  // Equipment
+  safetyLifeJacket?: boolean;
+  safetyHelmet?: boolean;
+  safetyShoes?: boolean;
+  safetyGloves?: boolean;
+  safetyHarnessVest?: boolean;
+  workUniform?: boolean;
+  workIDCard?: boolean;
+  workAccessCard?: boolean;
+  workStationery?: boolean;
+  workToolsProvided?: boolean;
+  personalPassport?: boolean;
+  personalVisa?: boolean;
+  personalTickets?: boolean;
+  personalVaccineCard?: boolean;
+  personalMedicalCert?: boolean;
+  vesselStatroomAssigned?: boolean;
+  vesselStatroomNumber?: string | null;
+  vesselContractSigned?: boolean;
+  vesselBriefingScheduled?: boolean;
+  vesselBriefingDate?: string | null;
+  vesselOrientationDone?: boolean;
+  vesselEmergencyDrill?: boolean;
+
+  // Pre-Departure
+  preDepartureDocCheck?: boolean;
+  preDepartureEquipCheck?: boolean;
+  preDepartureMedicalOK?: boolean;
+  preDepartureEmergency?: boolean;
+  preDepartureSalaryOK?: boolean;
+  preDeparturePerDiem?: boolean;
+  preDepartureFinalCheck?: boolean;
+  preDepartureApprovedBy?: string | null;
+  preDepartureApprovedAt?: string | null;
+  preDepartureChecklistBy?: string | null;
 };
 
 const prepareJoiningStatuses = new Set<PrepareJoiningStatus>([
-  ...Object.values(PrepareJoiningStatus),
+  "PENDING",
+  "DOCUMENTS",
+  "MEDICAL",
+  "TRAINING",
+  "TRAVEL",
+  "READY",
+  "DISPATCHED",
+  "CANCELLED",
 ]);
 
 function parseDateOrNull(value?: string | null): Date | null {

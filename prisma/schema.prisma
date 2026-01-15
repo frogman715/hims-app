@@ -965,6 +965,68 @@ model PrepareJoining {
   transportArranged Boolean   @default(false)
   transportDetails  String?
 
+  // MCU (Medical Check-up) Section
+  mcuScheduled            Boolean   @default(false)
+  mcuScheduledDate        DateTime?
+  mcuCompleted            Boolean   @default(false)
+  mcuCompletedDate        DateTime?
+  mcuDoctorName           String?
+  mcuClinicName           String?
+  mcuResult               String? // PASSED, FAILED, CONDITIONAL
+  mcuRestrictions         String? // Any medical restrictions
+  mcuRemarks              String?
+  
+  // Vaccinations
+  vaccineYellowFever      Boolean @default(false)
+  vaccineHepatitisA       Boolean @default(false)
+  vaccineHepatitisB       Boolean @default(false)
+  vaccineTyphoid          Boolean @default(false)
+  vaccineOther            String? // Other vaccinations
+  vaccineExpiryDate       DateTime?
+
+  // Equipment Section (Perlengkapan Crew)
+  // Safety Equipment
+  safetyLifeJacket        Boolean @default(false)
+  safetyHelmet            Boolean @default(false)
+  safetyShoes             Boolean @default(false)
+  safetyGloves            Boolean @default(false)
+  safetyHarnessVest       Boolean @default(false)
+
+  // Work Equipment
+  workUniform             Boolean @default(false)
+  workIDCard              Boolean @default(false)
+  workAccessCard          Boolean @default(false)
+  workStationery          Boolean @default(false)
+  workToolsProvided       Boolean @default(false)
+
+  // Personal Items
+  personalPassport        Boolean @default(false)
+  personalVisa            Boolean @default(false)
+  personalTickets         Boolean @default(false)
+  personalVaccineCard     Boolean @default(false)
+  personalMedicalCert     Boolean @default(false)
+
+  // Vessel Pre-requisites
+  vesselStatroomAssigned  Boolean @default(false)
+  vesselStatroomNumber    String?
+  vesselContractSigned    Boolean @default(false)
+  vesselBriefingScheduled Boolean @default(false)
+  vesselBriefingDate      DateTime?
+  vesselOrientationDone   Boolean @default(false)
+  vesselEmergencyDrill    Boolean @default(false)
+
+  // Pre-Departure Section (48 hours before)
+  preDepartureDocCheck    Boolean @default(false)
+  preDepartureEquipCheck  Boolean @default(false)
+  preDepartureMedicalOK   Boolean @default(false)
+  preDepartureEmergency   Boolean @default(false) // Emergency contact confirmed
+  preDepartureSalaryOK    Boolean @default(false) // Salary/advance confirmed
+  preDeparturePerDiem     Boolean @default(false) // Per diem confirmed
+  preDepartureFinalCheck  Boolean @default(false) // Final approval
+  preDepartureApprovedBy  String? // Approver name/ID
+  preDepartureApprovedAt  DateTime?
+  preDepartureChecklistBy String? // Who did the final check
+
   // Additional
   remarks     String?
   attachments String? // JSON array of file paths
