@@ -1,8 +1,9 @@
 import { getServerSession } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
 import { authOptions } from '@/lib/auth';
-import * as auditService from '@/lib/audit/service';
+// import * as auditService from '@/lib/audit/service';
 
+// TODO: Disable NC routes - schema mismatch
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -13,6 +14,10 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Disabled - schema mismatch
+    return NextResponse.json({ error: 'This endpoint is temporarily disabled' }, { status: 503 });
+
+    /*
     const data = await req.json();
     const { id } = await params;
 
@@ -27,6 +32,7 @@ export async function POST(
     });
 
     return NextResponse.json(nc, { status: 201 });
+    */
   } catch (error) {
     console.error('Error creating non-conformity:', error);
     return NextResponse.json(

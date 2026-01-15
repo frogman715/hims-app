@@ -7,6 +7,17 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  return NextResponse.json(
+    { error: 'Non-conformity endpoints temporarily disabled' },
+    { status: 503 }
+  );
+}
+
+/*
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
@@ -31,7 +42,19 @@ export async function GET(
     );
   }
 }
+*/
 
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  return NextResponse.json(
+    { error: 'Non-conformity endpoints temporarily disabled' },
+    { status: 503 }
+  );
+}
+
+/*
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -60,3 +83,4 @@ export async function PUT(
     );
   }
 }
+*/
