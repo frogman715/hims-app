@@ -1,7 +1,7 @@
 // src/lib/role-display.ts
 export function getRoleDisplayName(role: string, isSystemAdmin?: boolean): string {
   const roleMap: Record<string, string> = {
-    'DIRECTOR': 'Director',
+    'DIRECTOR': 'Admin',
     'CDMO': 'CDMO',
     'OPERATIONAL': 'Operational',
     'ACCOUNTING': 'Accounting',
