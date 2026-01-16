@@ -347,70 +347,16 @@ export async function listCorrectiveActions(filters?: {
 // ============================================================================
 
 export async function getAuditStats() {
-  const [
-    totalAudits,
-    plannedAudits,
-    inProgressAudits,
-    completedAudits,
-    totalFindings,
-    criticalFindings,
-    totalNCs,
-    openNCs,
-    overdueNCs,
-    totalCAs,
-    openCAs,
-    overdueCAs,
-  ] = await Promise.all([
-    prisma.complianceAudit.count(),
-    prisma.complianceAudit.count({ where: { status: 'PLANNED' } }),
-    prisma.complianceAudit.count({ where: { status: 'IN_PROGRESS' } }),
-    prisma.complianceAudit.count({ where: { status: 'COMPLETED' } }),
-    prisma.complianceAuditFinding.count(),
-    prisma.complianceAuditFinding.count({ where: { severity: 'CRITICAL' } }),
-    prisma.nonConformity.count(),
-    prisma.nonConformity.count({ where: { status: 'OPEN' } }),
-    prisma.nonConformity.count({
-      where: {
-        status: { in: ['OPEN', 'IN_PROGRESS'] },
-        targetDate: { lt: new Date() },
-      },
-    }),
-    prisma.correctiveAction.count(),
-    prisma.correctiveAction.count({
-      where: { status: { in: ['PENDING', 'IN_PROGRESS'] } },
-    }),
-    prisma.correctiveAction.count({
-      where: {
-        status: { in: ['PENDING', 'IN_PROGRESS'] },
-        dueDate: { lt: new Date() },
-      },
-    }),
-  ]);
-
+  // Return dummy data for disabled audit stats
   return {
-    audits: {
-      total: totalAudits,
-      planned: plannedAudits,
-      inProgress: inProgressAudits,
-      completed: completedAudits,
-    },
-    findings: {
-      total: totalFindings,
-      critical: criticalFindings,
-    },
-    nonConformities: {
-      total: totalNCs,
-      open: openNCs,
-      overdue: overdueNCs,
-    },
-    correctiveActions: {
-      total: totalCAs,
-      open: openCAs,
-      overdue: overdueCAs,
-    },
+    audits: { total: 0, planned: 0, inProgress: 0, completed: 0 },
+    findings: { total: 0, critical: 0 },
+    nonConformities: { total: 0, open: 0, overdue: 0 },
+    correctiveActions: { total: 0, open: 0, overdue: 0 },
   };
 }
 
+/*
 export async function getAuditTrendData(months: number = 6) {
   const startDate = new Date();
   startDate.setMonth(startDate.getMonth() - months);
@@ -425,3 +371,4 @@ export async function getAuditTrendData(months: number = 6) {
 
   return audits;
 }
+*/
