@@ -481,6 +481,10 @@ model User {
   formTemplatesCreated      FormTemplate[]    @relation("FormTemplateCreatedBy")
   hgfSubmissionAuditLogs    HGFSubmissionAuditLog[]
 
+  // Crew Task Management
+  crewTasksAssigned         CrewTask[]        @relation("CrewTaskAssignedTo")
+  crewTasksCompleted        CrewTask[]        @relation("CrewTaskCompletedBy")
+
   // Phase 3: Quality Management System (QMS)
   qmsDocumentsReviewed      QMSDocument[]     @relation("QMSDocumentReviewedBy")
   nonconformitiesAssigned   NonconformityRecord[] @relation("NonconformityAssignedTo")
@@ -571,6 +575,7 @@ model Crew {
   insuranceRecords    InsuranceRecord[]
   contracts           EmploymentContract[]
   prepareJoinings     PrepareJoining[]
+  crewTasks           CrewTask[]
   exchangeExpenses    ExchangeExpense[]
   documentReceipts    DocumentReceipt[]
   documentReceivings  DocumentReceiving[]
@@ -1035,6 +1040,7 @@ model PrepareJoining {
   vessel    Vessel?              @relation(fields: [vesselId], references: [id])
   principal Principal?           @relation(fields: [principalId], references: [id])
   forms     PrepareJoiningForm[]
+  tasks     CrewTask[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1089,6 +1095,64 @@ enum FormApprovalStatus {
   CHANGES_REQUESTED // Need edits
   APPROVED // Approved, ready to download
   REJECTED // Rejected
+}
+
+// ==========================
+// CREW TASK MANAGEMENT
+// ==========================
+
+enum CrewTaskStatus {
+  TODO
+  IN_PROGRESS
+  COMPLETED
+  BLOCKED
+}
+
+enum CrewTaskType {
+  MCU          // Medical Check-up
+  TRAINING     // Training/Orientation
+  VISA         // Visa Processing
+  CONTRACT     // Contract Signing
+  BRIEFING     // Vessel Briefing
+}
+
+model CrewTask {
+  id               String          @id @default(cuid())
+  crewId           String
+  prepareJoiningId String?
+  
+  // Task details
+  taskType         CrewTaskType
+  title            String
+  description      String?         @db.Text
+  status           CrewTaskStatus  @default(TODO)
+  priority         String          @default("MEDIUM") // LOW, MEDIUM, HIGH
+  
+  // Assignment
+  assignedTo       String?         // User ID
+  assignedToUser   User?           @relation(fields: [assignedTo], references: [id], onDelete: SetNull)
+  
+  // Tracking
+  dueDate          DateTime?
+  completedAt      DateTime?
+  completedBy      String?         // User ID
+  completedByUser  User?           @relation("CrewTaskCompletedBy", fields: [completedBy], references: [id], onDelete: SetNull)
+  
+  // Notes
+  remarks          String?         @db.Text
+  
+  crew             Crew            @relation(fields: [crewId], references: [id], onDelete: Cascade)
+  prepareJoining   PrepareJoining? @relation(fields: [prepareJoiningId], references: [id], onDelete: SetNull)
+  
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  
+  @@index([crewId])
+  @@index([prepareJoiningId])
+  @@index([taskType])
+  @@index([status])
+  @@index([assignedTo])
+  @@index([dueDate])
 }
 
 model Dispatch {
