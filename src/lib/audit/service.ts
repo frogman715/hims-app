@@ -307,6 +307,7 @@ export async function updateCAStatus(
 }
 */
 
+/*
 export async function listCorrectiveActions(filters?: {
   status?: CorrectiveActionStatus;
   assignedToId?: string;
@@ -339,6 +340,7 @@ export async function listCorrectiveActions(filters?: {
     orderBy: { dueDate: 'asc' },
   });
 }
+*/
 
 // ============================================================================
 // AUDIT STATISTICS & ANALYTICS
