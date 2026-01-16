@@ -143,13 +143,6 @@ export const authOptions: NextAuthOptions = {
 
         const role = normalizedRoles[0];
 
-        console.log("[auth] authorize returning user:", {
-          email: user.email,
-          name: user.name,
-          role,
-          isSystemAdmin: user.isSystemAdmin,
-        });
-
         return {
           id: typeof user.id === "string" ? user.id : String(user.id),
           email: user.email,
