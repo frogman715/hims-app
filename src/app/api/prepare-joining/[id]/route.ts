@@ -352,6 +352,65 @@ export async function PUT(
       },
     });
 
+    // Auto-create tasks if status changed to READY or DISPATCHED
+    if (updateData.status && ['READY', 'DISPATCHED'].includes(updateData.status as string)) {
+      try {
+        const taskTemplates = [
+          {
+            taskType: 'MCU',
+            title: `MCU - ${prepareJoining.crew.fullName}`,
+            description: 'Schedule and complete Medical Check-Up (MCU) examination'
+          },
+          {
+            taskType: 'TRAINING',
+            title: `Training - ${prepareJoining.crew.fullName}`,
+            description: 'Arrange training and orientation sessions'
+          },
+          {
+            taskType: 'VISA',
+            title: `Visa - ${prepareJoining.crew.fullName}`,
+            description: 'Process visa application and documentation'
+          },
+          {
+            taskType: 'CONTRACT',
+            title: `Contract - ${prepareJoining.crew.fullName}`,
+            description: 'Prepare and obtain signed employment contract'
+          },
+          {
+            taskType: 'BRIEFING',
+            title: `Briefing - ${prepareJoining.crew.fullName}`,
+            description: 'Schedule vessel briefing and orientation'
+          }
+        ];
+
+        // Create tasks for each template
+        interface TaskTemplate {
+          taskType: string;
+          title: string;
+          description: string;
+        }
+        await Promise.all(
+          taskTemplates.map((template: TaskTemplate) =>
+            prisma.crewTask.create({
+              data: {
+                crewId: prepareJoining.crew.id,
+                prepareJoiningId: id,
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                taskType: template.taskType as any,
+                title: template.title,
+                description: template.description,
+                status: 'TODO',
+                dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000) // 14 days from now
+              }
+            })
+          )
+        );
+      } catch (taskError) {
+        console.error('Error creating auto tasks:', taskError);
+        // Don't fail the entire update if task creation fails
+      }
+    }
+
     return NextResponse.json(prepareJoining);
   } catch (error) {
     console.error("Error updating prepare joining:", error);

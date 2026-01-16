@@ -1130,7 +1130,7 @@ model CrewTask {
   
   // Assignment
   assignedTo       String?         // User ID
-  assignedToUser   User?           @relation(fields: [assignedTo], references: [id], onDelete: SetNull)
+  assignedToUser   User?           @relation("CrewTaskAssignedTo", fields: [assignedTo], references: [id], onDelete: SetNull)
   
   // Tracking
   dueDate          DateTime?
