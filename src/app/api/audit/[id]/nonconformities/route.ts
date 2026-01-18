@@ -1,43 +1,73 @@
 import { getServerSession } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
 import { authOptions } from '@/lib/auth';
-// import * as auditService from '@/lib/audit/service';
+import { prisma } from '@/lib/prisma';
+import { checkPermission, PermissionLevel } from '@/lib/permission-middleware';
+import { handleApiError } from '@/lib/error-handler';
+import { randomUUID } from 'crypto';
 
-// TODO: Disable NC routes - schema mismatch
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const session = await getServerSession(authOptions);
+
+    if (!session || !checkPermission(session, 'quality', PermissionLevel.VIEW_ACCESS)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const nonConformities = await prisma.nonConformity.findMany({
+      where: { auditId: id },
+      include: {
+        audit: true,
+        finding: true,
+        assignedTo: true,
+        verifiedBy: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return NextResponse.json(nonConformities);
+  } catch (error) {
+    return handleApiError(error);
+  }
+}
+
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    if (!session || !checkPermission(session, 'quality', PermissionLevel.EDIT_ACCESS)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // Disabled - schema mismatch
-    return NextResponse.json({ error: 'This endpoint is temporarily disabled' }, { status: 503 });
+    const body = await req.json();
 
-    /*
-    const data = await req.json();
-    const { id } = await params;
-
-    const nc = await auditService.createNonConformity({
-      auditId: id,
-      findingId: data.findingId,
-      description: data.description,
-      rootCause: data.rootCause,
-      correctionAction: data.correctionAction,
-      preventionAction: data.preventionAction,
-      targetDate: data.targetDate ? new Date(data.targetDate) : undefined,
+    const nonConformity = await prisma.nonConformity.create({
+      data: {
+        id: randomUUID(),
+        auditId: id,
+        description: body.description,
+        status: body.status || 'OPEN',
+        rootCause: body.rootCause,
+        targetDate: body.targetDate ? new Date(body.targetDate) : null,
+      },
+      include: {
+        audit: true,
+        finding: true,
+        assignedTo: true,
+        verifiedBy: true,
+      },
     });
 
-    return NextResponse.json(nc, { status: 201 });
-    */
+    return NextResponse.json(nonConformity, { status: 201 });
   } catch (error) {
-    console.error('Error creating non-conformity:', error);
-    return NextResponse.json(
-      { error: 'Failed to create non-conformity' },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }

@@ -40,13 +40,13 @@ export default function LeavePayPage() {
 
   const fetchLeavePays = async () => {
     try {
-      // TODO: Replace with actual API call when available
-      // const response = await fetch("/api/accounting/leave-pay");
-      // if (response.ok) {
-      //   const data = await response.json();
-      //   setLeavePays(data);
-      // }
-      setLeavePays([]);
+      const response = await fetch("/api/accounting/leave-pay");
+      if (response.ok) {
+        const data = await response.json();
+        setLeavePays(data.data || []);
+      } else {
+        console.error("Failed to fetch leave pays:", response.statusText);
+      }
     } catch (error) {
       console.error("Error fetching leave pays:", error);
     } finally {
@@ -56,15 +56,35 @@ export default function LeavePayPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Placeholder for API call
-    console.log("Leave pay record:", formData);
-    setShowForm(false);
-    setFormData({
-      seafarerId: '',
-      amount: '',
-      currency: 'USD',
-      paymentDate: new Date().toISOString().split('T')[0],
-    });
+    try {
+      const response = await fetch("/api/accounting/leave-pay", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          seafarerId: parseInt(formData.seafarerId),
+          amount: parseFloat(formData.amount as string),
+          currency: formData.currency,
+          paymentDate: new Date(formData.paymentDate),
+        }),
+      });
+      
+      if (response.ok) {
+        const newRecord = await response.json();
+        setLeavePays([newRecord.data, ...leavePays]);
+        setShowForm(false);
+        setFormData({
+          seafarerId: '',
+          amount: '',
+          currency: 'USD',
+          paymentDate: new Date().toISOString().split('T')[0],
+        });
+      } else {
+        alert("Failed to create leave pay record");
+      }
+    } catch (error) {
+      console.error("Error creating leave pay:", error);
+      alert("Error creating record");
+    }
   };
 
   if (status === "loading" || loading) {

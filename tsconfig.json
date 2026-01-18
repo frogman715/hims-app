@@ -40,6 +40,7 @@
     "node_modules",
     "REFACTORED_EXAMPLE_contracts_route.ts",
     "**/*EXAMPLE*",
-    "scripts/**/*"
+    "scripts/**/*",
+    "hims-app/**/*"
   ]
 }

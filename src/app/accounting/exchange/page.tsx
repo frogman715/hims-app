@@ -44,13 +44,13 @@ export default function ExchangeExpensePage() {
 
   const fetchExpenses = async () => {
     try {
-      // TODO: Replace with actual API call when available
-      // const response = await fetch("/api/accounting/exchange-expense");
-      // if (response.ok) {
-      //   const data = await response.json();
-      //   setExpenses(data);
-      // }
-      setExpenses([]);
+      const response = await fetch("/api/accounting/exchange-expense");
+      if (response.ok) {
+        const data = await response.json();
+        setExpenses(data.data || []);
+      } else {
+        console.error("Failed to fetch expenses:", response.statusText);
+      }
     } catch (error) {
       console.error("Error fetching exchange expenses:", error);
     } finally {
@@ -60,17 +60,39 @@ export default function ExchangeExpensePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Placeholder for API call
-    console.log("Exchange expense record:", formData);
-    setShowForm(false);
-    setFormData({
-      seafarerId: '',
-      expenseType: 'TICKET',
-      description: '',
-      amount: '',
-      currency: 'USD',
-      expenseDate: new Date().toISOString().split('T')[0],
-    });
+    try {
+      const response = await fetch("/api/accounting/exchange-expense", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          seafarerId: parseInt(formData.seafarerId),
+          expenseType: formData.expenseType,
+          description: formData.description,
+          amount: parseFloat(formData.amount as string),
+          currency: formData.currency,
+          expenseDate: new Date(formData.expenseDate),
+        }),
+      });
+      
+      if (response.ok) {
+        const newRecord = await response.json();
+        setExpenses([newRecord.data, ...expenses]);
+        setShowForm(false);
+        setFormData({
+          seafarerId: '',
+          expenseType: 'TICKET',
+          description: '',
+          amount: '',
+          currency: 'USD',
+          expenseDate: new Date().toISOString().split('T')[0],
+        });
+      } else {
+        alert("Failed to create exchange expense record");
+      }
+    } catch (error) {
+      console.error("Error creating expense:", error);
+      alert("Error creating record");
+    }
   };
 
   if (status === "loading" || loading) {

@@ -143,12 +143,18 @@ Add Seafarer → Application (CR-02) → Document Upload → Assignment → Crew
 
 ### Setup
 ```bash
-npm install                          # Install dependencies
-docker-compose up -d                 # Start PostgreSQL
-npx prisma migrate dev              # Run migrations
-npx prisma generate                 # Generate Prisma client
-npm run seed                        # Seed initial data (admin@hanmarine.com / admin123)
-npm run dev                         # Start dev server on :3000
+cp .env.example .env                 # Copy environment template
+# Generate secrets (CRITICAL for production):
+openssl rand -base64 32              # NEXTAUTH_SECRET
+openssl rand -base64 32              # HIMS_CRYPTO_KEY
+openssl rand -base64 24              # DB password
+
+npm install                          # Install dependencies (use PUPPETEER_SKIP_DOWNLOAD=true if needed)
+docker-compose up -d db              # Start PostgreSQL on 5434:5432
+npx prisma migrate deploy            # Run migrations
+npx prisma generate                  # Generate Prisma client
+npm run seed                         # Seed initial data (admin@hanmarine.com / admin123)
+npm run dev                          # Start dev server on :3000
 ```
 
 ### Database Changes
@@ -156,21 +162,109 @@ npm run dev                         # Start dev server on :3000
 2. Run `npx prisma migrate dev --name descriptive_name`
 3. Run `npx prisma generate` to update types
 4. Never edit migrations directly - always create new ones
+5. Use `$transaction()` for multi-step operations to ensure consistency
 
 ### Testing Access
 Default users from seed script:
 - Admin: `admin@hanmarine.com` / `admin123` (DIRECTOR role)
 - Test login at `http://localhost:3000/auth/signin`
+- Build production: `npm run build` → `npm start`
 
 ## Common Gotchas
 
-1. **Environment Variables**: `DATABASE_URL`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL`, `HIMS_CRYPTO_KEY` (32+ chars) required
+1. **Environment Variables**: 
+   - `DATABASE_URL`, `NEXTAUTH_SECRET` (32+ chars), `NEXTAUTH_URL`, `HIMS_CRYPTO_KEY` (32+ chars) REQUIRED
+   - Never commit `.env` - use `.env.example` as template
+   - Verify on startup: `scripts/verify-env.sh`
+
 2. **Port Conflict**: Database runs on `5434:5432` to avoid conflicts with local PostgreSQL
-3. **Session Type**: JWT strategy only - no database sessions
-4. **File Uploads**: Store paths in DB, actual files in `public/uploads/` (implement file handling as needed)
-5. **Type Safety**: Prisma generates types from schema - regenerate after schema changes
-6. **Client Components**: Don't fetch data in client components - pass as props from server components or use API routes
-7. **Permission Matrix**: ACCOUNTING has FULL_ACCESS to contracts (wage calculation) but NO_ACCESS to medical records
+
+3. **Session Type**: JWT strategy only - no database sessions. Session expires after 30 days (`SESSION_MAX_AGE_SECONDS`)
+
+4. **File Uploads**: 
+   - Store paths in DB (`crewDocument.filePath`), actual files in `seafarers_files/{crewId}_{slug}/`
+   - Use `upload-path.ts` utilities (`getAbsolutePath()`, `isPathSafe()`) for security
+   - Files served through `/api/files/[...path]/route.ts` with permission checks
+
+5. **Type Safety**: 
+   - Prisma generates types from schema - regenerate after schema changes (`npx prisma generate`)
+   - Use `type-guards.ts` for runtime validation of request payloads
+   - Avoid `any` - prefer `unknown` then narrow with guards
+
+6. **Client Components**: 
+   - Don't fetch data in client components - pass as props from server components or use API routes
+   - `'use client'` only for interactive forms, event handlers, browser APIs
+
+7. **Permission Matrix**: 
+   - ACCOUNTING has FULL_ACCESS to contracts (wage calculation) but NO_ACCESS to medical records
+   - CREW_PORTAL can only access own data - filter by `crewId === session.user.id`
+   - Role normalization: `normalizeToUserRoles()` handles legacy/deprecated roles
+
+8. **Prisma Relation Queries**:
+   - Always use `include` for related data, not separate queries (prevents N+1)
+   - Example: `await prisma.crew.findMany({ include: { documents: true, assignments: true } })`
+   - Use `select` to exclude sensitive fields if needed
+
+9. **Decimal/Money Fields**:
+   - Use `Decimal` type from Prisma for salary/financial amounts (not `Float`)
+   - Convert to string for JSON: `.toFixed(2)` or use `prisma-json-serializer`
+
+10. **Data Sensitivity in Responses**:
+    - Check `hasSensitivityAccess(userRoles, DataSensitivity.RED/AMBER)` before returning data
+    - Decrypt RED data only for authorized users: `decrypt(encryptedPassport)`
+    - Mask AMBER data: `maskPhoneNumber('6281234567890')` → `'62812****5678'`
+
+## Debugging & Troubleshooting
+
+### Database Connection Issues
+```bash
+# Verify PostgreSQL is running
+docker ps | grep db
+
+# Check logs
+docker logs hims-app-db-1
+
+# Recreate database (WARNING: deletes all data)
+docker-compose down -v
+docker-compose up -d db
+npx prisma migrate deploy
+```
+
+### Authentication Failures
+1. Check `NEXTAUTH_SECRET` is 32+ chars: `echo ${NEXTAUTH_SECRET} | wc -c`
+2. Verify `NEXTAUTH_URL` matches deployment domain (e.g., `http://localhost:3000` for dev)
+3. Session token decode: Check browser cookies under `next-auth.session-token`
+4. Enable NextAuth debug: `DEBUG=next-auth:*` npm run dev`
+
+### Permission Denied Errors
+1. Confirm user session: `console.log(session.user.roles)` in route handler
+2. Check permission matrix in `src/lib/permissions.ts` for module + PermissionLevel combo
+3. Verify role normalization: `normalizeToUserRoles(session.user.roles)`
+4. Test with admin (DIRECTOR role) to rule out permission issues
+
+### Encryption/Decryption Errors
+1. Verify `HIMS_CRYPTO_KEY` length: Must be 32+ chars (256 bits)
+2. Check if data was encrypted before decrypting: Look for `iv:` prefix in encrypted string
+3. Key mismatch: If key changed, encrypted data becomes unreadable (regenerate or use key rotation
+4. Test encryption: `npm run seed` includes test crew with encrypted data
+
+### Type Errors
+1. Run `npx prisma generate` after schema changes
+2. Verify function signatures in `src/lib/api-middleware.ts` match your usage
+3. Use TypeScript strict mode: `tsc --noEmit` to catch issues
+
+### Build Failures
+1. Check `npm run lint` and fix ESLint errors
+2. Run `npx prisma generate` to update types
+3. Verify all `.env` variables are set
+4. Check for circular imports in `src/lib/`
+5. Next.js build cache: `rm -rf .next && npm run build`
+
+### File Upload Issues
+1. Verify `seafarers_files/` directory exists with correct permissions: `chmod 755 seafarers_files/`
+2. Check file size limits in `constants.ts` (`FILE_MAX_SIZE_MB`)
+3. Validate MIME types match extension in `validators/file-validator.ts`
+4. Ensure request multipart boundary is correct in FormData
 
 ## External Maritime Compliance Systems
 
@@ -203,7 +297,123 @@ HIMS integrates with 3 external regulatory systems (NEW 2025):
 - Component: `src/components/compliance/ExternalComplianceWidget.tsx`
 - Page: `src/app/compliance/external/page.tsx`
 
-## Security & Best Practices (UPDATED 2025)
+## Advanced API Patterns (NEW 2025)
+
+### Dynamic Route Parameters (App Router)
+**CRITICAL**: Params are a Promise in App Router - must await them:
+```typescript
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;  // ✅ REQUIRED for Next.js 15+
+  const item = await prisma.crew.findUnique({ where: { id } });
+  return NextResponse.json(item);
+}
+```
+
+### Advanced Middleware Usage
+```typescript
+// 1. Auth only (no permission check)
+import { withAuth } from '@/lib/api-middleware';
+export const GET = withAuth(async (req, session, context) => {
+  // session available, auth guaranteed
+  return NextResponse.json({ user: session.user });
+});
+
+// 2. Auth + permission check
+import { withPermission } from '@/lib/api-middleware';
+export const POST = withPermission("crew", PermissionLevel.EDIT_ACCESS, async (req) => {
+  // Permission already validated
+  const body = await req.json();
+  return NextResponse.json({ created: true }, { status: 201 });
+});
+
+// 3. Auth + rate limiting
+import { withRateLimit } from '@/lib/api-middleware';
+export const POST = withRateLimit(5, 60000, async (req, session) => {
+  // Max 5 requests per minute per user
+});
+```
+
+### Complex Queries with Pagination & Sorting
+```typescript
+const limit = Math.min(Number(searchParams.get('limit')) || 50, 100);
+const offset = Number(searchParams.get('offset')) || 0;
+const sort = searchParams.get('sort') || 'createdAt:desc';
+
+const [field, direction] = sort.split(':');
+const data = await prisma.crew.findMany({
+  where: { status: 'ACTIVE' },
+  include: { assignments: true, documents: true },
+  orderBy: { [field]: direction },
+  take: limit,
+  skip: offset,
+});
+const total = await prisma.crew.count({ where: { status: 'ACTIVE' } });
+return NextResponse.json({ data, total, limit, offset });
+```
+
+### Transactions for Data Consistency
+```typescript
+// Update crew AND create audit log atomically
+const result = await prisma.$transaction(async (tx) => {
+  const crew = await tx.crew.update({
+    where: { id: crewId },
+    data: { status: 'ONBOARD', vestselId: newVesselId },
+  });
+  
+  await tx.auditLog.create({
+    data: {
+      userId: session.user.id,
+      action: 'UPDATE_CREW_ASSIGNMENT',
+      module: 'crew',
+      targetId: crewId,
+      metadata: { oldStatus: 'STANDBY', newStatus: 'ONBOARD' },
+    },
+  });
+  
+  return crew;
+});
+```
+
+### Audit Logging (Automatic for All Changes)
+```typescript
+import { logAuditEvent } from '@/lib/audit-service';
+
+// Called after data mutation
+await logAuditEvent({
+  userId: session.user.id,
+  action: 'CREATE_CREW',
+  module: 'crew',
+  targetId: newCrew.id,
+  metadata: { fullName: newCrew.fullName },
+});
+```
+
+### File Upload Handling
+```typescript
+import { FileUploadRequest } from '@/lib/file-operations';
+import { validateFileUpload } from '@/lib/validators/file-validator';
+
+export const POST = withPermission("crew", PermissionLevel.EDIT_ACCESS, async (req) => {
+  const formData = await req.formData();
+  const file = formData.get('file') as File;
+  
+  const validation = validateFileUpload(file, 'passport', DataSensitivity.RED);
+  if (!validation.valid) {
+    return NextResponse.json({ error: validation.error }, { status: 400 });
+  }
+  
+  // File saved to seafarers_files/ with encrypted metadata
+  const savedPath = await saveCrewFile(crewId, file, 'passport');
+  await prisma.crewDocument.create({
+    data: { crewId, type: 'PASSPORT', fileName: file.name, filePath: savedPath },
+  });
+  
+  return NextResponse.json({ success: true }, { status: 201 });
+});
+```
 
 ### Encryption (CRITICAL)
 - **Crypto**: Uses AES-256-GCM with proper IV (fixed deprecated `createCipher`)

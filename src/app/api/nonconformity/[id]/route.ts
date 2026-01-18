@@ -1,16 +1,40 @@
 import { getServerSession } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
 import { authOptions } from '@/lib/auth';
-import * as auditService from '@/lib/audit/service';
+import { prisma } from '@/lib/prisma';
+import { checkPermission, PermissionLevel } from '@/lib/permission-middleware';
+import { handleApiError } from '@/lib/error-handler';
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return NextResponse.json(
-    { error: 'Non-conformity endpoints temporarily disabled' },
-    { status: 503 }
-  );
+  try {
+    const { id } = await params;
+    const session = await getServerSession(authOptions);
+
+    if (!session || !checkPermission(session, 'quality', PermissionLevel.VIEW_ACCESS)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const nonConformity = await prisma.nonConformity.findUnique({
+      where: { id },
+      include: {
+        audit: true,
+        finding: true,
+        assignedTo: true,
+        verifiedBy: true,
+      },
+    });
+
+    if (!nonConformity) {
+      return NextResponse.json({ error: 'Non-conformity not found' }, { status: 404 });
+    }
+
+    return NextResponse.json(nonConformity);
+  } catch (error) {
+    return handleApiError(error);
+  }
 }
 
 /*
@@ -48,10 +72,36 @@ export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return NextResponse.json(
-    { error: 'Non-conformity endpoints temporarily disabled' },
-    { status: 503 }
-  );
+  try {
+    const { id } = await params;
+    const session = await getServerSession(authOptions);
+
+    if (!session || !checkPermission(session, 'quality', PermissionLevel.EDIT_ACCESS)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const body = await req.json();
+
+    const nonConformity = await prisma.nonConformity.update({
+      where: { id },
+      data: {
+        description: body.description,
+        status: body.status,
+        rootCause: body.rootCause,
+        targetDate: body.targetDate ? new Date(body.targetDate) : null,
+      },
+      include: {
+        audit: true,
+        finding: true,
+        assignedTo: true,
+        verifiedBy: true,
+      },
+    });
+
+    return NextResponse.json(nonConformity);
+  } catch (error) {
+    return handleApiError(error);
+  }
 }
 
 /*

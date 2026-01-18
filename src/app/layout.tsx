@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { BreadcrumbWrapper } from "@/components/Breadcrumb";
 import { PwaRegister } from "./_components/PwaRegister";
 import { env } from "@/lib/env";
 
@@ -70,7 +71,10 @@ export default function RootLayout({
       <body className="antialiased" style={{ fontFamily: fontVariables.sans }}>
         <PwaRegister />
         <ErrorBoundary>
-          <Providers>{children}</Providers>
+          <Providers>
+            <BreadcrumbWrapper />
+            {children}
+          </Providers>
         </ErrorBoundary>
       </body>
     </html>

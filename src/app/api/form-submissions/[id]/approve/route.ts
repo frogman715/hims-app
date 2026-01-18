@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { generatePDF, generateFormSubmissionHTML } from "@/lib/pdf-generator";
 
 enum FormApprovalStatus {
   DRAFT = "DRAFT",
@@ -68,14 +69,50 @@ export async function POST(
           include: {
             crew: true,
             principal: true,
+            vessel: true,
           },
         },
       },
     });
 
-    // TODO: Generate PDF after approval
-    // This would involve converting the formData to a PDF using a library like puppeteer
-    // and saving it to finalPdfPath
+    // Generate PDF after approval
+    if (form.prepareJoining?.crew && form.prepareJoining?.principal) {
+      const formatDate = (date: Date | null): string => {
+        if (!date) return "N/A";
+        return new Date(date).toLocaleDateString('id-ID', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        });
+      };
+
+      const htmlContent = generateFormSubmissionHTML({
+        crewName: form.prepareJoining.crew.fullName || "N/A",
+        rank: form.prepareJoining.crew.rank || "N/A",
+        vessel: form.prepareJoining.vessel?.name || "N/A",
+        principal: form.prepareJoining.principal.name || "N/A",
+        department: "N/A",
+        joinDate: formatDate(form.prepareJoining.departureDate),
+        contractEndDate: formatDate(new Date()),
+        formContent: (form.formData as Record<string, unknown>) || {},
+        approvedBy: session?.user?.name || "System",
+        approvedAt: new Date(),
+      });
+
+      const timestamp = Date.now();
+      const pdfFilename = `form-submission-${id}-${timestamp}.pdf`;
+      const pdfResult = await generatePDF(htmlContent, pdfFilename);
+
+      if (pdfResult.success && pdfResult.path) {
+        // Update form with PDF path
+        await prisma.prepareJoiningForm.update({
+          where: { id },
+          data: {
+            finalPdfPath: pdfResult.path,
+          },
+        });
+      }
+    }
 
     return NextResponse.json({
       message: "Form approved successfully",
