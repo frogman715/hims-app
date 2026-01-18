@@ -138,7 +138,18 @@ export async function GET(
       return NextResponse.json({ error: "Application not found" }, { status: 404 });
     }
 
-    return NextResponse.json(application);
+    // Transform response to match frontend expectations
+    return NextResponse.json({
+      id: application.id,
+      seafarerId: application.crewId,
+      appliedRank: application.position,
+      status: application.status,
+      seafarer: {
+        fullName: application.crew.fullName,
+        nationality: application.crew.nationality,
+      },
+      ...application, // Include all other fields
+    });
   } catch (error) {
     console.error("Error fetching application:", error);
     return NextResponse.json(

@@ -42,6 +42,9 @@ export default function EditApplicationPage() {
             appliedRank: data.appliedRank || '',
             status: data.status,
           });
+        } else if (response.status === 404) {
+          setError('Application not found');
+          setTimeout(() => router.push('/crewing/applications'), 2000);
         } else {
           const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
           setError(`Failed to fetch application: ${errorData.error || response.statusText}`);
@@ -50,6 +53,7 @@ export default function EditApplicationPage() {
       } catch (error) {
         console.error('Error:', error);
         setError(`Error fetching application: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        setTimeout(() => router.push('/crewing/applications'), 3000);
       } finally {
         setFetchLoading(false);
       }
