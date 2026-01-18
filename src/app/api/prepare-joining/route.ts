@@ -86,9 +86,10 @@ export async function GET(req: NextRequest) {
       total: prepareJoinings.length,
     });
   } catch (error) {
-    console.error("Error fetching prepare joinings:", error);
+    console.error("[prepare-joining API] Error fetching prepare joinings:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(
-      { error: "Failed to fetch prepare joinings" },
+      { error: `Failed to fetch prepare joinings: ${errorMessage}` },
       { status: 500 }
     );
   }
