@@ -272,6 +272,243 @@ export async function PUT(
       updateData.transportArranged = transportArranged;
     }
 
+    // MCU fields
+    const mcuScheduled = parseOptionalBoolean(body.mcuScheduled);
+    if (mcuScheduled !== undefined) {
+      updateData.mcuScheduled = mcuScheduled;
+    }
+
+    const mcuCompleted = parseOptionalBoolean(body.mcuCompleted);
+    if (mcuCompleted !== undefined) {
+      updateData.mcuCompleted = mcuCompleted;
+    }
+
+    if (body.mcuScheduledDate !== undefined) {
+      updateData.mcuScheduledDate = parseDateOrNull(body.mcuScheduledDate);
+    }
+
+    if (body.mcuCompletedDate !== undefined) {
+      updateData.mcuCompletedDate = parseDateOrNull(body.mcuCompletedDate);
+    }
+
+    const mcuDoctorName = parseStringOrNull(body.mcuDoctorName);
+    if (mcuDoctorName !== undefined) {
+      updateData.mcuDoctorName = mcuDoctorName;
+    }
+
+    const mcuClinicName = parseStringOrNull(body.mcuClinicName);
+    if (mcuClinicName !== undefined) {
+      updateData.mcuClinicName = mcuClinicName;
+    }
+
+    const mcuResult = parseStringOrNull(body.mcuResult);
+    if (mcuResult !== undefined) {
+      updateData.mcuResult = mcuResult;
+    }
+
+    const mcuRestrictions = parseStringOrNull(body.mcuRestrictions);
+    if (mcuRestrictions !== undefined) {
+      updateData.mcuRestrictions = mcuRestrictions;
+    }
+
+    const mcuRemarks = parseStringOrNull(body.mcuRemarks);
+    if (mcuRemarks !== undefined) {
+      updateData.mcuRemarks = mcuRemarks;
+    }
+
+    // Vaccination fields
+    const vaccineYellowFever = parseOptionalBoolean(body.vaccineYellowFever);
+    if (vaccineYellowFever !== undefined) {
+      updateData.vaccineYellowFever = vaccineYellowFever;
+    }
+
+    const vaccineHepatitisA = parseOptionalBoolean(body.vaccineHepatitisA);
+    if (vaccineHepatitisA !== undefined) {
+      updateData.vaccineHepatitisA = vaccineHepatitisA;
+    }
+
+    const vaccineHepatitisB = parseOptionalBoolean(body.vaccineHepatitisB);
+    if (vaccineHepatitisB !== undefined) {
+      updateData.vaccineHepatitisB = vaccineHepatitisB;
+    }
+
+    const vaccineTyphoid = parseOptionalBoolean(body.vaccineTyphoid);
+    if (vaccineTyphoid !== undefined) {
+      updateData.vaccineTyphoid = vaccineTyphoid;
+    }
+
+    const vaccineOther = parseStringOrNull(body.vaccineOther);
+    if (vaccineOther !== undefined) {
+      updateData.vaccineOther = vaccineOther;
+    }
+
+    if (body.vaccineExpiryDate !== undefined) {
+      updateData.vaccineExpiryDate = parseDateOrNull(body.vaccineExpiryDate);
+    }
+
+    // Safety Equipment
+    const safetyLifeJacket = parseOptionalBoolean(body.safetyLifeJacket);
+    if (safetyLifeJacket !== undefined) {
+      updateData.safetyLifeJacket = safetyLifeJacket;
+    }
+
+    const safetyHelmet = parseOptionalBoolean(body.safetyHelmet);
+    if (safetyHelmet !== undefined) {
+      updateData.safetyHelmet = safetyHelmet;
+    }
+
+    const safetyShoes = parseOptionalBoolean(body.safetyShoes);
+    if (safetyShoes !== undefined) {
+      updateData.safetyShoes = safetyShoes;
+    }
+
+    const safetyGloves = parseOptionalBoolean(body.safetyGloves);
+    if (safetyGloves !== undefined) {
+      updateData.safetyGloves = safetyGloves;
+    }
+
+    const safetyHarnessVest = parseOptionalBoolean(body.safetyHarnessVest);
+    if (safetyHarnessVest !== undefined) {
+      updateData.safetyHarnessVest = safetyHarnessVest;
+    }
+
+    // Work Equipment
+    const workUniform = parseOptionalBoolean(body.workUniform);
+    if (workUniform !== undefined) {
+      updateData.workUniform = workUniform;
+    }
+
+    const workIDCard = parseOptionalBoolean(body.workIDCard);
+    if (workIDCard !== undefined) {
+      updateData.workIDCard = workIDCard;
+    }
+
+    const workAccessCard = parseOptionalBoolean(body.workAccessCard);
+    if (workAccessCard !== undefined) {
+      updateData.workAccessCard = workAccessCard;
+    }
+
+    const workStationery = parseOptionalBoolean(body.workStationery);
+    if (workStationery !== undefined) {
+      updateData.workStationery = workStationery;
+    }
+
+    const workToolsProvided = parseOptionalBoolean(body.workToolsProvided);
+    if (workToolsProvided !== undefined) {
+      updateData.workToolsProvided = workToolsProvided;
+    }
+
+    // Personal Items
+    const personalPassport = parseOptionalBoolean(body.personalPassport);
+    if (personalPassport !== undefined) {
+      updateData.personalPassport = personalPassport;
+    }
+
+    const personalVisa = parseOptionalBoolean(body.personalVisa);
+    if (personalVisa !== undefined) {
+      updateData.personalVisa = personalVisa;
+    }
+
+    const personalTickets = parseOptionalBoolean(body.personalTickets);
+    if (personalTickets !== undefined) {
+      updateData.personalTickets = personalTickets;
+    }
+
+    const personalVaccineCard = parseOptionalBoolean(body.personalVaccineCard);
+    if (personalVaccineCard !== undefined) {
+      updateData.personalVaccineCard = personalVaccineCard;
+    }
+
+    const personalMedicalCert = parseOptionalBoolean(body.personalMedicalCert);
+    if (personalMedicalCert !== undefined) {
+      updateData.personalMedicalCert = personalMedicalCert;
+    }
+
+    // Vessel Pre-requisites
+    const vesselStatroomAssigned = parseOptionalBoolean(body.vesselStatroomAssigned);
+    if (vesselStatroomAssigned !== undefined) {
+      updateData.vesselStatroomAssigned = vesselStatroomAssigned;
+    }
+
+    const vesselStatroomNumber = parseStringOrNull(body.vesselStatroomNumber);
+    if (vesselStatroomNumber !== undefined) {
+      updateData.vesselStatroomNumber = vesselStatroomNumber;
+    }
+
+    const vesselContractSigned = parseOptionalBoolean(body.vesselContractSigned);
+    if (vesselContractSigned !== undefined) {
+      updateData.vesselContractSigned = vesselContractSigned;
+    }
+
+    const vesselBriefingScheduled = parseOptionalBoolean(body.vesselBriefingScheduled);
+    if (vesselBriefingScheduled !== undefined) {
+      updateData.vesselBriefingScheduled = vesselBriefingScheduled;
+    }
+
+    if (body.vesselBriefingDate !== undefined) {
+      updateData.vesselBriefingDate = parseDateOrNull(body.vesselBriefingDate);
+    }
+
+    const vesselOrientationDone = parseOptionalBoolean(body.vesselOrientationDone);
+    if (vesselOrientationDone !== undefined) {
+      updateData.vesselOrientationDone = vesselOrientationDone;
+    }
+
+    const vesselEmergencyDrill = parseOptionalBoolean(body.vesselEmergencyDrill);
+    if (vesselEmergencyDrill !== undefined) {
+      updateData.vesselEmergencyDrill = vesselEmergencyDrill;
+    }
+
+    // Pre-Departure Final Check
+    const preDepartureDocCheck = parseOptionalBoolean(body.preDepartureDocCheck);
+    if (preDepartureDocCheck !== undefined) {
+      updateData.preDepartureDocCheck = preDepartureDocCheck;
+    }
+
+    const preDepartureEquipCheck = parseOptionalBoolean(body.preDepartureEquipCheck);
+    if (preDepartureEquipCheck !== undefined) {
+      updateData.preDepartureEquipCheck = preDepartureEquipCheck;
+    }
+
+    const preDepartureMedicalOK = parseOptionalBoolean(body.preDepartureMedicalOK);
+    if (preDepartureMedicalOK !== undefined) {
+      updateData.preDepartureMedicalOK = preDepartureMedicalOK;
+    }
+
+    const preDepartureEmergency = parseOptionalBoolean(body.preDepartureEmergency);
+    if (preDepartureEmergency !== undefined) {
+      updateData.preDepartureEmergency = preDepartureEmergency;
+    }
+
+    const preDepartureSalaryOK = parseOptionalBoolean(body.preDepartureSalaryOK);
+    if (preDepartureSalaryOK !== undefined) {
+      updateData.preDepartureSalaryOK = preDepartureSalaryOK;
+    }
+
+    const preDeparturePerDiem = parseOptionalBoolean(body.preDeparturePerDiem);
+    if (preDeparturePerDiem !== undefined) {
+      updateData.preDeparturePerDiem = preDeparturePerDiem;
+    }
+
+    const preDepartureFinalCheck = parseOptionalBoolean(body.preDepartureFinalCheck);
+    if (preDepartureFinalCheck !== undefined) {
+      updateData.preDepartureFinalCheck = preDepartureFinalCheck;
+    }
+
+    const preDepartureApprovedBy = parseStringOrNull(body.preDepartureApprovedBy);
+    if (preDepartureApprovedBy !== undefined) {
+      updateData.preDepartureApprovedBy = preDepartureApprovedBy;
+    }
+
+    if (body.preDepartureApprovedAt !== undefined) {
+      updateData.preDepartureApprovedAt = parseDateOrNull(body.preDepartureApprovedAt);
+    }
+
+    const preDepartureChecklistBy = parseStringOrNull(body.preDepartureChecklistBy);
+    if (preDepartureChecklistBy !== undefined) {
+      updateData.preDepartureChecklistBy = preDepartureChecklistBy;
+    }
+
     if (body.medicalCheckDate !== undefined) {
       updateData.medicalCheckDate = parseDateOrNull(body.medicalCheckDate);
     }
