@@ -9,11 +9,14 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { requireUserApi } from '@/lib/authz';
 import fs from 'fs';
 import path from 'path';
 import { getAbsolutePath, isPathSafe } from '@/lib/upload-path';
+import { prisma } from '@/lib/prisma';
+import { recordAuditLog } from '@/lib/audit-log';
+import { hasPermission, PermissionLevel, UserRole } from '@/lib/permissions';
+import { isSystemAdmin, normalizeToUserRoles } from '@/lib/type-guards';
 
 /**
  * GET handler for serving files
@@ -23,18 +26,54 @@ export async function GET(
   { params }: { params: Promise<{ path: string[] }> }
 ) {
   try {
-    // Require authentication
-    const session = await getServerSession(authOptions);
-    if (!session?.user) {
-      return new NextResponse('Unauthorized', { status: 401 });
+    const auth = await requireUserApi();
+    if (!auth.ok) {
+      return new NextResponse('Unauthorized', { status: auth.status });
     }
 
     // Get the requested path
     const resolvedParams = await params;
+    if (!resolvedParams.path || resolvedParams.path.length === 0) {
+      return new NextResponse('Bad request', { status: 400 });
+    }
     const requestedPath = resolvedParams.path.join('/');
+    const crewSegment = resolvedParams.path[0] ?? '';
+    const crewId = crewSegment.split('_')[0];
+    if (!crewId) {
+      return new NextResponse('Bad request', { status: 400 });
+    }
 
     // Build absolute path
     const fullPath = getAbsolutePath(requestedPath);
+
+    const session = auth.session;
+    const roles = normalizeToUserRoles(session.user.roles);
+    const isAdmin = isSystemAdmin(session);
+    const hasCrewAccess = hasPermission(roles, 'crew', PermissionLevel.VIEW_ACCESS);
+
+    if (!isAdmin && !hasCrewAccess) {
+      const isCrewPortalOnly = roles.length === 1 && roles[0] === UserRole.CREW_PORTAL;
+      if (isCrewPortalOnly) {
+        const sessionEmail = session.user.email ?? null;
+        let crew = await prisma.crew.findUnique({
+          where: { id: session.user.id },
+          select: { id: true },
+        });
+
+        if (!crew && sessionEmail) {
+          crew = await prisma.crew.findFirst({
+            where: { email: sessionEmail },
+            select: { id: true },
+          });
+        }
+
+        if (!crew || crew.id !== crewId) {
+          return new NextResponse('Forbidden', { status: 403 });
+        }
+      } else {
+        return new NextResponse('Forbidden', { status: 403 });
+      }
+    }
 
     // Validate path to prevent directory traversal attacks
     if (!isPathSafe(fullPath)) {
@@ -82,6 +121,25 @@ export async function GET(
       size: fileBuffer.length,
       timestamp: new Date().toISOString(),
     });
+    try {
+      await recordAuditLog({
+        actorUserId: session.user.id,
+        action: 'FILE_ACCESSED',
+        entityType: 'UPLOAD_FILE',
+        entityId: requestedPath,
+        metadata: {
+          path: requestedPath,
+          size: fileBuffer.length,
+          ip:
+            req.headers.get('x-forwarded-for') ||
+            req.headers.get('x-real-ip') ||
+            req.headers.get('cf-connecting-ip') ||
+            'unknown',
+        },
+      });
+    } catch (error) {
+      console.error('[FILE_SERVER] Audit log failed:', error);
+    }
 
     // Return file with appropriate headers
     return new NextResponse(fileBuffer, {

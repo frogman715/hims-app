@@ -148,6 +148,25 @@ export function generateSafeFilename(
   return `${timestamp}_${crewId}_${sanitizedType}${extension}`;
 }
 
+export function generateCrewDocumentFilename(params: {
+  crewName: string;
+  rank: string;
+  docType: string;
+  docNumber: string;
+  extension: string;
+  issuedAt?: Date;
+}): string {
+  const date = params.issuedAt ?? new Date();
+  const timestamp = date.toISOString().split('T')[0].replace(/-/g, '');
+  const crewName = params.crewName.toUpperCase().replace(/[^A-Z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+  const rank = params.rank.toUpperCase().replace(/[^A-Z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+  const docType = params.docType.toUpperCase().replace(/[^A-Z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+  const docNumber = params.docNumber.toUpperCase().replace(/[^A-Z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+  const extension = params.extension.startsWith('.') ? params.extension.toLowerCase() : `.${params.extension.toLowerCase()}`;
+
+  return `${timestamp}_${crewName}_${rank}_${docType}_${docNumber}${extension}`;
+}
+
 /**
  * Validate file path to prevent directory traversal attacks
  * 

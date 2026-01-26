@@ -10,6 +10,7 @@ import {
   buildCrewFilePath,
   getRelativePath,
   getMaxFileSize,
+  generateCrewDocumentFilename,
 } from "@/lib/upload-path";
 
 // Configure max body size for file uploads
@@ -186,7 +187,7 @@ export const POST = withPermission(
     // Get crew name for directory structure
     const crew = await prisma.crew.findUnique({
       where: { id: crewId },
-      select: { fullName: true }
+      select: { fullName: true, rank: true }
     });
     
     if (!crew) {
@@ -199,12 +200,14 @@ export const POST = withPermission(
       .replace(/[^A-Z0-9\s]/g, "")
       .replace(/\s+/g, "_");
 
-    // Generate professional filename: {date}_{crewid}_{doctype}_{docnumber}.{ext}
-    // Format: 20251230_clxuser001_coc_620027165IN20225.jpg
-    const timestamp = new Date().toISOString().split('T')[0].replace(/-/g, '');
-    const docNumberSafe = docNumber.toLowerCase().replace(/[^a-z0-9]/g, '');
-    const docTypeSafe = docType.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
-    const fileName = `${timestamp}_${crewId}_${docTypeSafe}_${docNumberSafe}${allowedExtension}`;
+    const fileName = generateCrewDocumentFilename({
+      crewName: crew.fullName,
+      rank: crew.rank,
+      docType,
+      docNumber,
+      extension: allowedExtension,
+      issuedAt: parsedIssueDate,
+    });
     
     // Build full file path using centralized utility
     const filePath = buildCrewFilePath(crewId, crewSlug, fileName);

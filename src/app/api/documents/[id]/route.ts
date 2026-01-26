@@ -2,9 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { writeFile, mkdir, unlink } from "fs/promises";
-import { join } from "path";
+import { writeFile, unlink } from "fs/promises";
+import { extname, join } from "path";
 import { checkPermission, PermissionLevel } from "@/lib/permission-middleware";
+import {
+  buildCrewFilePath,
+  getRelativePath,
+  getMaxFileSize,
+  generateCrewDocumentFilename,
+  getAbsolutePath,
+  deleteFileSafe,
+} from "@/lib/upload-path";
 
 export async function GET(
   request: NextRequest,
@@ -134,25 +142,67 @@ export async function PUT(
 
     // Handle file upload if provided
     if (file && file.size > 0) {
-      // Create uploads directory if it doesn't exist
-      const uploadsDir = join(process.cwd(), 'public', 'uploads', 'documents');
-      try {
-        await mkdir(uploadsDir, { recursive: true });
-      } catch {
-        // Directory might already exist
+      const MAX_FILE_SIZE = getMaxFileSize();
+      const ALLOWED_MIME_TYPES: Record<string, string> = {
+        "application/pdf": ".pdf",
+        "image/jpeg": ".jpg",
+        "image/png": ".png",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx",
+        "application/msword": ".doc",
+      };
+
+      const mimeType = file.type || "";
+      const declaredExtension = extname(file.name || "").toLowerCase();
+      const allowedExtension = ALLOWED_MIME_TYPES[mimeType];
+
+      if (!allowedExtension || (declaredExtension && declaredExtension !== allowedExtension)) {
+        const allowedMimes = Object.keys(ALLOWED_MIME_TYPES).join(", ");
+        return NextResponse.json(
+          { error: `Unsupported file type: ${mimeType || 'unknown'}. Allowed MIME types: ${allowedMimes}` },
+          { status: 415 }
+        );
       }
 
-      // Generate unique filename
-      const fileExtension = file.name.split('.').pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExtension}`;
-      const filePath = join(uploadsDir, fileName);
+      if (file.size > MAX_FILE_SIZE) {
+        const fileSizeMB = (file.size / 1024 / 1024).toFixed(2);
+        const maxSizeMB = (MAX_FILE_SIZE / 1024 / 1024).toFixed(0);
+        return NextResponse.json(
+          { error: `File size (${fileSizeMB}MB) exceeds maximum allowed (${maxSizeMB}MB)` },
+          { status: 413 }
+        );
+      }
 
-      // Save file
+      const crew = await prisma.crew.findUnique({
+        where: { id: existingDocument.crewId },
+        select: { fullName: true, rank: true },
+      });
+
+      if (!crew) {
+        return NextResponse.json({ error: "Crew not found" }, { status: 404 });
+      }
+
+      const crewSlug = crew.fullName
+        .toUpperCase()
+        .replace(/[^A-Z0-9\s]/g, "")
+        .replace(/\s+/g, "_");
+
+      const fileName = generateCrewDocumentFilename({
+        crewName: crew.fullName,
+        rank: crew.rank,
+        docType,
+        docNumber,
+        extension: allowedExtension,
+        issuedAt: updateData.issueDate,
+      });
+
+      const filePath = buildCrewFilePath(existingDocument.crewId, crewSlug, fileName);
+
       const bytes = await file.arrayBuffer();
       const buffer = Buffer.from(bytes);
       await writeFile(filePath, buffer);
 
-      updateData.fileUrl = `/uploads/documents/${fileName}`;
+      const relativePath = getRelativePath(filePath);
+      updateData.fileUrl = `/api/files/${relativePath}`;
     }
 
     // Update document
@@ -209,23 +259,29 @@ export async function DELETE(
     // Delete file from disk if it exists
     if (existingDocument.fileUrl) {
       try {
-        const fileName = existingDocument.fileUrl.split('/').pop();
-        
-        // Validate fileName to prevent directory traversal attacks
-        if (fileName && /^[\w\-\.]+$/.test(fileName)) {
-          const filePath = join(process.cwd(), 'public', 'uploads', 'documents', fileName);
-          
-          try {
-            await unlink(filePath);
-          } catch (fileError) {
-            // File might not exist, which is acceptable
-            // Continue with database delete even if file delete fails
-            if ((fileError as NodeJS.ErrnoException).code !== 'ENOENT') {
-              console.warn("Warning: File deletion failed but was not ENOENT:", fileError);
-            }
-          }
+        if (existingDocument.fileUrl.startsWith("/api/files/")) {
+          const relativePath = existingDocument.fileUrl.replace("/api/files/", "");
+          const absolutePath = getAbsolutePath(relativePath);
+          deleteFileSafe(absolutePath);
         } else {
-          console.warn("Invalid fileName format, skipping file deletion:", fileName);
+          const fileName = existingDocument.fileUrl.split("/").pop();
+
+          // Validate fileName to prevent directory traversal attacks
+          if (fileName && /^[\w\-\.]+$/.test(fileName)) {
+            const filePath = join(process.cwd(), "public", "uploads", "documents", fileName);
+
+            try {
+              await unlink(filePath);
+            } catch (fileError) {
+              // File might not exist, which is acceptable
+              // Continue with database delete even if file delete fails
+              if ((fileError as NodeJS.ErrnoException).code !== "ENOENT") {
+                console.warn("Warning: File deletion failed but was not ENOENT:", fileError);
+              }
+            }
+          } else {
+            console.warn("Invalid fileName format, skipping file deletion:", fileName);
+          }
         }
       } catch (fileError) {
         console.error("Error processing file deletion:", fileError);

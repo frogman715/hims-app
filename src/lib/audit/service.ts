@@ -347,12 +347,69 @@ export async function listCorrectiveActions(filters?: {
 // ============================================================================
 
 export async function getAuditStats() {
-  // Return dummy data for disabled audit stats
+  const now = new Date();
+
+  const [
+    totalAudits,
+    plannedAudits,
+    inProgressAudits,
+    completedAudits,
+    totalFindings,
+    criticalFindings,
+    totalNonConformities,
+    openNonConformities,
+    overdueNonConformities,
+    totalCorrectiveActions,
+    openCorrectiveActions,
+    overdueCorrectiveActions,
+  ] = await Promise.all([
+    prisma.complianceAudit.count(),
+    prisma.complianceAudit.count({ where: { status: 'PLANNED' } }),
+    prisma.complianceAudit.count({ where: { status: 'IN_PROGRESS' } }),
+    prisma.complianceAudit.count({ where: { status: 'COMPLETED' } }),
+    prisma.complianceAuditFinding.count(),
+    prisma.complianceAuditFinding.count({ where: { severity: 'CRITICAL' } }),
+    prisma.nonConformity.count(),
+    prisma.nonConformity.count({ where: { status: { not: 'CLOSED' } } }),
+    prisma.nonConformity.count({
+      where: {
+        status: { not: 'CLOSED' },
+        targetDate: { lt: now },
+      },
+    }),
+    prisma.correctiveAction.count(),
+    prisma.correctiveAction.count({
+      where: { status: { in: ['OPEN', 'IN_PROGRESS', 'PENDING_VERIFICATION'] } },
+    }),
+    prisma.correctiveAction.count({
+      where: {
+        status: { in: ['OPEN', 'IN_PROGRESS', 'PENDING_VERIFICATION'] },
+        targetDate: { lt: now },
+      },
+    }),
+  ]);
+
   return {
-    audits: { total: 0, planned: 0, inProgress: 0, completed: 0 },
-    findings: { total: 0, critical: 0 },
-    nonConformities: { total: 0, open: 0, overdue: 0 },
-    correctiveActions: { total: 0, open: 0, overdue: 0 },
+    audits: {
+      total: totalAudits,
+      planned: plannedAudits,
+      inProgress: inProgressAudits,
+      completed: completedAudits,
+    },
+    findings: {
+      total: totalFindings,
+      critical: criticalFindings,
+    },
+    nonConformities: {
+      total: totalNonConformities,
+      open: openNonConformities,
+      overdue: overdueNonConformities,
+    },
+    correctiveActions: {
+      total: totalCorrectiveActions,
+      open: openCorrectiveActions,
+      overdue: overdueCorrectiveActions,
+    },
   };
 }
 
