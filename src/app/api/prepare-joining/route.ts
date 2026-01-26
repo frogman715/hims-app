@@ -22,7 +22,16 @@ const prepareJoiningStatuses = new Set<PrepareJoiningStatus>([
 export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
+    if (!session) {
+      console.error("[prepare-joining GET] No session found");
+      return NextResponse.json(
+        { error: "Unauthorized - no session" },
+        { status: 401 }
+      );
+    }
+
     if (!checkPermission(session, "crew", PermissionLevel.VIEW_ACCESS)) {
+      console.error("[prepare-joining GET] Permission denied for user:", session.user?.email);
       return NextResponse.json(
         { error: "Insufficient permissions" },
         { status: 403 }
@@ -81,6 +90,8 @@ export async function GET(req: NextRequest) {
       orderBy: { createdAt: "desc" },
     });
 
+    console.log(`[prepare-joining GET] Retrieved ${prepareJoinings.length} records`);
+
     return NextResponse.json({
       data: prepareJoinings,
       total: prepareJoinings.length,
@@ -88,6 +99,7 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     console.error("[prepare-joining API] Error fetching prepare joinings:", error);
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    console.error("[prepare-joining API] Full error:", JSON.stringify(error));
     return NextResponse.json(
       { error: `Failed to fetch prepare joinings: ${errorMessage}` },
       { status: 500 }
