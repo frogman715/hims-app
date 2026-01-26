@@ -28,7 +28,8 @@ export async function GET(
   try {
     const auth = await requireUserApi();
     if (!auth.ok) {
-      return new NextResponse('Unauthorized', { status: auth.status });
+      const status = "status" in auth ? auth.status : 401;
+      return new NextResponse('Unauthorized', { status });
     }
 
     // Get the requested path

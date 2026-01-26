@@ -7,7 +7,7 @@ import {
   generateCrewDocumentFilename,
   getAbsolutePath,
   getRelativePath,
-} from "../src/lib/upload-path";
+} from "../src/lib/upload-path.ts";
 
 const prisma = new PrismaClient();
 
