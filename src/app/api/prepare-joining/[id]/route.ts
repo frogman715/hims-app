@@ -3,6 +3,11 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { checkPermission, PermissionLevel } from "@/lib/permission-middleware";
+import {
+  assertPrepareJoiningStatusTransition,
+  ensurePrepareJoiningPrincipalForms,
+  getPrepareJoiningComplianceSnapshot,
+} from "@/lib/prepare-joining-enforcement";
 
 // Use Prisma enum instead of local enum
 type PrepareJoiningStatus = "PENDING" | "DOCUMENTS" | "MEDICAL" | "TRAINING" | "TRAVEL" | "READY" | "DISPATCHED" | "CANCELLED";
@@ -120,6 +125,17 @@ function parseStringOrNull(value: unknown): string | null | undefined {
   return typeof value === "string" ? value : undefined;
 }
 
+function mapComplianceSummary(compliance: Awaited<ReturnType<typeof getPrepareJoiningComplianceSnapshot>>) {
+  return {
+    requiredTemplateCount: compliance?.requiredTemplateCount ?? 0,
+    approvedRequiredCount: compliance?.approvedRequiredCount ?? 0,
+    missingRequiredCount:
+      (compliance?.missingRequiredForms.length ?? 0) +
+      (compliance?.pendingRequiredForms.length ?? 0),
+    blockers: compliance?.blockers ?? [],
+  };
+}
+
 // GET /api/prepare-joining/[id] - Get single prepare joining record
 export async function GET(
   req: NextRequest,
@@ -128,7 +144,7 @@ export async function GET(
   const { id } = await context.params;
   try {
     const session = await getServerSession(authOptions);
-    if (!checkPermission(session, "crew", PermissionLevel.VIEW_ACCESS)) {
+    if (!checkPermission(session, "crewing", PermissionLevel.VIEW_ACCESS)) {
       return NextResponse.json(
         { error: "Insufficient permissions" },
         { status: 403 }
@@ -172,6 +188,23 @@ export async function GET(
             phone: true,
           },
         },
+        forms: {
+          orderBy: [{ createdAt: "asc" }],
+          select: {
+            id: true,
+            status: true,
+            approvedAt: true,
+            submittedAt: true,
+            template: {
+              select: {
+                id: true,
+                formName: true,
+                formCategory: true,
+                isRequired: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -182,7 +215,13 @@ export async function GET(
       );
     }
 
-    return NextResponse.json(prepareJoining);
+    const compliance = await getPrepareJoiningComplianceSnapshot(id);
+
+    return NextResponse.json({
+      ...prepareJoining,
+      principalChecklist: compliance?.checklist ?? [],
+      principalChecklistSummary: mapComplianceSummary(compliance),
+    });
   } catch (error) {
     console.error("Error fetching prepare joining:", error);
     return NextResponse.json(
@@ -200,7 +239,7 @@ export async function PUT(
   const { id } = await context.params;
   try {
     const session = await getServerSession(authOptions);
-    if (!checkPermission(session, "crew", PermissionLevel.EDIT_ACCESS)) {
+    if (!checkPermission(session, "crewing", PermissionLevel.EDIT_ACCESS)) {
       return NextResponse.json(
         { error: "Insufficient permissions" },
         { status: 403 }
@@ -208,8 +247,20 @@ export async function PUT(
     }
 
     const body = (await req.json()) as UpdatePrepareJoiningPayload;
+    const existingPrepareJoining = await prisma.prepareJoining.findUnique({
+      where: { id },
+      select: { id: true, principalId: true, status: true },
+    });
+
+    if (!existingPrepareJoining) {
+      return NextResponse.json(
+        { error: "Prepare joining not found" },
+        { status: 404 }
+      );
+    }
 
     const updateData: Record<string, unknown> = {};
+    let nextStatus = existingPrepareJoining.status;
 
     if (body.status !== undefined) {
       const normalizedStatus = body.status?.trim();
@@ -223,6 +274,7 @@ export async function PUT(
         );
       }
       updateData.status = normalizedStatus as PrepareJoiningStatus;
+      nextStatus = normalizedStatus as PrepareJoiningStatus;
     }
 
     const passportValid = parseOptionalBoolean(body.passportValid);
@@ -560,6 +612,31 @@ export async function PUT(
       updateData.principal = principalId ? { connect: { id: principalId } } : { disconnect: true };
     }
 
+    const nextPrincipalId =
+      principalId !== undefined ? principalId : existingPrepareJoining.principalId;
+
+    if (
+      (nextStatus === "READY" || nextStatus === "DISPATCHED") &&
+      principalId !== undefined &&
+      principalId !== existingPrepareJoining.principalId
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Save principal changes first, then complete the principal checklist review before moving to READY or DISPATCHED.",
+        },
+        { status: 400 }
+      );
+    }
+
+    if (nextPrincipalId) {
+      await ensurePrepareJoiningPrincipalForms(id, nextPrincipalId);
+    }
+
+    if (nextStatus === "READY" || nextStatus === "DISPATCHED") {
+      await assertPrepareJoiningStatusTransition(id, nextStatus as PrepareJoiningStatus);
+    }
+
     const prepareJoining = await prisma.prepareJoining.update({
       where: { id },
       data: updateData,
@@ -584,6 +661,23 @@ export async function PUT(
           select: {
             id: true,
             name: true,
+          },
+        },
+        forms: {
+          orderBy: [{ createdAt: "asc" }],
+          select: {
+            id: true,
+            status: true,
+            approvedAt: true,
+            submittedAt: true,
+            template: {
+              select: {
+                id: true,
+                formName: true,
+                formCategory: true,
+                isRequired: true,
+              },
+            },
           },
         },
       },
@@ -648,9 +742,28 @@ export async function PUT(
       }
     }
 
-    return NextResponse.json(prepareJoining);
+    const compliance = await getPrepareJoiningComplianceSnapshot(id);
+
+    return NextResponse.json({
+      ...prepareJoining,
+      principalChecklist: compliance?.checklist ?? [],
+      principalChecklistSummary: mapComplianceSummary(compliance),
+    });
   } catch (error) {
     console.error("Error updating prepare joining:", error);
+    if (
+      error instanceof Error &&
+      "statusCode" in error &&
+      typeof error.statusCode === "number"
+    ) {
+      return NextResponse.json(
+        {
+          error: error.message,
+          compliance: "snapshot" in error ? error.snapshot : undefined,
+        },
+        { status: error.statusCode }
+      );
+    }
     return NextResponse.json(
       { error: "Failed to update prepare joining" },
       { status: 500 }
@@ -666,7 +779,7 @@ export async function DELETE(
   try {
     const { id } = await context.params;
     const session = await getServerSession(authOptions);
-    if (!checkPermission(session, "crew", PermissionLevel.FULL_ACCESS)) {
+    if (!checkPermission(session, "crewing", PermissionLevel.FULL_ACCESS)) {
       return NextResponse.json(
         { error: "Insufficient permissions" },
         { status: 403 }

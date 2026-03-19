@@ -8,7 +8,7 @@ import { Role } from "@prisma/client";
 
 /**
  * GET /api/admin/users
- * List all users (System Admin and DIRECTOR only)
+ * List all users (System Admin, DIRECTOR, and HR_ADMIN)
  */
 export async function GET() {
   try {
@@ -19,7 +19,10 @@ export async function GET() {
     }
 
     // Check authorization
-    const canManageUsers = session.user.isSystemAdmin || session.user.roles?.includes('DIRECTOR');
+    const canManageUsers =
+      session.user.isSystemAdmin ||
+      session.user.roles?.includes("DIRECTOR") ||
+      session.user.roles?.includes("HR_ADMIN");
     if (!canManageUsers) {
       return NextResponse.json({ error: "Forbidden - Insufficient permissions" }, { status: 403 });
     }
@@ -48,7 +51,7 @@ export async function GET() {
 
 /**
  * POST /api/admin/users
- * Create a new user (System Admin and DIRECTOR only)
+ * Create a new user (System Admin, DIRECTOR, and HR_ADMIN)
  */
 export async function POST(req: NextRequest) {
   try {
@@ -59,7 +62,10 @@ export async function POST(req: NextRequest) {
     }
 
     // Check authorization
-    const canManageUsers = session.user.isSystemAdmin || session.user.roles?.includes('DIRECTOR');
+    const canManageUsers =
+      session.user.isSystemAdmin ||
+      session.user.roles?.includes("DIRECTOR") ||
+      session.user.roles?.includes("HR_ADMIN");
     if (!canManageUsers) {
       return NextResponse.json({ error: "Forbidden - Insufficient permissions" }, { status: 403 });
     }
@@ -111,6 +117,7 @@ export async function POST(req: NextRequest) {
         password: hashedPassword,
         isSystemAdmin: systemAdminValue,
         isActive: true,
+        forcePasswordChange: true,
       },
       select: {
         id: true,

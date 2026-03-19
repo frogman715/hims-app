@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
@@ -40,8 +41,52 @@ export default function CompliancePage() {
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">External Compliance Management</h1>
                 <p className="mt-2 text-gray-700">
-                  Manage KOSMA certificates, Dephub seafarer verification, and Schengen visa compliance
+                  Manage external verification while the MLC and IMO control center tracks readiness, QMS pressure, and deployment exposure
                 </p>
+                <div className="mt-4 flex flex-wrap gap-3">
+                  <Link
+                    href="/compliance/control-center"
+                    className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
+                  >
+                    Open MLC / IMO Control Center
+                  </Link>
+                  <Link
+                    href="/crewing/readiness"
+                    className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-400 hover:text-blue-700"
+                  >
+                    Crew Readiness
+                  </Link>
+                  <Link
+                    href="/compliance/fleet-board"
+                    className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-400 hover:text-blue-700"
+                  >
+                    Fleet Board
+                  </Link>
+                  <Link
+                    href="/compliance/welfare"
+                    className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-400 hover:text-blue-700"
+                  >
+                    Welfare Tracker
+                  </Link>
+                  <Link
+                    href="/compliance/rest-hours"
+                    className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-400 hover:text-blue-700"
+                  >
+                    Rest-Hour Register
+                  </Link>
+                  <Link
+                    href="/compliance/requirement-matrix"
+                    className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-400 hover:text-blue-700"
+                  >
+                    Requirement Matrix
+                  </Link>
+                  <Link
+                    href="/compliance/escalations"
+                    className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-400 hover:text-blue-700"
+                  >
+                    Escalations
+                  </Link>
+                </div>
               </div>
               <div className="flex items-center space-x-4">
                 <div className="text-right">

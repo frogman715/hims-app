@@ -22,7 +22,10 @@ export async function GET(
     }
 
     // Check authorization
-    const canManageUsers = session.user.isSystemAdmin || session.user.roles?.includes('DIRECTOR');
+    const canManageUsers =
+      session.user.isSystemAdmin ||
+      session.user.roles?.includes("DIRECTOR") ||
+      session.user.roles?.includes("HR_ADMIN");
     if (!canManageUsers) {
       return NextResponse.json({ error: "Forbidden - Insufficient permissions" }, { status: 403 });
     }
@@ -68,7 +71,10 @@ export async function PUT(
     }
 
     // Check authorization
-    const canManageUsers = session.user.isSystemAdmin || session.user.roles?.includes('DIRECTOR');
+    const canManageUsers =
+      session.user.isSystemAdmin ||
+      session.user.roles?.includes("DIRECTOR") ||
+      session.user.roles?.includes("HR_ADMIN");
     if (!canManageUsers) {
       return NextResponse.json({ error: "Forbidden - Insufficient permissions" }, { status: 403 });
     }
@@ -182,7 +188,10 @@ export async function DELETE(
     }
 
     // Check authorization
-    const canManageUsers = session.user.isSystemAdmin || session.user.roles?.includes('DIRECTOR');
+    const canManageUsers =
+      session.user.isSystemAdmin ||
+      session.user.roles?.includes("DIRECTOR") ||
+      session.user.roles?.includes("HR_ADMIN");
     if (!canManageUsers) {
       return NextResponse.json({ error: "Forbidden - Insufficient permissions" }, { status: 403 });
     }

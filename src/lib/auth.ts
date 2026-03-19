@@ -25,6 +25,7 @@ declare module "next-auth" {
     roles: string[];
     permissionOverrides?: RolePermissionOverride[];
     isSystemAdmin?: boolean;
+    forcePasswordChange?: boolean;
   }
   interface Session {
     user: {
@@ -35,6 +36,7 @@ declare module "next-auth" {
       roles: string[];
       permissionOverrides?: RolePermissionOverride[];
       isSystemAdmin?: boolean;
+      forcePasswordChange?: boolean;
     };
   }
 }
@@ -45,6 +47,7 @@ declare module "next-auth/jwt" {
     roles: string[];
     permissionOverrides?: RolePermissionOverride[];
     isSystemAdmin?: boolean;
+    forcePasswordChange?: boolean;
     user?: {
       id: string;
       email?: string | null;
@@ -53,6 +56,7 @@ declare module "next-auth/jwt" {
       roles: string[];
       permissionOverrides?: RolePermissionOverride[];
       isSystemAdmin?: boolean;
+      forcePasswordChange?: boolean;
     };
   }
 }
@@ -116,10 +120,33 @@ export const authOptions: NextAuthOptions = {
         const user = await safePrismaCall("authorize:user.findUnique", () =>
           prisma.user.findUnique({
             where: { email: credentials.email },
+            select: {
+              id: true,
+              email: true,
+              name: true,
+              role: true,
+              isSystemAdmin: true,
+              isActive: true,
+              forcePasswordChange: true,
+              password: true,
+            },
           })
-        ) as { password: string; id: string; name: string; email: string; role: string; isSystemAdmin: boolean } | null;
+        ) as {
+          password: string;
+          id: string;
+          name: string;
+          email: string;
+          role: string;
+          isSystemAdmin: boolean;
+          isActive: boolean;
+          forcePasswordChange: boolean;
+        } | null;
 
         if (!user || !user.password) {
+          return null;
+        }
+
+        if (!user.isActive) {
           return null;
         }
 
@@ -150,6 +177,7 @@ export const authOptions: NextAuthOptions = {
           role,
           roles: normalizedRoles,
           isSystemAdmin: user.isSystemAdmin ?? false,
+          forcePasswordChange: user.forcePasswordChange ?? false,
         };
       },
     }),
@@ -246,18 +274,27 @@ export const authOptions: NextAuthOptions = {
         token.permissionOverrides = permissionOverrides;
 
         let isSystemAdmin = false;
+        let forcePasswordChange = false;
         const userWithSystemAdmin = user as unknown as Record<string, unknown>;
-        if (user && typeof userWithSystemAdmin['isSystemAdmin'] === "boolean") {
-          isSystemAdmin = userWithSystemAdmin['isSystemAdmin'] as boolean;
+        if (user && typeof userWithSystemAdmin["isSystemAdmin"] === "boolean") {
+          isSystemAdmin = userWithSystemAdmin["isSystemAdmin"] as boolean;
+          forcePasswordChange =
+            typeof userWithSystemAdmin["forcePasswordChange"] === "boolean"
+              ? (userWithSystemAdmin["forcePasswordChange"] as boolean)
+              : false;
         } else if (tokenSubject) {
           try {
             const dbUser = await safePrismaCall("jwt:isSystemAdmin", () =>
               prisma.user.findUnique({
                 where: { id: tokenSubject },
-                select: { isSystemAdmin: true },
+                select: { isSystemAdmin: true, forcePasswordChange: true, isActive: true },
               })
-            ) as { isSystemAdmin: boolean } | null;
+            ) as { isSystemAdmin: boolean; forcePasswordChange: boolean; isActive: boolean } | null;
+            if (dbUser?.isActive === false) {
+              throw new Error("Inactive user");
+            }
             isSystemAdmin = dbUser?.isSystemAdmin ?? false;
+            forcePasswordChange = dbUser?.forcePasswordChange ?? false;
           } catch (error) {
             console.error("[auth] jwt: failed to fetch isSystemAdmin", {
               tokenSubject,
@@ -267,6 +304,7 @@ export const authOptions: NextAuthOptions = {
           }
         }
         token.isSystemAdmin = isSystemAdmin;
+        token.forcePasswordChange = forcePasswordChange;
 
         const tokenUser = {
           id: tokenSubject ?? "",
@@ -276,6 +314,7 @@ export const authOptions: NextAuthOptions = {
           roles: resolvedRoles,
           permissionOverrides,
           isSystemAdmin,
+          forcePasswordChange,
         };
 
         token.user = tokenUser;
@@ -354,6 +393,7 @@ export const authOptions: NextAuthOptions = {
           session.user.roles = normalizedRoles;
           session.user.permissionOverrides = token.permissionOverrides ?? [];
           session.user.isSystemAdmin = token.isSystemAdmin ?? false;
+          session.user.forcePasswordChange = token.forcePasswordChange ?? false;
 
           if (shouldLogAuth) {
             console.info("[auth] session-callback", {
@@ -384,6 +424,7 @@ export const authOptions: NextAuthOptions = {
             : (session.user.role ? [session.user.role] : ["CREW_PORTAL"]);
           session.user.permissionOverrides = [];
           session.user.isSystemAdmin = false;
+          session.user.forcePasswordChange = false;
         }
         return session;
       }

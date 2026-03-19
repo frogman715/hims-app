@@ -43,6 +43,14 @@ enum CrewStatus {
   BLOCKED
 }
 
+enum CrewOperationalStatus {
+  AVAILABLE
+  ON_BOARD
+  STANDBY
+  MEDICAL
+  DOCUMENT_ISSUE
+}
+
 enum DocumentReceiptCrewStatus {
   NEW
   EX_CREW
@@ -416,6 +424,7 @@ model User {
   role          Role
   isSystemAdmin Boolean @default(false) // System admin override
   isActive      Boolean @default(true)
+  forcePasswordChange Boolean @default(false)
   password      String // Hashed password
 
   // Audit relations
@@ -512,6 +521,7 @@ model User {
   employeeCertifications      Certification[]            @relation("EmployeeCertification")
   complianceGapsEmployee      ComplianceGap[]            @relation("ComplianceGapEmployee")
   complianceGapsAssignedTo    ComplianceGap[]            @relation("ComplianceGapAssignedTo")
+  restHourRegistersRecorded   RestHourRegister[]
 
   // Phase 4.5: Supplier Management
   suppliersApprovedBy         Supplier[]                 @relation("SupplierApprovedBy")
@@ -529,6 +539,7 @@ model User {
 
 model Crew {
   id                       String          @id @default(cuid())
+  crewCode                 String?         @unique
   fullName                 String
   dateOfBirth              DateTime?
   placeOfBirth             String?
@@ -539,6 +550,7 @@ model Crew {
   seamanBookExpiry         DateTime?
   rank                     String
   status                   CrewStatus      @default(STANDBY)
+  crewStatus               CrewOperationalStatus @default(AVAILABLE)
   phone                    String?
   email                    String?
   address                  String?
@@ -581,6 +593,7 @@ model Crew {
   documentReceivings  DocumentReceiving[]
   transportLogs       TransportLog[]
   externalCompliances ExternalCompliance[]
+  restHourRegisters    RestHourRegister[]
 
   // HGQS Relations
   communicationLogs CommunicationLog[]
@@ -598,8 +611,10 @@ model Crew {
 
   // Indexes for search performance
   @@index([fullName])
+  @@index([crewCode])
   @@index([rank])
   @@index([status])
+  @@index([crewStatus])
   @@index([passportNumber])
   @@index([seamanBookNumber])
   @@index([nationality])
@@ -788,6 +803,7 @@ model Vessel {
   insuranceRecords InsuranceRecord[]
   agencyAgreements AgencyAgreementVessel[]
   prepareJoinings  PrepareJoining[]
+  restHourRegisters RestHourRegister[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1095,6 +1111,55 @@ enum FormApprovalStatus {
   CHANGES_REQUESTED // Need edits
   APPROVED // Approved, ready to download
   REJECTED // Rejected
+}
+
+model RestHourRegister {
+  id               String   @id @default(cuid())
+  crewId           String
+  vesselId         String
+  logDate          DateTime
+  workHours        Float
+  restHours        Float
+  minimumRestHours Float    @default(10)
+  isCompliant      Boolean  @default(true)
+  remarks          String?
+  recordedByUserId String?
+  recordedByName   String?
+
+  crew           Crew   @relation(fields: [crewId], references: [id], onDelete: Cascade)
+  vessel         Vessel @relation(fields: [vesselId], references: [id], onDelete: Cascade)
+  recordedByUser User?  @relation(fields: [recordedByUserId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([crewId, vesselId, logDate])
+  @@index([vesselId, logDate])
+  @@index([crewId, logDate])
+  @@index([isCompliant])
+}
+
+model EscalationNotificationLog {
+  id                String   @id @default(cuid())
+  ruleCode          String
+  severity          String
+  ownerRole         String
+  recipientEmail    String?
+  recipientName     String?
+  deliveryChannel   String   @default("EMAIL")
+  relatedEntityType String?
+  relatedEntityId   String?
+  subject           String
+  status            String   @default("PENDING")
+  failureReason     String?
+  lastAttemptAt     DateTime?
+  sentAt            DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([ruleCode, status])
+  @@index([relatedEntityType, relatedEntityId])
+  @@index([createdAt])
 }
 
 // ==========================

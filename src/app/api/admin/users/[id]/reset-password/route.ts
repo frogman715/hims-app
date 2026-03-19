@@ -23,7 +23,10 @@ export async function POST(
     }
 
     // Check authorization
-    const canManageUsers = session.user.isSystemAdmin || session.user.roles?.includes('DIRECTOR');
+    const canManageUsers =
+      session.user.isSystemAdmin ||
+      session.user.roles?.includes("DIRECTOR") ||
+      session.user.roles?.includes("HR_ADMIN");
     if (!canManageUsers) {
       return NextResponse.json({ error: "Forbidden - Insufficient permissions" }, { status: 403 });
     }
@@ -49,7 +52,7 @@ export async function POST(
     // Update user password
     await prisma.user.update({
       where: { id },
-      data: { password: hashedPassword },
+      data: { password: hashedPassword, forcePasswordChange: true },
     });
 
     // Log the action

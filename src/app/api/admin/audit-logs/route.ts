@@ -6,7 +6,7 @@ import { handleApiError, validatePagination } from "@/lib/error-handler";
 
 /**
  * GET /api/admin/audit-logs
- * Get audit logs with pagination (System Admin and DIRECTOR only)
+ * Get audit logs with pagination (System Admin, DIRECTOR, and HR_ADMIN)
  */
 export async function GET(req: NextRequest) {
   try {
@@ -17,7 +17,10 @@ export async function GET(req: NextRequest) {
     }
 
     // Check authorization
-    const canViewAuditLogs = session.user.isSystemAdmin || session.user.roles?.includes('DIRECTOR');
+    const canViewAuditLogs =
+      session.user.isSystemAdmin ||
+      session.user.roles?.includes("DIRECTOR") ||
+      session.user.roles?.includes("HR_ADMIN");
     if (!canViewAuditLogs) {
       return NextResponse.json({ error: "Forbidden - Insufficient permissions" }, { status: 403 });
     }

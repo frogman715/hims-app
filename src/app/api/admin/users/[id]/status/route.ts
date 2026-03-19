@@ -21,7 +21,10 @@ export async function PATCH(
     }
 
     // Check authorization
-    const canManageUsers = session.user.isSystemAdmin || session.user.roles?.includes('DIRECTOR');
+    const canManageUsers =
+      session.user.isSystemAdmin ||
+      session.user.roles?.includes("DIRECTOR") ||
+      session.user.roles?.includes("HR_ADMIN");
     if (!canManageUsers) {
       return NextResponse.json({ error: "Forbidden - Insufficient permissions" }, { status: 403 });
     }

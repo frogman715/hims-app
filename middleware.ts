@@ -2,8 +2,10 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { env } from "@/lib/env";
+import { canAccessOfficePath, getPrimaryOfficeRole } from "@/lib/office-access";
 
 const PUBLIC_PREFIXES = ["/auth", "/_next", "/favicon.ico", "/icons", "/manifest.json", "/sw.js"];
+const PUBLIC_API_PREFIXES = ["/api/auth", "/api/health"];
 
 function isPublicPath(pathname: string) {
   return PUBLIC_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
@@ -12,7 +14,10 @@ function isPublicPath(pathname: string) {
 export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
 
-  if (pathname.startsWith("/api") || isPublicPath(pathname)) {
+  if (
+    isPublicPath(pathname) ||
+    PUBLIC_API_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))
+  ) {
     return NextResponse.next();
   }
 
@@ -39,9 +44,51 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(signInUrl);
   }
 
+  const tokenPayload = (token && typeof token === "object" ? token : {}) as Record<string, unknown>;
+  const tokenUser = (tokenPayload.user && typeof tokenPayload.user === "object"
+    ? tokenPayload.user
+    : {}) as Record<string, unknown>;
+
+  const tokenRoles = [
+    ...(Array.isArray(tokenUser.roles) ? (tokenUser.roles as string[]) : []),
+    ...(Array.isArray(tokenPayload.roles) ? (tokenPayload.roles as string[]) : []),
+    typeof tokenUser.role === "string" ? tokenUser.role : undefined,
+    typeof tokenPayload.role === "string" ? tokenPayload.role : undefined,
+  ].filter((value): value is string => Boolean(value));
+  const isSystemAdmin = tokenPayload.isSystemAdmin === true || tokenUser.isSystemAdmin === true;
+  const forcePasswordChange =
+    tokenPayload.forcePasswordChange === true || tokenUser.forcePasswordChange === true;
+  const primaryRole =
+    (typeof tokenUser.role === "string" ? tokenUser.role : null) ??
+    (typeof tokenPayload.role === "string" ? tokenPayload.role : null);
+  const primaryOfficeRoles = getPrimaryOfficeRole(tokenRoles, primaryRole);
+
+  if (
+    forcePasswordChange &&
+    pathname !== "/change-password" &&
+    !pathname.startsWith("/api/account/change-password")
+  ) {
+    const changePasswordUrl = new URL("/change-password", request.url);
+    return NextResponse.redirect(changePasswordUrl);
+  }
+
+  if (!canAccessOfficePath(pathname, primaryOfficeRoles, isSystemAdmin, request.method)) {
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json(
+        { error: "Access denied for this role", route: pathname },
+        { status: 403 }
+      );
+    }
+
+    const deniedUrl = new URL("/dashboard", request.url);
+    deniedUrl.searchParams.set("accessDenied", "1");
+    deniedUrl.searchParams.set("from", pathname);
+    return NextResponse.redirect(deniedUrl);
+  }
+
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|icons/|manifest.json|sw.js).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|icons/|manifest.json|sw.js).*)"],
 };

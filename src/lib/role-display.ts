@@ -1,10 +1,21 @@
 // src/lib/role-display.ts
 export function getRoleDisplayName(role: string, isSystemAdmin?: boolean): string {
-  // Only show System Admin indicator if applicable
-  if (isSystemAdmin) {
-    return '(System Admin)';
-  }
-  
-  // Don't show role name, just return empty
-  return '';
+  const normalizedRole = role?.toUpperCase?.() ?? '';
+
+  const roleLabels: Record<string, string> = {
+    DIRECTOR: 'Director',
+    CDMO: 'Crewing and Manning',
+    OPERATIONAL: 'Operational',
+    ACCOUNTING: 'Accounting',
+    HR: 'Human Resources',
+    HR_ADMIN: 'HR Admin',
+    QMR: 'Quality Management',
+    SECTION_HEAD: 'Section Head',
+    STAFF: 'Staff',
+    CREW_PORTAL: 'Crew Portal',
+    CREW: 'Crew Portal',
+  };
+
+  const baseLabel = roleLabels[normalizedRole] ?? 'User';
+  return isSystemAdmin ? `${baseLabel} (System Admin)` : baseLabel;
 }
