@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { handleApiError, validatePagination } from "@/lib/error-handler";
+import { ensureAdminApiAccess } from "@/lib/admin-authorization";
 
 /**
  * GET /api/admin/audit-logs
@@ -11,19 +12,8 @@ import { handleApiError, validatePagination } from "@/lib/error-handler";
 export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Check authorization
-    const canViewAuditLogs =
-      session.user.isSystemAdmin ||
-      session.user.roles?.includes("DIRECTOR") ||
-      session.user.roles?.includes("HR_ADMIN");
-    if (!canViewAuditLogs) {
-      return NextResponse.json({ error: "Forbidden - Insufficient permissions" }, { status: 403 });
-    }
+    const authError = ensureAdminApiAccess(session);
+    if (authError) return authError;
 
     const { searchParams } = new URL(req.url);
     const limitParam = searchParams.get('limit') || '50';

@@ -1,25 +1,10 @@
 import Link from "next/link";
-import { requireUser } from "@/lib/authz";
+import { requireAuthorizedUser } from "@/lib/authz";
+import { PermissionLevel } from "@/lib/permissions";
 import { getComplianceControlCenterData } from "@/lib/compliance-control-center";
-
-function formatTimestamp(value: string) {
-  return new Date(value).toLocaleString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
-function formatShortDate(value: string | null) {
-  if (!value) return "No date";
-  return new Date(value).toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-}
+import { getSeverityBadgeClasses } from "@/lib/severity-ui";
+import StatCard from "@/components/ui/StatCard";
+import { formatDateLabel, formatDateTimeLabel, formatStatusLabel } from "@/lib/formatters";
 
 function getToneClasses(tone: "slate" | "emerald" | "amber" | "rose" | "cyan") {
   switch (tone) {
@@ -36,18 +21,19 @@ function getToneClasses(tone: "slate" | "emerald" | "amber" | "rose" | "cyan") {
   }
 }
 
-function getSeverityClasses(severity: string) {
-  const normalized = severity.toUpperCase();
-  if (normalized === "CRITICAL") return "bg-rose-100 text-rose-700";
-  if (normalized === "HIGH") return "bg-amber-100 text-amber-800";
-  if (normalized === "MEDIUM") return "bg-cyan-100 text-cyan-800";
+function getContractToneClasses(band: string) {
+  if (band === "EXPIRED") return "bg-rose-100 text-rose-700";
+  if (band === "CRITICAL") return "bg-rose-100 text-rose-700";
+  if (band === "URGENT") return "bg-amber-100 text-amber-800";
+  if (band === "FOLLOW_UP") return "bg-cyan-100 text-cyan-800";
   return "bg-slate-100 text-slate-700";
 }
 
 export default async function ComplianceControlCenterPage() {
-  await requireUser({
+  await requireAuthorizedUser({
     redirectIfCrew: "/m/crew",
-    allowedRoles: ["DIRECTOR", "CDMO", "OPERATIONAL", "ACCOUNTING", "HR_ADMIN"],
+    module: "compliance",
+    requiredLevel: PermissionLevel.VIEW_ACCESS,
     redirectOnDisallowed: "/dashboard",
   });
 
@@ -60,15 +46,15 @@ export default async function ComplianceControlCenterPage() {
           <div className="grid gap-6 px-6 py-8 lg:grid-cols-[1.15fr,0.85fr] lg:px-8">
             <div className="space-y-4">
               <div className="inline-flex items-center rounded-full border border-cyan-400/30 bg-cyan-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200">
-                Phase 2 Control Center
+                MLC / IMO Command Deck
               </div>
               <div>
                 <h1 className="text-3xl font-semibold tracking-tight text-white">
                   MLC and IMO compliance control center
                 </h1>
                 <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-300">
-                  One operating picture for crew readiness, statutory document validity, external compliance,
-                  internal audit pressure, and corrective action exposure across the digital shipping workflow.
+                  One operating picture for crew readiness, statutory document validity, audit pressure,
+                  corrective action exposure, and verification support across the digital shipping workflow.
                 </p>
               </div>
               <div className="flex flex-wrap gap-2 text-xs font-semibold uppercase tracking-wide text-slate-200">
@@ -77,37 +63,73 @@ export default async function ComplianceControlCenterPage() {
                 <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">Audit and CAPA</span>
                 <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">Flag readiness</span>
               </div>
+              <div className="grid gap-3 pt-2 sm:grid-cols-3">
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Command focus</p>
+                  <p className="mt-2 text-lg font-semibold text-white">Signals first</p>
+                  <p className="mt-1 text-sm text-slate-300">Management signals are grouped before users move into detailed desks.</p>
+                  <p className="mt-1 text-xs text-slate-400">This page is for monitoring, not direct record entry.</p>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Operating rhythm</p>
+                  <p className="mt-2 text-lg font-semibold text-white">Daily command review</p>
+                  <p className="mt-1 text-sm text-slate-300">Readiness, expiry, audit, and closure pressure stay visible on one page.</p>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Support tools</p>
+                  <p className="mt-2 text-lg font-semibold text-white">Separate from core flow</p>
+                  <p className="mt-1 text-sm text-slate-300">Verification shortcuts remain available without competing with core MLC and IMO controls.</p>
+                  <p className="mt-1 text-xs text-slate-400">Crewing remains the execution department for update and processing work.</p>
+                </div>
+              </div>
               <p className="text-xs font-medium text-slate-400">
-                Snapshot generated {formatTimestamp(data.generatedAt)}
+                Snapshot generated {formatDateTimeLabel(data.generatedAt, "en-GB")}
               </p>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2">
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 shadow-inner shadow-cyan-950/20">
                 <p className="text-sm text-slate-400">Readiness pool</p>
                 <p className="mt-2 text-3xl font-semibold text-white">{data.summary.readiness.crewPool}</p>
-                <p className="mt-1 text-sm text-slate-300">Standby crew monitored for deployment</p>
+                <p className="mt-1 text-sm text-slate-300">Standby crew monitored for deployment review</p>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 shadow-inner shadow-cyan-950/20">
                 <p className="text-sm text-slate-400">Compliance score</p>
                 <p className="mt-2 text-3xl font-semibold text-white">{data.summary.qms.complianceScore}%</p>
                 <p className="mt-1 text-sm text-slate-300">Document and audit coverage trend</p>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 shadow-inner shadow-cyan-950/20">
                 <p className="text-sm text-slate-400">Critical QMS alerts</p>
                 <p className="mt-2 text-3xl font-semibold text-white">{data.summary.qms.criticalAlerts}</p>
-                <p className="mt-1 text-sm text-slate-300">Items needing immediate management action</p>
+                <p className="mt-1 text-sm text-slate-300">Items requiring immediate management follow-up</p>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 shadow-inner shadow-cyan-950/20">
                 <p className="text-sm text-slate-400">Overdue CAPA</p>
                 <p className="mt-2 text-3xl font-semibold text-white">{data.summary.audits.overdueCorrectiveActions}</p>
-                <p className="mt-1 text-sm text-slate-300">Corrective actions already past due</p>
+                <p className="mt-1 text-sm text-slate-300">Corrective actions already beyond target date</p>
               </div>
             </div>
           </div>
         </section>
 
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <section className="rounded-[2rem] border border-slate-200 bg-white/80 p-6 shadow-sm backdrop-blur">
+          <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-cyan-700">Signal Board</p>
+              <h2 className="mt-2 text-2xl font-semibold text-slate-900">Command cards for immediate attention</h2>
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
+                Use these cards to review exposure and decide which operational desk needs follow-up next.
+              </p>
+            </div>
+            <Link
+              href="/compliance"
+              className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-cyan-300 hover:bg-cyan-50 hover:text-cyan-700"
+            >
+              Back to operations hub
+            </Link>
+          </div>
+
+          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {data.cards.map((card) => (
             <Link
               key={card.label}
@@ -119,6 +141,7 @@ export default async function ComplianceControlCenterPage() {
               <p className="mt-2 text-sm opacity-80">{card.detail}</p>
             </Link>
           ))}
+          </div>
         </section>
 
         <section className="grid gap-6 xl:grid-cols-[0.95fr,1.05fr]">
@@ -156,26 +179,10 @@ export default async function ComplianceControlCenterPage() {
             <p className="text-sm font-semibold uppercase tracking-[0.22em] text-emerald-700">Command Summary</p>
             <h2 className="mt-2 text-xl font-semibold text-slate-900">Immediate management signals</h2>
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <p className="text-sm text-slate-500">Ready to deploy</p>
-                <p className="mt-2 text-3xl font-semibold text-slate-900">{data.summary.readiness.readyToDeploy}</p>
-                <p className="mt-1 text-sm text-slate-600">Crew currently passing core MLC/STCW checks.</p>
-              </div>
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <p className="text-sm text-slate-500">Expiring certifications</p>
-                <p className="mt-2 text-3xl font-semibold text-slate-900">{data.summary.hrCompliance.expiringCertifications}</p>
-                <p className="mt-1 text-sm text-slate-600">HR certification expiries requiring follow-up.</p>
-              </div>
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <p className="text-sm text-slate-500">Overdue trainings</p>
-                <p className="mt-2 text-3xl font-semibold text-slate-900">{data.summary.hrCompliance.overdueTrainings}</p>
-                <p className="mt-1 text-sm text-slate-600">Mandatory training plans beyond target date.</p>
-              </div>
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <p className="text-sm text-slate-500">Open audits</p>
-                <p className="mt-2 text-3xl font-semibold text-slate-900">{data.summary.audits.openAudits}</p>
-                <p className="mt-1 text-sm text-slate-600">Planned and in-progress audits still active.</p>
-              </div>
+              <StatCard label="Ready to deploy" value={data.summary.readiness.readyToDeploy} description="Crew currently passing core MLC/STCW checks." tone="emerald" />
+              <StatCard label="Expiring certifications" value={data.summary.hrCompliance.expiringCertifications} description="HR certification expiries requiring follow-up." tone="amber" />
+              <StatCard label="Overdue trainings" value={data.summary.hrCompliance.overdueTrainings} description="Mandatory training plans beyond target date." tone="rose" />
+              <StatCard label="Open audits" value={data.summary.audits.openAudits} description="Planned and in-progress audits still active." tone="slate" />
             </div>
           </div>
         </section>
@@ -226,6 +233,47 @@ export default async function ComplianceControlCenterPage() {
             <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
               <div className="flex items-center justify-between">
                 <div>
+                  <p className="text-sm font-semibold uppercase tracking-[0.22em] text-rose-700">Contract Expiry Watch</p>
+                  <h2 className="mt-2 text-xl font-semibold text-slate-900">Onboard contracts in alert range</h2>
+                </div>
+                <Link href="/crewing/crew-list" className="text-sm font-semibold text-rose-700 hover:text-rose-800">
+                  Open crew list
+                </Link>
+              </div>
+              <div className="mt-5 space-y-3">
+                {data.contractExpiryWatch.length === 0 ? (
+                  <p className="text-sm text-slate-500">No onboard contracts are currently inside the monitored alert window.</p>
+                ) : (
+                  data.contractExpiryWatch.map((item) => (
+                    <Link
+                      key={item.id}
+                      href={item.href}
+                      className="block rounded-2xl border border-slate-200 px-4 py-4 transition hover:border-rose-300 hover:bg-rose-50"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <p className="font-semibold text-slate-900">{item.crewName}</p>
+                          <p className="text-sm text-slate-500">
+                            {item.rank} • {item.vesselName}
+                          </p>
+                          <p className="mt-2 text-sm leading-6 text-slate-600">{item.nextAction}</p>
+                        </div>
+                        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${getContractToneClasses(item.band)}`}>
+                          {formatStatusLabel(item.band)}
+                        </span>
+                      </div>
+                      <p className="mt-2 text-sm font-medium text-slate-700">
+                        Contract end {formatDateLabel(item.contractEnd, "en-GB")} • {item.daysRemaining} day(s) remaining
+                      </p>
+                    </Link>
+                  ))
+                )}
+              </div>
+            </div>
+
+            <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+              <div className="flex items-center justify-between">
+                <div>
                   <p className="text-sm font-semibold uppercase tracking-[0.22em] text-amber-700">Expiring Documents</p>
                   <h2 className="mt-2 text-xl font-semibold text-slate-900">Next 30 days</h2>
                 </div>
@@ -249,7 +297,7 @@ export default async function ComplianceControlCenterPage() {
                       </div>
                       <div className="text-right">
                         <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">Expiry</p>
-                        <p className="text-sm font-medium text-slate-700">{formatShortDate(item.expiryDate)}</p>
+                        <p className="text-sm font-medium text-slate-700">{formatDateLabel(item.expiryDate, "en-GB")}</p>
                       </div>
                     </Link>
                   ))
@@ -282,11 +330,11 @@ export default async function ComplianceControlCenterPage() {
                           <p className="font-semibold text-slate-900">{item.crewName}</p>
                           <p className="text-sm text-slate-500">{item.rank} • {item.systemType}</p>
                         </div>
-                        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${getSeverityClasses(item.status)}`}>
-                          {item.status.replaceAll("_", " ")}
+                        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${getSeverityBadgeClasses(item.status)}`}>
+                          {formatStatusLabel(item.status)}
                         </span>
                       </div>
-                      <p className="mt-2 text-sm text-slate-600">Expiry: {formatShortDate(item.expiryDate)}</p>
+                      <p className="mt-2 text-sm text-slate-600">Expiry: {formatDateLabel(item.expiryDate, "en-GB")}</p>
                     </Link>
                   ))
                 )}
@@ -317,12 +365,12 @@ export default async function ComplianceControlCenterPage() {
                         <p className="font-semibold text-slate-900">{alert.title}</p>
                         <p className="mt-1 text-sm leading-6 text-slate-600">{alert.description}</p>
                       </div>
-                      <span className={`rounded-full px-3 py-1 text-xs font-semibold ${getSeverityClasses(alert.severity)}`}>
+                      <span className={`rounded-full px-3 py-1 text-xs font-semibold ${getSeverityBadgeClasses(alert.severity)}`}>
                         {alert.severity}
                       </span>
                     </div>
                     <p className="mt-2 text-xs font-medium uppercase tracking-wide text-slate-500">
-                      Due {formatShortDate(alert.dueDate)}
+                      Due {formatDateLabel(alert.dueDate, "en-GB")}
                     </p>
                   </div>
                 ))
@@ -353,13 +401,13 @@ export default async function ComplianceControlCenterPage() {
                     <div className="flex items-start justify-between gap-4">
                       <div>
                         <p className="font-semibold text-slate-900">{item.title}</p>
-                        <p className="mt-1 text-sm text-slate-500">{item.status.replaceAll("_", " ")}</p>
+                        <p className="mt-1 text-sm text-slate-500">{formatStatusLabel(item.status)}</p>
                       </div>
-                      <span className={`rounded-full px-3 py-1 text-xs font-semibold ${getSeverityClasses(item.severity)}`}>
+                      <span className={`rounded-full px-3 py-1 text-xs font-semibold ${getSeverityBadgeClasses(item.severity)}`}>
                         {item.severity}
                       </span>
                     </div>
-                    <p className="mt-2 text-sm text-slate-600">Due {formatShortDate(item.dueDate)}</p>
+                    <p className="mt-2 text-sm text-slate-600">Due {formatDateLabel(item.dueDate, "en-GB")}</p>
                   </Link>
                 ))
               )}

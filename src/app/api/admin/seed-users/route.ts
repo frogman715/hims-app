@@ -1,15 +1,27 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 
 // This endpoint seeds test users - only accessible with correct secret key
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
     const isProduction = process.env.NODE_ENV === "production";
     if (isProduction) {
       return NextResponse.json(
         { error: "Seed endpoint is disabled in production" },
         { status: 403 }
+      );
+    }
+
+    const expectedToken = process.env.DEV_SEED_TOKEN || process.env.NEXTAUTH_SECRET;
+    const providedToken =
+      request.headers.get("x-seed-token") ||
+      request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
+
+    if (!expectedToken || !providedToken || providedToken !== expectedToken) {
+      return NextResponse.json(
+        { error: "Unauthorized seed request" },
+        { status: 401 }
       );
     }
 
@@ -101,7 +113,7 @@ export async function POST() {
     return NextResponse.json(
       {
         message: "Users seeded successfully",
-        users: results,
+        users: results.map(({ password, ...rest }) => rest),
       },
       { status: 200 }
     );

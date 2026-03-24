@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { checkPermission, PermissionLevel } from "@/lib/permission-middleware";
+import { ensureOfficeApiPathAccess } from "@/lib/office-api-access";
+import { interviewCreateSchema } from "@/lib/crewing-ops-schemas";
+import { handleApiError, ApiError } from "@/lib/error-handler";
 
 enum ApplicationStatus {
   RECEIVED = "RECEIVED",
@@ -47,11 +49,9 @@ function parseIsoDate(value?: string | null): Date | null {
 export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!checkPermission(session, "crew", PermissionLevel.VIEW_ACCESS)) {
-      return NextResponse.json(
-        { error: "Insufficient permissions" },
-        { status: 403 }
-      );
+    const authError = ensureOfficeApiPathAccess(session, "/api/interviews", "GET");
+    if (authError) {
+      return authError;
     }
 
     const { searchParams } = new URL(req.url);
@@ -103,6 +103,15 @@ export async function GET(req: NextRequest) {
             id: true,
             position: true,
             status: true,
+            crew: {
+              select: {
+                id: true,
+                fullName: true,
+                rank: true,
+                nationality: true,
+                phone: true,
+              },
+            },
             principal: {
               select: {
                 id: true,
@@ -115,18 +124,48 @@ export async function GET(req: NextRequest) {
 
     const applicationMap = new Map(applications.map((app) => [app.id, app]));
 
-    const result = interviews.map((interview) => ({
-      ...interview,
-      application: interview.applicationId ? applicationMap.get(interview.applicationId) ?? null : null,
-    }));
+    const result = interviews.map((interview) => {
+      const application = interview.applicationId ? applicationMap.get(interview.applicationId) ?? null : null;
+
+      return {
+        id: interview.id,
+        applicationId: interview.applicationId,
+        scheduledDate: interview.scheduledDate,
+        conductedDate: interview.conductedDate,
+        status: interview.status,
+        interviewerName: interview.interviewer?.name ?? null,
+        technicalScore: interview.technicalScore,
+        attitudeScore: interview.attitudeScore,
+        englishScore: interview.englishScore,
+        recommendation: interview.recommendation,
+        notes: interview.remarks,
+        application: application
+          ? {
+              id: application.id,
+              position: application.position,
+              status: application.status,
+              crew: application.crew,
+              principal: application.principal,
+            }
+          : {
+              id: interview.applicationId ?? interview.id,
+              position: interview.crew.rank ?? "Not specified",
+              status: null,
+              crew: {
+                id: interview.crew.id,
+                fullName: interview.crew.fullName,
+                rank: interview.crew.rank,
+                nationality: interview.crew.nationality,
+                phone: interview.crew.phone,
+              },
+              principal: null,
+            },
+      };
+    });
 
     return NextResponse.json({ data: result, total: result.length });
   } catch (error) {
-    console.error("Error fetching interviews:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch interviews" },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
 
@@ -134,23 +173,24 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!checkPermission(session, "crew", PermissionLevel.EDIT_ACCESS)) {
-      return NextResponse.json(
-        { error: "Insufficient permissions" },
-        { status: 403 }
-      );
+    const authError = ensureOfficeApiPathAccess(session, "/api/interviews", "POST");
+    if (authError) {
+      return authError;
     }
 
-    const body = (await req.json()) as Partial<CreateInterviewPayload>;
-    const { applicationId, scheduledDate, notes } = body;
+    if (!session.user?.id) {
+      throw new ApiError(401, "Unauthorized", "AUTHENTICATION_ERROR");
+    }
 
-    if (!applicationId || typeof applicationId !== "string") {
+    const parsedBody = interviewCreateSchema.safeParse(await req.json());
+    if (!parsedBody.success) {
       return NextResponse.json(
-        { error: "Application ID is required" },
+        { error: "Invalid interview payload", details: parsedBody.error.flatten() },
         { status: 400 }
       );
     }
 
+    const { applicationId, scheduledDate, notes } = parsedBody.data;
     const scheduledAt = parseIsoDate(typeof scheduledDate === "string" ? scheduledDate : null);
     const sanitizedNotes = typeof notes === "string" ? notes.trim() : null;
 
@@ -174,10 +214,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Application not found" }, { status: 404 });
     }
 
-    const interviewerId = session.user?.id;
-    if (!interviewerId) {
-      return NextResponse.json({ error: "Unable to determine interviewer" }, { status: 400 });
-    }
+    const interviewerId = session.user.id;
 
     const interview = await prisma.interview.create({
       data: {
@@ -217,22 +254,50 @@ export async function POST(req: NextRequest) {
       data: { status: ApplicationStatus.INTERVIEW },
     });
 
+    await prisma.auditLog.create({
+      data: {
+        actorUserId: session.user.id,
+        action: "INTERVIEW_CREATED",
+        entityType: "Interview",
+        entityId: interview.id,
+        metadataJson: {
+          applicationId,
+          crewId: interview.crew.id,
+          scheduledDate: interview.scheduledDate.toISOString(),
+          status: interview.status,
+        },
+      },
+    });
+
     const enrichedInterview = {
-      ...interview,
+      id: interview.id,
+      applicationId: interview.applicationId,
+      scheduledDate: interview.scheduledDate,
+      conductedDate: interview.conductedDate,
+      status: interview.status,
+      interviewerName: interview.interviewer?.name ?? null,
+      technicalScore: interview.technicalScore,
+      attitudeScore: interview.attitudeScore,
+      englishScore: interview.englishScore,
+      recommendation: interview.recommendation,
+      notes: interview.remarks,
       application: {
         id: application.id,
-        status: application.status,
+        status: ApplicationStatus.INTERVIEW,
         position: application.position,
+        crew: {
+          id: interview.crew.id,
+          fullName: interview.crew.fullName,
+          rank: interview.crew.rank,
+          nationality: null,
+          phone: null,
+        },
         principal: application.principal,
       },
     };
 
     return NextResponse.json(enrichedInterview, { status: 201 });
   } catch (error) {
-    console.error("Error creating interview:", error);
-    return NextResponse.json(
-      { error: "Failed to create interview" },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }

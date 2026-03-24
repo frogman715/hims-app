@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireQmsApiAccess } from '@/lib/qms-api-auth';
+import { PermissionLevel } from '@/lib/permission-middleware';
 
 /**
  * GET /api/qms/nonconformities/[id]
@@ -10,6 +12,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const access = await requireQmsApiAccess(PermissionLevel.VIEW_ACCESS);
+    if (!access.ok) return access.response;
+
     const { id } = await params;
 
     const record = await prisma.nonconformityRecord.findUnique({
@@ -56,6 +61,9 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const access = await requireQmsApiAccess(PermissionLevel.EDIT_ACCESS);
+    if (!access.ok) return access.response;
+
     const { id } = await params;
     const body = await request.json();
     const {
@@ -119,7 +127,7 @@ export async function PUT(
         entityId: id,
         event: 'UPDATED',
         description: `Updated non-conformity: status=${status}`,
-        userId: 'system',
+        userId: access.session.user.id,
         severity: status === 'CLOSED' ? 'INFO' : 'WARNING',
       },
     });
@@ -143,6 +151,9 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const access = await requireQmsApiAccess(PermissionLevel.EDIT_ACCESS);
+    if (!access.ok) return access.response;
+
     const { id } = await params;
 
     if (!request.url.includes('/close')) {
@@ -188,7 +199,7 @@ export async function POST(
         entityId: id,
         event: 'CLOSED',
         description: `Closed non-conformity for ${updated.crew?.fullName || 'Unknown'}`,
-        userId: 'system',
+        userId: access.session.user.id,
       },
     });
 

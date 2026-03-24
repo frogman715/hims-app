@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
-import { hasPermission, PermissionLevel, RolePermissionOverride } from '@/lib/permissions';
-import { normalizeToUserRoles, isSystemAdmin } from '@/lib/type-guards';
+import { PermissionLevel, RolePermissionOverride } from '@/lib/permissions';
+import { isSystemAdmin } from '@/lib/type-guards';
+import { hasModuleAccess } from '@/lib/authorization';
 
 export { PermissionLevel };
 
@@ -63,15 +64,14 @@ export function withPermission(
         );
       }
 
-      // Normalize roles to ensure type safety
-      const normalizedRoles = normalizeToUserRoles(user.roles);
-
-      // Check permission - pass normalized user roles
-      const hasAccess = hasPermission(
-        normalizedRoles,
+      const hasAccess = hasModuleAccess(
+        {
+          roles: user.roles,
+          role: user.role,
+          permissionOverrides: user.permissionOverrides ?? overrideList,
+        },
         module,
-        requiredPermission,
-        user.permissionOverrides ?? overrideList
+        requiredPermission
       );
 
       if (!hasAccess) {
@@ -149,15 +149,14 @@ export async function checkUserPermission(
       return { allowed: false, error: 'Invalid user session' };
     }
 
-    // Normalize roles to ensure type safety
-    const normalizedRoles = normalizeToUserRoles(user.roles);
-
-    // Check permission using normalized user roles
-    const hasAccess = hasPermission(
-      normalizedRoles,
+    const hasAccess = hasModuleAccess(
+      {
+        roles: user.roles,
+        role: user.role,
+        permissionOverrides: user.permissionOverrides ?? overrideList,
+      },
       module,
-      requiredPermission,
-      user.permissionOverrides ?? overrideList
+      requiredPermission
     );
 
     return {
@@ -190,6 +189,7 @@ interface SessionUser {
   id: string;
   email: string;
   roles: string[];
+  role?: string;
   name?: string;
   permissionOverrides?: RolePermissionOverride[];
   isSystemAdmin?: boolean; // Add this field
@@ -202,17 +202,16 @@ interface Session {
 
 // Simplified guard functions for API routes with type safety
 export function checkPermission(session: Session | null, module: string, requiredLevel: PermissionLevel): boolean {
-  // System admins bypass all permission checks
-  if (isSystemAdmin(session)) return true;
-  
-  if (!session?.user?.roles || session.user.roles.length === 0) return false;
-
-  // Normalize roles to ensure type safety
-  const normalizedRoles = normalizeToUserRoles(session.user.roles);
-
-  // Check permission using normalized user roles
-  const overrides = session.user.permissionOverrides;
-  return hasPermission(normalizedRoles, module, requiredLevel, overrides);
+  return hasModuleAccess(
+    {
+      roles: Array.isArray(session?.user?.roles) ? session.user.roles : [],
+      role: typeof session?.user?.role === "string" ? session.user.role : undefined,
+      isSystemAdmin: isSystemAdmin(session),
+      permissionOverrides: session?.user?.permissionOverrides,
+    },
+    module,
+    requiredLevel
+  );
 }
 
 // Module-specific guard functions

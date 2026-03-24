@@ -2,13 +2,15 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { ensureOfficeApiPathAccess } from '@/lib/office-api-access';
+import { handleApiError } from '@/lib/error-handler';
 
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
-    
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const authError = ensureOfficeApiPathAccess(session, '/api/crewing/workflow/stats', 'GET');
+    if (authError) {
+      return authError;
     }
 
     // Get counts for each workflow stage
@@ -61,10 +63,6 @@ export async function GET() {
     });
 
   } catch (error) {
-    console.error('Error fetching workflow stats:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }

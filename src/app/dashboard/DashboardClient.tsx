@@ -6,17 +6,25 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import type { AppRole } from '@/lib/roles';
 import { APP_ROLES } from '@/lib/roles';
-import { hasPermission, ModuleName, PermissionLevel, UserRole } from '@/lib/permissions';
+import { ModuleName, PermissionLevel } from '@/lib/permissions';
+import { hasExplicitRoleAccess, hasModuleAccess } from '@/lib/authorization';
 import SidebarHeader from '@/components/sidebar/SidebarHeader';
 import ComplianceStatusWidget from '@/components/compliance/ComplianceStatusWidget';
-import ExternalComplianceWidget from '@/components/compliance/ExternalComplianceWidget';
 import { getRoleDisplayName } from '@/lib/role-display';
+import { getFleetActivityBadgeClasses } from '@/lib/fleet-ui';
+import StatCard from '@/components/ui/StatCard';
+import { formatDateLabel, formatStatusLabel } from '@/lib/formatters';
 
 interface DashboardData {
   totalCrew: number;
   activeVessels: number;
+  operationalVessels: number;
+  onboardVessels: number;
   pendingApplications: number;
   expiringDocuments: number;
+  contractsExpiring45Days: number;
+  contractsExpiring30Days: number;
+  contractsExpiring14Days: number;
 }
 
 interface CrewMovementItem {
@@ -34,6 +42,18 @@ interface ExpiringItem {
   name: string;
   expiryDate: string;
   daysLeft: number;
+}
+
+interface ContractAlertItem {
+  seafarer: string;
+  crewId: string;
+  vessel: string;
+  principal: string;
+  expiryDate: string;
+  daysLeft: number;
+  band: string;
+  nextAction: string;
+  link: string;
 }
 
 interface PendingTask {
@@ -61,6 +81,7 @@ interface DashboardSectionProps {
   data: DashboardData | null;
   crewMovement: CrewMovementItem[];
   expiringItems: ExpiringItem[];
+  contractAlerts: ContractAlertItem[];
   pendingTasks: PendingTask[];
   recentActivity: RecentActivity[];
   user?: DashboardUser;
@@ -81,16 +102,47 @@ interface OfficeNavigationItem {
   icon: string;
   requiredLevel?: PermissionLevel;
   group?: string;
+  allowedRoles?: AppRole[];
+}
+
+interface CompliancePriority {
+  title: string;
+  detail: string;
+  href: string;
 }
 
 const OFFICE_NAV_ITEMS: OfficeNavigationItem[] = [
-  // CREWING OPERATIONS
   {
     module: ModuleName.crewing,
     href: '/crewing',
-    label: 'Crewing Department',
+    label: 'Crewing Operations',
     icon: '⚓',
     group: 'CREWING OPERATIONS',
+    allowedRoles: [APP_ROLES.DIRECTOR, APP_ROLES.CDMO, APP_ROLES.OPERATIONAL, APP_ROLES.GA_DRIVER, APP_ROLES.ACCOUNTING, APP_ROLES.HR, APP_ROLES.HR_ADMIN, APP_ROLES.QMR],
+  },
+  {
+    module: ModuleName.crewing,
+    href: '/crewing/readiness',
+    label: 'Crew Readiness',
+    icon: '✅',
+    group: 'CREWING OPERATIONS',
+    allowedRoles: [APP_ROLES.DIRECTOR, APP_ROLES.CDMO, APP_ROLES.OPERATIONAL, APP_ROLES.GA_DRIVER, APP_ROLES.ACCOUNTING, APP_ROLES.HR, APP_ROLES.HR_ADMIN, APP_ROLES.QMR],
+  },
+  {
+    module: ModuleName.crewing,
+    href: '/crewing/prepare-joining',
+    label: 'Prepare Joining',
+    icon: '🧾',
+    group: 'CREWING OPERATIONS',
+    allowedRoles: [APP_ROLES.DIRECTOR, APP_ROLES.CDMO, APP_ROLES.OPERATIONAL, APP_ROLES.GA_DRIVER, APP_ROLES.ACCOUNTING, APP_ROLES.HR, APP_ROLES.HR_ADMIN, APP_ROLES.QMR],
+  },
+  {
+    module: ModuleName.assignments,
+    href: '/crewing/assignments',
+    label: 'Vessel Assignment',
+    icon: '🚐',
+    group: 'CREWING OPERATIONS',
+    allowedRoles: [APP_ROLES.DIRECTOR, APP_ROLES.CDMO, APP_ROLES.OPERATIONAL, APP_ROLES.GA_DRIVER, APP_ROLES.ACCOUNTING, APP_ROLES.HR, APP_ROLES.HR_ADMIN, APP_ROLES.QMR],
   },
   {
     module: ModuleName.contracts,
@@ -98,6 +150,7 @@ const OFFICE_NAV_ITEMS: OfficeNavigationItem[] = [
     label: 'Contracts',
     icon: '📝',
     group: 'CREWING OPERATIONS',
+    allowedRoles: [APP_ROLES.DIRECTOR, APP_ROLES.CDMO, APP_ROLES.OPERATIONAL, APP_ROLES.GA_DRIVER, APP_ROLES.ACCOUNTING, APP_ROLES.HR, APP_ROLES.HR_ADMIN, APP_ROLES.QMR],
   },
   {
     module: ModuleName.documents,
@@ -105,55 +158,41 @@ const OFFICE_NAV_ITEMS: OfficeNavigationItem[] = [
     label: 'Documents',
     icon: '📁',
     group: 'CREWING OPERATIONS',
+    allowedRoles: [APP_ROLES.DIRECTOR, APP_ROLES.CDMO, APP_ROLES.OPERATIONAL, APP_ROLES.GA_DRIVER, APP_ROLES.ACCOUNTING, APP_ROLES.HR, APP_ROLES.HR_ADMIN, APP_ROLES.QMR],
   },
   {
     module: ModuleName.principals,
     href: '/crewing/principals',
-    label: 'Fleet Management',
+    label: 'Fleet & Principals',
     icon: '🚢',
     group: 'CREWING OPERATIONS',
+    allowedRoles: [APP_ROLES.DIRECTOR, APP_ROLES.CDMO, APP_ROLES.OPERATIONAL, APP_ROLES.GA_DRIVER, APP_ROLES.ACCOUNTING, APP_ROLES.HR, APP_ROLES.HR_ADMIN, APP_ROLES.QMR],
   },
-
-  // FINANCE & ADMIN
   {
     module: ModuleName.accounting,
     href: '/accounting',
     label: 'Accounting',
     icon: '💰',
     group: 'FINANCE & ADMINISTRATION',
+    allowedRoles: [APP_ROLES.DIRECTOR, APP_ROLES.CDMO, APP_ROLES.OPERATIONAL, APP_ROLES.GA_DRIVER, APP_ROLES.ACCOUNTING, APP_ROLES.HR, APP_ROLES.HR_ADMIN, APP_ROLES.QMR],
   },
-  {
-    module: ModuleName.agencyFees,
-    href: '/agency-fees',
-    label: 'Agency Fees',
-    icon: '💵',
-    group: 'FINANCE & ADMINISTRATION',
-  },
-  {
-    module: ModuleName.insurance,
-    href: '/insurance',
-    label: 'Insurance',
-    icon: '🛡️',
-    group: 'FINANCE & ADMINISTRATION',
-  },
-
-  // HR & PERSONNEL
   {
     module: ModuleName.crew,
     href: '/hr',
     label: 'HR Management',
     icon: '👔',
     group: 'HR & PERSONNEL',
+    allowedRoles: [APP_ROLES.DIRECTOR, APP_ROLES.CDMO, APP_ROLES.OPERATIONAL, APP_ROLES.GA_DRIVER, APP_ROLES.ACCOUNTING, APP_ROLES.HR, APP_ROLES.HR_ADMIN, APP_ROLES.QMR],
   },
   {
-    module: ModuleName.disciplinary,
-    href: '/disciplinary',
-    label: 'Disciplinary',
-    icon: '⚖️',
-    group: 'HR & PERSONNEL',
+    module: ModuleName.compliance,
+    href: '/compliance',
+    label: 'Compliance Command',
+    icon: '🧭',
+    group: 'QUALITY & COMPLIANCE',
+    requiredLevel: PermissionLevel.VIEW_ACCESS,
+    allowedRoles: [APP_ROLES.DIRECTOR, APP_ROLES.CDMO, APP_ROLES.OPERATIONAL, APP_ROLES.GA_DRIVER, APP_ROLES.ACCOUNTING, APP_ROLES.HR, APP_ROLES.HR_ADMIN, APP_ROLES.QMR],
   },
-
-  // QUALITY & COMPLIANCE
   {
     module: ModuleName.quality,
     href: '/quality/qms-dashboard',
@@ -161,6 +200,7 @@ const OFFICE_NAV_ITEMS: OfficeNavigationItem[] = [
     icon: '📊',
     group: 'QUALITY & COMPLIANCE',
     requiredLevel: PermissionLevel.VIEW_ACCESS,
+    allowedRoles: [APP_ROLES.DIRECTOR, APP_ROLES.CDMO, APP_ROLES.OPERATIONAL, APP_ROLES.GA_DRIVER, APP_ROLES.ACCOUNTING, APP_ROLES.HR, APP_ROLES.HR_ADMIN, APP_ROLES.QMR],
   },
   {
     module: ModuleName.quality,
@@ -169,6 +209,7 @@ const OFFICE_NAV_ITEMS: OfficeNavigationItem[] = [
     icon: '📋',
     group: 'QUALITY & COMPLIANCE',
     requiredLevel: PermissionLevel.VIEW_ACCESS,
+    allowedRoles: [APP_ROLES.DIRECTOR, APP_ROLES.CDMO, APP_ROLES.OPERATIONAL, APP_ROLES.GA_DRIVER, APP_ROLES.ACCOUNTING, APP_ROLES.HR, APP_ROLES.HR_ADMIN, APP_ROLES.QMR],
   },
   {
     module: ModuleName.quality,
@@ -177,9 +218,8 @@ const OFFICE_NAV_ITEMS: OfficeNavigationItem[] = [
     icon: '⚠️',
     group: 'QUALITY & COMPLIANCE',
     requiredLevel: PermissionLevel.VIEW_ACCESS,
+    allowedRoles: [APP_ROLES.DIRECTOR, APP_ROLES.CDMO, APP_ROLES.OPERATIONAL, APP_ROLES.GA_DRIVER, APP_ROLES.ACCOUNTING, APP_ROLES.HR, APP_ROLES.HR_ADMIN, APP_ROLES.QMR],
   },
-
-  // SYSTEM ADMINISTRATION
   {
     module: ModuleName.dashboard,
     href: '/admin/system-health',
@@ -187,6 +227,7 @@ const OFFICE_NAV_ITEMS: OfficeNavigationItem[] = [
     icon: '⚙️',
     group: 'SYSTEM ADMINISTRATION',
     requiredLevel: PermissionLevel.FULL_ACCESS,
+    allowedRoles: [APP_ROLES.DIRECTOR, APP_ROLES.HR_ADMIN],
   },
   {
     module: ModuleName.dashboard,
@@ -195,6 +236,7 @@ const OFFICE_NAV_ITEMS: OfficeNavigationItem[] = [
     icon: '👥',
     group: 'SYSTEM ADMINISTRATION',
     requiredLevel: PermissionLevel.FULL_ACCESS,
+    allowedRoles: [APP_ROLES.DIRECTOR, APP_ROLES.HR_ADMIN],
   },
 ];
 
@@ -215,8 +257,8 @@ const SUMMARY_CARDS: SummaryCardConfig[] = [
   },
   {
     key: 'activeVessels',
-    label: 'Active Vessels',
-    description: 'Managed fleet',
+    label: 'Active Fleet',
+    description: 'Master vessels marked active',
     href: '/crewing/principals',
     icon: '🚢',
   },
@@ -227,6 +269,38 @@ const SUMMARY_CARDS: SummaryCardConfig[] = [
     href: '/crewing/applications',
     icon: '📝',
   },
+  {
+    key: 'expiringDocuments',
+    label: 'Expiring Documents',
+    description: 'Renew before deployment',
+    href: '/crewing/documents?filter=expiring',
+    icon: '⏳',
+  },
+  {
+    key: 'contractsExpiring45Days',
+    label: 'Contracts ≤ 45 Days',
+    description: 'Onboard renewal watch',
+    href: '/crewing/crew-list',
+    icon: '📣',
+  },
+];
+
+const COMPLIANCE_PRIORITIES: CompliancePriority[] = [
+  {
+    title: 'Crew welfare and fatigue control',
+    detail: 'Track grievances, welfare cases, rest hours, and readiness blockers before sign-on or audit review.',
+    href: '/compliance/welfare',
+  },
+  {
+    title: 'Fleet readiness and principal control',
+    detail: 'Review active-fleet blockers and confirm principal or flag-state requirements before deployment.',
+    href: '/compliance/fleet-board',
+  },
+  {
+    title: 'Audit, CAPA, and escalation control',
+    detail: 'Keep QMS procedures, audit findings, corrective actions, and escalation rules aligned with office operations.',
+    href: '/compliance',
+  },
 ];
 
 export default function DashboardClient() {
@@ -235,6 +309,7 @@ export default function DashboardClient() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [crewMovement, setCrewMovement] = useState<CrewMovementItem[]>([]);
   const [expiringItems, setExpiringItems] = useState<ExpiringItem[]>([]);
+  const [contractAlerts, setContractAlerts] = useState<ContractAlertItem[]>([]);
   const [pendingTasks, setPendingTasks] = useState<PendingTask[]>([]);
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [loading, setLoading] = useState(true);
@@ -257,12 +332,18 @@ export default function DashboardClient() {
         setData({
           totalCrew: payload.totalCrew ?? 0,
           activeVessels: payload.activeVessels ?? 0,
+          operationalVessels: payload.operationalVessels ?? 0,
+          onboardVessels: payload.onboardVessels ?? 0,
           pendingApplications: payload.pendingApplications ?? 0,
           expiringDocuments: payload.expiringDocuments ?? 0,
+          contractsExpiring45Days: payload.contractsExpiring45Days ?? 0,
+          contractsExpiring30Days: payload.contractsExpiring30Days ?? 0,
+          contractsExpiring14Days: payload.contractsExpiring14Days ?? 0,
         });
 
         setCrewMovement(Array.isArray(payload.crewMovement) ? payload.crewMovement : []);
         setExpiringItems(Array.isArray(payload.expiringItems) ? payload.expiringItems : []);
+        setContractAlerts(Array.isArray(payload.contractExpiryAlerts) ? payload.contractExpiryAlerts : []);
         setPendingTasks(Array.isArray(payload.pendingTasks) ? payload.pendingTasks : []);
         setRecentActivity(Array.isArray(payload.recentActivity) ? payload.recentActivity : []);
       } catch (error) {
@@ -271,11 +352,17 @@ export default function DashboardClient() {
         setData({
           totalCrew: 0,
           activeVessels: 0,
+          operationalVessels: 0,
+          onboardVessels: 0,
           pendingApplications: 0,
           expiringDocuments: 0,
+          contractsExpiring45Days: 0,
+          contractsExpiring30Days: 0,
+          contractsExpiring14Days: 0,
         });
         setCrewMovement([]);
         setExpiringItems([]);
+        setContractAlerts([]);
         setPendingTasks([]);
         setRecentActivity([]);
       } finally {
@@ -289,11 +376,17 @@ export default function DashboardClient() {
       setData({
         totalCrew: 0,
         activeVessels: 0,
+        operationalVessels: 0,
+        onboardVessels: 0,
         pendingApplications: 0,
         expiringDocuments: 0,
+        contractsExpiring45Days: 0,
+        contractsExpiring30Days: 0,
+        contractsExpiring14Days: 0,
       });
       setCrewMovement([]);
       setExpiringItems([]);
+      setContractAlerts([]);
       setPendingTasks([]);
       setRecentActivity([]);
       setLoading(false);
@@ -311,33 +404,6 @@ export default function DashboardClient() {
     return rawPrimary as AppRole;
   }, [session?.user?.role, session?.user?.roles]);
   const userName = session?.user?.name || 'Preview User';
-  const permissionOverrides = session?.user?.permissionOverrides ?? null;
-  const allUserRoles = useMemo(() => {
-    const reportedRoles = Array.isArray(session?.user?.roles)
-      ? (session?.user?.roles ?? [])
-      : [];
-    const validRoles = new Set(Object.values(UserRole) as string[]);
-    const aggregated = new Set<UserRole>();
-
-    for (const role of reportedRoles) {
-      const upper = role?.toUpperCase();
-      if (upper && validRoles.has(upper)) {
-        aggregated.add(upper as UserRole);
-      }
-    }
-
-    const normalizedPrimary = userRole?.toUpperCase();
-    if (normalizedPrimary && validRoles.has(normalizedPrimary)) {
-      aggregated.add(normalizedPrimary as UserRole);
-    }
-
-    if (aggregated.size === 0) {
-      aggregated.add(UserRole.CREW_PORTAL);
-    }
-
-    return Array.from(aggregated);
-  }, [session?.user?.roles, userRole]);
-
   if (status === 'loading' || loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
@@ -370,6 +436,7 @@ export default function DashboardClient() {
       data,
       crewMovement,
       expiringItems,
+      contractAlerts,
       pendingTasks,
       recentActivity,
       user: resolvedUser,
@@ -384,12 +451,18 @@ export default function DashboardClient() {
         return <AccountingDashboard {...sharedProps} />;
       case APP_ROLES.OPERATIONAL:
         return <OperationalDashboard {...sharedProps} />;
+      case APP_ROLES.GA_DRIVER:
+        return <GADriverDashboard {...sharedProps} />;
       case APP_ROLES.HR:
         return <HRDashboard {...sharedProps} />;
+      case APP_ROLES.HR_ADMIN:
+        return <HRAdminDashboard {...sharedProps} />;
+      case APP_ROLES.QMR:
+        return <QMRDashboard {...sharedProps} />;
       case APP_ROLES.CREW_PORTAL:
         return <CrewPortalDashboard {...sharedProps} />;
       default:
-        return <DirectorDashboard {...sharedProps} />;
+        return <OperationalDashboard {...sharedProps} />;
     }
   };
 
@@ -407,14 +480,20 @@ export default function DashboardClient() {
       ));
     }
 
-    const items = OFFICE_NAV_ITEMS.filter((item) =>
-      hasPermission(
-        allUserRoles,
-        item.module,
-        item.requiredLevel ?? PermissionLevel.VIEW_ACCESS,
-        permissionOverrides ?? undefined
-      )
-    );
+    const subject = {
+      roles: session?.user?.roles,
+      role: session?.user?.role,
+      isSystemAdmin: (session?.user as Record<string, unknown>)?.isSystemAdmin === true,
+      permissionOverrides: (session?.user as Record<string, unknown>)?.permissionOverrides as never,
+    };
+
+    const items = OFFICE_NAV_ITEMS.filter((item) => {
+      if (!hasExplicitRoleAccess(subject, item.allowedRoles)) {
+        return false;
+      }
+
+      return hasModuleAccess(subject, item.module, item.requiredLevel ?? PermissionLevel.VIEW_ACCESS);
+    });
 
     // Group items by their group property
     const groupedItems = items.reduce((acc, item) => {
@@ -526,14 +605,17 @@ export default function DashboardClient() {
   );
 }
 
-function DirectorDashboard({ data, crewMovement, expiringItems, pendingTasks, recentActivity }: DashboardSectionProps) {
+function DirectorDashboard({ data, crewMovement, expiringItems, contractAlerts, pendingTasks, recentActivity }: DashboardSectionProps) {
   return (
     <div className="space-y-6">
       <DashboardHeader
         title="Executive Overview"
         subtitle="Summary of fleet readiness, recruitment, and compliance"
       />
+      <ComplianceOperationsBanner />
+      <FleetSnapshot data={data} />
       <SummaryCards data={data} />
+      <ContractAlertStrip data={data} items={contractAlerts} />
       <div className="grid gap-6 xl:grid-cols-3">
         <CrewMovementSection crewMovement={crewMovement} className="xl:col-span-2" />
         <ExpiringItemsSection items={expiringItems} />
@@ -542,23 +624,67 @@ function DirectorDashboard({ data, crewMovement, expiringItems, pendingTasks, re
         <PendingTasksSection tasks={pendingTasks} className="xl:col-span-2" />
         <RecentActivitySection events={recentActivity} />
       </div>
-      <ExternalComplianceWidget className="border border-gray-200" />
+      <div className="surface-card p-6">
+        <div className="mb-4 flex items-center justify-between gap-4">
+          <div>
+            <h3 className="text-lg font-semibold text-slate-900">Verification shortcuts</h3>
+            <p className="mt-1 text-sm text-slate-600">
+              Keep portal shortcuts available without placing a separate verification workflow on the dashboard.
+            </p>
+          </div>
+          <Link href="/compliance" className="text-sm font-semibold text-cyan-700 hover:text-cyan-800">
+            Open operations hub
+          </Link>
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          <Link
+            href="/compliance/external"
+            className="rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:border-cyan-300 hover:bg-cyan-50"
+          >
+            <p className="text-sm font-semibold text-slate-900">Verification shortcuts</p>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              Open the support launcher for KOSMA reference, Dephub checks, and visa portals.
+            </p>
+          </Link>
+          <Link
+            href="/crewing/documents?type=KOSMA"
+            className="rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:border-cyan-300 hover:bg-cyan-50"
+          >
+            <p className="text-sm font-semibold text-slate-900">KOSMA records</p>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              Review KOSMA training and certificate records under document control.
+            </p>
+          </Link>
+          <Link
+            href="/compliance/control-center"
+            className="rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:border-cyan-300 hover:bg-cyan-50"
+          >
+            <p className="text-sm font-semibold text-slate-900">Command view</p>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              Return to the MLC and IMO control center for the actual operating workflow.
+            </p>
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }
 
-function CDMODashboard({ data, crewMovement, expiringItems, pendingTasks, recentActivity }: DashboardSectionProps) {
+function CDMODashboard({ data, crewMovement, expiringItems, contractAlerts, pendingTasks, recentActivity }: DashboardSectionProps) {
   return (
     <div className="space-y-6">
       <DashboardHeader
-        title="Crewing & Compliance"
-        subtitle="Assignments pipeline and regulatory status"
+        title="Document Control"
+        subtitle="Crew records, certificates, and document validity control"
       />
+      <ComplianceOperationsBanner />
+      <FleetSnapshot data={data} />
       <SummaryCards data={data} />
+      <ContractAlertStrip data={data} items={contractAlerts} />
       <div className="grid gap-6 xl:grid-cols-3">
         <CrewMovementSection crewMovement={crewMovement} className="xl:col-span-2" />
         <div className="surface-card p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Compliance Snapshot</h3>
+          <h3 className="mb-4 text-lg font-semibold text-gray-900">Verification Snapshot</h3>
           <ComplianceStatusWidget />
         </div>
       </div>
@@ -578,6 +704,7 @@ function AccountingDashboard({ data, pendingTasks }: DashboardSectionProps) {
         title="Accounting Overview"
         subtitle="Monitor payroll, allotments, and billing follow ups"
       />
+      <FleetSnapshot data={data} />
       <SummaryCards data={data} />
       <PendingTasksSection tasks={pendingTasks} />
       <EmptyState message="Connect accounting data sources to surface revenue, allotment, and payroll analytics." />
@@ -585,14 +712,17 @@ function AccountingDashboard({ data, pendingTasks }: DashboardSectionProps) {
   );
 }
 
-function OperationalDashboard({ data, crewMovement, expiringItems, pendingTasks }: DashboardSectionProps) {
+function OperationalDashboard({ data, crewMovement, expiringItems, contractAlerts, pendingTasks }: DashboardSectionProps) {
   return (
     <div className="space-y-6">
       <DashboardHeader
         title="Operational Control"
         subtitle="Crew logistics, sign-on readiness, and vessel documentation"
       />
+      <ComplianceOperationsBanner />
+      <FleetSnapshot data={data} />
       <SummaryCards data={data} />
+      <ContractAlertStrip data={data} items={contractAlerts} />
       <div className="grid gap-6 xl:grid-cols-2">
         <CrewMovementSection crewMovement={crewMovement} />
         <ExpiringItemsSection items={expiringItems} />
@@ -602,16 +732,106 @@ function OperationalDashboard({ data, crewMovement, expiringItems, pendingTasks 
   );
 }
 
-function HRDashboard({ data, expiringItems, pendingTasks, recentActivity }: DashboardSectionProps) {
+function GADriverDashboard({ data, pendingTasks, recentActivity }: DashboardSectionProps) {
+  return (
+    <div className="space-y-6">
+      <DashboardHeader
+        title="General Affair and Driver"
+        subtitle="Vessel assignment, transport coordination, and logistics support"
+      />
+      <FleetSnapshot data={data} />
+      <SummaryCards data={data} />
+      <div className="surface-card p-6">
+        <h3 className="text-lg font-semibold text-slate-900">Primary workflow</h3>
+        <p className="mt-2 text-sm leading-6 text-slate-600">
+          This role focuses on vessel assignment, transport coordination, pickup handling, and field logistics support.
+        </p>
+        <div className="mt-4 flex flex-wrap gap-3">
+          <Link href="/crewing/assignments" className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
+            Open Vessel Assignment
+          </Link>
+          <Link href="/crewing/crew-list" className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700">
+            Crew List
+          </Link>
+        </div>
+      </div>
+      <PendingTasksSection tasks={pendingTasks} />
+      <RecentActivitySection events={recentActivity} />
+    </div>
+  );
+}
+
+function HRDashboard({ data, expiringItems, contractAlerts, pendingTasks, recentActivity }: DashboardSectionProps) {
   return (
     <div className="space-y-6">
       <DashboardHeader
         title="HR & Welfare"
         subtitle="Document renewals, onboarding status, and recent updates"
       />
+      <ComplianceOperationsBanner />
+      <FleetSnapshot data={data} />
       <SummaryCards data={data} />
+      <ContractAlertStrip data={data} items={contractAlerts} />
       <div className="grid gap-6 xl:grid-cols-2">
         <ExpiringItemsSection items={expiringItems} />
+        <PendingTasksSection tasks={pendingTasks} />
+      </div>
+      <RecentActivitySection events={recentActivity} />
+    </div>
+  );
+}
+
+function HRAdminDashboard({ data, expiringItems, contractAlerts, pendingTasks, recentActivity }: DashboardSectionProps) {
+  return (
+    <div className="space-y-6">
+      <DashboardHeader
+        title="HR Administration"
+        subtitle="User administration, HR control, and office support oversight"
+      />
+      <ComplianceOperationsBanner />
+      <FleetSnapshot data={data} />
+      <SummaryCards data={data} />
+      <ContractAlertStrip data={data} items={contractAlerts} />
+      <div className="grid gap-6 xl:grid-cols-2">
+        <PendingTasksSection tasks={pendingTasks} />
+        <ExpiringItemsSection items={expiringItems} />
+      </div>
+      <RecentActivitySection events={recentActivity} />
+    </div>
+  );
+}
+
+function QMRDashboard({ data, contractAlerts, pendingTasks, recentActivity }: DashboardSectionProps) {
+  return (
+    <div className="space-y-6">
+      <DashboardHeader
+        title="Quality and Compliance"
+        subtitle="Audit follow-up, QMS control, and MLC / IMO oversight"
+      />
+      <ComplianceOperationsBanner />
+      <FleetSnapshot data={data} />
+      <SummaryCards data={data} />
+      <ContractAlertStrip data={data} items={contractAlerts} />
+        <div className="surface-card p-6">
+          <h3 className="text-lg font-semibold text-slate-900">Priority focus</h3>
+        <div className="mt-4 grid gap-4 md:grid-cols-3">
+          {COMPLIANCE_PRIORITIES.map((priority) => (
+            <Link
+              key={priority.title}
+              href={priority.href}
+              className="rounded-2xl border border-slate-200 bg-white p-4 transition hover:border-cyan-300 hover:shadow-sm"
+            >
+              <p className="text-sm font-semibold text-slate-900">{priority.title}</p>
+              <p className="mt-2 text-sm leading-6 text-slate-600">{priority.detail}</p>
+            </Link>
+          ))}
+        </div>
+      </div>
+      <div className="grid gap-6 xl:grid-cols-2">
+        <div className="surface-card p-6">
+          <h3 className="mb-4 text-lg font-semibold text-slate-900">Verification Snapshot</h3>
+          <ComplianceStatusWidget />
+        </div>
         <PendingTasksSection tasks={pendingTasks} />
       </div>
       <RecentActivitySection events={recentActivity} />
@@ -657,9 +877,50 @@ function DashboardHeader({ title, subtitle }: { title: string; subtitle?: string
   );
 }
 
+function ComplianceOperationsBanner() {
+  return (
+    <section className="overflow-hidden rounded-3xl border border-slate-200 bg-slate-950 text-slate-50 shadow-2xl">
+      <div className="grid gap-6 px-6 py-6 lg:grid-cols-[1.2fr,0.8fr] lg:px-8">
+        <div className="space-y-4">
+          <div className="inline-flex items-center rounded-full border border-cyan-400/30 bg-cyan-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200">
+            International Shipping Operations
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-semibold tracking-tight text-white">
+              MLC and IMO control tower for crewing, compliance, and fleet readiness
+            </h2>
+            <p className="max-w-3xl text-sm leading-6 text-slate-300">
+              HIMS now positions daily office work around crew welfare, statutory documentation, internal audits,
+              controlled deployment workflows, and vessel-by-vessel compliance review expected in an international ship management environment.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2 text-xs font-semibold uppercase tracking-wide text-slate-200">
+            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">MLC 2006</span>
+            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">IMO ISM</span>
+            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">IMO STCW</span>
+            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">CAPA and Audit Trail</span>
+          </div>
+        </div>
+        <div className="grid gap-3">
+          {COMPLIANCE_PRIORITIES.map((item) => (
+            <Link
+              key={item.title}
+              href={item.href}
+              className="rounded-2xl border border-white/10 bg-white/5 p-4 transition hover:border-cyan-300/40 hover:bg-white/10"
+            >
+              <div className="text-sm font-semibold text-white">{item.title}</div>
+              <p className="mt-1 text-sm leading-6 text-slate-300">{item.detail}</p>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function SummaryCards({ data }: { data: DashboardData | null }) {
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
       {SUMMARY_CARDS.map((card) => {
         const value = data?.[card.key] ?? 0;
         return (
@@ -678,6 +939,113 @@ function SummaryCards({ data }: { data: DashboardData | null }) {
         );
       })}
     </div>
+  );
+}
+
+function FleetSnapshot({ data }: { data: DashboardData | null }) {
+  const activeFleet = data?.activeVessels ?? 0;
+  const operationalFleet = data?.operationalVessels ?? 0;
+  const onboardFleet = data?.onboardVessels ?? 0;
+
+  return (
+    <section className="surface-card p-6">
+      <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-700">Fleet Snapshot</p>
+          <h3 className="mt-2 text-xl font-semibold text-slate-900">Master fleet and live deployment picture</h3>
+          <p className="mt-1 text-sm leading-6 text-slate-600">
+            Dashboard fleet numbers are separated so master vessel records do not get mixed with onboard deployment activity.
+          </p>
+        </div>
+        <Link href="/compliance/fleet-board" className="text-sm font-semibold text-cyan-700 hover:text-cyan-800">
+          Open fleet board
+        </Link>
+      </div>
+      <div className="mt-5 grid gap-4 md:grid-cols-3">
+        <StatCard label="Active Fleet" value={activeFleet.toLocaleString('id-ID')} description="Master vessels with status set to active." tone="slate" />
+        <StatCard label="Operational Fleet" value={operationalFleet.toLocaleString('id-ID')} description="Active fleet with assignments or prepare joining activity." tone="cyan" />
+        <StatCard label="Onboard Fleet" value={onboardFleet.toLocaleString('id-ID')} description="Vessels currently carrying onboard crew assignments." tone="emerald" />
+      </div>
+      <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold">
+        <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-slate-700">Active = master vessel status ACTIVE</span>
+        <span className="rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-cyan-800">Operational = active fleet with assignment or prepare joining activity</span>
+        <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-emerald-800">Onboard = active crew currently deployed onboard</span>
+      </div>
+    </section>
+  );
+}
+
+function getContractBandStyles(band: string) {
+  if (band === 'EXPIRED' || band === 'CRITICAL') return 'bg-rose-100 text-rose-700';
+  if (band === 'URGENT') return 'bg-amber-100 text-amber-800';
+  if (band === 'FOLLOW_UP') return 'bg-cyan-100 text-cyan-800';
+  return 'bg-slate-100 text-slate-700';
+}
+
+function ContractAlertStrip({ data, items }: { data: DashboardData | null; items: ContractAlertItem[] }) {
+  const topItems = items.slice(0, 4);
+
+  return (
+    <section className="surface-card p-6">
+      <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-rose-700">Contract Alert Deck</p>
+          <h3 className="mt-2 text-xl font-semibold text-slate-900">Onboard contracts requiring follow-up</h3>
+          <p className="mt-1 text-sm leading-6 text-slate-600">
+            Escalation window is now tracked at 45, 30, and 14 days so renewal or reliever planning stays visible from the dashboard.
+          </p>
+        </div>
+        <Link href="/crewing/crew-list" className="text-sm font-semibold text-rose-700 hover:text-rose-800">
+          Open crew list
+        </Link>
+      </div>
+      <div className="mt-5 grid gap-4 md:grid-cols-3">
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <p className="text-sm text-slate-500">Within 45 days</p>
+          <p className="mt-2 text-3xl font-semibold text-amber-700">{data?.contractsExpiring45Days ?? 0}</p>
+          <p className="mt-1 text-sm text-slate-600">Urgent review and reliever planning.</p>
+        </div>
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <p className="text-sm text-slate-500">Within 30 days</p>
+          <p className="mt-2 text-3xl font-semibold text-rose-700">{data?.contractsExpiring30Days ?? 0}</p>
+          <p className="mt-1 text-sm text-slate-600">Critical renewal or sign-off decision.</p>
+        </div>
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <p className="text-sm text-slate-500">Within 14 days</p>
+          <p className="mt-2 text-3xl font-semibold text-rose-700">{data?.contractsExpiring14Days ?? 0}</p>
+          <p className="mt-1 text-sm text-slate-600">Director escalation required immediately.</p>
+        </div>
+      </div>
+      {topItems.length === 0 ? (
+        <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-4 text-sm text-emerald-800">
+          No onboard contracts are currently inside the contract escalation window.
+        </div>
+      ) : (
+        <div className="mt-5 grid gap-3 xl:grid-cols-2">
+          {topItems.map((item, index) => (
+            <Link
+              key={`${item.crewId}-${index}`}
+              href={item.link}
+              className="rounded-2xl border border-slate-200 bg-white p-4 transition hover:border-rose-300 hover:bg-rose-50"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="font-semibold text-slate-900">{item.seafarer}</p>
+                  <p className="text-sm text-slate-500">{item.principal} • {item.vessel}</p>
+                </div>
+                <span className={`rounded-full px-3 py-1 text-xs font-semibold ${getContractBandStyles(item.band)}`}>
+                  {item.band.replaceAll('_', ' ')}
+                </span>
+              </div>
+              <p className="mt-3 text-sm font-medium text-slate-700">
+                Contract end {formatDateLabel(item.expiryDate, 'id-ID')} • {item.daysLeft} day(s) left
+              </p>
+              <p className="mt-2 text-sm leading-6 text-slate-600">{item.nextAction}</p>
+            </Link>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -773,7 +1141,7 @@ function ExpiringItemsSection({ items, className = '' }: { items: ExpiringItem[]
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-amber-700 uppercase tracking-wide">Expires</p>
-                  <p className="text-sm font-semibold text-amber-900">{formatDate(item.expiryDate)}</p>
+                  <p className="text-sm font-semibold text-amber-900">{formatDateLabel(item.expiryDate, 'id-ID')}</p>
                   <p className="text-xs text-amber-600">{item.daysLeft} days left</p>
                 </div>
               </div>
@@ -815,7 +1183,7 @@ function PendingTasksSection({ tasks, className = '' }: { tasks: PendingTask[]; 
             const taskContent = (
               <>
                 <div className="text-sm font-semibold text-gray-900 w-24">
-                  <div>{formatDate(task.dueDate)}</div>
+                  <div>{formatDateLabel(task.dueDate, 'id-ID')}</div>
                   <span className={`inline-flex mt-2 items-center px-2 py-0.5 rounded-full text-xs font-semibold ${getTaskStatusBadge(task.status)}`}>
                     {formatStatusLabel(task.status)}
                   </span>
@@ -937,35 +1305,8 @@ function EmptyState({ message }: { message: string }) {
   );
 }
 
-function formatDate(value: string) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-  return date.toLocaleDateString('id-ID', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  });
-}
-
-function formatStatusLabel(value: string) {
-  return value
-    .toLowerCase()
-    .split('_')
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ');
-}
-
-const crewStatusBadges: Record<string, string> = {
-  ONBOARD: 'bg-green-100 text-green-700',
-  READY: 'bg-blue-100 text-blue-700',
-  COMPLETED: 'bg-gray-100 text-gray-600',
-  SIGN_OFF_DUE: 'bg-amber-100 text-amber-700',
-};
-
 function getCrewStatusBadge(status: string) {
-  return crewStatusBadges[status] ?? 'bg-slate-100 text-slate-600';
+  return getFleetActivityBadgeClasses(status);
 }
 
 const taskStatusBadges: Record<string, string> = {

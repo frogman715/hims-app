@@ -2,18 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { checkPermission, PermissionLevel } from "@/lib/permission-middleware";
+import { ensureOfficeApiPathAccess } from "@/lib/office-api-access";
+import { handleApiError } from "@/lib/error-handler";
 
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Check quality permission for checklist access
-    if (!checkPermission(session, 'quality', PermissionLevel.VIEW_ACCESS)) {
-      return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 });
+    const authError = ensureOfficeApiPathAccess(session, "/api/checklist", "GET");
+    if (authError) {
+      return authError;
     }
 
     const { searchParams } = new URL(request.url);
@@ -24,8 +21,18 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Month and year are required" }, { status: 400 });
     }
 
-    const monthNum = parseInt(month);
-    const yearNum = parseInt(year);
+    const monthNum = Number.parseInt(month, 10);
+    const yearNum = Number.parseInt(year, 10);
+    if (
+      Number.isNaN(monthNum) ||
+      Number.isNaN(yearNum) ||
+      monthNum < 1 ||
+      monthNum > 12 ||
+      yearNum < 2000 ||
+      yearNum > 2100
+    ) {
+      return NextResponse.json({ error: "Invalid month or year" }, { status: 400 });
+    }
 
     // Calculate date range for the month
     const startDate = new Date(yearNum, monthNum - 1, 1);
@@ -121,8 +128,8 @@ export async function GET(request: NextRequest) {
         doc.expiryDate && doc.expiryDate > new Date()
       );
 
-      // Check if training is complete (mock for now - would need training model)
-      const trainingComplete = Math.random() > 0.3; // Mock data
+      // Use valid competency certificates as the current training readiness signal.
+      const trainingComplete = hasValidCertificates;
 
       return {
         id: assignment.id,
@@ -144,10 +151,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(checklistItems);
   } catch (error) {
-    console.error("Error fetching checklist:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }

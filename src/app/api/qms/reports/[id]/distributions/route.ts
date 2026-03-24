@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { EmailDistributionService } from '@/lib/qms/email-distribution';
+import { requireQmsApiAccess } from '@/lib/qms-api-auth';
+import { PermissionLevel } from '@/lib/permission-middleware';
 
 type RouteParams = Promise<{ id: string }>;
 
@@ -13,6 +15,9 @@ export async function GET(request: NextRequest, props: { params: RouteParams }) 
   const params = await props.params;
 
   try {
+    const access = await requireQmsApiAccess(PermissionLevel.VIEW_ACCESS);
+    if (!access.ok) return access.response;
+
     // Verify report exists
     const report = await prisma.qMSReport.findUnique({
       where: { id: params.id },
@@ -43,6 +48,9 @@ export async function POST(request: NextRequest, props: { params: RouteParams })
   const params = await props.params;
 
   try {
+    const access = await requireQmsApiAccess(PermissionLevel.EDIT_ACCESS);
+    if (!access.ok) return access.response;
+
     const body = (await request.json()) as Record<string, unknown>;
     const { recipients, schedule, provider } = body;
 

@@ -1,0 +1,3342 @@
+{
+  "rows": [
+    {
+      "file": "src/app/api/about/vision-mission/route.ts",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/account/change-password/route.ts",
+      "methods": [
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": false,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "password"
+      ],
+      "audit": [
+        "auditLog"
+      ],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/accounting/office-expense/route.ts",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/admin/audit-logs/route.ts",
+      "methods": [
+        "GET"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email"
+      ],
+      "audit": [],
+      "mutating": false
+    },
+    {
+      "file": "src/app/api/admin/purchases/route.ts",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "withPermission",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/admin/seed-form-templates/route.ts",
+      "methods": [
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email"
+      ],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/admin/seed-users/route.ts",
+      "methods": [
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "Bearer token",
+      "validation": [],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email",
+        "password"
+      ],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/admin/users/[id]/reset-password/route.ts",
+      "methods": [
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email",
+        "password"
+      ],
+      "audit": [
+        "auditLog"
+      ],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/admin/users/[id]/route.ts",
+      "methods": [
+        "GET",
+        "PUT",
+        "DELETE"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email"
+      ],
+      "audit": [
+        "auditLog"
+      ],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/admin/users/[id]/status/route.ts",
+      "methods": [
+        "PATCH"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email"
+      ],
+      "audit": [
+        "auditLog"
+      ],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/admin/users/route.ts",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email",
+        "password"
+      ],
+      "audit": [
+        "auditLog"
+      ],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/agency-fees/[id]/route.ts",
+      "methods": [
+        "GET",
+        "PUT",
+        "DELETE"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/agency-fees/route.ts",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/applications/[id]/route.ts",
+      "methods": [
+        "GET",
+        "PUT"
+      ],
+      "authRequired": true,
+      "authzEnforced": false,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email",
+        "phone",
+        "passport"
+      ],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/applications/route.ts",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email",
+        "phone"
+      ],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/assignments/[id]/route.ts",
+      "methods": [
+        "GET",
+        "PUT"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "withPermission",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/assignments/route.ts",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "withPermission",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/attendances/[id]/route.ts",
+      "methods": [
+        "GET",
+        "PUT",
+        "DELETE"
+      ],
+      "authRequired": true,
+      "authzEnforced": false,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/attendances/route.ts",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/audit/[id]/findings/route.ts",
+      "methods": [
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": false,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [
+        "createAudit helper"
+      ],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/audit/[id]/nonconformities/route.ts",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/audit/[id]/route.ts",
+      "methods": [
+        "GET",
+        "PUT"
+      ],
+      "authRequired": true,
+      "authzEnforced": false,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/audit/list/route.ts",
+      "methods": [
+        "POST",
+        "GET"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [
+        "createAudit helper"
+      ],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/audit/stats/route.ts",
+      "methods": [
+        "GET"
+      ],
+      "authRequired": true,
+      "authzEnforced": false,
+      "guardSystem": "getServerSession",
+      "validation": [],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": false
+    },
+    {
+      "file": "src/app/api/audits/[id]/findings/route.ts",
+      "methods": [
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/audits/[id]/report/route.ts",
+      "methods": [
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email"
+      ],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/audits/[id]/route.ts",
+      "methods": [
+        "GET",
+        "PUT"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/audits/dashboard/metrics/route.ts",
+      "methods": [
+        "GET"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": false
+    },
+    {
+      "file": "src/app/api/audits/route.ts",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/auth/[...nextauth]/route.ts",
+      "methods": [],
+      "authRequired": true,
+      "authzEnforced": false,
+      "guardSystem": "NextAuth",
+      "validation": [],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": false
+    },
+    {
+      "file": "src/app/api/checklist/route.ts",
+      "methods": [
+        "GET"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": false
+    },
+    {
+      "file": "src/app/api/compliance/certifications/expiring/route.ts",
+      "methods": [
+        "GET"
+      ],
+      "authRequired": true,
+      "authzEnforced": false,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": false
+    },
+    {
+      "file": "src/app/api/compliance/communication/[id]/route.ts",
+      "methods": [
+        "GET",
+        "PUT"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "withPermission",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email",
+        "phone"
+      ],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/compliance/communication/route.ts",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "withPermission",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/compliance/enrollments/route.ts",
+      "methods": [
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": false,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/compliance/escalations/notify/route.ts",
+      "methods": [
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "withPermission, internal job token",
+      "validation": [],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/compliance/rest-hours/route.ts",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "withPermission",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email"
+      ],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/compliance/siuppak/route.ts",
+      "methods": [
+        "GET"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "withPermission",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email"
+      ],
+      "audit": [],
+      "mutating": false
+    },
+    {
+      "file": "src/app/api/compliance/stats/route.ts",
+      "methods": [
+        "GET"
+      ],
+      "authRequired": true,
+      "authzEnforced": false,
+      "guardSystem": "getServerSession",
+      "validation": [],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": false
+    },
+    {
+      "file": "src/app/api/compliance/trainings/route.ts",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": false,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/contracts/[id]/route.ts",
+      "methods": [
+        "GET",
+        "PUT",
+        "DELETE"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "passport",
+        "salary/wage"
+      ],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/contracts/route.ts",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "passport",
+        "salary/wage"
+      ],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/crew-replacements/[id]/route.ts",
+      "methods": [
+        "PATCH"
+      ],
+      "authRequired": true,
+      "authzEnforced": false,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/crew-replacements/route.ts",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": false,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/crew-tasks/[id]/route.ts",
+      "methods": [
+        "GET",
+        "PATCH",
+        "DELETE"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/crew-tasks/auto-create/route.ts",
+      "methods": [
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/crew-tasks/route.ts",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email"
+      ],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/crew/[id]/route.ts",
+      "methods": [
+        "GET",
+        "PATCH",
+        "DELETE"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "withPermission",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email",
+        "medical"
+      ],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/crew/bulk/route.ts",
+      "methods": [
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "withPermission",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email"
+      ],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/crew/route.ts",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "withPermission",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email"
+      ],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/crewing/applications/[id]/transition/route.ts",
+      "methods": [
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "withPermission",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [
+        "activityLog"
+      ],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/crewing/checklists/[id]/route.ts",
+      "methods": [
+        "GET",
+        "PUT",
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": false,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/crewing/checklists/route.ts",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": false,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/crewing/data-quality/route.ts",
+      "methods": [
+        "GET"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "withPermission",
+      "validation": [],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email"
+      ],
+      "audit": [],
+      "mutating": false
+    },
+    {
+      "file": "src/app/api/crewing/documents/expiring/route.ts",
+      "methods": [
+        "GET"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "withPermission",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email",
+        "phone"
+      ],
+      "audit": [],
+      "mutating": false
+    },
+    {
+      "file": "src/app/api/crewing/documents/remind/route.ts",
+      "methods": [
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "withPermission",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email",
+        "phone"
+      ],
+      "audit": [
+        "auditLog"
+      ],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/crewing/form-reference/download/route.ts",
+      "methods": [
+        "GET"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": false
+    },
+    {
+      "file": "src/app/api/crewing/form-reference/generate/route.ts",
+      "methods": [
+        "GET"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": false
+    },
+    {
+      "file": "src/app/api/crewing/form-reference/route.ts",
+      "methods": [
+        "GET"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": false
+    },
+    {
+      "file": "src/app/api/crewing/overview/route.ts",
+      "methods": [
+        "GET"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": false
+    },
+    {
+      "file": "src/app/api/crewing/procedures/[id]/route.ts",
+      "methods": [
+        "GET"
+      ],
+      "authRequired": true,
+      "authzEnforced": false,
+      "guardSystem": "getServerSession",
+      "validation": [],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": false
+    },
+    {
+      "file": "src/app/api/crewing/procedures/route.ts",
+      "methods": [
+        "GET"
+      ],
+      "authRequired": true,
+      "authzEnforced": false,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": false
+    },
+    {
+      "file": "src/app/api/crewing/reports/summary/route.ts",
+      "methods": [
+        "GET"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "withPermission",
+      "validation": [],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": false
+    },
+    {
+      "file": "src/app/api/crewing/seafarers/[id]/cv/route.ts",
+      "methods": [
+        "GET"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "withPermission",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email",
+        "phone"
+      ],
+      "audit": [],
+      "mutating": false
+    },
+    {
+      "file": "src/app/api/crewing/seafarers/[id]/photo/route.ts",
+      "methods": [
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": false,
+      "guardSystem": "getServerSession",
+      "validation": [],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/crewing/seafarers/[id]/route.ts",
+      "methods": [
+        "GET",
+        "PUT",
+        "DELETE"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "withPermission",
+      "validation": [
+        "zod safeParse",
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": true,
+      "sensitive": [
+        "email"
+      ],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/crewing/seafarers/route.ts",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "withPermission",
+      "validation": [
+        "zod safeParse",
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": true,
+      "sensitive": [
+        "email"
+      ],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/crewing/sign-off/route.ts",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "phone"
+      ],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/crewing/workflow/stats/route.ts",
+      "methods": [
+        "GET"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": false
+    },
+    {
+      "file": "src/app/api/dashboard/stats/route.ts",
+      "methods": [
+        "GET"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": false
+    },
+    {
+      "file": "src/app/api/disciplinary/[id]/route.ts",
+      "methods": [
+        "GET",
+        "PUT",
+        "DELETE"
+      ],
+      "authRequired": true,
+      "authzEnforced": false,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/disciplinary/route.ts",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/dispatches/route.ts",
+      "methods": [
+        "GET"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": false
+    },
+    {
+      "file": "src/app/api/document-receipts/route.ts",
+      "methods": [
+        "GET"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "withPermission",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email"
+      ],
+      "audit": [],
+      "mutating": false
+    },
+    {
+      "file": "src/app/api/documents/[id]/acknowledge/route.ts",
+      "methods": [
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": false,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/documents/[id]/approvals/[approvalId]/route.ts",
+      "methods": [
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": false,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/documents/[id]/delete/route.ts",
+      "methods": [
+        "DELETE"
+      ],
+      "authRequired": true,
+      "authzEnforced": false,
+      "guardSystem": "getServerSession",
+      "validation": [],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/documents/[id]/distribute/route.ts",
+      "methods": [
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": false,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/documents/[id]/history/route.ts",
+      "methods": [
+        "GET"
+      ],
+      "authRequired": true,
+      "authzEnforced": false,
+      "guardSystem": "getServerSession",
+      "validation": [],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": false
+    },
+    {
+      "file": "src/app/api/documents/[id]/route.ts",
+      "methods": [
+        "GET",
+        "PUT",
+        "DELETE"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/documents/[id]/submit-approval/route.ts",
+      "methods": [
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": false,
+      "guardSystem": "getServerSession",
+      "validation": [],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/documents/[id]/update/route.ts",
+      "methods": [
+        "PUT"
+      ],
+      "authRequired": true,
+      "authzEnforced": false,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/documents/create/route.ts",
+      "methods": [
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": false,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/documents/generate/route.ts",
+      "methods": [
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/documents/list/route.ts",
+      "methods": [
+        "GET"
+      ],
+      "authRequired": true,
+      "authzEnforced": false,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email"
+      ],
+      "audit": [],
+      "mutating": false
+    },
+    {
+      "file": "src/app/api/documents/route.ts",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "withPermission",
+      "validation": [],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/employees/route.ts",
+      "methods": [
+        "GET"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": false
+    },
+    {
+      "file": "src/app/api/external-compliance/[id]/route.ts",
+      "methods": [
+        "GET",
+        "PUT",
+        "DELETE"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "withPermission",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/external-compliance/[id]/verify/route.ts",
+      "methods": [
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": false,
+      "guardSystem": "getServerSession",
+      "validation": [],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/external-compliance/route.ts",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "withPermission",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/external-compliance/stats/route.ts",
+      "methods": [
+        "GET"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "withPermission",
+      "validation": [],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": false
+    },
+    {
+      "file": "src/app/api/files/[...path]/route.ts",
+      "methods": [
+        "GET"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "requireUserApi",
+      "validation": [],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email"
+      ],
+      "audit": [
+        "recordAuditLog"
+      ],
+      "mutating": false
+    },
+    {
+      "file": "src/app/api/form-submissions/[id]/approve/route.ts",
+      "methods": [
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email"
+      ],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/form-submissions/[id]/reject/route.ts",
+      "methods": [
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email"
+      ],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/form-submissions/[id]/request-changes/route.ts",
+      "methods": [
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email"
+      ],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/form-submissions/[id]/route.ts",
+      "methods": [
+        "GET",
+        "PUT",
+        "DELETE"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email",
+        "phone",
+        "passport"
+      ],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/form-submissions/route.ts",
+      "methods": [
+        "GET"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": false
+    },
+    {
+      "file": "src/app/api/form-templates/route.ts",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/forms/ac-01/[id]/route.ts",
+      "methods": [
+        "GET"
+      ],
+      "authRequired": true,
+      "authzEnforced": false,
+      "guardSystem": "getServerSession",
+      "validation": [],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email"
+      ],
+      "audit": [],
+      "mutating": false
+    },
+    {
+      "file": "src/app/api/forms/cr-01/route.ts",
+      "methods": [
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/forms/cr-02/[id]/route.ts",
+      "methods": [
+        "GET"
+      ],
+      "authRequired": true,
+      "authzEnforced": false,
+      "guardSystem": "getServerSession",
+      "validation": [],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email"
+      ],
+      "audit": [],
+      "mutating": false
+    },
+    {
+      "file": "src/app/api/forms/cr-02/route.ts",
+      "methods": [
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email"
+      ],
+      "audit": [
+        "activityLog"
+      ],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/forms/cr-07/route.ts",
+      "methods": [
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email"
+      ],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/forms/cr-08/route.ts",
+      "methods": [
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/forms/cr-09/route.ts",
+      "methods": [
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email"
+      ],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/forms/cr-15/route.ts",
+      "methods": [
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/forms/cr-16/route.ts",
+      "methods": [
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/forms/letter-guarantee/[prepareJoiningId]/route.ts",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email",
+        "phone",
+        "passport"
+      ],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/health/route.ts",
+      "methods": [
+        "GET"
+      ],
+      "authRequired": false,
+      "authzEnforced": false,
+      "guardSystem": "none",
+      "validation": [],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": false
+    },
+    {
+      "file": "src/app/api/hgf/documents/upload/route.ts",
+      "methods": [
+        "POST",
+        "GET"
+      ],
+      "authRequired": true,
+      "authzEnforced": false,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [
+        "submission audit"
+      ],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/hgf/forms/[formCode]/route.ts",
+      "methods": [
+        "GET",
+        "PUT",
+        "DELETE"
+      ],
+      "authRequired": true,
+      "authzEnforced": false,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/hgf/forms/route.ts",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": false,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/hgf/submissions/[submissionId]/approve/route.ts",
+      "methods": [
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": false,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email"
+      ],
+      "audit": [
+        "submission audit"
+      ],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/hgf/submissions/[submissionId]/reject/route.ts",
+      "methods": [
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": false,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email"
+      ],
+      "audit": [
+        "submission audit"
+      ],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/hgf/submissions/[submissionId]/route.ts",
+      "methods": [
+        "GET",
+        "PUT",
+        "DELETE"
+      ],
+      "authRequired": true,
+      "authzEnforced": false,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email"
+      ],
+      "audit": [
+        "submission audit"
+      ],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/hgf/submissions/[submissionId]/submit/route.ts",
+      "methods": [
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": false,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email"
+      ],
+      "audit": [
+        "submission audit"
+      ],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/hgf/submissions/route.ts",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": false,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/hr/appraisals/route.ts",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "withPermission",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/hr/requisitions/route.ts",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "withPermission",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/insurance/[id]/route.ts",
+      "methods": [
+        "GET",
+        "PUT",
+        "DELETE"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/insurance/route.ts",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/integrations/link-finding-cpar/route.ts",
+      "methods": [
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/integrations/link-risk-nonconformance/route.ts",
+      "methods": [
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/integrations/qms-status/route.ts",
+      "methods": [
+        "GET"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": false
+    },
+    {
+      "file": "src/app/api/interviews/route.ts",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "phone"
+      ],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/mobile/crew/upload/route.ts",
+      "methods": [
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "requireUserApi",
+      "validation": [],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email"
+      ],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/national-holidays/[id]/route.ts",
+      "methods": [
+        "GET",
+        "PUT",
+        "DELETE"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/national-holidays/route.ts",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/nonconformity/[id]/corrective-actions/route.ts",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/nonconformity/[id]/route.ts",
+      "methods": [
+        "GET",
+        "GET",
+        "PUT",
+        "PUT"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/nonconformity/list/route.ts",
+      "methods": [
+        "GET"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": false
+    },
+    {
+      "file": "src/app/api/orientations/route.ts",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/prepare-joining/[id]/route.ts",
+      "methods": [
+        "GET",
+        "PUT",
+        "DELETE"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email",
+        "phone",
+        "passport"
+      ],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/prepare-joining/route.ts",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email",
+        "phone"
+      ],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/principals/[id]/route.ts",
+      "methods": [
+        "PUT",
+        "DELETE"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email"
+      ],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/principals/[id]/vessels/route.ts",
+      "methods": [
+        "GET"
+      ],
+      "authRequired": true,
+      "authzEnforced": false,
+      "guardSystem": "getServerSession",
+      "validation": [],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": false
+    },
+    {
+      "file": "src/app/api/principals/route.ts",
+      "methods": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email"
+      ],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/qms/analytics/alerts/route.ts",
+      "methods": [
+        "GET"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "requireQmsApiAccess",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": false
+    },
+    {
+      "file": "src/app/api/qms/analytics/dashboard/route.ts",
+      "methods": [
+        "GET"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "requireQmsApiAccess",
+      "validation": [],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": false
+    },
+    {
+      "file": "src/app/api/qms/analytics/trends/route.ts",
+      "methods": [
+        "GET"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "requireQmsApiAccess",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": false
+    },
+    {
+      "file": "src/app/api/qms/audit-trail/route.ts",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "requireQmsApiAccess",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email"
+      ],
+      "audit": [
+        "auditTrail"
+      ],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/qms/documents/[id]/route.ts",
+      "methods": [
+        "GET",
+        "PUT",
+        "DELETE"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "requireQmsApiAccess",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email"
+      ],
+      "audit": [
+        "auditTrail"
+      ],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/qms/documents/route.ts",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "requireQmsApiAccess",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email"
+      ],
+      "audit": [
+        "auditTrail"
+      ],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/qms/metrics/route.ts",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "requireQmsApiAccess",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/qms/nonconformities/[id]/route.ts",
+      "methods": [
+        "GET",
+        "PUT",
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "requireQmsApiAccess",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email"
+      ],
+      "audit": [
+        "auditTrail",
+        "nonconformityAuditLog"
+      ],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/qms/nonconformities/route.ts",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "requireQmsApiAccess",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email"
+      ],
+      "audit": [
+        "auditTrail"
+      ],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/qms/reports/[id]/distributions/route.ts",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "requireQmsApiAccess",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email"
+      ],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/qms/reports/[id]/export/route.ts",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "requireQmsApiAccess",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email"
+      ],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/qms/reports/execute-distributions/route.ts",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": false,
+      "guardSystem": "Bearer token, internal job token",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/qms/reports/route.ts",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "requireQmsApiAccess",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email"
+      ],
+      "audit": [
+        "auditTrail"
+      ],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/quality/forms/generate/route.ts",
+      "methods": [
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": false,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email"
+      ],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/quality/qmr/stats/route.ts",
+      "methods": [
+        "GET"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": false
+    },
+    {
+      "file": "src/app/api/quality/qmr/tasks/route.ts",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": false,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/recruitments/[id]/route.ts",
+      "methods": [
+        "GET",
+        "PUT",
+        "DELETE"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email",
+        "phone"
+      ],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/recruitments/route.ts",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email",
+        "phone"
+      ],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/risks/[id]/actions/route.ts",
+      "methods": [
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email"
+      ],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/risks/[id]/review/route.ts",
+      "methods": [
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email"
+      ],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/risks/[id]/route.ts",
+      "methods": [
+        "GET",
+        "PUT",
+        "DELETE"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email"
+      ],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/risks/dashboard/metrics/route.ts",
+      "methods": [
+        "GET"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": false
+    },
+    {
+      "file": "src/app/api/risks/route.ts",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email"
+      ],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/seafarers/[id]/biodata/route.ts",
+      "methods": [
+        "GET"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": false
+    },
+    {
+      "file": "src/app/api/seafarers/[id]/document-receipts/route.ts",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email"
+      ],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/seafarers/[id]/documents/route.ts",
+      "methods": [
+        "GET"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": false
+    },
+    {
+      "file": "src/app/api/seafarers/[id]/route.ts",
+      "methods": [
+        "GET",
+        "PUT"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email"
+      ],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/seafarers/route.ts",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email"
+      ],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/seafarers/search/route.ts",
+      "methods": [
+        "GET"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "withPermission",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email"
+      ],
+      "audit": [],
+      "mutating": false
+    },
+    {
+      "file": "src/app/api/supplier/[id]/audits/route.ts",
+      "methods": [
+        "POST",
+        "GET"
+      ],
+      "authRequired": true,
+      "authzEnforced": false,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/supplier/[id]/compliance/route.ts",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": false,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/supplier/[id]/route.ts",
+      "methods": [
+        "GET",
+        "PUT"
+      ],
+      "authRequired": true,
+      "authzEnforced": false,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/supplier/list/route.ts",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": false,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [
+        "email"
+      ],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/supplier/performance/route.ts",
+      "methods": [
+        "GET"
+      ],
+      "authRequired": true,
+      "authzEnforced": false,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": false
+    },
+    {
+      "file": "src/app/api/supplier/stats/route.ts",
+      "methods": [
+        "GET"
+      ],
+      "authRequired": true,
+      "authzEnforced": false,
+      "guardSystem": "getServerSession",
+      "validation": [],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": false
+    },
+    {
+      "file": "src/app/api/vessels/[id]/route.ts",
+      "methods": [
+        "GET",
+        "PUT",
+        "DELETE"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/vessels/route.ts",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "getServerSession",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    },
+    {
+      "file": "src/app/api/wage-scales/route.ts",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "authRequired": true,
+      "authzEnforced": true,
+      "guardSystem": "withPermission",
+      "validation": [
+        "manual/inline checks"
+      ],
+      "hasSchemaValidation": false,
+      "sensitive": [],
+      "audit": [],
+      "mutating": true
+    }
+  ],
+  "unguarded": [],
+  "weak": [
+    "src/app/api/account/change-password/route.ts",
+    "src/app/api/applications/[id]/route.ts",
+    "src/app/api/attendances/[id]/route.ts",
+    "src/app/api/audit/[id]/findings/route.ts",
+    "src/app/api/audit/[id]/route.ts",
+    "src/app/api/audit/stats/route.ts",
+    "src/app/api/compliance/certifications/expiring/route.ts",
+    "src/app/api/compliance/enrollments/route.ts",
+    "src/app/api/compliance/stats/route.ts",
+    "src/app/api/compliance/trainings/route.ts",
+    "src/app/api/crew-replacements/[id]/route.ts",
+    "src/app/api/crew-replacements/route.ts",
+    "src/app/api/crewing/checklists/[id]/route.ts",
+    "src/app/api/crewing/checklists/route.ts",
+    "src/app/api/crewing/procedures/[id]/route.ts",
+    "src/app/api/crewing/procedures/route.ts",
+    "src/app/api/crewing/seafarers/[id]/photo/route.ts",
+    "src/app/api/disciplinary/[id]/route.ts",
+    "src/app/api/documents/[id]/acknowledge/route.ts",
+    "src/app/api/documents/[id]/approvals/[approvalId]/route.ts",
+    "src/app/api/documents/[id]/delete/route.ts",
+    "src/app/api/documents/[id]/distribute/route.ts",
+    "src/app/api/documents/[id]/history/route.ts",
+    "src/app/api/documents/[id]/submit-approval/route.ts",
+    "src/app/api/documents/[id]/update/route.ts",
+    "src/app/api/documents/create/route.ts",
+    "src/app/api/documents/list/route.ts",
+    "src/app/api/external-compliance/[id]/verify/route.ts",
+    "src/app/api/forms/ac-01/[id]/route.ts",
+    "src/app/api/forms/cr-02/[id]/route.ts",
+    "src/app/api/hgf/documents/upload/route.ts",
+    "src/app/api/hgf/forms/[formCode]/route.ts",
+    "src/app/api/hgf/forms/route.ts",
+    "src/app/api/hgf/submissions/[submissionId]/approve/route.ts",
+    "src/app/api/hgf/submissions/[submissionId]/reject/route.ts",
+    "src/app/api/hgf/submissions/[submissionId]/route.ts",
+    "src/app/api/hgf/submissions/[submissionId]/submit/route.ts",
+    "src/app/api/hgf/submissions/route.ts",
+    "src/app/api/principals/[id]/vessels/route.ts",
+    "src/app/api/qms/reports/execute-distributions/route.ts",
+    "src/app/api/quality/forms/generate/route.ts",
+    "src/app/api/quality/qmr/tasks/route.ts",
+    "src/app/api/supplier/[id]/audits/route.ts",
+    "src/app/api/supplier/[id]/compliance/route.ts",
+    "src/app/api/supplier/[id]/route.ts",
+    "src/app/api/supplier/list/route.ts",
+    "src/app/api/supplier/performance/route.ts",
+    "src/app/api/supplier/stats/route.ts"
+  ],
+  "missingSchema": [
+    "src/app/api/about/vision-mission/route.ts",
+    "src/app/api/account/change-password/route.ts",
+    "src/app/api/accounting/office-expense/route.ts",
+    "src/app/api/admin/purchases/route.ts",
+    "src/app/api/admin/seed-form-templates/route.ts",
+    "src/app/api/admin/seed-users/route.ts",
+    "src/app/api/admin/users/[id]/reset-password/route.ts",
+    "src/app/api/admin/users/[id]/route.ts",
+    "src/app/api/admin/users/[id]/status/route.ts",
+    "src/app/api/admin/users/route.ts",
+    "src/app/api/agency-fees/[id]/route.ts",
+    "src/app/api/agency-fees/route.ts",
+    "src/app/api/applications/[id]/route.ts",
+    "src/app/api/applications/route.ts",
+    "src/app/api/assignments/[id]/route.ts",
+    "src/app/api/assignments/route.ts",
+    "src/app/api/attendances/[id]/route.ts",
+    "src/app/api/attendances/route.ts",
+    "src/app/api/audit/[id]/findings/route.ts",
+    "src/app/api/audit/[id]/nonconformities/route.ts",
+    "src/app/api/audit/[id]/route.ts",
+    "src/app/api/audit/list/route.ts",
+    "src/app/api/audits/[id]/findings/route.ts",
+    "src/app/api/audits/[id]/report/route.ts",
+    "src/app/api/audits/[id]/route.ts",
+    "src/app/api/audits/route.ts",
+    "src/app/api/compliance/communication/[id]/route.ts",
+    "src/app/api/compliance/communication/route.ts",
+    "src/app/api/compliance/enrollments/route.ts",
+    "src/app/api/compliance/escalations/notify/route.ts",
+    "src/app/api/compliance/rest-hours/route.ts",
+    "src/app/api/compliance/trainings/route.ts",
+    "src/app/api/contracts/[id]/route.ts",
+    "src/app/api/contracts/route.ts",
+    "src/app/api/crew-replacements/[id]/route.ts",
+    "src/app/api/crew-replacements/route.ts",
+    "src/app/api/crew-tasks/[id]/route.ts",
+    "src/app/api/crew-tasks/auto-create/route.ts",
+    "src/app/api/crew-tasks/route.ts",
+    "src/app/api/crew/[id]/route.ts",
+    "src/app/api/crew/bulk/route.ts",
+    "src/app/api/crew/route.ts",
+    "src/app/api/crewing/applications/[id]/transition/route.ts",
+    "src/app/api/crewing/checklists/[id]/route.ts",
+    "src/app/api/crewing/checklists/route.ts",
+    "src/app/api/crewing/documents/remind/route.ts",
+    "src/app/api/crewing/seafarers/[id]/photo/route.ts",
+    "src/app/api/crewing/sign-off/route.ts",
+    "src/app/api/disciplinary/[id]/route.ts",
+    "src/app/api/disciplinary/route.ts",
+    "src/app/api/documents/[id]/acknowledge/route.ts",
+    "src/app/api/documents/[id]/approvals/[approvalId]/route.ts",
+    "src/app/api/documents/[id]/delete/route.ts",
+    "src/app/api/documents/[id]/distribute/route.ts",
+    "src/app/api/documents/[id]/route.ts",
+    "src/app/api/documents/[id]/submit-approval/route.ts",
+    "src/app/api/documents/[id]/update/route.ts",
+    "src/app/api/documents/create/route.ts",
+    "src/app/api/documents/generate/route.ts",
+    "src/app/api/documents/route.ts",
+    "src/app/api/external-compliance/[id]/route.ts",
+    "src/app/api/external-compliance/[id]/verify/route.ts",
+    "src/app/api/external-compliance/route.ts",
+    "src/app/api/form-submissions/[id]/approve/route.ts",
+    "src/app/api/form-submissions/[id]/reject/route.ts",
+    "src/app/api/form-submissions/[id]/request-changes/route.ts",
+    "src/app/api/form-submissions/[id]/route.ts",
+    "src/app/api/form-templates/route.ts",
+    "src/app/api/forms/cr-01/route.ts",
+    "src/app/api/forms/cr-02/route.ts",
+    "src/app/api/forms/cr-07/route.ts",
+    "src/app/api/forms/cr-08/route.ts",
+    "src/app/api/forms/cr-09/route.ts",
+    "src/app/api/forms/cr-15/route.ts",
+    "src/app/api/forms/cr-16/route.ts",
+    "src/app/api/forms/letter-guarantee/[prepareJoiningId]/route.ts",
+    "src/app/api/hgf/documents/upload/route.ts",
+    "src/app/api/hgf/forms/[formCode]/route.ts",
+    "src/app/api/hgf/forms/route.ts",
+    "src/app/api/hgf/submissions/[submissionId]/approve/route.ts",
+    "src/app/api/hgf/submissions/[submissionId]/reject/route.ts",
+    "src/app/api/hgf/submissions/[submissionId]/route.ts",
+    "src/app/api/hgf/submissions/[submissionId]/submit/route.ts",
+    "src/app/api/hgf/submissions/route.ts",
+    "src/app/api/hr/appraisals/route.ts",
+    "src/app/api/hr/requisitions/route.ts",
+    "src/app/api/insurance/[id]/route.ts",
+    "src/app/api/insurance/route.ts",
+    "src/app/api/integrations/link-finding-cpar/route.ts",
+    "src/app/api/integrations/link-risk-nonconformance/route.ts",
+    "src/app/api/interviews/route.ts",
+    "src/app/api/mobile/crew/upload/route.ts",
+    "src/app/api/national-holidays/[id]/route.ts",
+    "src/app/api/national-holidays/route.ts",
+    "src/app/api/nonconformity/[id]/corrective-actions/route.ts",
+    "src/app/api/nonconformity/[id]/route.ts",
+    "src/app/api/orientations/route.ts",
+    "src/app/api/prepare-joining/[id]/route.ts",
+    "src/app/api/prepare-joining/route.ts",
+    "src/app/api/principals/[id]/route.ts",
+    "src/app/api/principals/route.ts",
+    "src/app/api/qms/audit-trail/route.ts",
+    "src/app/api/qms/documents/[id]/route.ts",
+    "src/app/api/qms/documents/route.ts",
+    "src/app/api/qms/metrics/route.ts",
+    "src/app/api/qms/nonconformities/[id]/route.ts",
+    "src/app/api/qms/nonconformities/route.ts",
+    "src/app/api/qms/reports/[id]/distributions/route.ts",
+    "src/app/api/qms/reports/[id]/export/route.ts",
+    "src/app/api/qms/reports/execute-distributions/route.ts",
+    "src/app/api/qms/reports/route.ts",
+    "src/app/api/quality/forms/generate/route.ts",
+    "src/app/api/quality/qmr/tasks/route.ts",
+    "src/app/api/recruitments/[id]/route.ts",
+    "src/app/api/recruitments/route.ts",
+    "src/app/api/risks/[id]/actions/route.ts",
+    "src/app/api/risks/[id]/review/route.ts",
+    "src/app/api/risks/[id]/route.ts",
+    "src/app/api/risks/route.ts",
+    "src/app/api/seafarers/[id]/document-receipts/route.ts",
+    "src/app/api/seafarers/[id]/route.ts",
+    "src/app/api/seafarers/route.ts",
+    "src/app/api/supplier/[id]/audits/route.ts",
+    "src/app/api/supplier/[id]/compliance/route.ts",
+    "src/app/api/supplier/[id]/route.ts",
+    "src/app/api/supplier/list/route.ts",
+    "src/app/api/vessels/[id]/route.ts",
+    "src/app/api/vessels/route.ts",
+    "src/app/api/wage-scales/route.ts"
+  ],
+  "missingAudit": [
+    "src/app/api/about/vision-mission/route.ts",
+    "src/app/api/accounting/office-expense/route.ts",
+    "src/app/api/admin/purchases/route.ts",
+    "src/app/api/admin/seed-form-templates/route.ts",
+    "src/app/api/admin/seed-users/route.ts",
+    "src/app/api/agency-fees/[id]/route.ts",
+    "src/app/api/agency-fees/route.ts",
+    "src/app/api/applications/[id]/route.ts",
+    "src/app/api/applications/route.ts",
+    "src/app/api/assignments/[id]/route.ts",
+    "src/app/api/assignments/route.ts",
+    "src/app/api/attendances/[id]/route.ts",
+    "src/app/api/attendances/route.ts",
+    "src/app/api/audit/[id]/nonconformities/route.ts",
+    "src/app/api/audit/[id]/route.ts",
+    "src/app/api/audits/[id]/findings/route.ts",
+    "src/app/api/audits/[id]/report/route.ts",
+    "src/app/api/audits/[id]/route.ts",
+    "src/app/api/audits/route.ts",
+    "src/app/api/compliance/communication/[id]/route.ts",
+    "src/app/api/compliance/communication/route.ts",
+    "src/app/api/compliance/enrollments/route.ts",
+    "src/app/api/compliance/escalations/notify/route.ts",
+    "src/app/api/compliance/rest-hours/route.ts",
+    "src/app/api/compliance/trainings/route.ts",
+    "src/app/api/contracts/[id]/route.ts",
+    "src/app/api/contracts/route.ts",
+    "src/app/api/crew-replacements/[id]/route.ts",
+    "src/app/api/crew-replacements/route.ts",
+    "src/app/api/crew-tasks/[id]/route.ts",
+    "src/app/api/crew-tasks/auto-create/route.ts",
+    "src/app/api/crew-tasks/route.ts",
+    "src/app/api/crew/[id]/route.ts",
+    "src/app/api/crew/bulk/route.ts",
+    "src/app/api/crew/route.ts",
+    "src/app/api/crewing/checklists/[id]/route.ts",
+    "src/app/api/crewing/checklists/route.ts",
+    "src/app/api/crewing/seafarers/[id]/photo/route.ts",
+    "src/app/api/crewing/seafarers/[id]/route.ts",
+    "src/app/api/crewing/seafarers/route.ts",
+    "src/app/api/crewing/sign-off/route.ts",
+    "src/app/api/disciplinary/[id]/route.ts",
+    "src/app/api/disciplinary/route.ts",
+    "src/app/api/documents/[id]/acknowledge/route.ts",
+    "src/app/api/documents/[id]/approvals/[approvalId]/route.ts",
+    "src/app/api/documents/[id]/delete/route.ts",
+    "src/app/api/documents/[id]/distribute/route.ts",
+    "src/app/api/documents/[id]/route.ts",
+    "src/app/api/documents/[id]/submit-approval/route.ts",
+    "src/app/api/documents/[id]/update/route.ts",
+    "src/app/api/documents/create/route.ts",
+    "src/app/api/documents/generate/route.ts",
+    "src/app/api/documents/route.ts",
+    "src/app/api/external-compliance/[id]/route.ts",
+    "src/app/api/external-compliance/[id]/verify/route.ts",
+    "src/app/api/external-compliance/route.ts",
+    "src/app/api/form-submissions/[id]/approve/route.ts",
+    "src/app/api/form-submissions/[id]/reject/route.ts",
+    "src/app/api/form-submissions/[id]/request-changes/route.ts",
+    "src/app/api/form-submissions/[id]/route.ts",
+    "src/app/api/form-templates/route.ts",
+    "src/app/api/forms/cr-01/route.ts",
+    "src/app/api/forms/cr-07/route.ts",
+    "src/app/api/forms/cr-08/route.ts",
+    "src/app/api/forms/cr-09/route.ts",
+    "src/app/api/forms/cr-15/route.ts",
+    "src/app/api/forms/cr-16/route.ts",
+    "src/app/api/forms/letter-guarantee/[prepareJoiningId]/route.ts",
+    "src/app/api/hgf/forms/[formCode]/route.ts",
+    "src/app/api/hgf/forms/route.ts",
+    "src/app/api/hgf/submissions/route.ts",
+    "src/app/api/hr/appraisals/route.ts",
+    "src/app/api/hr/requisitions/route.ts",
+    "src/app/api/insurance/[id]/route.ts",
+    "src/app/api/insurance/route.ts",
+    "src/app/api/integrations/link-finding-cpar/route.ts",
+    "src/app/api/integrations/link-risk-nonconformance/route.ts",
+    "src/app/api/interviews/route.ts",
+    "src/app/api/mobile/crew/upload/route.ts",
+    "src/app/api/national-holidays/[id]/route.ts",
+    "src/app/api/national-holidays/route.ts",
+    "src/app/api/nonconformity/[id]/corrective-actions/route.ts",
+    "src/app/api/nonconformity/[id]/route.ts",
+    "src/app/api/orientations/route.ts",
+    "src/app/api/prepare-joining/[id]/route.ts",
+    "src/app/api/prepare-joining/route.ts",
+    "src/app/api/principals/[id]/route.ts",
+    "src/app/api/principals/route.ts",
+    "src/app/api/qms/metrics/route.ts",
+    "src/app/api/qms/reports/[id]/distributions/route.ts",
+    "src/app/api/qms/reports/[id]/export/route.ts",
+    "src/app/api/qms/reports/execute-distributions/route.ts",
+    "src/app/api/quality/forms/generate/route.ts",
+    "src/app/api/quality/qmr/tasks/route.ts",
+    "src/app/api/recruitments/[id]/route.ts",
+    "src/app/api/recruitments/route.ts",
+    "src/app/api/risks/[id]/actions/route.ts",
+    "src/app/api/risks/[id]/review/route.ts",
+    "src/app/api/risks/[id]/route.ts",
+    "src/app/api/risks/route.ts",
+    "src/app/api/seafarers/[id]/document-receipts/route.ts",
+    "src/app/api/seafarers/[id]/route.ts",
+    "src/app/api/seafarers/route.ts",
+    "src/app/api/supplier/[id]/audits/route.ts",
+    "src/app/api/supplier/[id]/compliance/route.ts",
+    "src/app/api/supplier/[id]/route.ts",
+    "src/app/api/supplier/list/route.ts",
+    "src/app/api/vessels/[id]/route.ts",
+    "src/app/api/vessels/route.ts",
+    "src/app/api/wage-scales/route.ts"
+  ]
+}

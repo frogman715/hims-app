@@ -2,9 +2,12 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { CREWING_DOCUMENT_RECEIPTS_ROUTE } from "@/lib/routes";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { canAccessOfficePath, getPrimaryOfficeRole } from "@/lib/office-access";
+import { hasExplicitRoleAccess, hasModuleAccess } from "@/lib/authorization";
+import { ModuleName, PermissionLevel } from "@/lib/permissions";
+import StatCard from "@/components/ui/StatCard";
 
 interface OverviewCard {
   label: string;
@@ -20,6 +23,9 @@ interface QuickAction {
   description: string;
   icon: string;
   accent: string;
+  module?: ModuleName;
+  requiredLevel?: PermissionLevel;
+  allowedRoles?: string[];
 }
 
 interface ModuleLink {
@@ -29,6 +35,9 @@ interface ModuleLink {
   icon: string;
   color: string;
   stats: string;
+  module?: ModuleName;
+  requiredLevel?: PermissionLevel;
+  allowedRoles?: string[];
 }
 
 interface ModuleCategory {
@@ -39,9 +48,9 @@ interface ModuleCategory {
 
 interface CrewSearchResult {
   id: string;
-  fullName: string;
-  rank: string;
-  status: string;
+  fullName: string | null;
+  rank: string | null;
+  status: string | null;
   nationality?: string | null;
   passportNumber?: string | null;
   passportExpiry?: string | null;
@@ -55,12 +64,12 @@ interface CrewSearchResult {
     rank: string | null;
     vesselName: string | null;
     principalName: string | null;
-    status: string;
+    status: string | null;
     startDate: string;
     endDate: string | null;
   } | null;
   latestApplication: {
-    status: string;
+    status: string | null;
     appliedAt: string;
     principalName: string | null;
     vesselType: string | null;
@@ -133,6 +142,11 @@ const formatDate = (value?: string | null) => {
 
 const formatDocumentLabel = (code: string) => code.replace(/_/g, " ");
 
+const getCrewDisplayName = (result: Pick<CrewSearchResult, "id" | "fullName">) => {
+  const normalized = result.fullName?.trim();
+  return normalized && normalized.length > 0 ? normalized : `Crew ${result.id}`;
+};
+
 export default function CrewingClient() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -143,6 +157,8 @@ export default function CrewingClient() {
   const [overviewData, setOverviewData] = useState<CrewingOverviewResponse | null>(null);
   const [overviewError, setOverviewError] = useState<string | null>(null);
   const [isOverviewLoading, setIsOverviewLoading] = useState(false);
+  const userRoles = getPrimaryOfficeRole(session?.user?.roles, session?.user?.role);
+  const isSystemAdmin = session?.user?.isSystemAdmin === true;
 
   useEffect(() => {
     if (status === "loading") {
@@ -308,16 +324,23 @@ export default function CrewingClient() {
       accent: "bg-blue-500/10 text-blue-600",
     },
     {
+      label: "Active Fleet",
+      value: formatNumber(stats?.vesselCount),
+      description: "Master vessels marked active",
+      icon: "🚢",
+      accent: "bg-cyan-500/10 text-cyan-700",
+    },
+    {
       label: "Pending Applications",
       value: formatNumber(stats?.pendingApplications),
-      description: "Awaiting recruitment review",
+      description: "Awaiting screening",
       icon: "📝",
       accent: "bg-emerald-500/10 text-emerald-600",
     },
     {
       label: "Assignments In Progress",
       value: formatNumber(stats?.activeAssignments),
-      description: "SEA & PKL contracts being tracked",
+      description: "Deployment statuses being tracked",
       icon: "📋",
       accent: "bg-indigo-500/10 text-indigo-600",
     },
@@ -337,6 +360,17 @@ export default function CrewingClient() {
       description: "Register new crew member",
       icon: "➕",
       accent: "bg-blue-500/10 text-blue-600",
+      module: ModuleName.crew,
+      allowedRoles: ["DIRECTOR", "CDMO"],
+    },
+    {
+      href: "/crewing/readiness",
+      label: "Readiness Hub",
+      description: "Deployment readiness dashboard",
+      icon: "📍",
+      accent: "bg-cyan-500/10 text-cyan-700",
+      module: ModuleName.crewing,
+      allowedRoles: ["DIRECTOR", "OPERATIONAL"],
     },
     {
       href: "/crewing/prepare-joining",
@@ -344,20 +378,26 @@ export default function CrewingClient() {
       description: "Departure checklist & travel",
       icon: "✈️",
       accent: "bg-teal-500/10 text-teal-600",
+      module: ModuleName.crewing,
+      allowedRoles: ["DIRECTOR", "OPERATIONAL"],
+    },
+    {
+      href: "/crewing/readiness-board",
+      label: "Readiness Follow-Up",
+      description: "Operational follow-up queue after readiness review",
+      icon: "🧭",
+      accent: "bg-emerald-500/10 text-emerald-700",
+      module: ModuleName.crewing,
+      allowedRoles: ["DIRECTOR", "OPERATIONAL"],
     },
     {
       href: "/crewing/crew-list",
       label: "Crew List Onboard",
-      description: "Monitor crew per vessel",
+      description: "Live crew board per vessel",
       icon: "🚢",
       accent: "bg-indigo-500/10 text-indigo-600",
-    },
-    {
-      href: CREWING_DOCUMENT_RECEIPTS_ROUTE,
-      label: "Document Receipt",
-      description: "Record document handover",
-      icon: "📥",
-      accent: "bg-emerald-500/10 text-emerald-600",
+      module: ModuleName.assignments,
+      allowedRoles: ["DIRECTOR", "OPERATIONAL", "GA_DRIVER"],
     },
     {
       href: "/crewing/documents?filter=expiring",
@@ -365,6 +405,8 @@ export default function CrewingClient() {
       description: "Renew passport, medical & visa",
       icon: "📄",
       accent: "bg-amber-500/10 text-amber-600",
+      module: ModuleName.documents,
+      allowedRoles: ["DIRECTOR", "CDMO"],
     },
   ];
 
@@ -387,6 +429,8 @@ export default function CrewingClient() {
           icon: "👨‍⚓",
           color: "from-blue-600 to-blue-700",
           stats: formatStat(stats?.activeSeafarers, "Active"),
+          module: ModuleName.crew,
+          allowedRoles: ["DIRECTOR", "CDMO"],
         },
         {
           title: "Applications",
@@ -395,22 +439,28 @@ export default function CrewingClient() {
           icon: "📝",
           color: "from-green-600 to-green-700",
           stats: formatStat(stats?.pendingApplications, "Pending"),
+          module: ModuleName.crewing,
+          allowedRoles: ["DIRECTOR", "CDMO"],
         },
         {
           title: "Application Workflow",
-          description: "Track application stages: Review → Interview → Approved",
+          description: "Track application stages: Applicant → Screening → Selection → Hired",
           href: "/crewing/workflow",
           icon: "🔄",
           color: "from-cyan-600 to-cyan-700",
           stats: formatStat(stats?.applicationInProgress, "In Progress"),
+          module: ModuleName.crewing,
+          allowedRoles: ["DIRECTOR", "CDMO"],
         },
         {
           title: "Interviews",
-          description: "Schedule & conduct crew interviews",
+          description: "Review interview queue and recorded results",
           href: "/crewing/interviews",
           icon: "💼",
           color: "from-indigo-600 to-indigo-700",
           stats: formatStat(stats?.scheduledInterviews, "Scheduled"),
+          module: ModuleName.crewing,
+          allowedRoles: ["DIRECTOR", "CDMO"],
         },
       ],
     },
@@ -419,12 +469,34 @@ export default function CrewingClient() {
       description: "Assignment to vessel operations",
       modules: [
         {
-          title: "Assignments & Contracts",
-          description: "Manage crew-vessel assignments & contracts (SEA/PKL)",
+          title: "Vessel Assignment Desk",
+          description: "Manage pickup, vessel movement, and onboard assignment status",
           href: "/crewing/assignments",
           icon: "📋",
           color: "from-purple-600 to-purple-700",
           stats: formatStat(stats?.activeAssignments, "Active"),
+          module: ModuleName.assignments,
+          allowedRoles: ["DIRECTOR", "GA_DRIVER"],
+        },
+        {
+          title: "Readiness Hub",
+          description: "Operational review desk for active crew follow-up after compliance monitoring",
+          href: "/crewing/readiness",
+          icon: "📍",
+          color: "from-cyan-600 to-sky-700",
+          stats: formatStat(stats?.prepareJoiningInProgress, "Review"),
+          module: ModuleName.crewing,
+          allowedRoles: ["DIRECTOR", "OPERATIONAL"],
+        },
+        {
+          title: "Readiness Follow-Up",
+          description: "Operational follow-up queue only; queued items are not auto-sent",
+          href: "/crewing/readiness-board",
+          icon: "🧭",
+          color: "from-emerald-600 to-green-700",
+          stats: formatStat(stats?.prepareJoiningInProgress, "Queued"),
+          module: ModuleName.crewing,
+          allowedRoles: ["DIRECTOR", "OPERATIONAL"],
         },
         {
           title: "Prepare Joining",
@@ -433,22 +505,28 @@ export default function CrewingClient() {
           icon: "✈️",
           color: "from-emerald-600 to-teal-700",
           stats: formatStat(stats?.prepareJoiningInProgress, "Ongoing"),
+          module: ModuleName.crewing,
+          allowedRoles: ["DIRECTOR", "OPERATIONAL"],
         },
         {
           title: "Crew List (Onboard)",
-          description: "Current crew complement per vessel",
+          description: "Live onboard crew complement per operating vessel",
           href: "/crewing/crew-list",
           icon: "🚢",
           color: "from-blue-700 to-indigo-700",
-          stats: formatStat(stats?.vesselCount, "Vessels"),
+          stats: formatStat(stats?.vesselCount, "Active Fleet"),
+          module: ModuleName.assignments,
+          allowedRoles: ["DIRECTOR", "OPERATIONAL", "GA_DRIVER"],
         },
         {
           title: "Crew Replacements",
-          description: "Plan & manage crew changes (sign-on/sign-off)",
-          href: "/crewing/replacements",
+          description: "Crew change follow-up is managed from the readiness board and checklist review",
+          href: "/crewing/readiness-board",
           icon: "🔄",
           color: "from-orange-600 to-red-600",
-          stats: formatStat(stats?.crewReplacementPending, "Pending"),
+          stats: formatStat(stats?.crewReplacementPending, "Queued"),
+          module: ModuleName.crewing,
+          allowedRoles: ["DIRECTOR", "OPERATIONAL"],
         },
         {
           title: "Sign-Off Records",
@@ -457,6 +535,8 @@ export default function CrewingClient() {
           icon: "📤",
           color: "from-red-600 to-rose-700",
           stats: formatStat(stats?.signOffThisMonth, "This Month"),
+          module: ModuleName.crewing,
+          allowedRoles: ["DIRECTOR", "OPERATIONAL", "ACCOUNTING"],
         },
       ],
     },
@@ -471,14 +551,8 @@ export default function CrewingClient() {
           icon: "📜",
           color: "from-amber-600 to-orange-700",
           stats: complianceBadge,
-        },
-        {
-          title: "Document Receipt",
-          description: "Generate & archive crew document handover receipt",
-          href: CREWING_DOCUMENT_RECEIPTS_ROUTE,
-          icon: "📥",
-          color: "from-emerald-600 to-teal-600",
-          stats: formatStat(stats?.documentReceiptsTotal, "Records"),
+          module: ModuleName.documents,
+          allowedRoles: ["DIRECTOR", "CDMO"],
         },
         {
           title: "Form Management",
@@ -486,43 +560,44 @@ export default function CrewingClient() {
           href: "/crewing/forms",
           icon: "📋",
           color: "from-fuchsia-600 to-pink-700",
-          stats: "New!",
-        },
-        {
-          title: "Form References",
-          description: "Download official form templates (HGF-CR, HGF-AD, HGF-AC, etc)",
-          href: "/crewing/form-reference",
-          icon: "📄",
-          color: "from-blue-600 to-cyan-700",
-          stats: "64 Forms",
-        },
-        {
-          title: "Monthly Checklist",
-          description: "ON/OFF signers report & compliance checklist",
-          href: "/crewing/checklist",
-          icon: "✅",
-          color: "from-teal-600 to-cyan-700",
-          stats: formatStat(stats?.signOffThisMonth, "This Month"),
-        },
-        {
-          title: "External Compliance",
-          description: "KOSMA, Dephub verification & Schengen visa",
-          href: "/compliance/external",
-          icon: "🌐",
-          color: "from-indigo-600 to-purple-700",
-          stats: formatStat(stats?.externalComplianceActive, "Active"),
-        },
-        {
-          title: "SIUPPAK Reports",
-          description: "Crew recruitment semester report for Transportation audit",
-          href: "/compliance/siuppak",
-          icon: "📊",
-          color: "from-red-600 to-rose-700",
-          stats: "Auto Generate",
+          stats: "Live Workflow",
+          module: ModuleName.crewing,
+          allowedRoles: ["DIRECTOR", "OPERATIONAL"],
         },
       ],
     },
   ];
+
+  const subject = {
+    roles: session?.user?.roles,
+    role: session?.user?.role,
+    isSystemAdmin,
+    permissionOverrides: (session?.user as Record<string, unknown> | undefined)?.permissionOverrides as never,
+  };
+  const visibleQuickActions = quickActions.filter((action) => {
+    if (!hasExplicitRoleAccess(subject, action.allowedRoles)) {
+      return false;
+    }
+    if (action.module) {
+      return hasModuleAccess(subject, action.module, action.requiredLevel ?? PermissionLevel.VIEW_ACCESS);
+    }
+    return canAccessOfficePath(action.href.split("?")[0] || action.href, userRoles, isSystemAdmin);
+  });
+  const visibleModuleCategories = moduleCategories
+    .map((category) => ({
+      ...category,
+      modules: category.modules.filter((module) => {
+        if (!hasExplicitRoleAccess(subject, module.allowedRoles)) {
+          return false;
+        }
+        if (module.module) {
+          return hasModuleAccess(subject, module.module, module.requiredLevel ?? PermissionLevel.VIEW_ACCESS);
+        }
+        return canAccessOfficePath(module.href.split("?")[0] || module.href, userRoles, isSystemAdmin);
+      }),
+    }))
+    .filter((category) => category.modules.length > 0);
+  const canOpenCrewingReports = canAccessOfficePath("/crewing/reports", userRoles, isSystemAdmin);
 
   const sanitizedQuery = searchQuery.trim();
   const hasMinimumSearch = sanitizedQuery.length >= 2;
@@ -537,7 +612,10 @@ export default function CrewingClient() {
               <div>
                 <h1 className="text-3xl font-bold text-slate-900">Crewing Department</h1>
                 <p className="mt-2 max-w-3xl text-base text-slate-600">
-                  Recruitment, assignment, and crew compliance operations in one calm and professional hub.
+                  CV review, crew biodata, document control, joining preparation, and active-fleet deployment work in one execution desk.
+                </p>
+                <p className="mt-2 text-sm font-medium text-emerald-700">
+                  Start here for input, update, and processing work. Compliance pages are used separately for monitoring, escalation, and oversight.
                 </p>
                 <div className="mt-4 flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-600">
                   <span className="action-pill text-xs">System Online</span>
@@ -549,9 +627,11 @@ export default function CrewingClient() {
               <Link href="/dashboard" className="action-pill text-sm">
                 ← Back to Dashboard
               </Link>
-              <Link href="/crewing/reports" className="action-pill text-sm">
-                Crew Reports →
-              </Link>
+              {canOpenCrewingReports ? (
+                <Link href="/crewing/reports" className="action-pill text-sm">
+                  Crew Reports →
+                </Link>
+              ) : null}
             </div>
           </div>
         </div>
@@ -582,7 +662,7 @@ export default function CrewingClient() {
               type="search"
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder="Sign Inkan kata kunci kru"
+              placeholder="Type a crew keyword"
               className="w-full rounded-xl border border-emerald-200 bg-white py-3 pl-10 pr-12 text-sm font-medium text-slate-800 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
             />
             {searchQuery && (
@@ -603,12 +683,12 @@ export default function CrewingClient() {
               </div>
             )}
             {!searchError && sanitizedQuery.length > 0 && sanitizedQuery.length < 2 && (
-              <p className="text-xs text-slate-500">Ketik minimal 2 karakter untuk mulai mencari.</p>
+              <p className="text-xs text-slate-500">Type at least 2 characters to start searching.</p>
             )}
             {isSearching && (
               <div className="flex items-center gap-2 text-sm text-slate-600">
                 <span className="h-4 w-4 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent" />
-                <span>Mencari kru...</span>
+                <span>Searching crew...</span>
               </div>
             )}
             {!isSearching && !searchError && hasMinimumSearch && (
@@ -631,11 +711,11 @@ export default function CrewingClient() {
                       >
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                           <div>
-                            <p className="text-sm font-semibold text-slate-900">{result.fullName}</p>
-                            <p className="text-xs text-slate-500">{metaSegments.join(" • ")}</p>
+                            <p className="text-sm font-semibold text-slate-900">{getCrewDisplayName(result)}</p>
+                            <p className="text-xs text-slate-500">{metaSegments.join(" • ") || "Crew review"}</p>
                           </div>
-                          <span className={`badge-soft text-xs font-semibold ${crewStatusAccent(result.status)}`}>
-                            {result.status}
+                          <span className={`badge-soft text-xs font-semibold ${crewStatusAccent(result.status ?? "")}`}>
+                            {result.status ?? "UNKNOWN"}
                           </span>
                         </div>
                         <div className="mt-3 grid gap-2 text-xs text-slate-600 sm:grid-cols-2">
@@ -701,24 +781,45 @@ export default function CrewingClient() {
                   })}
                 </div>
               ) : (
-                <p className="text-sm text-slate-500">Tidak ada kru yang cocok dengan pencarian.</p>
+                <p className="text-sm text-slate-500">No crew matches your search.</p>
               )
             )}
           </div>
         </div>
 
-        <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {overviewCards.map((card) => (
-            <div key={card.label} className="surface-card flex items-center justify-between gap-4 p-6">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{card.label}</p>
-                <p className="mt-2 text-2xl font-extrabold text-slate-900">{card.value}</p>
-                <p className="mt-1 text-sm text-slate-600">{card.description}</p>
-              </div>
-              <span className={`badge-soft text-xl ${card.accent}`} aria-hidden="true">
-                {card.icon}
-              </span>
+        <section className="rounded-3xl border border-cyan-100 bg-cyan-50/60 p-4 shadow-sm">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-700">Fleet Definitions</p>
+              <p className="mt-1 text-sm text-slate-700">Use the same vessel language across crewing, dashboard, and compliance pages.</p>
             </div>
+            <div className="flex flex-wrap gap-2 text-xs font-semibold">
+              <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-slate-700">Active Fleet = master vessel status ACTIVE</span>
+              <span className="rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-cyan-800">Operational Fleet = active fleet in deployment flow</span>
+              <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-emerald-800">Onboard Fleet = crew currently onboard</span>
+            </div>
+          </div>
+        </section>
+
+        <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
+          {overviewCards.map((card) => (
+            <StatCard
+              key={card.label}
+              label={card.label}
+              value={card.value}
+              description={card.description}
+              tone={
+                card.label === "Active Fleet"
+                  ? "cyan"
+                  : card.label === "Expiring Documents"
+                    ? "amber"
+                    : card.label === "Pending Applications"
+                      ? "emerald"
+                      : "slate"
+              }
+              icon={<span className={`badge-soft text-xl ${card.accent}`}>{card.icon}</span>}
+              className="surface-card border border-slate-200/70"
+            />
           ))}
         </section>
 
@@ -726,10 +827,10 @@ export default function CrewingClient() {
           <div className="surface-card p-6">
             <div className="surface-card__header">
               <h2 className="text-lg font-semibold text-slate-900">Quick Actions</h2>
-              <p className="mt-1 text-sm text-slate-600">Quick steps for daily crewing tasks.</p>
+              <p className="mt-1 text-sm text-slate-600">Operational actions for daily crewing processing and record updates.</p>
             </div>
             <div className="space-y-3">
-              {quickActions.map((action) => (
+              {visibleQuickActions.map((action) => (
                 <Link
                   key={action.href}
                   href={action.href}
@@ -765,7 +866,7 @@ export default function CrewingClient() {
         </section>
 
         <section className="space-y-8">
-          {moduleCategories.map((category) => (
+          {visibleModuleCategories.map((category) => (
             <div key={category.category} className="space-y-4">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div>

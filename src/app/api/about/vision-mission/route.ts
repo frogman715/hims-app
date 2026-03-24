@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { hasExplicitRoleAccess } from "@/lib/authorization";
 
 export async function GET() {
   try {
@@ -43,7 +44,17 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== "DIRECTOR") {
+    if (
+      !session ||
+      !hasExplicitRoleAccess(
+        {
+          roles: session.user.roles,
+          role: session.user.role,
+          isSystemAdmin: session.user.isSystemAdmin === true,
+        },
+        ["DIRECTOR"]
+      )
+    ) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 

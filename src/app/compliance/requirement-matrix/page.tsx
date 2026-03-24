@@ -1,3 +1,5 @@
+import { requireAuthorizedUser } from "@/lib/authz";
+import { PermissionLevel } from "@/lib/permissions";
 import { getRequirementMatrix } from "@/lib/compliance-requirement-matrix";
 
 export const dynamic = "force-dynamic";
@@ -13,6 +15,13 @@ function formatDate(value: string | null) {
 }
 
 export default async function RequirementMatrixPage() {
+  await requireAuthorizedUser({
+    redirectIfCrew: "/m/crew",
+    module: "compliance",
+    requiredLevel: PermissionLevel.VIEW_ACCESS,
+    redirectOnDisallowed: "/dashboard",
+  });
+
   const data = await getRequirementMatrix();
 
   return (

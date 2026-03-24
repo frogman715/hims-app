@@ -7,8 +7,9 @@ import Link from 'next/link';
 import AddUserModal from '@/components/admin/AddUserModal';
 import EditUserModal from '@/components/admin/EditUserModal';
 import ResetPasswordModal from '@/components/admin/ResetPasswordModal';
-import AuditLogTable from '@/components/admin/AuditLogTable';
 import { getRoleDisplayName } from '@/lib/role-display';
+import { ADMIN_ALLOWED_ROLES } from '@/lib/admin-access';
+import { hasExplicitRoleAccess } from '@/lib/authorization';
 
 interface User {
   id: string;
@@ -30,8 +31,6 @@ export default function UserManagementPage() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showResetPasswordModal, setShowResetPasswordModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [showAuditLogs, setShowAuditLogs] = useState(false);
-  const [auditLogRefresh, setAuditLogRefresh] = useState(0);
 
   // Check authentication and authorization
   useEffect(() => {
@@ -42,9 +41,14 @@ export default function UserManagementPage() {
       return;
     }
 
-    const hasAccess = 
-      session.user.roles?.includes('DIRECTOR') || 
-      session.user.isSystemAdmin;
+    const hasAccess = hasExplicitRoleAccess(
+      {
+        roles: session.user.roles,
+        role: session.user.role,
+        isSystemAdmin: session.user.isSystemAdmin,
+      },
+      ADMIN_ALLOWED_ROLES
+    );
 
     if (!hasAccess) {
       router.push('/403');
@@ -97,7 +101,6 @@ export default function UserManagementPage() {
       }
 
       fetchUsers();
-      setAuditLogRefresh(prev => prev + 1);
       alert(`User ${newStatus ? 'activated' : 'deactivated'} successfully`);
     } catch (error) {
       console.error('Error updating user status:', error);
@@ -107,16 +110,14 @@ export default function UserManagementPage() {
 
   const handleUserAdded = () => {
     fetchUsers();
-    setAuditLogRefresh(prev => prev + 1);
   };
 
   const handleUserUpdated = () => {
     fetchUsers();
-    setAuditLogRefresh(prev => prev + 1);
   };
 
   const handlePasswordReset = () => {
-    setAuditLogRefresh(prev => prev + 1);
+    fetchUsers();
   };
 
   const canSetSystemAdmin = session?.user.isSystemAdmin || false;
@@ -209,15 +210,23 @@ export default function UserManagementPage() {
         <div className="bg-white rounded-lg shadow-md overflow-hidden mb-8">
           <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
             <h2 className="text-xl font-semibold text-gray-900">All Users</h2>
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-2 rounded-lg font-medium transition-all duration-300 shadow-lg hover:shadow-xl flex items-center space-x-2"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              <span>Add User</span>
-            </button>
+            <div className="flex items-center gap-3">
+              <Link
+                href="/admin/audit-logs"
+                className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
+              >
+                Open Audit Logs
+              </Link>
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-2 rounded-lg font-medium transition-all duration-300 shadow-lg hover:shadow-xl flex items-center space-x-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                <span>Add User</span>
+              </button>
+            </div>
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
@@ -318,23 +327,6 @@ export default function UserManagementPage() {
           </div>
         </div>
 
-        {/* Audit Logs Section */}
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-            <h2 className="text-xl font-semibold text-gray-900">Audit Logs</h2>
-            <button
-              onClick={() => setShowAuditLogs(!showAuditLogs)}
-              className="text-blue-600 hover:text-blue-900 font-medium"
-            >
-              {showAuditLogs ? 'Hide' : 'Show'} Logs
-            </button>
-          </div>
-          {showAuditLogs && (
-            <div className="p-6">
-              <AuditLogTable entityType="User" refreshTrigger={auditLogRefresh} />
-            </div>
-          )}
-        </div>
       </div>
 
       {/* Modals */}

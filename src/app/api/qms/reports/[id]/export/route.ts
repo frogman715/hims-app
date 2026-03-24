@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { ReportExportService } from '@/lib/qms/report-export';
+import { requireQmsApiAccess } from '@/lib/qms-api-auth';
+import { PermissionLevel } from '@/lib/permission-middleware';
 
 type RouteParams = Promise<{ id: string }>;
 
@@ -22,6 +24,9 @@ export async function GET(request: NextRequest, props: { params: RouteParams }) 
   const params = await props.params;
 
   try {
+    const access = await requireQmsApiAccess(PermissionLevel.VIEW_ACCESS);
+    if (!access.ok) return access.response;
+
     const { searchParams } = new URL(request.url);
     const format = (searchParams.get('format') as 'pdf' | 'excel' | null) || 'pdf';
     const emailRecipients = searchParams.getAll('email');
@@ -147,6 +152,9 @@ export async function POST(request: NextRequest, props: { params: RouteParams })
   const params = await props.params;
 
   try {
+    const access = await requireQmsApiAccess(PermissionLevel.EDIT_ACCESS);
+    if (!access.ok) return access.response;
+
     const body = (await request.json()) as Record<string, unknown>;
     const { schedule, recipients } = body;
 

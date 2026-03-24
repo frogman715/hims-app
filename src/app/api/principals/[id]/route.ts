@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { ensureOfficeApiPathAccess } from '@/lib/office-api-access';
+import { principalUpdateSchema } from '@/lib/crewing-ops-schemas';
+import { handleApiError, ApiError } from '@/lib/error-handler';
 
 export async function PUT(
   request: NextRequest,
@@ -9,56 +12,69 @@ export async function PUT(
 ) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const authError = ensureOfficeApiPathAccess(session, '/api/principals', 'PUT');
+    if (authError) {
+      return authError;
     }
 
     const { id } = await params;
-    const {
-      name,
-      country,
-      address,
-      contactPerson,
-      phone,
-      email,
-      taxId,
-      registrationNumber,
-      agreementDate,
-      agreementExpiry,
-      status,
-    } = await request.json();
+    if (!session.user?.id) {
+      throw new ApiError(401, 'Unauthorized', 'AUTHENTICATION_ERROR');
+    }
 
-    if (!name) {
+    const parsedBody = principalUpdateSchema.safeParse(await request.json());
+    if (!parsedBody.success) {
       return NextResponse.json(
-        { error: 'Name is required' },
+        { error: 'Invalid principal payload', details: parsedBody.error.flatten() },
         { status: 400 }
       );
     }
 
+    const body = parsedBody.data;
     const principal = await prisma.principal.update({
       where: { id: id },
       data: {
-        name,
-        country: country || undefined,
-        address: address || undefined,
-        contactPerson: contactPerson || undefined,
-        phone: phone || undefined,
-        email: email || undefined,
-        taxId: taxId || undefined,
-        registrationNumber: registrationNumber || undefined,
-        agreementDate: agreementDate ? new Date(agreementDate) : undefined,
-        agreementExpiry: agreementExpiry ? new Date(agreementExpiry) : undefined,
-        status: status || undefined,
+        name: body.name,
+        country: body.country ?? undefined,
+        address: body.address ?? undefined,
+        contactPerson: body.contactPerson ?? undefined,
+        phone: body.phone ?? undefined,
+        email: body.email ?? undefined,
+        taxId: body.taxId ?? undefined,
+        registrationNumber: body.registrationNumber ?? undefined,
+        agreementDate:
+          body.agreementDate === undefined
+            ? undefined
+            : body.agreementDate
+              ? new Date(body.agreementDate)
+              : null,
+        agreementExpiry:
+          body.agreementExpiry === undefined
+            ? undefined
+            : body.agreementExpiry
+              ? new Date(body.agreementExpiry)
+              : null,
+        status: body.status ?? undefined,
+      },
+    });
+
+    await prisma.auditLog.create({
+      data: {
+        actorUserId: session.user.id,
+        action: 'PRINCIPAL_UPDATED',
+        entityType: 'Principal',
+        entityId: principal.id,
+        metadataJson: {
+          name: principal.name,
+          status: principal.status,
+          country: principal.country,
+        },
       },
     });
 
     return NextResponse.json(principal);
   } catch (error) {
-    console.error('Error updating principal:', error);
-    return NextResponse.json(
-      { error: 'Failed to update principal' },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
 
@@ -68,11 +84,15 @@ export async function DELETE(
 ) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const authError = ensureOfficeApiPathAccess(session, '/api/principals', 'DELETE');
+    if (authError) {
+      return authError;
     }
 
     const { id } = await params;
+    if (!session.user?.id) {
+      throw new ApiError(401, 'Unauthorized', 'AUTHENTICATION_ERROR');
+    }
 
     // Check if principal has associated assignments
     const assignmentCount = await prisma.assignment.count({
@@ -86,16 +106,34 @@ export async function DELETE(
       );
     }
 
+    const principal = await prisma.principal.findUnique({
+      where: { id },
+      select: { id: true, name: true, status: true },
+    });
+
+    if (!principal) {
+      throw new ApiError(404, 'Principal not found', 'NOT_FOUND');
+    }
+
     await prisma.principal.delete({
       where: { id: id },
     });
 
+    await prisma.auditLog.create({
+      data: {
+        actorUserId: session.user.id,
+        action: 'PRINCIPAL_DELETED',
+        entityType: 'Principal',
+        entityId: principal.id,
+        metadataJson: {
+          name: principal.name,
+          status: principal.status,
+        },
+      },
+    });
+
     return NextResponse.json({ message: 'Principal deleted successfully' });
   } catch (error) {
-    console.error('Error deleting principal:', error);
-    return NextResponse.json(
-      { error: 'Failed to delete principal' },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }

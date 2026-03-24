@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { QMSAdvancedAnalytics } from '@/lib/qms/advanced-analytics';
+import { requireQmsApiAccess } from '@/lib/qms-api-auth';
+import { PermissionLevel } from '@/lib/permission-middleware';
 
 /**
  * GET /api/qms/analytics/alerts
@@ -8,6 +10,9 @@ import { QMSAdvancedAnalytics } from '@/lib/qms/advanced-analytics';
  */
 export async function GET(request: NextRequest) {
   try {
+    const access = await requireQmsApiAccess(PermissionLevel.VIEW_ACCESS);
+    if (!access.ok) return access.response;
+
     const searchParams = request.nextUrl.searchParams;
     const severityFilter = searchParams.get('severity');
 

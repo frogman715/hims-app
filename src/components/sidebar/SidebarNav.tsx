@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession as useSessionAuth } from "next-auth/react";
-import { hasPermission, ModuleName, PermissionLevel } from "@/lib/permissions";
-import { normalizeToUserRoles, isSystemAdmin } from "@/lib/type-guards";
+import { ModuleName, PermissionLevel } from "@/lib/permissions";
+import { hasExplicitRoleAccess, hasModuleAccess } from "@/lib/authorization";
+import { isSystemAdmin } from "@/lib/type-guards";
+import type { AppRole } from "@/lib/roles";
 
 export interface NavItem {
   href: string;
@@ -13,6 +15,7 @@ export interface NavItem {
   group?: string;
   module?: ModuleName;
   requiredLevel?: PermissionLevel;
+  allowedRoles?: AppRole[];
 }
 
 interface SidebarNavProps {
@@ -34,11 +37,19 @@ export default function SidebarNav({ items }: SidebarNavProps) {
     // If session not loaded, show nothing to be safe
     if (!session?.user) return false;
     
-    // Normalize roles to ensure type safety
-    const userRoles = normalizeToUserRoles(session.user.roles);
-    
-    return hasPermission(
-      userRoles,
+    const subject = {
+      roles: session.user.roles,
+      role: session.user.role,
+      isSystemAdmin: session.user.isSystemAdmin === true,
+      permissionOverrides: session.user.permissionOverrides,
+    };
+
+    if (!hasExplicitRoleAccess(subject, item.allowedRoles)) {
+      return false;
+    }
+
+    return hasModuleAccess(
+      subject,
       item.module,
       item.requiredLevel ?? PermissionLevel.VIEW_ACCESS
     );

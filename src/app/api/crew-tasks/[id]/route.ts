@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { CrewTaskStatus } from '@prisma/client';
+import { ensureOfficeApiPathAccess } from '@/lib/office-api-access';
+import { crewTaskUpdateSchema } from '@/lib/crewing-ops-schemas';
+import { handleApiError, ApiError } from '@/lib/error-handler';
 
 // GET /api/crew-tasks/[id] - Get specific task
 export async function GET(
@@ -7,6 +13,12 @@ export async function GET(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const session = await getServerSession(authOptions);
+    const authError = ensureOfficeApiPathAccess(session, '/api/crew-tasks', 'GET');
+    if (authError) {
+      return authError;
+    }
+
     const { id } = await context.params;
     const task = await prisma.crewTask.findUnique({
       where: { id },
@@ -27,11 +39,7 @@ export async function GET(
 
     return NextResponse.json(task);
   } catch (error) {
-    console.error('[crew-tasks] GET error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch task' },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
 
@@ -41,12 +49,27 @@ export async function PATCH(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await context.params;
-    const body = await req.json();
-    const { status, assignedTo, dueDate, remarks, completedAt, completedBy } = body;
+    const session = await getServerSession(authOptions);
+    const authError = ensureOfficeApiPathAccess(session, '/api/crew-tasks', 'PATCH');
+    if (authError) {
+      return authError;
+    }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const updateData: Record<string, any> = {};
+    const { id } = await context.params;
+    if (!session.user?.id) {
+      throw new ApiError(401, 'Unauthorized', 'AUTHENTICATION_ERROR');
+    }
+
+    const parsedBody = crewTaskUpdateSchema.safeParse(await req.json());
+    if (!parsedBody.success) {
+      return NextResponse.json(
+        { error: 'Invalid crew task update payload', details: parsedBody.error.flatten() },
+        { status: 400 }
+      );
+    }
+
+    const { status, assignedTo, dueDate, remarks, completedAt, completedBy } = parsedBody.data;
+    const updateData: Record<string, unknown> = {};
     if (status) updateData.status = status;
     if (assignedTo !== undefined) updateData.assignedTo = assignedTo;
     if (dueDate !== undefined) updateData.dueDate = dueDate ? new Date(dueDate) : null;
@@ -57,7 +80,7 @@ export async function PATCH(
     if (completedBy !== undefined) updateData.completedBy = completedBy;
 
     // If marking as completed, set completedAt automatically
-    if (status === 'COMPLETED' && !completedAt) {
+    if (status === CrewTaskStatus.COMPLETED && !completedAt) {
       updateData.completedAt = new Date();
     }
 
@@ -71,13 +94,24 @@ export async function PATCH(
       }
     });
 
+    await prisma.auditLog.create({
+      data: {
+        actorUserId: session.user.id,
+        action: 'CREW_TASK_UPDATED',
+        entityType: 'CrewTask',
+        entityId: task.id,
+        metadataJson: {
+          status: task.status,
+          assignedTo: task.assignedTo,
+          dueDate: task.dueDate?.toISOString() ?? null,
+          completedBy: task.completedBy,
+        },
+      },
+    });
+
     return NextResponse.json(task);
   } catch (error) {
-    console.error('[crew-tasks] PATCH error:', error);
-    return NextResponse.json(
-      { error: 'Failed to update task' },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
 
@@ -87,9 +121,42 @@ export async function DELETE(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const session = await getServerSession(authOptions);
+    const authError = ensureOfficeApiPathAccess(session, '/api/crew-tasks', 'DELETE');
+    if (authError) {
+      return authError;
+    }
+
     const { id } = await context.params;
+    if (!session.user?.id) {
+      throw new ApiError(401, 'Unauthorized', 'AUTHENTICATION_ERROR');
+    }
+
+    const task = await prisma.crewTask.findUnique({
+      where: { id },
+      select: { id: true, crewId: true, taskType: true, status: true },
+    });
+
+    if (!task) {
+      throw new ApiError(404, 'Task not found', 'NOT_FOUND');
+    }
+
     await prisma.crewTask.delete({
       where: { id }
+    });
+
+    await prisma.auditLog.create({
+      data: {
+        actorUserId: session.user.id,
+        action: 'CREW_TASK_DELETED',
+        entityType: 'CrewTask',
+        entityId: task.id,
+        metadataJson: {
+          crewId: task.crewId,
+          taskType: task.taskType,
+          status: task.status,
+        },
+      },
     });
 
     return NextResponse.json(
@@ -97,10 +164,6 @@ export async function DELETE(
       { status: 200 }
     );
   } catch (error) {
-    console.error('[crew-tasks] DELETE error:', error);
-    return NextResponse.json(
-      { error: 'Failed to delete task' },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }

@@ -5,12 +5,15 @@ import { extname } from "path";
 import { withPermission } from "@/lib/api-middleware";
 import { PermissionLevel } from "@/lib/permission-middleware";
 import { hasSensitivityAccess, UserRole, DataSensitivity } from "@/lib/permissions";
+import { ensureOfficeApiPathAccess } from "@/lib/office-api-access";
 import { maskDocumentNumber } from "@/lib/masking";
+import { handleApiError } from "@/lib/error-handler";
 import {
-  buildCrewFilePath,
+  buildCrewDocumentFilePath,
   getRelativePath,
   getMaxFileSize,
   generateCrewDocumentFilename,
+  resolveStoredFileUrl,
 } from "@/lib/upload-path";
 
 // Configure max body size for file uploads
@@ -27,67 +30,62 @@ export const GET = withPermission(
   PermissionLevel.VIEW_ACCESS,
   async (_req, session) => {
     try {
-      const userRoles = session.user.roles ?? [];
-    const normalizedRoles = normalizeRoles(userRoles);
-    const isCrewPortalOnly = normalizedRoles.length === 1 && normalizedRoles[0] === UserRole.CREW_PORTAL;
-
-    const whereClause: Record<string, unknown> = {};
-    if (isCrewPortalOnly) {
-      whereClause.crewId = session.user.id;
-    }
-
-    const documents = await prisma.crewDocument.findMany({
-      where: whereClause,
-      include: {
-        crew: {
-          select: {
-            id: true,
-            fullName: true,
-          },
-        },
-      },
-      orderBy: {
-        expiryDate: "asc",
-      },
-    });
-
-    const canViewAmber = hasSensitivityAccess(normalizedRoles, DataSensitivity.AMBER);
-    const canViewRed = hasSensitivityAccess(normalizedRoles, DataSensitivity.RED);
-
-    const sanitizedDocuments = documents.map((document) => {
-      const prismaToLibSensitivity: Record<string, DataSensitivity> = {
-        RED: DataSensitivity.RED,
-        AMBER: DataSensitivity.AMBER,
-        GREEN: DataSensitivity.GREEN,
-      };
-      const libSensitivity = prismaToLibSensitivity[document.sensitivity];
-      const requiresMask =
-        (libSensitivity === DataSensitivity.RED && !canViewRed) ||
-        (libSensitivity === DataSensitivity.AMBER && !canViewAmber);
-
-      // Normalize fileUrl: ensure leading slash for legacy values
-      let normalizedFileUrl = document.fileUrl;
-      if (normalizedFileUrl && !normalizedFileUrl.startsWith('/')) {
-        normalizedFileUrl = `/${normalizedFileUrl}`;
+      const authError = ensureOfficeApiPathAccess(session, "/api/documents", "GET");
+      if (authError) {
+        return authError;
       }
 
-      return {
-        ...document,
-        docNumber:
-          document.docNumber && requiresMask
-            ? maskDocumentNumber(document.docNumber)
-            : document.docNumber,
-        fileUrl: requiresMask ? null : normalizedFileUrl,
-      };
-    });
+      const userRoles = session.user.roles ?? [];
+      const normalizedRoles = normalizeRoles(userRoles);
+      const isCrewPortalOnly = normalizedRoles.length === 1 && normalizedRoles[0] === UserRole.CREW_PORTAL;
+
+      const whereClause: Record<string, unknown> = {};
+      if (isCrewPortalOnly) {
+        whereClause.crewId = session.user.id;
+      }
+
+      const documents = await prisma.crewDocument.findMany({
+        where: whereClause,
+        include: {
+          crew: {
+            select: {
+              id: true,
+              fullName: true,
+            },
+          },
+        },
+        orderBy: {
+          expiryDate: "asc",
+        },
+      });
+
+      const canViewAmber = hasSensitivityAccess(normalizedRoles, DataSensitivity.AMBER);
+      const canViewRed = hasSensitivityAccess(normalizedRoles, DataSensitivity.RED);
+
+      const sanitizedDocuments = documents.map((document) => {
+        const prismaToLibSensitivity: Record<string, DataSensitivity> = {
+          RED: DataSensitivity.RED,
+          AMBER: DataSensitivity.AMBER,
+          GREEN: DataSensitivity.GREEN,
+        };
+        const libSensitivity = prismaToLibSensitivity[document.sensitivity];
+        const requiresMask =
+          (libSensitivity === DataSensitivity.RED && !canViewRed) ||
+          (libSensitivity === DataSensitivity.AMBER && !canViewAmber);
+
+        return {
+          ...document,
+          docNumber:
+            document.docNumber && requiresMask
+              ? maskDocumentNumber(document.docNumber)
+              : document.docNumber,
+          fileUrl: requiresMask ? null : resolveStoredFileUrl(document.fileUrl),
+        };
+      });
 
       return NextResponse.json(sanitizedDocuments);
     } catch (error) {
-      console.error("Error fetching documents:", error);
-      return NextResponse.json(
-        { error: "Failed to fetch documents" },
-        { status: 500 }
-      );
+      return handleApiError(error);
     }
   }
 );
@@ -97,62 +95,68 @@ export const POST = withPermission(
   PermissionLevel.EDIT_ACCESS,
   async (request: NextRequest, session) => {
     try {
+      const authError = ensureOfficeApiPathAccess(session, "/api/documents", "POST");
+      if (authError) {
+        return authError;
+      }
+
       const userRoles = session.user.roles ?? [];
-    const normalizedRoles = normalizeRoles(userRoles);
-    const isCrewPortalOnly = normalizedRoles.length === 1 && normalizedRoles[0] === UserRole.CREW_PORTAL;
+      const normalizedRoles = normalizeRoles(userRoles);
+      const isCrewPortalOnly = normalizedRoles.length === 1 && normalizedRoles[0] === UserRole.CREW_PORTAL;
 
-    const formData = await request.formData();
-    const crewId = String(formData.get('seafarerId') ?? "").trim();
-    const docType = String(formData.get('docType') ?? "").trim();
-    const docNumber = String(formData.get('docNumber') ?? "").trim();
-    const issueDate = String(formData.get('issueDate') ?? "").trim();
-    const expiryDate = String(formData.get('expiryDate') ?? "").trim();
-    const remarks = formData.get('remarks');
-    const file = formData.get('file') as File | null;
+      const formData = await request.formData();
+      const crewId = String(formData.get('seafarerId') ?? "").trim();
+      const docType = String(formData.get('docType') ?? "").trim();
+      const docNumber = String(formData.get('docNumber') ?? "").trim();
+      const issueDate = String(formData.get('issueDate') ?? "").trim();
+      const expiryDate = String(formData.get('expiryDate') ?? "").trim();
+      const remarks = formData.get('remarks');
+      const file = formData.get('file') as File | null;
 
-    if (!crewId || !docType || !docNumber || !issueDate || !expiryDate || !file) {
-      const missing = [];
-      if (!crewId) missing.push('seafarerId');
-      if (!docType) missing.push('docType');
-      if (!docNumber) missing.push('docNumber');
-      if (!issueDate) missing.push('issueDate');
-      if (!expiryDate) missing.push('expiryDate');
-      if (!file) missing.push('file');
-      return NextResponse.json(
-        { error: `Missing required fields: ${missing.join(', ')}` },
-        { status: 400 }
-      );
-    }
+      if (!crewId || !docType || !docNumber || !file) {
+        const missing = [];
+        if (!crewId) missing.push('seafarerId');
+        if (!docType) missing.push('docType');
+        if (!docNumber) missing.push('docNumber');
+        if (!file) missing.push('file');
+        return NextResponse.json(
+          { error: `Missing required fields: ${missing.join(', ')}` },
+          { status: 400 }
+        );
+      }
 
-    if (isCrewPortalOnly && crewId !== session.user.id) {
-      return NextResponse.json({ error: "Crew portal users can only upload their own documents" }, { status: 403 });
-    }
+      if (isCrewPortalOnly && crewId !== session.user.id) {
+        return NextResponse.json({ error: "Crew portal users can only upload their own documents" }, { status: 403 });
+      }
 
-    const crewExists = await prisma.crew.findUnique({
-      where: { id: crewId },
-      select: { id: true },
-    });
+      const crewExists = await prisma.crew.findUnique({
+        where: { id: crewId },
+        select: { id: true },
+      });
 
-    if (!crewExists) {
-      return NextResponse.json({ error: "Crew not found" }, { status: 404 });
-    }
+      if (!crewExists) {
+        return NextResponse.json({ error: "Crew not found" }, { status: 404 });
+      }
 
-    const parsedIssueDate = new Date(issueDate);
-    const parsedExpiryDate = new Date(expiryDate);
+      const parsedIssueDate = issueDate ? new Date(issueDate) : null;
+      const parsedExpiryDate = expiryDate ? new Date(expiryDate) : null;
 
-    if (Number.isNaN(parsedIssueDate.getTime()) || Number.isNaN(parsedExpiryDate.getTime())) {
-      return NextResponse.json(
-        { error: "Invalid date format. Please use YYYY-MM-DD format for both issue date and expiry date" },
-        { status: 400 }
-      );
-    }
+      if (
+        (parsedIssueDate && Number.isNaN(parsedIssueDate.getTime())) ||
+        (parsedExpiryDate && Number.isNaN(parsedExpiryDate.getTime()))
+      ) {
+        return NextResponse.json(
+          { error: "Invalid date format. Please use YYYY-MM-DD format for issue date and expiry date" },
+          { status: 400 }
+        );
+      }
 
-    if (parsedExpiryDate <= parsedIssueDate) {
-      return NextResponse.json(
-        { error: "Expiry date must be after issue date" },
-        { status: 400 }
-      );
-    }
+      if (parsedIssueDate && parsedExpiryDate && parsedExpiryDate <= parsedIssueDate) {
+        return NextResponse.json(
+          { error: "Expiry date must be after issue date" },
+          { status: 400 }
+        );
+      }
 
     const MAX_FILE_SIZE = getMaxFileSize();
     const ALLOWED_MIME_TYPES: Record<string, string> = {
@@ -187,18 +191,12 @@ export const POST = withPermission(
     // Get crew name for directory structure
     const crew = await prisma.crew.findUnique({
       where: { id: crewId },
-      select: { fullName: true, rank: true }
+      select: { fullName: true, rank: true, crewCode: true }
     });
     
     if (!crew) {
       return NextResponse.json({ error: "Crew not found" }, { status: 404 });
     }
-
-    // Generate crew slug from full name
-    const crewSlug = crew.fullName
-      .toUpperCase()
-      .replace(/[^A-Z0-9\s]/g, "")
-      .replace(/\s+/g, "_");
 
     const fileName = generateCrewDocumentFilename({
       crewName: crew.fullName,
@@ -206,11 +204,11 @@ export const POST = withPermission(
       docType,
       docNumber,
       extension: allowedExtension,
-      issuedAt: parsedIssueDate,
+      issuedAt: parsedIssueDate ?? undefined,
     });
     
     // Build full file path using centralized utility
-    const filePath = buildCrewFilePath(crewId, crewSlug, fileName);
+    const filePath = buildCrewDocumentFilePath(crew.crewCode ?? crewId, fileName, docType);
 
     // Save file with error handling and logging
     const bytes = await file.arrayBuffer();
@@ -248,28 +246,40 @@ export const POST = withPermission(
     const relativePath = getRelativePath(filePath);
     const publicUrl = `/api/files/${relativePath}`;
 
-    const normalizedDocType = docType.toUpperCase();
+      const normalizedDocType = docType.toUpperCase();
 
-    // Save to database
-    const document = await prisma.crewDocument.create({
-      data: {
-        crewId,
-        docType: normalizedDocType,
-        docNumber,
-        issueDate: parsedIssueDate,
-        expiryDate: parsedExpiryDate,
-        remarks: remarks ? String(remarks).trim() : null,
-        fileUrl: publicUrl,
-      },
-    });
+      // Save to database
+      const document = await prisma.crewDocument.create({
+        data: {
+          crewId,
+          docType: normalizedDocType,
+          docNumber,
+          issueDate: parsedIssueDate,
+          expiryDate: parsedExpiryDate,
+          remarks: remarks ? String(remarks).trim() : null,
+          fileUrl: publicUrl,
+        },
+      });
+
+      if (session.user?.id) {
+        await prisma.auditLog.create({
+          data: {
+            actorUserId: session.user.id,
+            action: "CREW_DOCUMENT_CREATED",
+            entityType: "CrewDocument",
+            entityId: document.id,
+            metadataJson: {
+              crewId: document.crewId,
+              docType: document.docType,
+              hasFile: Boolean(document.fileUrl),
+            },
+          },
+        });
+      }
 
       return NextResponse.json(document, { status: 201 });
     } catch (error) {
-      console.error("Error uploading document:", error);
-      return NextResponse.json(
-        { error: "Internal server error" },
-        { status: 500 }
-      );
+      return handleApiError(error);
     }
   }
 );

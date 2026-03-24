@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { requireAuthorizedUser } from "@/lib/authz";
+import { PermissionLevel } from "@/lib/permissions";
 import { getEscalationCenterData } from "@/lib/compliance-escalations";
 import { getEscalationNotificationOverview } from "@/lib/compliance-escalation-notifications";
 
@@ -22,6 +24,13 @@ function formatTimestamp(value: string) {
 }
 
 export default async function EscalationsPage() {
+  await requireAuthorizedUser({
+    redirectIfCrew: "/m/crew",
+    module: "compliance",
+    requiredLevel: PermissionLevel.VIEW_ACCESS,
+    redirectOnDisallowed: "/dashboard",
+  });
+
   const [data, notificationLogs] = await Promise.all([
     getEscalationCenterData(),
     getEscalationNotificationOverview(),

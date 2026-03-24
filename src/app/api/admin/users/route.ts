@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { handleApiError, ApiError, validateRequired } from "@/lib/error-handler";
+import { ensureAdminApiAccess } from "@/lib/admin-authorization";
 import bcrypt from "bcryptjs";
 import { Role } from "@prisma/client";
 
@@ -13,19 +14,8 @@ import { Role } from "@prisma/client";
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
-
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Check authorization
-    const canManageUsers =
-      session.user.isSystemAdmin ||
-      session.user.roles?.includes("DIRECTOR") ||
-      session.user.roles?.includes("HR_ADMIN");
-    if (!canManageUsers) {
-      return NextResponse.json({ error: "Forbidden - Insufficient permissions" }, { status: 403 });
-    }
+    const authError = ensureAdminApiAccess(session);
+    if (authError) return authError;
 
     const users = await prisma.user.findMany({
       select: {
@@ -56,19 +46,8 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Check authorization
-    const canManageUsers =
-      session.user.isSystemAdmin ||
-      session.user.roles?.includes("DIRECTOR") ||
-      session.user.roles?.includes("HR_ADMIN");
-    if (!canManageUsers) {
-      return NextResponse.json({ error: "Forbidden - Insufficient permissions" }, { status: 403 });
-    }
+    const authError = ensureAdminApiAccess(session);
+    if (authError) return authError;
 
     const body = await req.json();
     const { name, email, role, password, isSystemAdmin } = body;
@@ -96,7 +75,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Validate role
-    const validRoles = ["DIRECTOR", "CDMO", "OPERATIONAL", "ACCOUNTING", "HR", "CREW_PORTAL", "QMR", "HR_ADMIN", "SECTION_HEAD", "STAFF"];
+    const validRoles = ["DIRECTOR", "CDMO", "OPERATIONAL", "GA_DRIVER", "ACCOUNTING", "HR", "CREW_PORTAL", "QMR", "HR_ADMIN", "SECTION_HEAD", "STAFF"];
     if (typeof role !== 'string' || !validRoles.includes(role)) {
       throw new ApiError(400, `Invalid role. Must be one of: ${validRoles.join(", ")}`, "INVALID_ROLE");
     }

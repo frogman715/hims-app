@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireQmsApiAccess } from '@/lib/qms-api-auth';
+import { PermissionLevel } from '@/lib/permission-middleware';
 
 /**
  * GET /api/qms/metrics
@@ -7,6 +9,9 @@ import { prisma } from '@/lib/prisma';
  */
 export async function GET(request: NextRequest) {
   try {
+    const access = await requireQmsApiAccess(PermissionLevel.VIEW_ACCESS);
+    if (!access.ok) return access.response;
+
     const searchParams = request.nextUrl.searchParams;
     const category = searchParams.get('category');
     const isActive = searchParams.get('isActive');
@@ -44,6 +49,9 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
+    const access = await requireQmsApiAccess(PermissionLevel.EDIT_ACCESS);
+    if (!access.ok) return access.response;
+
     const body = await request.json();
     const {
       name,

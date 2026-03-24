@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireQmsApiAccess } from '@/lib/qms-api-auth';
+import { PermissionLevel } from '@/lib/permission-middleware';
 
 /**
  * GET /api/qms/documents/[id]
@@ -10,6 +12,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const access = await requireQmsApiAccess(PermissionLevel.VIEW_ACCESS);
+    if (!access.ok) return access.response;
+
     const { id } = await params;
 
     const document = await prisma.qMSDocument.findUnique({
@@ -53,6 +58,9 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const access = await requireQmsApiAccess(PermissionLevel.EDIT_ACCESS);
+    if (!access.ok) return access.response;
+
     const { id } = await params;
     const body = await request.json();
     const { status, riskLevel, remarks, reviewedBy, expiresAt } = body;
@@ -92,7 +100,7 @@ export async function PUT(
         entityId: id,
         event: 'UPDATED',
         description: `Updated QMS document: status=${status}, riskLevel=${riskLevel}`,
-        userId: 'system',
+        userId: access.session.user.id,
         severity: riskLevel === 'CRITICAL' ? 'WARNING' : 'INFO',
       },
     });
@@ -116,6 +124,9 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const access = await requireQmsApiAccess(PermissionLevel.EDIT_ACCESS);
+    if (!access.ok) return access.response;
+
     const { id } = await params;
 
     // Archive instead of delete
@@ -136,7 +147,7 @@ export async function DELETE(
         entityId: id,
         event: 'ARCHIVED',
         description: 'Archived QMS document',
-        userId: 'system',
+        userId: access.session.user.id,
       },
     });
 

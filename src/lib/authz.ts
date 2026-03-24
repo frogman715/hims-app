@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import type { AppRole } from "@/lib/roles";
 import { ALL_APP_ROLES, APP_ROLES, CREW_ROLE_SET } from "@/lib/roles";
+import { hasExplicitRoleAccess, hasModuleAccess } from "@/lib/authorization";
+import { PermissionLevel } from "@/lib/permissions";
 
 export { APP_ROLES, OFFICE_ROLES, CREW_ROLES } from "@/lib/roles";
 export type { AppRole } from "@/lib/roles";
@@ -21,6 +23,11 @@ export type RequireUserOptions = {
   redirectOnDisallowed?: string;
 };
 
+export type RequireAuthorizationOptions = RequireUserOptions & {
+  module?: string;
+  requiredLevel?: PermissionLevel;
+};
+
 const ALL_VALID_ROLES: readonly AppRole[] = ALL_APP_ROLES;
 
 const ROLE_HOME_MAP: Record<AppRole, string> = {
@@ -29,6 +36,7 @@ const ROLE_HOME_MAP: Record<AppRole, string> = {
   [APP_ROLES.DIRECTOR]: "/dashboard",
   [APP_ROLES.CDMO]: "/dashboard",
   [APP_ROLES.OPERATIONAL]: "/dashboard",
+  [APP_ROLES.GA_DRIVER]: "/dashboard",
   [APP_ROLES.ACCOUNTING]: "/dashboard",
   [APP_ROLES.HR]: "/dashboard",
   [APP_ROLES.HR_ADMIN]: "/dashboard",
@@ -195,6 +203,30 @@ export async function requireUser(options: RequireUserOptions = {}) {
     // For any other error, redirect to login with error indication
     redirect("/auth/signin?error=SessionError");
   }
+}
+
+export async function requireAuthorizedUser(options: RequireAuthorizationOptions = {}) {
+  const result = await requireUser(options);
+
+  const subject = {
+    roles: result.user.roles,
+    role: result.user.role,
+    isSystemAdmin: result.session.user?.isSystemAdmin === true,
+    permissionOverrides: result.session.user?.permissionOverrides,
+  };
+
+  if (!hasExplicitRoleAccess(subject, options.allowedRoles)) {
+    redirect(options.redirectOnDisallowed ?? "/dashboard");
+  }
+
+  if (
+    options.module &&
+    !hasModuleAccess(subject, options.module, options.requiredLevel ?? PermissionLevel.VIEW_ACCESS)
+  ) {
+    redirect(options.redirectOnDisallowed ?? "/dashboard");
+  }
+
+  return result;
 }
 
 export async function requireCrew() {

@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { requireAuthorizedUser } from "@/lib/authz";
+import { PermissionLevel } from "@/lib/permissions";
 import RestHourRegisterClient from "./RestHourRegisterClient";
 import { getRestHourRegisterData } from "@/lib/compliance-rest-hours";
 
@@ -16,6 +18,13 @@ function formatTimestamp(value: string) {
 }
 
 export default async function RestHourRegisterPage() {
+  await requireAuthorizedUser({
+    redirectIfCrew: "/m/crew",
+    module: "compliance",
+    requiredLevel: PermissionLevel.VIEW_ACCESS,
+    redirectOnDisallowed: "/dashboard",
+  });
+
   const data = await getRestHourRegisterData();
 
   return (
@@ -37,7 +46,7 @@ export default async function RestHourRegisterPage() {
                 Welfare Tracker
               </Link>
               <Link href="/compliance/fleet-board" className="rounded-full bg-cyan-700 px-4 py-2 text-sm font-semibold text-white">
-                Fleet Board
+                Fleet Readiness
               </Link>
             </div>
           </div>

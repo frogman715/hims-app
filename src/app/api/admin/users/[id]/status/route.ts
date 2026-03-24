@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { handleApiError, ApiError } from "@/lib/error-handler";
+import { ensureAdminApiAccess } from "@/lib/admin-authorization";
 
 /**
  * PATCH /api/admin/users/[id]/status
@@ -15,19 +16,8 @@ export async function PATCH(
   try {
     const { id } = await params;
     const session = await getServerSession(authOptions);
-
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Check authorization
-    const canManageUsers =
-      session.user.isSystemAdmin ||
-      session.user.roles?.includes("DIRECTOR") ||
-      session.user.roles?.includes("HR_ADMIN");
-    if (!canManageUsers) {
-      return NextResponse.json({ error: "Forbidden - Insufficient permissions" }, { status: 403 });
-    }
+    const authError = ensureAdminApiAccess(session);
+    if (authError) return authError;
 
     // Prevent self-deactivation
     if (session.user.id === id) {

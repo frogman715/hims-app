@@ -1,9 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { CrewTaskStatus, CrewTaskType } from '@prisma/client';
+import { ensureOfficeApiPathAccess } from '@/lib/office-api-access';
+import { crewTaskCreateSchema } from '@/lib/crewing-ops-schemas';
+import { handleApiError, ApiError } from '@/lib/error-handler';
 
 // GET /api/crew-tasks - List tasks based on filters
 export async function GET(req: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+    const authError = ensureOfficeApiPathAccess(session, '/api/crew-tasks', 'GET');
+    if (authError) {
+      return authError;
+    }
+
     const { searchParams } = new URL(req.url);
     const crewId = searchParams.get('crewId');
     const status = searchParams.get('status');
@@ -13,8 +25,18 @@ export async function GET(req: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const where: any = {};
     if (crewId) where.crewId = crewId;
-    if (status) where.status = status;
-    if (taskType) where.taskType = taskType;
+    if (status) {
+      if (!Object.values(CrewTaskStatus).includes(status as CrewTaskStatus)) {
+        return NextResponse.json({ error: 'Invalid task status filter' }, { status: 400 });
+      }
+      where.status = status;
+    }
+    if (taskType) {
+      if (!Object.values(CrewTaskType).includes(taskType as CrewTaskType)) {
+        return NextResponse.json({ error: 'Invalid task type filter' }, { status: 400 });
+      }
+      where.taskType = taskType;
+    }
     if (assignedTo) where.assignedTo = assignedTo;
 
     const tasks = await prisma.crewTask.findMany({
@@ -36,27 +58,32 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(tasks);
   } catch (error) {
-    console.error('[crew-tasks] GET error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch tasks' },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
 
 // POST /api/crew-tasks - Create a new task
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const { crewId, taskType, title, description, assignedTo, dueDate, priority } = body;
+    const session = await getServerSession(authOptions);
+    const authError = ensureOfficeApiPathAccess(session, '/api/crew-tasks', 'POST');
+    if (authError) {
+      return authError;
+    }
 
-    if (!crewId || !taskType || !title) {
+    if (!session.user?.id) {
+      throw new ApiError(401, 'Unauthorized', 'AUTHENTICATION_ERROR');
+    }
+
+    const parsedBody = crewTaskCreateSchema.safeParse(await req.json());
+    if (!parsedBody.success) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Invalid crew task payload', details: parsedBody.error.flatten() },
         { status: 400 }
       );
     }
 
+    const { crewId, taskType, title, description, assignedTo, dueDate, priority } = parsedBody.data;
     const task = await prisma.crewTask.create({
       data: {
         crewId,
@@ -65,7 +92,7 @@ export async function POST(req: NextRequest) {
         description,
         assignedTo,
         dueDate: dueDate ? new Date(dueDate) : null,
-        priority: priority || 'MEDIUM'
+        priority
       },
       include: {
         crew: true,
@@ -73,12 +100,23 @@ export async function POST(req: NextRequest) {
       }
     });
 
+    await prisma.auditLog.create({
+      data: {
+        actorUserId: session.user.id,
+        action: 'CREW_TASK_CREATED',
+        entityType: 'CrewTask',
+        entityId: task.id,
+        metadataJson: {
+          crewId: task.crewId,
+          taskType: task.taskType,
+          status: task.status,
+          assignedTo: task.assignedTo,
+        },
+      },
+    });
+
     return NextResponse.json(task, { status: 201 });
   } catch (error) {
-    console.error('[crew-tasks] POST error:', error);
-    return NextResponse.json(
-      { error: 'Failed to create task' },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }

@@ -1,10 +1,12 @@
 import CrewingClient from "./CrewingClient";
-import { requireUser } from "@/lib/authz";
+import { requireAuthorizedUser } from "@/lib/authz";
+import { PermissionLevel } from "@/lib/permissions";
 
 export default async function CrewingPage() {
-  await requireUser({
+  await requireAuthorizedUser({
     redirectIfCrew: "/m/crew",
-    allowedRoles: ["DIRECTOR", "CDMO", "OPERATIONAL", "HR", "ACCOUNTING"],
+    module: "crewing",
+    requiredLevel: PermissionLevel.VIEW_ACCESS,
   });
 
   return <CrewingClient />;

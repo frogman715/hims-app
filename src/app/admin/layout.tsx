@@ -1,10 +1,11 @@
 import type { ReactNode } from "react";
-import { OFFICE_ROLES, requireUser } from "@/lib/authz";
+import { requireAuthorizedUser } from "@/lib/authz";
+import { ADMIN_ALLOWED_ROLES } from "@/lib/admin-access";
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {
-  await requireUser({
+  await requireAuthorizedUser({
     redirectIfCrew: "/m/crew",
-    allowedRoles: [...OFFICE_ROLES],
+    allowedRoles: ADMIN_ALLOWED_ROLES,
     redirectOnDisallowed: "/dashboard",
   });
   return <>{children}</>;

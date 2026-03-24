@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { handleApiError, ApiError } from "@/lib/error-handler";
+import { ensureAdminApiAccess } from "@/lib/admin-authorization";
 import type { Role } from "@prisma/client";
 
 /**
@@ -16,19 +17,8 @@ export async function GET(
   try {
     const { id } = await params;
     const session = await getServerSession(authOptions);
-
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Check authorization
-    const canManageUsers =
-      session.user.isSystemAdmin ||
-      session.user.roles?.includes("DIRECTOR") ||
-      session.user.roles?.includes("HR_ADMIN");
-    if (!canManageUsers) {
-      return NextResponse.json({ error: "Forbidden - Insufficient permissions" }, { status: 403 });
-    }
+    const authError = ensureAdminApiAccess(session);
+    if (authError) return authError;
 
     const user = await prisma.user.findUnique({
       where: { id },
@@ -65,19 +55,8 @@ export async function PUT(
   try {
     const { id } = await params;
     const session = await getServerSession(authOptions);
-
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Check authorization
-    const canManageUsers =
-      session.user.isSystemAdmin ||
-      session.user.roles?.includes("DIRECTOR") ||
-      session.user.roles?.includes("HR_ADMIN");
-    if (!canManageUsers) {
-      return NextResponse.json({ error: "Forbidden - Insufficient permissions" }, { status: 403 });
-    }
+    const authError = ensureAdminApiAccess(session);
+    if (authError) return authError;
 
     // Get existing user
     const existingUser = await prisma.user.findUnique({
@@ -101,7 +80,7 @@ export async function PUT(
 
     // Validate role if provided
     if (role) {
-      const validRoles = ["DIRECTOR", "CDMO", "OPERATIONAL", "ACCOUNTING", "HR", "CREW_PORTAL", "QMR", "HR_ADMIN", "SECTION_HEAD", "STAFF"];
+      const validRoles = ["DIRECTOR", "CDMO", "OPERATIONAL", "GA_DRIVER", "ACCOUNTING", "HR", "CREW_PORTAL", "QMR", "HR_ADMIN", "SECTION_HEAD", "STAFF"];
       if (!validRoles.includes(role)) {
         throw new ApiError(400, `Invalid role. Must be one of: ${validRoles.join(", ")}`, "INVALID_ROLE");
       }
@@ -182,19 +161,8 @@ export async function DELETE(
   try {
     const { id } = await params;
     const session = await getServerSession(authOptions);
-
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Check authorization
-    const canManageUsers =
-      session.user.isSystemAdmin ||
-      session.user.roles?.includes("DIRECTOR") ||
-      session.user.roles?.includes("HR_ADMIN");
-    if (!canManageUsers) {
-      return NextResponse.json({ error: "Forbidden - Insufficient permissions" }, { status: 403 });
-    }
+    const authError = ensureAdminApiAccess(session);
+    if (authError) return authError;
 
     // Prevent self-deletion
     if (session.user.id === id) {

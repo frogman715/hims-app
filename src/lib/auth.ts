@@ -10,6 +10,7 @@ enum Role {
   DIRECTOR = "DIRECTOR",
   CDMO = "CDMO",
   OPERATIONAL = "OPERATIONAL",
+  GA_DRIVER = "GA_DRIVER",
   ACCOUNTING = "ACCOUNTING",
   HR = "HR",
   CREW_PORTAL = "CREW_PORTAL",
@@ -61,7 +62,7 @@ declare module "next-auth/jwt" {
   }
 }
 
-const shouldLogAuth = true; // Always log auth for debugging
+const shouldLogAuth = process.env.NODE_ENV === "development";
 
 function assertDatabaseConfigured(context: string): void {
   if (!env.hasDatabaseUrl) {
@@ -111,7 +112,8 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
-        const identifier = `login:${credentials.email.toLowerCase()}`;
+        const email = credentials.email.trim().toLowerCase();
+        const identifier = `login:${email}`;
         if (!rateLimit(identifier, 5, 60_000)) {
           throw new Error("Too many login attempts. Please try again later.");
         }
@@ -119,7 +121,7 @@ export const authOptions: NextAuthOptions = {
         assertDatabaseConfigured("authorize:user");
         const user = await safePrismaCall("authorize:user.findUnique", () =>
           prisma.user.findUnique({
-            where: { email: credentials.email },
+            where: { email },
             select: {
               id: true,
               email: true,

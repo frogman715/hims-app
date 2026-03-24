@@ -1,10 +1,10 @@
 import type { ReactNode } from "react";
-import { OFFICE_ROLES, requireUser } from "@/lib/authz";
+import { requireAuthorizedUser } from "@/lib/authz";
 
 export default async function HrLayout({ children }: { children: ReactNode }) {
-  await requireUser({
+  await requireAuthorizedUser({
     redirectIfCrew: "/m/crew",
-    allowedRoles: [...OFFICE_ROLES],
+    allowedRoles: ["DIRECTOR", "HR", "HR_ADMIN"],
     redirectOnDisallowed: "/dashboard",
   });
   return <>{children}</>;

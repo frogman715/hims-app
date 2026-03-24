@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { CrewingChecklistStatus } from '@prisma/client';
+import { ensureOfficeApiPathAccess } from '@/lib/office-api-access';
+import { handleApiError } from '@/lib/error-handler';
 
 /**
  * GET /api/crewing/checklists
@@ -16,12 +18,9 @@ import { CrewingChecklistStatus } from '@prisma/client';
 export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    
-    if (!session || !session.user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+    const authError = ensureOfficeApiPathAccess(session, '/api/crewing/checklists', 'GET');
+    if (authError) {
+      return authError;
     }
 
     const { searchParams } = new URL(req.url);
@@ -73,11 +72,7 @@ export async function GET(req: NextRequest) {
       data: checklists,
     });
   } catch (error) {
-    console.error('Error fetching checklists:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch checklists' },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
 

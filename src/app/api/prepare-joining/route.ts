@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { checkPermission, PermissionLevel } from "@/lib/permission-middleware";
+import { ensureOfficeApiPathAccess } from "@/lib/office-api-access";
+import { prepareJoiningCreateSchema } from "@/lib/prepare-joining-schemas";
 import {
   ensurePrepareJoiningPrincipalForms,
   getPrepareJoiningComplianceSnapshot,
@@ -62,20 +63,10 @@ function mapPrepareJoiningWithChecklistSummary<
 export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session) {
-      console.error("[prepare-joining GET] No session found");
-      return NextResponse.json(
-        { error: "Unauthorized - no session" },
-        { status: 401 }
-      );
-    }
-
-    if (!checkPermission(session, "crewing", PermissionLevel.VIEW_ACCESS)) {
-      console.error("[prepare-joining GET] Permission denied for user:", session.user?.email);
-      return NextResponse.json(
-        { error: "Insufficient permissions" },
-        { status: 403 }
-      );
+    const authError = ensureOfficeApiPathAccess(session, "/api/prepare-joining", "GET");
+    if (authError) {
+      console.error("[prepare-joining GET] Permission denied");
+      return authError;
     }
 
     const { searchParams } = new URL(req.url);
@@ -142,8 +133,15 @@ export async function GET(req: NextRequest) {
 
     console.log(`[prepare-joining GET] Retrieved ${prepareJoinings.length} records`);
 
+    const prepareJoiningsWithCompliance = await Promise.all(
+      prepareJoinings.map(async (prepareJoining) => {
+        const compliance = await getPrepareJoiningComplianceSnapshot(prepareJoining.id);
+        return mapPrepareJoiningWithChecklistSummary(prepareJoining, compliance ?? undefined);
+      })
+    );
+
     return NextResponse.json({
-      data: prepareJoinings.map((prepareJoining) => mapPrepareJoiningWithChecklistSummary(prepareJoining)),
+      data: prepareJoiningsWithCompliance,
       total: prepareJoinings.length,
     });
   } catch (error) {
@@ -161,14 +159,18 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!checkPermission(session, "crewing", PermissionLevel.EDIT_ACCESS)) {
+    const authError = ensureOfficeApiPathAccess(session, "/api/prepare-joining", "POST");
+    if (authError) return authError;
+
+    const parsedBody = prepareJoiningCreateSchema.safeParse(await req.json());
+    if (!parsedBody.success) {
       return NextResponse.json(
-        { error: "Insufficient permissions" },
-        { status: 403 }
+        { error: "Invalid prepare joining payload", details: parsedBody.error.flatten() },
+        { status: 400 }
       );
     }
 
-    const body = await req.json();
+    const body = parsedBody.data;
     const {
       crewId,
       vesselId,
@@ -210,14 +212,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Crew not found" }, { status: 404 });
     }
 
-    if (
-      (status === "READY" || status === "DISPATCHED") &&
-      principalId
-    ) {
+    if (status === "READY" || status === "DISPATCHED") {
       return NextResponse.json(
         {
           error:
-            "Create prepare joining in a working status first. Required principal forms must be generated and approved before READY or DISPATCHED.",
+            "Create prepare joining in a working status first. Assign the principal and complete required principal forms before READY or DISPATCHED.",
         },
         { status: 400 }
       );
@@ -288,6 +287,21 @@ export async function POST(req: NextRequest) {
     if (principalId) {
       await ensurePrepareJoiningPrincipalForms(prepareJoining.id, principalId);
     }
+
+    await prisma.auditLog.create({
+      data: {
+        actorUserId: session.user.id,
+        action: "PREPARE_JOINING_CREATED",
+        entityType: "PrepareJoining",
+        entityId: prepareJoining.id,
+        metadataJson: {
+          crewId,
+          principalId,
+          vesselId,
+          status: prepareJoining.status,
+        },
+      },
+    });
 
     const compliance = await getPrepareJoiningComplianceSnapshot(prepareJoining.id);
 

@@ -3,6 +3,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { hasExplicitRoleAccess } from "@/lib/authorization";
 
 export default async function SystemHealthPage() {
   const session = await getServerSession(authOptions);
@@ -12,7 +13,11 @@ export default async function SystemHealthPage() {
   }
 
   // Only DIRECTOR can access this page
-  if (!session.user.roles.includes('DIRECTOR')) {
+  if (!hasExplicitRoleAccess({
+    roles: session.user.roles,
+    role: session.user.role,
+    isSystemAdmin: session.user.isSystemAdmin === true,
+  }, ['DIRECTOR'])) {
     redirect("/403");
   }
 

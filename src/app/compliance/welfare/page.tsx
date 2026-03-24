@@ -1,27 +1,21 @@
+import { requireAuthorizedUser } from "@/lib/authz";
+import { PermissionLevel } from "@/lib/permissions";
 import { getWelfareTrackerData } from "@/lib/compliance-welfare";
+import { getSeverityBadgeClasses } from "@/lib/severity-ui";
+import StatCard from "@/components/ui/StatCard";
+import { formatDateLabel, formatDateTimeLabel, formatStatusLabel } from "@/lib/formatters";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-function formatTimestamp(value: string) {
-  return new Date(value).toLocaleString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
-function formatDate(value: string) {
-  return new Date(value).toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-}
-
 export default async function WelfarePage() {
+  await requireAuthorizedUser({
+    redirectIfCrew: "/m/crew",
+    module: "compliance",
+    requiredLevel: PermissionLevel.VIEW_ACCESS,
+    redirectOnDisallowed: "/dashboard",
+  });
+
   const data = await getWelfareTrackerData();
 
   return (
@@ -34,30 +28,15 @@ export default async function WelfarePage() {
             Track active grievance and welfare communication, sign-off closure obligations, and current digital coverage for
             rest-hour monitoring.
           </p>
-          <p className="mt-3 text-xs font-medium text-slate-500">Generated {formatTimestamp(data.generatedAt)}</p>
+          <p className="mt-3 text-xs font-medium text-slate-500">Generated {formatDateTimeLabel(data.generatedAt, "en-GB")}</p>
         </section>
 
         <section className="grid gap-4 md:grid-cols-5">
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <p className="text-sm text-slate-500">Open grievances</p>
-            <p className="mt-2 text-3xl font-semibold text-slate-900">{data.summary.openGrievances}</p>
-          </div>
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <p className="text-sm text-slate-500">Welfare cases</p>
-            <p className="mt-2 text-3xl font-semibold text-slate-900">{data.summary.welfareCases}</p>
-          </div>
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <p className="text-sm text-slate-500">Sign-off closures pending</p>
-            <p className="mt-2 text-3xl font-semibold text-slate-900">{data.summary.signOffClosuresPending}</p>
-          </div>
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
-            <p className="text-sm text-amber-700">Fleet without rest register</p>
-            <p className="mt-2 text-3xl font-semibold text-amber-900">{data.summary.activeFleetWithoutRestRegister}</p>
-          </div>
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
-            <p className="text-sm text-amber-700">Crew needing manual rest log</p>
-            <p className="mt-2 text-3xl font-semibold text-amber-900">{data.summary.onboardCrewRequiringManualRestTracking}</p>
-          </div>
+          <StatCard label="Open grievances" value={data.summary.openGrievances} description="Cases requiring welfare review or response." tone="slate" />
+          <StatCard label="Welfare cases" value={data.summary.welfareCases} description="Active crew welfare follow-up across the fleet." tone="slate" />
+          <StatCard label="Sign-off closures pending" value={data.summary.signOffClosuresPending} description="Crew departures awaiting closure items." tone="slate" />
+          <StatCard label="Fleet without rest register" value={data.summary.activeFleetWithoutRestRegister} description="Active fleet still lacking digital rest-hour records." tone="amber" />
+          <StatCard label="Manual rest tracking" value={data.summary.onboardCrewRequiringManualRestTracking} description="Onboard crew still monitored outside the digital register." tone="cyan" />
         </section>
 
         <section className="rounded-3xl border border-amber-200 bg-amber-50 p-6 shadow-sm">
@@ -83,12 +62,12 @@ export default async function WelfarePage() {
                         <p className="font-semibold text-slate-900">{item.subject}</p>
                         <p className="text-sm text-slate-500">{item.crewName} • {item.type}</p>
                       </div>
-                      <div className="text-right text-xs font-semibold uppercase tracking-wide text-slate-500">
-                        <div>{item.priority}</div>
-                        <div>{item.status}</div>
+                      <div className="flex flex-col items-end gap-2 text-right text-xs font-semibold uppercase tracking-wide">
+                        <span className={`rounded-full px-3 py-1 ${getSeverityBadgeClasses(item.priority)}`}>{item.priority}</span>
+                        <span className={`rounded-full px-3 py-1 ${getSeverityBadgeClasses(item.status)}`}>{item.status}</span>
                       </div>
                     </div>
-                    <p className="mt-2 text-sm text-slate-600">Opened {formatDate(item.createdAt)}</p>
+                    <p className="mt-2 text-sm text-slate-600">Opened {formatDateLabel(item.createdAt, "en-GB")}</p>
                   </div>
                 ))
               )}
@@ -108,12 +87,12 @@ export default async function WelfarePage() {
                         <p className="font-semibold text-slate-900">{item.subject}</p>
                         <p className="text-sm text-slate-500">{item.crewName} • {item.type}</p>
                       </div>
-                      <div className="text-right text-xs font-semibold uppercase tracking-wide text-slate-500">
-                        <div>{item.priority}</div>
-                        <div>{item.status}</div>
+                      <div className="flex flex-col items-end gap-2 text-right text-xs font-semibold uppercase tracking-wide">
+                        <span className={`rounded-full px-3 py-1 ${getSeverityBadgeClasses(item.priority)}`}>{item.priority}</span>
+                        <span className={`rounded-full px-3 py-1 ${getSeverityBadgeClasses(item.status)}`}>{item.status}</span>
                       </div>
                     </div>
-                    <p className="mt-2 text-sm text-slate-600">Opened {formatDate(item.createdAt)}</p>
+                    <p className="mt-2 text-sm text-slate-600">Opened {formatDateLabel(item.createdAt, "en-GB")}</p>
                   </div>
                 ))
               )}
@@ -132,10 +111,11 @@ export default async function WelfarePage() {
                   <div className="flex items-start justify-between gap-4">
                     <div>
                       <p className="font-semibold text-slate-900">{item.crewName}</p>
-                      <p className="text-sm text-slate-500">Sign-off {formatDate(item.signOffDate)} • {item.status}</p>
+                      <p className="text-sm text-slate-500">Sign-off {formatDateLabel(item.signOffDate, "en-GB")} • {formatStatusLabel(item.status)}</p>
                     </div>
-                    <div className="text-sm font-medium text-slate-700">{item.missingItems.join(", ")}</div>
+                    <span className={`rounded-full px-3 py-1 text-xs font-semibold ${getSeverityBadgeClasses(item.status)}`}>{item.status}</span>
                   </div>
+                  <p className="mt-2 text-sm font-medium text-slate-700">{item.missingItems.join(", ")}</p>
                 </div>
               ))
             )}

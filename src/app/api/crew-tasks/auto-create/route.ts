@@ -1,20 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { ensureOfficeApiPathAccess } from '@/lib/office-api-access';
+import { crewTaskAutoCreateSchema } from '@/lib/crewing-ops-schemas';
+import { handleApiError, ApiError } from '@/lib/error-handler';
 
 type TaskTypeValue = 'MCU' | 'TRAINING' | 'VISA' | 'CONTRACT' | 'BRIEFING';
 
 // POST /api/crew-tasks/auto-create - Auto-generate tasks when crew approved
 export async function POST(req: NextRequest) {
   try {
-    const { crewId } = await req.json();
+    const session = await getServerSession(authOptions);
+    const authError = ensureOfficeApiPathAccess(session, '/api/crew-tasks', 'POST');
+    if (authError) {
+      return authError;
+    }
 
-    if (!crewId) {
+    if (!session.user?.id) {
+      throw new ApiError(401, 'Unauthorized', 'AUTHENTICATION_ERROR');
+    }
+
+    const parsedBody = crewTaskAutoCreateSchema.safeParse(await req.json());
+    if (!parsedBody.success) {
       return NextResponse.json(
-        { error: 'crewId is required' },
+        { error: 'Invalid auto-create payload', details: parsedBody.error.flatten() },
         { status: 400 }
       );
     }
 
+    const { crewId } = parsedBody.data;
     // Get the crew and their prepare-joining record
     const crew = await prisma.crew.findUnique({
       where: { id: crewId },
@@ -78,15 +93,25 @@ export async function POST(req: NextRequest) {
       )
     );
 
+    await prisma.auditLog.create({
+      data: {
+        actorUserId: session.user.id,
+        action: 'CREW_TASKS_AUTO_CREATED',
+        entityType: 'Crew',
+        entityId: crewId,
+        metadataJson: {
+          prepareJoiningId: prepareJoiningRecord.id,
+          createdTaskCount: createdTasks.length,
+          taskTypes: createdTasks.map((task) => task.taskType),
+        },
+      },
+    });
+
     return NextResponse.json({
       message: `Created ${createdTasks.length} tasks for crew ${crew.fullName}`,
       tasks: createdTasks
     });
   } catch (error) {
-    console.error('[crew-tasks/auto-create] error:', error);
-    return NextResponse.json(
-      { error: 'Failed to create tasks' },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }

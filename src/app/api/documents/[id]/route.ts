@@ -4,14 +4,16 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { writeFile, unlink } from "fs/promises";
 import { extname, join } from "path";
-import { checkPermission, PermissionLevel } from "@/lib/permission-middleware";
+import { ensureOfficeApiPathAccess } from "@/lib/office-api-access";
+import { handleApiError, ApiError } from "@/lib/error-handler";
 import {
-  buildCrewFilePath,
+  buildCrewDocumentFilePath,
   getRelativePath,
   getMaxFileSize,
   generateCrewDocumentFilename,
   getAbsolutePath,
   deleteFileSafe,
+  resolveStoredFileUrl,
 } from "@/lib/upload-path";
 
 export async function GET(
@@ -20,13 +22,9 @@ export async function GET(
 ) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Check documents permission
-    if (!checkPermission(session, 'documents', PermissionLevel.VIEW_ACCESS)) {
-      return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 });
+    const authError = ensureOfficeApiPathAccess(session, "/api/documents", "GET");
+    if (authError) {
+      return authError;
     }
 
     const { id } = await params;
@@ -48,35 +46,18 @@ export async function GET(
       return NextResponse.json({ error: "Document not found" }, { status: 404 });
     }
 
-    // Authorization: Check ownership or admin role
-    // Non-admin users can only view their own crew's documents
-    const isAdmin = session.user?.roles?.includes('ADMIN') || session.user?.roles?.includes('DIRECTOR');
-    const isOwnDocument = document.crew.id === session.user?.id; // Assuming crewId is stored in session.user.id
-    
-    if (!isAdmin && !isOwnDocument) {
-      return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 });
-    }
-
-    // Normalize dates to ISO strings for consistent FE handling
-    // Normalize fileUrl: ensure leading slash for legacy values
-    let normalizedFileUrl = document.fileUrl;
-    if (normalizedFileUrl && !normalizedFileUrl.startsWith('/')) {
-      normalizedFileUrl = `/${normalizedFileUrl}`;
-    }
-
     const response = {
       ...document,
       issueDate: document.issueDate ? new Date(document.issueDate).toISOString() : null,
       expiryDate: document.expiryDate ? new Date(document.expiryDate).toISOString() : null,
       createdAt: document.createdAt.toISOString(),
       updatedAt: document.updatedAt.toISOString(),
-      fileUrl: normalizedFileUrl,
+      fileUrl: resolveStoredFileUrl(document.fileUrl),
     };
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error("Error fetching document:", error);
-    return NextResponse.json({ error: "Failed to fetch document" }, { status: 500 });
+    return handleApiError(error);
   }
 }
 
@@ -84,22 +65,25 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  let documentId = "";
   try {
     const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const authError = ensureOfficeApiPathAccess(
+      session,
+      "/api/documents",
+      "PUT",
+      "Insufficient permissions to update documents"
+    );
+    if (authError) {
+      return authError;
     }
 
-    // Check documents permission for editing
-    if (!checkPermission(session, 'documents', PermissionLevel.EDIT_ACCESS)) {
-      return NextResponse.json(
-        { error: "Insufficient permissions to update documents" },
-        { status: 403 }
-      );
+    if (!session.user?.id) {
+      throw new ApiError(401, "Unauthorized", "AUTHENTICATION_ERROR");
     }
 
     const { id } = await params;
-    const documentId = id;
+    documentId = id;
 
     const formData = await request.formData();
     const docType = formData.get('docType') as string;
@@ -174,17 +158,12 @@ export async function PUT(
 
       const crew = await prisma.crew.findUnique({
         where: { id: existingDocument.crewId },
-        select: { fullName: true, rank: true },
+        select: { fullName: true, rank: true, crewCode: true },
       });
 
       if (!crew) {
         return NextResponse.json({ error: "Crew not found" }, { status: 404 });
       }
-
-      const crewSlug = crew.fullName
-        .toUpperCase()
-        .replace(/[^A-Z0-9\s]/g, "")
-        .replace(/\s+/g, "_");
 
       const fileName = generateCrewDocumentFilename({
         crewName: crew.fullName,
@@ -195,7 +174,7 @@ export async function PUT(
         issuedAt: updateData.issueDate,
       });
 
-      const filePath = buildCrewFilePath(existingDocument.crewId, crewSlug, fileName);
+      const filePath = buildCrewDocumentFilePath(crew.crewCode ?? existingDocument.crewId, fileName, docType);
 
       const bytes = await file.arrayBuffer();
       const buffer = Buffer.from(bytes);
@@ -219,10 +198,23 @@ export async function PUT(
       },
     });
 
+    await prisma.auditLog.create({
+      data: {
+        actorUserId: session.user.id,
+        action: "CREW_DOCUMENT_UPDATED",
+        entityType: "CrewDocument",
+        entityId: document.id,
+        metadataJson: {
+          crewId: document.crewId,
+          docType: document.docType,
+          hasFile: Boolean(document.fileUrl),
+        },
+      },
+    });
+
     return NextResponse.json(document);
   } catch (error) {
-    console.error("Error updating document:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleApiError(error);
   }
 }
 
@@ -232,16 +224,18 @@ export async function DELETE(
 ) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const authError = ensureOfficeApiPathAccess(
+      session,
+      "/api/documents",
+      "DELETE",
+      "Insufficient permissions to delete documents"
+    );
+    if (authError) {
+      return authError;
     }
 
-    // Check documents permission for full access (delete operation)
-    if (!checkPermission(session, 'documents', PermissionLevel.FULL_ACCESS)) {
-      return NextResponse.json(
-        { error: "Insufficient permissions to delete documents" },
-        { status: 403 }
-      );
+    if (!session.user?.id) {
+      throw new ApiError(401, "Unauthorized", "AUTHENTICATION_ERROR");
     }
 
     const { id } = await params;
@@ -294,6 +288,20 @@ export async function DELETE(
       where: { id: documentId },
     });
 
+    await prisma.auditLog.create({
+      data: {
+        actorUserId: session.user.id,
+        action: "CREW_DOCUMENT_DELETED",
+        entityType: "CrewDocument",
+        entityId: existingDocument.id,
+        metadataJson: {
+          crewId: existingDocument.crewId,
+          docType: existingDocument.docType,
+          hadFile: Boolean(existingDocument.fileUrl),
+        },
+      },
+    });
+
     console.info("Document deleted", {
       documentId,
       crewId: existingDocument.crewId,
@@ -302,7 +310,6 @@ export async function DELETE(
 
     return NextResponse.json({ message: "Document deleted successfully" });
   } catch (error) {
-    console.error("Error deleting document:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleApiError(error);
   }
 }

@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { ensureOfficeApiPathAccess } from "@/lib/office-api-access";
 import { checkPermission, PermissionLevel } from "@/lib/permission-middleware";
+import { prepareJoiningUpdateSchema } from "@/lib/prepare-joining-schemas";
 import {
   assertPrepareJoiningStatusTransition,
   ensurePrepareJoiningPrincipalForms,
@@ -144,12 +146,8 @@ export async function GET(
   const { id } = await context.params;
   try {
     const session = await getServerSession(authOptions);
-    if (!checkPermission(session, "crewing", PermissionLevel.VIEW_ACCESS)) {
-      return NextResponse.json(
-        { error: "Insufficient permissions" },
-        { status: 403 }
-      );
-    }
+    const authError = ensureOfficeApiPathAccess(session, "/api/prepare-joining/detail", "GET");
+    if (authError) return authError;
 
     const prepareJoining = await prisma.prepareJoining.findUnique({
       where: { id },
@@ -239,14 +237,18 @@ export async function PUT(
   const { id } = await context.params;
   try {
     const session = await getServerSession(authOptions);
-    if (!checkPermission(session, "crewing", PermissionLevel.EDIT_ACCESS)) {
+    const authError = ensureOfficeApiPathAccess(session, "/api/prepare-joining/detail", "PUT");
+    if (authError) return authError;
+
+    const parsedBody = prepareJoiningUpdateSchema.safeParse(await req.json());
+    if (!parsedBody.success) {
       return NextResponse.json(
-        { error: "Insufficient permissions" },
-        { status: 403 }
+        { error: "Invalid prepare joining payload", details: parsedBody.error.flatten() },
+        { status: 400 }
       );
     }
 
-    const body = (await req.json()) as UpdatePrepareJoiningPayload;
+    const body = parsedBody.data as UpdatePrepareJoiningPayload;
     const existingPrepareJoining = await prisma.prepareJoining.findUnique({
       where: { id },
       select: { id: true, principalId: true, status: true },
@@ -744,6 +746,20 @@ export async function PUT(
 
     const compliance = await getPrepareJoiningComplianceSnapshot(id);
 
+    await prisma.auditLog.create({
+      data: {
+        actorUserId: session.user.id,
+        action: "PREPARE_JOINING_UPDATED",
+        entityType: "PrepareJoining",
+        entityId: id,
+        metadataJson: {
+          status: prepareJoining.status,
+          principalId: prepareJoining.principal?.id ?? null,
+          vesselId: prepareJoining.vessel?.id ?? null,
+        },
+      },
+    });
+
     return NextResponse.json({
       ...prepareJoining,
       principalChecklist: compliance?.checklist ?? [],
@@ -788,6 +804,15 @@ export async function DELETE(
 
     await prisma.prepareJoining.delete({
       where: { id },
+    });
+
+    await prisma.auditLog.create({
+      data: {
+        actorUserId: session.user.id,
+        action: "PREPARE_JOINING_DELETED",
+        entityType: "PrepareJoining",
+        entityId: id,
+      },
     });
 
     return NextResponse.json({ message: "Prepare joining deleted" });
