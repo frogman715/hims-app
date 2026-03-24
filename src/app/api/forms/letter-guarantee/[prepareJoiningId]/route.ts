@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { checkPermission, PermissionLevel } from "@/lib/permission-middleware";
+import { handleApiError } from "@/lib/error-handler";
 
 interface LetterGuaranteeHandlingAgent {
   name: string;
@@ -51,7 +52,7 @@ export async function GET(
   const { prepareJoiningId } = await context.params;
   try {
     const session = await getServerSession(authOptions);
-    if (!checkPermission(session, "crew", PermissionLevel.VIEW_ACCESS)) {
+    if (!checkPermission(session, "crewing", PermissionLevel.VIEW_ACCESS)) {
       return NextResponse.json(
         { error: "Insufficient permissions" },
         { status: 403 }
@@ -96,6 +97,13 @@ export async function GET(
       return NextResponse.json(
         { error: "Prepare joining record not found" },
         { status: 404 }
+      );
+    }
+
+    if (!prepareJoining.principalId) {
+      return NextResponse.json(
+        { error: "Assign principal before creating a Letter of Guarantee." },
+        { status: 400 }
       );
     }
 
@@ -375,7 +383,7 @@ export async function POST(
   try {
     const { prepareJoiningId } = await context.params;
     const session = await getServerSession(authOptions);
-    if (!checkPermission(session, "crew", PermissionLevel.EDIT_ACCESS)) {
+    if (!checkPermission(session, "crewing", PermissionLevel.EDIT_ACCESS)) {
       return NextResponse.json(
         { error: "Insufficient permissions" },
         { status: 403 }
@@ -427,32 +435,85 @@ export async function POST(
       });
     }
 
-    const form = await prisma.prepareJoiningForm.create({
-      data: {
+    const existingForm = await prisma.prepareJoiningForm.findFirst({
+      where: {
         prepareJoiningId,
         templateId: template.id,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        formData: formData as any,
-        status: "DRAFT",
-        version: 1,
       },
-      include: {
-        template: true,
-        prepareJoining: {
-          include: {
-            crew: true,
-            principal: true,
-          },
-        },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        status: true,
+        version: true,
       },
     });
 
+    if (existingForm && !["DRAFT", "CHANGES_REQUESTED"].includes(existingForm.status)) {
+      return NextResponse.json(
+        {
+          error: `Letter of Guarantee is already in ${existingForm.status} status and cannot be overwritten.`,
+        },
+        { status: 409 }
+      );
+    }
+
+    const form = existingForm
+      ? await prisma.prepareJoiningForm.update({
+          where: { id: existingForm.id },
+          data: {
+            formData: formData as object,
+            status: "DRAFT",
+            version: existingForm.version + 1,
+          },
+          include: {
+            template: true,
+            prepareJoining: {
+              include: {
+                crew: true,
+                principal: true,
+              },
+            },
+          },
+        })
+      : await prisma.prepareJoiningForm.create({
+          data: {
+            prepareJoiningId,
+            templateId: template.id,
+            formData: formData as object,
+            status: "DRAFT",
+            version: 1,
+          },
+          include: {
+            template: true,
+            prepareJoining: {
+              include: {
+                crew: true,
+                principal: true,
+              },
+            },
+          },
+        });
+
+    if (session?.user?.id) {
+      await prisma.auditLog.create({
+        data: {
+          actorUserId: session.user.id,
+          action: existingForm ? "LETTER_GUARANTEE_UPDATED" : "LETTER_GUARANTEE_CREATED",
+          entityType: "PrepareJoiningForm",
+          entityId: form.id,
+          metadataJson: {
+            prepareJoiningId,
+            templateId: template.id,
+            version: form.version,
+            previousStatus: existingForm?.status ?? null,
+            nextStatus: form.status,
+          },
+        },
+      });
+    }
+
     return NextResponse.json(form, { status: 201 });
   } catch (error) {
-    console.error("Error saving Letter Guarantee:", error);
-    return NextResponse.json(
-      { error: "Failed to save Letter Guarantee" },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }

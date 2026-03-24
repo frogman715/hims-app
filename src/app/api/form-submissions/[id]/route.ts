@@ -3,29 +3,19 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { checkPermission, PermissionLevel } from "@/lib/permission-middleware";
-
-enum FormApprovalStatus {
-  DRAFT = "DRAFT",
-  SUBMITTED = "SUBMITTED",
-  UNDER_REVIEW = "UNDER_REVIEW",
-  CHANGES_REQUESTED = "CHANGES_REQUESTED",
-  APPROVED = "APPROVED",
-  REJECTED = "REJECTED",
-}
+import {
+  FORM_APPROVAL_STATUSES,
+  type FormApprovalStatusValue,
+  isValidFormApprovalTransition,
+} from "@/lib/form-submission-workflow";
+import { handleApiError } from "@/lib/error-handler";
 
 interface UpdateFormSubmissionPayload {
-  formData?: unknown;
-  status?: FormApprovalStatus;
+  formData?: Record<string, unknown>;
+  status?: FormApprovalStatusValue;
 }
 
-const FORM_STATUS_SET = new Set<FormApprovalStatus>([
-  FormApprovalStatus.DRAFT,
-  FormApprovalStatus.SUBMITTED,
-  FormApprovalStatus.UNDER_REVIEW,
-  FormApprovalStatus.CHANGES_REQUESTED,
-  FormApprovalStatus.APPROVED,
-  FormApprovalStatus.REJECTED,
-]);
+const FORM_STATUS_SET = new Set<FormApprovalStatusValue>(FORM_APPROVAL_STATUSES);
 
 function isUpdateFormSubmissionPayload(value: unknown): value is UpdateFormSubmissionPayload {
   if (typeof value !== "object" || value === null) {
@@ -174,11 +164,7 @@ export async function GET(
 
     return NextResponse.json(normalizedForm);
   } catch (error) {
-    console.error("Error fetching form submission:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch form submission" },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
 
@@ -203,6 +189,15 @@ export async function PUT(
       return NextResponse.json({ error: "Invalid form submission payload" }, { status: 400 });
     }
 
+    const existingForm = await prisma.prepareJoiningForm.findUnique({
+      where: { id },
+      select: { id: true, status: true, prepareJoiningId: true, templateId: true },
+    });
+
+    if (!existingForm) {
+      return NextResponse.json({ error: "Form not found" }, { status: 404 });
+    }
+
     const { formData, status } = parsedBody;
 
     const updateData: Record<string, unknown> = {};
@@ -212,15 +207,22 @@ export async function PUT(
     
     // Status transitions
     if (status) {
+      if (!isValidFormApprovalTransition(existingForm.status as FormApprovalStatusValue, status)) {
+        return NextResponse.json(
+          { error: `Form cannot move from ${existingForm.status} to ${status}` },
+          { status: 400 }
+        );
+      }
+
       updateData.status = status;
 
-      if (status === FormApprovalStatus.SUBMITTED) {
+      if (status === "SUBMITTED") {
         updateData.submittedBy = session?.user?.email || "Unknown";
         updateData.submittedAt = new Date();
-      } else if (status === FormApprovalStatus.UNDER_REVIEW) {
+      } else if (status === "UNDER_REVIEW") {
         updateData.reviewedBy = session?.user?.email || "Unknown";
         updateData.reviewedAt = new Date();
-      } else if (status === FormApprovalStatus.APPROVED) {
+      } else if (status === "APPROVED") {
         updateData.approvedBy = session?.user?.email || "Unknown";
         updateData.approvedAt = new Date();
       }
@@ -240,13 +242,26 @@ export async function PUT(
       },
     });
 
+    if (session.user?.id && status && status !== existingForm.status) {
+      await prisma.auditLog.create({
+        data: {
+          actorUserId: session.user.id,
+          action: "PREPARE_JOINING_FORM_STATUS_UPDATED",
+          entityType: "PrepareJoiningForm",
+          entityId: form.id,
+          metadataJson: {
+            prepareJoiningId: existingForm.prepareJoiningId,
+            templateId: existingForm.templateId,
+            previousStatus: existingForm.status,
+            nextStatus: status,
+          },
+        },
+      });
+    }
+
     return NextResponse.json(form);
   } catch (error) {
-    console.error("Error updating form submission:", error);
-    return NextResponse.json(
-      { error: "Failed to update form submission" },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
 
@@ -271,10 +286,6 @@ export async function DELETE(
 
     return NextResponse.json({ message: "Form submission deleted successfully" });
   } catch (error) {
-    console.error("Error deleting form submission:", error);
-    return NextResponse.json(
-      { error: "Failed to delete form submission" },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }

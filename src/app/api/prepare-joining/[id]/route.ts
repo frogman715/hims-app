@@ -14,6 +14,42 @@ import {
 // Use Prisma enum instead of local enum
 type PrepareJoiningStatus = "PENDING" | "DOCUMENTS" | "MEDICAL" | "TRAINING" | "TRAVEL" | "READY" | "DISPATCHED" | "CANCELLED";
 
+const PREPARE_JOINING_STATUS_FLOW: PrepareJoiningStatus[] = [
+  "PENDING",
+  "DOCUMENTS",
+  "MEDICAL",
+  "TRAINING",
+  "TRAVEL",
+  "READY",
+  "DISPATCHED",
+];
+
+function isAllowedPrepareJoiningStatusTransition(
+  currentStatus: PrepareJoiningStatus,
+  nextStatus: PrepareJoiningStatus
+) {
+  if (currentStatus === nextStatus) {
+    return true;
+  }
+
+  if (nextStatus === "CANCELLED") {
+    return currentStatus !== "DISPATCHED";
+  }
+
+  if (currentStatus === "CANCELLED" || currentStatus === "DISPATCHED") {
+    return false;
+  }
+
+  const currentIndex = PREPARE_JOINING_STATUS_FLOW.indexOf(currentStatus);
+  const nextIndex = PREPARE_JOINING_STATUS_FLOW.indexOf(nextStatus);
+
+  if (currentIndex === -1 || nextIndex === -1) {
+    return false;
+  }
+
+  return Math.abs(nextIndex - currentIndex) <= 1;
+}
+
 type UpdatePrepareJoiningPayload = {
   status?: string;
   passportValid?: boolean;
@@ -251,7 +287,16 @@ export async function PUT(
     const body = parsedBody.data as UpdatePrepareJoiningPayload;
     const existingPrepareJoining = await prisma.prepareJoining.findUnique({
       where: { id },
-      select: { id: true, principalId: true, status: true },
+      select: {
+        id: true,
+        principalId: true,
+        status: true,
+        departureDate: true,
+        departurePort: true,
+        arrivalPort: true,
+        preDepartureFinalCheck: true,
+        remarks: true,
+      },
     });
 
     if (!existingPrepareJoining) {
@@ -277,6 +322,20 @@ export async function PUT(
       }
       updateData.status = normalizedStatus as PrepareJoiningStatus;
       nextStatus = normalizedStatus as PrepareJoiningStatus;
+
+      if (
+        !isAllowedPrepareJoiningStatusTransition(
+          existingPrepareJoining.status as PrepareJoiningStatus,
+          nextStatus
+        )
+      ) {
+        return NextResponse.json(
+          {
+            error: `Prepare joining can only move step-by-step. Transition from ${existingPrepareJoining.status} to ${nextStatus} is blocked.`,
+          },
+          { status: 400 }
+        );
+      }
     }
 
     const passportValid = parseOptionalBoolean(body.passportValid);
@@ -616,6 +675,19 @@ export async function PUT(
 
     const nextPrincipalId =
       principalId !== undefined ? principalId : existingPrepareJoining.principalId;
+    const nextDepartureDate =
+      body.departureDate !== undefined
+        ? parseDateOrNull(body.departureDate)
+        : existingPrepareJoining.departureDate;
+    const nextDeparturePort =
+      departurePort !== undefined ? departurePort : existingPrepareJoining.departurePort;
+    const nextArrivalPort =
+      arrivalPort !== undefined ? arrivalPort : existingPrepareJoining.arrivalPort;
+    const nextFinalCheck =
+      preDepartureFinalCheck !== undefined
+        ? preDepartureFinalCheck
+        : existingPrepareJoining.preDepartureFinalCheck;
+    const nextRemarks = remarks !== undefined ? remarks : existingPrepareJoining.remarks;
 
     if (
       (nextStatus === "READY" || nextStatus === "DISPATCHED") &&
@@ -637,6 +709,32 @@ export async function PUT(
 
     if (nextStatus === "READY" || nextStatus === "DISPATCHED") {
       await assertPrepareJoiningStatusTransition(id, nextStatus as PrepareJoiningStatus);
+    }
+
+    if (nextStatus === "DISPATCHED") {
+      if (!nextFinalCheck) {
+        return NextResponse.json(
+          { error: "Final pre-departure check must be completed before DISPATCHED." },
+          { status: 400 }
+        );
+      }
+
+      if (!nextDepartureDate || !nextDeparturePort || !nextArrivalPort) {
+        return NextResponse.json(
+          {
+            error:
+              "Departure date, departure port, and arrival port are required before DISPATCHED.",
+          },
+          { status: 400 }
+        );
+      }
+    }
+
+    if (nextStatus === "CANCELLED" && !nextRemarks?.trim()) {
+      return NextResponse.json(
+        { error: "Remarks are required when cancelling a prepare joining record." },
+        { status: 400 }
+      );
     }
 
     const prepareJoining = await prisma.prepareJoining.update({
@@ -685,7 +783,7 @@ export async function PUT(
       },
     });
 
-    // Auto-create tasks if status changed to READY or DISPATCHED
+    // Auto-create missing tasks if status changed to READY or DISPATCHED
     if (updateData.status && ['READY', 'DISPATCHED'].includes(updateData.status as string)) {
       try {
         const taskTemplates = [
@@ -722,9 +820,20 @@ export async function PUT(
           title: string;
           description: string;
         }
+        const existingTaskTypes = new Set(
+          (
+            await prisma.crewTask.findMany({
+              where: { prepareJoiningId: id },
+              select: { taskType: true },
+            })
+          ).map((task) => String(task.taskType))
+        );
+
         await Promise.all(
-          taskTemplates.map((template: TaskTemplate) =>
-            prisma.crewTask.create({
+          taskTemplates
+            .filter((template) => !existingTaskTypes.has(template.taskType))
+            .map((template: TaskTemplate) =>
+              prisma.crewTask.create({
               data: {
                 crewId: prepareJoining.crew.id,
                 prepareJoiningId: id,

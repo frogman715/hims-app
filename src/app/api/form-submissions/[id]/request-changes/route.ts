@@ -2,15 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-
-enum FormApprovalStatus {
-  DRAFT = "DRAFT",
-  SUBMITTED = "SUBMITTED",
-  UNDER_REVIEW = "UNDER_REVIEW",
-  CHANGES_REQUESTED = "CHANGES_REQUESTED",
-  APPROVED = "APPROVED",
-  REJECTED = "REJECTED",
-}
+import {
+  isReviewerSession,
+  isValidFormApprovalTransition,
+} from "@/lib/form-submission-workflow";
+import { handleApiError } from "@/lib/error-handler";
 
 function mergeRequestedChanges(formData: unknown, changes: string): unknown {
   if (formData && typeof formData === "object" && !Array.isArray(formData)) {
@@ -31,12 +27,10 @@ export async function POST(
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    
-    // Only CDMO and DIRECTOR can request changes
-    const role = session?.user?.role;
-    if (role !== "CDMO" && role !== "DIRECTOR") {
+
+    if (!isReviewerSession(session)) {
       return NextResponse.json(
-        { error: "Only CDMO and Director can request changes" },
+        { error: "Only Operational and Director can request changes" },
         { status: 403 }
       );
     }
@@ -54,17 +48,24 @@ export async function POST(
 
     const existingForm = await prisma.prepareJoiningForm.findUnique({
       where: { id },
-      select: { formData: true },
+      select: { formData: true, status: true, prepareJoiningId: true, templateId: true },
     });
 
     if (!existingForm) {
       return NextResponse.json({ error: "Form not found" }, { status: 404 });
     }
 
+    if (!isValidFormApprovalTransition(existingForm.status, "CHANGES_REQUESTED")) {
+      return NextResponse.json(
+        { error: `Form cannot move from ${existingForm.status} to CHANGES_REQUESTED` },
+        { status: 400 }
+      );
+    }
+
     const form = await prisma.prepareJoiningForm.update({
       where: { id },
       data: {
-        status: FormApprovalStatus.CHANGES_REQUESTED,
+        status: "CHANGES_REQUESTED",
         reviewedBy: session?.user?.email || "Unknown",
         reviewedAt: new Date(),
         formData: mergeRequestedChanges(existingForm.formData, changes) as unknown as object,
@@ -80,15 +81,28 @@ export async function POST(
       },
     });
 
+    if (session.user?.id) {
+      await prisma.auditLog.create({
+        data: {
+          actorUserId: session.user.id,
+          action: "PREPARE_JOINING_FORM_CHANGES_REQUESTED",
+          entityType: "PrepareJoiningForm",
+          entityId: form.id,
+          metadataJson: {
+            prepareJoiningId: existingForm.prepareJoiningId,
+            templateId: existingForm.templateId,
+            previousStatus: existingForm.status,
+            nextStatus: "CHANGES_REQUESTED",
+          },
+        },
+      });
+    }
+
     return NextResponse.json({
       message: "Changes requested successfully",
       form,
     });
   } catch (error) {
-    console.error("Error requesting changes:", error);
-    return NextResponse.json(
-      { error: "Failed to request changes" },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }

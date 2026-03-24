@@ -4,6 +4,12 @@ import { withPermission } from "@/lib/api-middleware";
 import { PermissionLevel } from "@/lib/permission-middleware";
 import { handleApiError, ApiError } from "@/lib/error-handler";
 import { isValidStateTransition } from "@/types/crewing";
+import { z } from "zod";
+
+const applicationTransitionSchema = z.object({
+  newStatus: z.enum(["REVIEWING", "INTERVIEW", "PASSED", "OFFERED", "ACCEPTED", "REJECTED", "CANCELLED"]),
+  remarks: z.string().trim().optional().nullable(),
+}).strict();
 
 /**
  * POST /api/crewing/applications/[id]/transition
@@ -16,12 +22,12 @@ export const POST = withPermission(
     try {
       const params = await context.params;
       const { id } = params;
-      const body = await req.json();
-      const { newStatus, remarks } = body;
-
-      if (!newStatus) {
-        throw new ApiError(400, "newStatus is required", "VALIDATION_ERROR");
+      const parsedBody = applicationTransitionSchema.safeParse(await req.json());
+      if (!parsedBody.success) {
+        throw new ApiError(400, "Invalid transition payload", "VALIDATION_ERROR", parsedBody.error.flatten());
       }
+
+      const { newStatus, remarks } = parsedBody.data;
 
       // Get current application
       const application = await prisma.application.findUnique({
@@ -33,6 +39,30 @@ export const POST = withPermission(
 
       if (!application) {
         throw new ApiError(404, "Application not found", "NOT_FOUND");
+      }
+
+      if (["ACCEPTED", "REJECTED", "CANCELLED"].includes(application.status)) {
+        throw new ApiError(
+          400,
+          "This application is already closed and locked. Continue the workflow in deployment handling or keep the record for history.",
+          "APPLICATION_LOCKED"
+        );
+      }
+
+      if ((newStatus === "REJECTED" || newStatus === "CANCELLED") && !remarks?.trim()) {
+        throw new ApiError(
+          400,
+          `Remarks are required when moving an application to ${newStatus}`,
+          "VALIDATION_ERROR"
+        );
+      }
+
+      if (newStatus === "ACCEPTED" && !application.principalId) {
+        throw new ApiError(
+          400,
+          "Assign a principal before accepting the application into deployment flow.",
+          "PRINCIPAL_REQUIRED"
+        );
       }
 
       // Validate state transition
@@ -65,15 +95,24 @@ export const POST = withPermission(
         switch (newStatus) {
           case "INTERVIEW":
             // Auto-create interview record
-            await tx.interview.create({
-              data: {
-                crewId: application.crewId,
-                applicationId: application.id,
-                interviewerId: session.user.id,
-                scheduledDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
-                status: "SCHEDULED",
-              },
-            });
+            {
+              const existingInterview = await tx.interview.findFirst({
+                where: { applicationId: application.id },
+                select: { id: true },
+              });
+
+              if (!existingInterview) {
+                await tx.interview.create({
+                  data: {
+                    crewId: application.crewId,
+                    applicationId: application.id,
+                    interviewerId: session.user.id,
+                    scheduledDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+                    status: "SCHEDULED",
+                  },
+                });
+              }
+            }
             break;
 
           case "ACCEPTED":

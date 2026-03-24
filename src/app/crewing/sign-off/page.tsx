@@ -2,6 +2,9 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { canAccessOfficePath } from "@/lib/office-access";
 
 interface CrewSignOffSummary {
   id: string;
@@ -24,11 +27,46 @@ interface CrewSignOffSummary {
   } | null;
 }
 
+const SIGN_OFF_STATUS_META: Record<string, { label: string; tone: string }> = {
+  PENDING: { label: "Pending", tone: "bg-yellow-100 text-yellow-800" },
+  DOCUMENTS_RECEIVED: { label: "Documents Received", tone: "bg-blue-100 text-blue-800" },
+  DEBRIEFING_DONE: { label: "Debriefing Done", tone: "bg-purple-100 text-purple-800" },
+  WAGES_CALCULATED: { label: "Wages Calculated", tone: "bg-cyan-100 text-cyan-800" },
+  WAGES_PAID: { label: "Wages Paid", tone: "bg-green-100 text-green-800" },
+  COMPLETED: { label: "Completed", tone: "bg-gray-100 text-gray-800" },
+};
+
 export default function CrewSignOffPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const [signOffs, setSignOffs] = useState<CrewSignOffSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState("ALL");
+  const [isAuthorized, setIsAuthorized] = useState(false);
+
+  useEffect(() => {
+    if (status === "loading") return;
+
+    if (!session) {
+      router.push("/auth/signin");
+      return;
+    }
+
+    const allowed = canAccessOfficePath(
+      "/api/crewing/sign-off",
+      [...(session.user?.roles ?? []), session.user?.role ?? ""].filter(Boolean),
+      session.user?.isSystemAdmin === true,
+      "GET"
+    );
+
+    if (!allowed) {
+      setIsAuthorized(false);
+      return;
+    }
+
+    setIsAuthorized(true);
+  }, [session, status, router]);
 
   const fetchSignOffs = useCallback(async () => {
     try {
@@ -55,19 +93,17 @@ export default function CrewSignOffPage() {
   }, [filter]);
 
   useEffect(() => {
-    fetchSignOffs();
-  }, [fetchSignOffs]);
+    if (isAuthorized) {
+      fetchSignOffs();
+    }
+  }, [fetchSignOffs, isAuthorized]);
 
   const getStatusColor = (status: string) => {
-    const colors: Record<string, string> = {
-      PENDING: "bg-yellow-100 text-yellow-800",
-      DOCUMENTS_RECEIVED: "bg-blue-100 text-blue-800",
-      DEBRIEFING_DONE: "bg-purple-100 text-purple-800",
-      WAGES_CALCULATED: "bg-cyan-100 text-cyan-800",
-      WAGES_PAID: "bg-green-100 text-green-800",
-      COMPLETED: "bg-gray-100 text-gray-800"
-    };
-    return colors[status] || "bg-gray-100 text-gray-800";
+    return SIGN_OFF_STATUS_META[status]?.tone || "bg-gray-100 text-gray-800";
+  };
+
+  const getStatusLabel = (status: string) => {
+    return SIGN_OFF_STATUS_META[status]?.label || status.replace(/_/g, " ");
   };
 
   const signOffSteps = [
@@ -78,6 +114,26 @@ export default function CrewSignOffPage() {
     { step: 5, title: "Payment", icon: "💰", status: "WAGES_PAID" },
     { step: 6, title: "Document Withdrawal", icon: "✅", status: "COMPLETED" }
   ];
+
+  if (status === "loading" || (loading && !isAuthorized)) {
+    return (
+      <div className="min-h-screen bg-gray-100 py-8 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (!session || !isAuthorized) {
+    return (
+      <div className="min-h-screen bg-gray-100 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="rounded-xl border border-amber-200 bg-amber-50 px-6 py-4 text-sm text-amber-900 shadow-sm">
+            Access to sign-off management is restricted for your role.
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (error) {
     return (
@@ -98,14 +154,6 @@ export default function CrewSignOffPage() {
     );
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-100 py-8 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gray-100 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -120,6 +168,10 @@ export default function CrewSignOffPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Crew Sign-Off Management</h1>
           <p className="text-gray-700 mt-1">HGQS Annex D - Sign-off Procedures & Wage Settlement</p>
+        </div>
+
+        <div className="mb-8 rounded-xl border border-amber-200 bg-amber-50 px-6 py-4 text-sm text-amber-900 shadow-sm">
+          Sign-off is handled as a controlled operations board. Open the record from workflow handling, then track documents, debriefing, wage settlement, and final closure here.
         </div>
 
         {/* Sign-Off Process Flowchart */}
@@ -145,7 +197,7 @@ export default function CrewSignOffPage() {
 
         {/* Filter Tabs */}
         <div className="bg-white rounded-lg shadow mb-6 p-2 flex gap-2 overflow-x-auto">
-          {["ALL", "PENDING", "DOCUMENTS_RECEIVED", "WAGES_CALCULATED", "COMPLETED"].map((status) => (
+          {["ALL", "PENDING", "DOCUMENTS_RECEIVED", "DEBRIEFING_DONE", "WAGES_CALCULATED", "WAGES_PAID", "COMPLETED"].map((status) => (
             <button
               key={status}
               onClick={() => setFilter(status)}
@@ -153,7 +205,7 @@ export default function CrewSignOffPage() {
                 filter === status ? "bg-blue-600 text-white" : "text-gray-700 hover:bg-gray-100"
               }`}
             >
-              {status.replace(/_/g, " ")}
+              {status === "ALL" ? "All" : getStatusLabel(status)}
             </button>
           ))}
         </div>
@@ -167,7 +219,11 @@ export default function CrewSignOffPage() {
           <div className="bg-white rounded-xl shadow p-12 text-center">
             <div className="text-6xl mb-4">🚢</div>
             <h3 className="text-xl font-semibold text-gray-800 mb-2">No Sign-Off Records</h3>
-            <p className="text-gray-700">Create sign-off records for crew members returning from vessels.</p>
+            <p className="text-gray-700">
+              {filter === "ALL"
+                ? "No sign-off records have been opened yet for returning crew."
+                : `No sign-off records are currently in ${getStatusLabel(filter)}.`}
+            </p>
           </div>
         ) : (
           <div className="grid gap-4">
@@ -180,7 +236,7 @@ export default function CrewSignOffPage() {
                     <p className="text-sm text-gray-500">Sign-Off: {new Date(signOff.signOffDate).toLocaleDateString()}</p>
                   </div>
                   <span className={`px-3 py-2 rounded-full text-xs font-semibold ${getStatusColor(signOff.status)}`}>
-                    {signOff.status.replace(/_/g, " ")}
+                    {getStatusLabel(signOff.status)}
                   </span>
                 </div>
 
@@ -212,11 +268,12 @@ export default function CrewSignOffPage() {
                 </div>
 
                 <div className="mt-4 flex gap-2">
-                  <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium">
-                    Update Status
-                  </button>
-                  <button className="px-4 py-2 bg-white text-gray-700 border border-gray-400 rounded-lg hover:bg-gray-100 text-sm font-medium">
-                    View Details
+                  <button
+                    type="button"
+                    disabled
+                    className="px-4 py-2 bg-slate-100 text-slate-400 border border-slate-200 rounded-lg text-sm font-medium cursor-not-allowed"
+                  >
+                    Status Update Page Not Live Yet
                   </button>
                 </div>
               </div>

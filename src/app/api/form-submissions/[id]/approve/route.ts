@@ -3,15 +3,11 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { generatePDF, generateFormSubmissionHTML } from "@/lib/pdf-generator";
-
-enum FormApprovalStatus {
-  DRAFT = "DRAFT",
-  SUBMITTED = "SUBMITTED",
-  UNDER_REVIEW = "UNDER_REVIEW",
-  CHANGES_REQUESTED = "CHANGES_REQUESTED",
-  APPROVED = "APPROVED",
-  REJECTED = "REJECTED",
-}
+import {
+  isReviewerSession,
+  isValidFormApprovalTransition,
+} from "@/lib/form-submission-workflow";
+import { handleApiError } from "@/lib/error-handler";
 
 function mergeApprovalNotes(formData: unknown, notes: string): unknown {
   if (formData && typeof formData === "object" && !Array.isArray(formData)) {
@@ -32,12 +28,10 @@ export async function POST(
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    
-    // Only CDMO and DIRECTOR can approve
-    const role = session?.user?.role;
-    if (role !== "CDMO" && role !== "DIRECTOR") {
+
+    if (!isReviewerSession(session)) {
       return NextResponse.json(
-        { error: "Only CDMO and Director can approve forms" },
+        { error: "Only Operational and Director can approve forms" },
         { status: 403 }
       );
     }
@@ -48,17 +42,24 @@ export async function POST(
 
     const existingForm = await prisma.prepareJoiningForm.findUnique({
       where: { id },
-      select: { formData: true },
+      select: { formData: true, status: true, prepareJoiningId: true, templateId: true },
     });
 
     if (!existingForm) {
       return NextResponse.json({ error: "Form not found" }, { status: 404 });
     }
 
+    if (!isValidFormApprovalTransition(existingForm.status, "APPROVED")) {
+      return NextResponse.json(
+        { error: `Form cannot move from ${existingForm.status} to APPROVED` },
+        { status: 400 }
+      );
+    }
+
     const form = await prisma.prepareJoiningForm.update({
       where: { id },
       data: {
-        status: FormApprovalStatus.APPROVED,
+        status: "APPROVED",
         approvedBy: session?.user?.email || "Unknown",
         approvedAt: new Date(),
         formData: mergeApprovalNotes(existingForm.formData, notes) as unknown as object,
@@ -114,15 +115,28 @@ export async function POST(
       }
     }
 
+    if (session.user?.id) {
+      await prisma.auditLog.create({
+        data: {
+          actorUserId: session.user.id,
+          action: "PREPARE_JOINING_FORM_APPROVED",
+          entityType: "PrepareJoiningForm",
+          entityId: form.id,
+          metadataJson: {
+            prepareJoiningId: existingForm.prepareJoiningId,
+            templateId: existingForm.templateId,
+            previousStatus: existingForm.status,
+            nextStatus: "APPROVED",
+          },
+        },
+      });
+    }
+
     return NextResponse.json({
       message: "Form approved successfully",
       form,
     });
   } catch (error) {
-    console.error("Error approving form:", error);
-    return NextResponse.json(
-      { error: "Failed to approve form" },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
