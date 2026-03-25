@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { handleApiError, ApiError } from "@/lib/error-handler";
 import { ensureAdminApiAccess } from "@/lib/admin-authorization";
+import { ADMIN_MAINTENANCE_SCOPES } from "@/lib/admin-access";
 
 /**
  * PATCH /api/admin/users/[id]/status
@@ -16,7 +17,7 @@ export async function PATCH(
   try {
     const { id } = await params;
     const session = await getServerSession(authOptions);
-    const authError = ensureAdminApiAccess(session);
+    const authError = ensureAdminApiAccess(session, ADMIN_MAINTENANCE_SCOPES.USER_MANAGEMENT);
     if (authError) return authError;
 
     // Prevent self-deactivation

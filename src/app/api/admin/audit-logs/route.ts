@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { handleApiError, validatePagination } from "@/lib/error-handler";
 import { ensureAdminApiAccess } from "@/lib/admin-authorization";
+import { ADMIN_MAINTENANCE_SCOPES } from "@/lib/admin-access";
 
 /**
  * GET /api/admin/audit-logs
@@ -12,7 +13,7 @@ import { ensureAdminApiAccess } from "@/lib/admin-authorization";
 export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    const authError = ensureAdminApiAccess(session);
+    const authError = ensureAdminApiAccess(session, ADMIN_MAINTENANCE_SCOPES.AUDIT_LOGS);
     if (authError) return authError;
 
     const { searchParams } = new URL(req.url);

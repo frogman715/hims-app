@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { Prisma, Role } from "@prisma/client";
 
 // This endpoint seeds test users - only accessible with correct secret key
 export async function POST(request: NextRequest) {
@@ -36,8 +37,8 @@ export async function POST(request: NextRequest) {
       {
         name: "Arief",
         email: "arief@hanmarine.co",
-        password: "admin2025",
-        role: "DIRECTOR" as const,
+        password: "operational2025",
+        role: "OPERATIONAL" as const,
         isSystemAdmin: false,
       },
       {
@@ -45,6 +46,20 @@ export async function POST(request: NextRequest) {
         email: "dino@hanmarine.co",
         password: "accounting2025",
         role: "ACCOUNTING" as const,
+        isSystemAdmin: false,
+      },
+      {
+        name: "Rizkie (Document Control)",
+        email: "rizkie@hanmarine.co",
+        password: "document2025",
+        role: "CDMO" as const,
+        isSystemAdmin: false,
+      },
+      {
+        name: "Imron (GA Driver)",
+        email: "imron@hanmarine.co",
+        password: "driver2025",
+        role: "GA_DRIVER" as const,
         isSystemAdmin: false,
       },
       {
@@ -82,24 +97,47 @@ export async function POST(request: NextRequest) {
     for (const u of users) {
       const hashed = await bcrypt.hash(u.password, 10);
 
-      const result = await prisma.user.upsert({
-        where: { email: u.email },
-        update: {
-          name: u.name,
-          role: u.role,
-          isSystemAdmin: u.isSystemAdmin,
-          isActive: true,
-          password: hashed,
-        },
-        create: {
-          name: u.name,
-          email: u.email,
-          role: u.role,
-          isSystemAdmin: u.isSystemAdmin,
-          isActive: true,
-          password: hashed,
-        },
-      });
+      let result: { id: string };
+
+      if (u.role === "GA_DRIVER") {
+        const rows = await prisma.$queryRaw<Array<{ id: string }>>(Prisma.sql`
+          INSERT INTO "User" ("name", "email", "password", "role", "isSystemAdmin", "isActive", "createdAt", "updatedAt")
+          VALUES (${u.name}, ${u.email}, ${hashed}, ${u.role}, ${u.isSystemAdmin}, true, NOW(), NOW())
+          ON CONFLICT ("email")
+          DO UPDATE SET
+            "name" = EXCLUDED."name",
+            "password" = EXCLUDED."password",
+            "role" = EXCLUDED."role",
+            "isSystemAdmin" = EXCLUDED."isSystemAdmin",
+            "isActive" = EXCLUDED."isActive",
+            "updatedAt" = NOW()
+          RETURNING "id"
+        `);
+
+        result = rows[0]!;
+      } else {
+        result = await prisma.user.upsert({
+          where: { email: u.email },
+          update: {
+            name: u.name,
+            role: u.role as Role,
+            isSystemAdmin: u.isSystemAdmin,
+            isActive: true,
+            password: hashed,
+          },
+          create: {
+            name: u.name,
+            email: u.email,
+            role: u.role as Role,
+            isSystemAdmin: u.isSystemAdmin,
+            isActive: true,
+            password: hashed,
+          },
+          select: {
+            id: true,
+          },
+        });
+      }
 
       results.push({
         email: u.email,

@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { handleApiError, ApiError, validateRequired } from "@/lib/error-handler";
 import { ensureAdminApiAccess } from "@/lib/admin-authorization";
+import { ADMIN_MAINTENANCE_SCOPES } from "@/lib/admin-access";
 import bcrypt from "bcryptjs";
 import { Role } from "@prisma/client";
 
@@ -14,24 +15,33 @@ import { Role } from "@prisma/client";
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
-    const authError = ensureAdminApiAccess(session);
+    const authError = ensureAdminApiAccess(session, ADMIN_MAINTENANCE_SCOPES.USER_MANAGEMENT);
     if (authError) return authError;
 
-    const users = await prisma.user.findMany({
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        isSystemAdmin: true,
-        isActive: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-      orderBy: {
-        name: 'asc'
-      }
-    });
+    // Use raw SQL for listing to tolerate legacy live role strings that may not
+    // match the generated Prisma enum yet (for example, GA_DRIVER).
+    const users = await prisma.$queryRaw<Array<{
+      id: string;
+      name: string;
+      email: string;
+      role: string;
+      isSystemAdmin: boolean;
+      isActive: boolean;
+      createdAt: Date;
+      updatedAt: Date;
+    }>>`
+      SELECT
+        "id",
+        "name",
+        "email",
+        "role"::text AS "role",
+        "isSystemAdmin",
+        "isActive",
+        "createdAt",
+        "updatedAt"
+      FROM "User"
+      ORDER BY "name" ASC
+    `;
 
     return NextResponse.json({ users });
   } catch (error) {
@@ -46,7 +56,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    const authError = ensureAdminApiAccess(session);
+    const authError = ensureAdminApiAccess(session, ADMIN_MAINTENANCE_SCOPES.USER_MANAGEMENT);
     if (authError) return authError;
 
     const body = await req.json();

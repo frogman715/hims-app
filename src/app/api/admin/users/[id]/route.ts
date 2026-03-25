@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { handleApiError, ApiError } from "@/lib/error-handler";
 import { ensureAdminApiAccess } from "@/lib/admin-authorization";
+import { ADMIN_MAINTENANCE_SCOPES } from "@/lib/admin-access";
 import type { Role } from "@prisma/client";
 
 /**
@@ -17,7 +18,7 @@ export async function GET(
   try {
     const { id } = await params;
     const session = await getServerSession(authOptions);
-    const authError = ensureAdminApiAccess(session);
+    const authError = ensureAdminApiAccess(session, ADMIN_MAINTENANCE_SCOPES.USER_MANAGEMENT);
     if (authError) return authError;
 
     const user = await prisma.user.findUnique({
@@ -55,7 +56,7 @@ export async function PUT(
   try {
     const { id } = await params;
     const session = await getServerSession(authOptions);
-    const authError = ensureAdminApiAccess(session);
+    const authError = ensureAdminApiAccess(session, ADMIN_MAINTENANCE_SCOPES.USER_MANAGEMENT);
     if (authError) return authError;
 
     // Get existing user
@@ -161,7 +162,7 @@ export async function DELETE(
   try {
     const { id } = await params;
     const session = await getServerSession(authOptions);
-    const authError = ensureAdminApiAccess(session);
+    const authError = ensureAdminApiAccess(session, ADMIN_MAINTENANCE_SCOPES.USER_MANAGEMENT);
     if (authError) return authError;
 
     // Prevent self-deletion

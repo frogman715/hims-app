@@ -5,6 +5,11 @@ import { rateLimit } from "@/lib/rate-limit";
 import bcrypt from "bcryptjs";
 import type { RolePermissionOverride } from "@/lib/permissions";
 import { env } from "@/lib/env";
+import { getSupplementalRoles } from "@/lib/supplemental-roles";
+import {
+  getAdminMaintenanceScopes,
+  type AdminMaintenanceScope,
+} from "@/lib/admin-maintenance-access";
 
 enum Role {
   DIRECTOR = "DIRECTOR",
@@ -27,6 +32,7 @@ declare module "next-auth" {
     permissionOverrides?: RolePermissionOverride[];
     isSystemAdmin?: boolean;
     forcePasswordChange?: boolean;
+    adminMaintenanceScopes?: AdminMaintenanceScope[];
   }
   interface Session {
     user: {
@@ -38,6 +44,7 @@ declare module "next-auth" {
       permissionOverrides?: RolePermissionOverride[];
       isSystemAdmin?: boolean;
       forcePasswordChange?: boolean;
+      adminMaintenanceScopes?: AdminMaintenanceScope[];
     };
   }
 }
@@ -49,6 +56,7 @@ declare module "next-auth/jwt" {
     permissionOverrides?: RolePermissionOverride[];
     isSystemAdmin?: boolean;
     forcePasswordChange?: boolean;
+    adminMaintenanceScopes?: AdminMaintenanceScope[];
     user?: {
       id: string;
       email?: string | null;
@@ -58,6 +66,7 @@ declare module "next-auth/jwt" {
       permissionOverrides?: RolePermissionOverride[];
       isSystemAdmin?: boolean;
       forcePasswordChange?: boolean;
+      adminMaintenanceScopes?: AdminMaintenanceScope[];
     };
   }
 }
@@ -87,15 +96,18 @@ async function safePrismaCall<T>(context: string, action: () => Promise<T>): Pro
   }
 }
 
-async function fetchUserRole(userId: string, context: string): Promise<string | undefined> {
+async function fetchUserAccessProfile(
+  userId: string,
+  context: string
+): Promise<{ role?: string; email?: string | null } | null> {
   assertDatabaseConfigured(context);
   const result = await safePrismaCall(context, () =>
     prisma.user.findUnique({
       where: { id: userId },
-      select: { role: true },
+      select: { role: true, email: true },
     })
-  ) as { role: string } | null;
-  return result?.role ?? undefined;
+  ) as { role: string; email: string | null } | null;
+  return result ? { role: result.role, email: result.email } : null;
 }
 
 export const authOptions: NextAuthOptions = {
@@ -161,7 +173,10 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
-        const normalizedRoles = uniqueRolesFrom(user.role);
+        const normalizedRoles = uniqueRolesFrom(
+          user.role,
+          getSupplementalRoles({ userId: user.id, email: user.email })
+        );
         if (normalizedRoles.length === 0) {
           console.warn("[auth] user-role-missing", {
             userId: user.id,
@@ -171,6 +186,7 @@ export const authOptions: NextAuthOptions = {
         }
 
         const role = normalizedRoles[0];
+        const adminMaintenanceScopes = getAdminMaintenanceScopes({ userId: user.id, email: user.email });
 
         return {
           id: typeof user.id === "string" ? user.id : String(user.id),
@@ -180,6 +196,7 @@ export const authOptions: NextAuthOptions = {
           roles: normalizedRoles,
           isSystemAdmin: user.isSystemAdmin ?? false,
           forcePasswordChange: user.forcePasswordChange ?? false,
+          adminMaintenanceScopes,
         };
       },
     }),
@@ -199,10 +216,10 @@ export const authOptions: NextAuthOptions = {
           const rawId = (user as { id?: unknown }).id;
           const userId = typeof rawId === "string" ? rawId : typeof rawId === "number" ? rawId.toString() : undefined;
           userIdFromSource = userId ?? undefined;
-          let dbRole: string | undefined;
+          let dbProfile: { role?: string; email?: string | null } | null = null;
           if (userId) {
             try {
-              dbRole = await fetchUserRole(userId, "jwt:user-role");
+              dbProfile = await fetchUserAccessProfile(userId, "jwt:user-role");
             } catch (error) {
               console.error("[auth] jwt: failed to fetch user role", {
                 userId,
@@ -212,7 +229,12 @@ export const authOptions: NextAuthOptions = {
             }
           }
 
-          resolvedRoles = uniqueRolesFrom(user.roles, user.role, dbRole);
+          resolvedRoles = uniqueRolesFrom(
+            user.roles,
+            user.role,
+            dbProfile?.role,
+            getSupplementalRoles({ userId, email: user.email ?? dbProfile?.email ?? null })
+          );
           if (resolvedRoles.length === 0) {
             resolvedRoles = ["CREW_PORTAL"];
           }
@@ -223,8 +245,11 @@ export const authOptions: NextAuthOptions = {
 
         if ((!primaryRole || resolvedRoles.length === 0) && tokenSubject) {
           try {
-            const dbRole = await fetchUserRole(tokenSubject, "jwt:token-subject");
-            const dbRoles = uniqueRolesFrom(dbRole);
+            const dbProfile = await fetchUserAccessProfile(tokenSubject, "jwt:token-subject");
+            const dbRoles = uniqueRolesFrom(
+              dbProfile?.role,
+              getSupplementalRoles({ userId: tokenSubject, email: dbProfile?.email ?? null })
+            );
             if (dbRoles.length > 0) {
               resolvedRoles = dbRoles;
               primaryRole = dbRoles[0];
@@ -277,6 +302,9 @@ export const authOptions: NextAuthOptions = {
 
         let isSystemAdmin = false;
         let forcePasswordChange = false;
+        let adminMaintenanceScopes: AdminMaintenanceScope[] = Array.isArray(token.adminMaintenanceScopes)
+          ? token.adminMaintenanceScopes
+          : [];
         const userWithSystemAdmin = user as unknown as Record<string, unknown>;
         if (user && typeof userWithSystemAdmin["isSystemAdmin"] === "boolean") {
           isSystemAdmin = userWithSystemAdmin["isSystemAdmin"] as boolean;
@@ -284,6 +312,9 @@ export const authOptions: NextAuthOptions = {
             typeof userWithSystemAdmin["forcePasswordChange"] === "boolean"
               ? (userWithSystemAdmin["forcePasswordChange"] as boolean)
               : false;
+          adminMaintenanceScopes = Array.isArray(userWithSystemAdmin["adminMaintenanceScopes"])
+            ? (userWithSystemAdmin["adminMaintenanceScopes"] as AdminMaintenanceScope[])
+            : [];
         } else if (tokenSubject) {
           try {
             const dbUser = await safePrismaCall("jwt:isSystemAdmin", () =>
@@ -304,9 +335,24 @@ export const authOptions: NextAuthOptions = {
             });
             // Continue with false if DB fetch fails
           }
+
+          try {
+            const dbProfile = await fetchUserAccessProfile(tokenSubject, "jwt:admin-maintenance-scopes");
+            adminMaintenanceScopes = getAdminMaintenanceScopes({
+              userId: tokenSubject,
+              email: dbProfile?.email ?? null,
+            });
+          } catch (error) {
+            console.error("[auth] jwt: failed to resolve admin maintenance scopes", {
+              tokenSubject,
+              error: error instanceof Error ? error.message : String(error),
+            });
+            adminMaintenanceScopes = [];
+          }
         }
         token.isSystemAdmin = isSystemAdmin;
         token.forcePasswordChange = forcePasswordChange;
+        token.adminMaintenanceScopes = adminMaintenanceScopes;
 
         const tokenUser = {
           id: tokenSubject ?? "",
@@ -317,6 +363,7 @@ export const authOptions: NextAuthOptions = {
           permissionOverrides,
           isSystemAdmin,
           forcePasswordChange,
+          adminMaintenanceScopes,
         };
 
         token.user = tokenUser;
@@ -374,8 +421,11 @@ export const authOptions: NextAuthOptions = {
 
           if (normalizedRoles.length === 0 && session.user.id) {
             try {
-              const dbRole = await fetchUserRole(session.user.id, "session:user-role");
-              normalizedRoles = uniqueRolesFrom(dbRole);
+              const dbProfile = await fetchUserAccessProfile(session.user.id, "session:user-role");
+              normalizedRoles = uniqueRolesFrom(
+                dbProfile?.role,
+                getSupplementalRoles({ userId: session.user.id, email: dbProfile?.email ?? session.user.email ?? null })
+              );
             } catch (error) {
               console.error("[auth] session: failed to fetch user role", {
                 userId: session.user.id,
@@ -396,6 +446,7 @@ export const authOptions: NextAuthOptions = {
           session.user.permissionOverrides = token.permissionOverrides ?? [];
           session.user.isSystemAdmin = token.isSystemAdmin ?? false;
           session.user.forcePasswordChange = token.forcePasswordChange ?? false;
+          session.user.adminMaintenanceScopes = token.adminMaintenanceScopes ?? [];
 
           if (shouldLogAuth) {
             console.info("[auth] session-callback", {
@@ -403,6 +454,7 @@ export const authOptions: NextAuthOptions = {
               role: session.user.role,
               roles: session.user.roles,
               isSystemAdmin: session.user.isSystemAdmin,
+              adminMaintenanceScopes: session.user.adminMaintenanceScopes,
               tokenRole: token.role ?? null,
               tokenRoles: token.roles ?? null,
               tokenIsSystemAdmin: token.isSystemAdmin ?? null,
@@ -427,6 +479,7 @@ export const authOptions: NextAuthOptions = {
           session.user.permissionOverrides = [];
           session.user.isSystemAdmin = false;
           session.user.forcePasswordChange = false;
+          session.user.adminMaintenanceScopes = [];
         }
         return session;
       }

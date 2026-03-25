@@ -140,8 +140,8 @@ export default function UserManagementPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Kelola User</h1>
-              <p className="text-gray-700 mt-1">Kelola user aktif, role, dan status akses</p>
+              <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
+              <p className="text-gray-700 mt-1">Manage active users, roles, and access status</p>
             </div>
             <Link
               href="/dashboard"
@@ -150,7 +150,7 @@ export default function UserManagementPage() {
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
-              <span>Kembali ke Dashboard</span>
+              <span>Back to Dashboard</span>
             </Link>
           </div>
         </div>
@@ -215,7 +215,7 @@ export default function UserManagementPage() {
                 href="/admin/audit-logs"
                 className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
               >
-                Buka Riwayat Aktivitas
+                Open Audit Logs
               </Link>
               <button
                 onClick={() => setShowAddModal(true)}

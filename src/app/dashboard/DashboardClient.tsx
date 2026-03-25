@@ -10,7 +10,7 @@ import { PermissionLevel } from '@/lib/permissions';
 import { hasExplicitRoleAccess, hasModuleAccess } from '@/lib/authorization';
 import { canAccessOfficePath } from '@/lib/office-access';
 import { getAdminScopeForPath, hasAdminMaintenanceScope } from '@/lib/admin-access';
-import { OFFICE_NAV_ITEMS } from '@/lib/office-navigation';
+import { OFFICE_NAV_ITEMS, type OfficeNavigationItem } from '@/lib/office-navigation';
 import SidebarHeader from '@/components/sidebar/SidebarHeader';
 import ComplianceStatusWidget from '@/components/compliance/ComplianceStatusWidget';
 import { getRoleDisplayName } from '@/lib/role-display';
@@ -385,12 +385,12 @@ export default function DashboardClient() {
 
     // Define group order
     const groupOrder = [
-      'ALUR CREW',
-      'ALUR DOKUMEN',
-      'KEUANGAN & ADMIN',
-      'SDM',
-      'MUTU & KEPATUHAN',
-      'ADMIN SISTEM',
+      'CREW OPERATIONS',
+      'DOCUMENT CONTROL',
+      'FINANCE & ADMINISTRATION',
+      'HR & PERSONNEL',
+      'QUALITY & COMPLIANCE',
+      'SYSTEM ADMINISTRATION',
       'OTHER',
     ];
 
@@ -488,18 +488,18 @@ function DirectorDashboard({ data, crewMovement, expiringItems, contractAlerts, 
   return (
     <div className="space-y-6">
       <DashboardHeader
-        title="Ringkasan Direksi"
-        subtitle="Ringkasan utama untuk crew, pekerjaan aktif, masa berlaku sertifikat, dan pengawasan keuangan"
+        title="Executive Overview"
+        subtitle="High-level visibility for crew, active jobs, expiring certificates, and finance monitoring"
       />
       <SectionHeading
-        title="Ringkasan Crew"
-        description="Lihat jumlah crew aktif dan gambaran armada yang sedang berjalan."
+        title="Crew Overview"
+        description="Review active crew numbers and the current fleet picture."
       />
       <DirectorOverviewStructure data={data} pendingTasks={pendingTasks} />
       <FleetSnapshot data={data} />
       <SectionHeading
-        title="Pekerjaan Aktif"
-        description="Pantau pekerjaan operasional yang masih bergerak dan butuh tindak lanjut kantor."
+        title="Active Jobs"
+        description="Track operational work that is still moving and needs office follow-up."
       />
       <ContractAlertStrip data={data} items={contractAlerts} />
       <div className="grid gap-6 xl:grid-cols-3">
@@ -507,28 +507,28 @@ function DirectorDashboard({ data, crewMovement, expiringItems, contractAlerts, 
         <PendingTasksSection tasks={pendingTasks} />
       </div>
       <SectionHeading
-        title="Sertifikat Akan Kedaluwarsa"
-        description="Fokus pada sertifikat dan dokumen yang akan habis masa berlakunya."
+        title="Expiring Certificates"
+        description="Focus on certificates and controlled documents approaching expiry."
       />
       <div className="grid gap-6 xl:grid-cols-3">
         <ExpiringItemsSection items={expiringItems} className="xl:col-span-2" />
         <RecentActivitySection events={recentActivity} />
       </div>
       <SectionHeading
-        title="Ringkasan Keuangan"
-        description="Ringkasan keuangan ringan memakai data yang sudah tersedia tanpa analitik tambahan."
+        title="Finance Summary"
+        description="A simple finance summary based on existing data without additional analytics."
       />
       <DirectorFinanceSummary data={data} />
       <div className="surface-card p-6">
         <div className="mb-4 flex items-center justify-between gap-4">
           <div>
-            <h3 className="text-lg font-semibold text-slate-900">Shortcut operasional</h3>
+            <h3 className="text-lg font-semibold text-slate-900">Operational shortcuts</h3>
             <p className="mt-1 text-sm text-slate-600">
-              Akses cepat tetap tersedia tanpa mengubah alur kerja utama di dashboard.
+              Keep practical shortcuts available without changing the main dashboard workflow.
             </p>
           </div>
           <Link href="/compliance" className="text-sm font-semibold text-cyan-700 hover:text-cyan-800">
-            Buka pusat kepatuhan
+            Open compliance center
           </Link>
         </div>
         <div className="grid gap-4 md:grid-cols-3">
@@ -568,27 +568,27 @@ function DirectorDashboard({ data, crewMovement, expiringItems, contractAlerts, 
 function DirectorOverviewStructure({ data, pendingTasks }: { data: DashboardData | null; pendingTasks: PendingTask[] }) {
   const structureCards = [
     {
-      label: "Jumlah Crew",
+      label: "Crew Count",
       value: (data?.totalCrew ?? 0).toLocaleString("id-ID"),
-      detail: "Jumlah crew aktif yang sedang dipantau kantor.",
+      detail: "Active seafarers currently tracked by the office.",
       href: "/crewing/seafarers",
     },
     {
-      label: "Pekerjaan Aktif",
+      label: "Active Jobs",
       value: pendingTasks.length.toLocaleString("id-ID"),
-      detail: "Tindak lanjut aktif di operasional dan kantor.",
+      detail: "Current open follow-up work across operations and office control.",
       href: "/crewing",
     },
     {
-      label: "Sertifikat Akan Kedaluwarsa",
+      label: "Expiring Certificates",
       value: (data?.expiringDocuments ?? 0).toLocaleString("id-ID"),
-      detail: "Dokumen dan sertifikat yang perlu diperpanjang.",
+      detail: "Certificates and controlled documents requiring renewal attention.",
       href: "/crewing/documents?filter=expiring",
     },
     {
-      label: "Kontrak Perlu Review",
+      label: "Contracts Requiring Review",
       value: (data?.contractsExpiring30Days ?? 0).toLocaleString("id-ID"),
-      detail: "Kontrak onboard yang perlu perhatian dekat dari sisi biaya dan rotasi.",
+      detail: "Onboard contracts that need closer finance and rotation attention.",
       href: "/contracts",
     },
   ];
@@ -597,14 +597,14 @@ function DirectorOverviewStructure({ data, pendingTasks }: { data: DashboardData
     <section className="surface-card p-6">
       <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-700">Struktur Dashboard Direksi</p>
-          <h3 className="mt-2 text-xl font-semibold text-slate-900">Sinyal utama untuk pemantauan kantor</h3>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-700">Director Dashboard Structure</p>
+          <h3 className="mt-2 text-xl font-semibold text-slate-900">Core signals for office monitoring</h3>
           <p className="mt-1 text-sm leading-6 text-slate-600">
-            Struktur ini menjaga dashboard tetap jelas: jumlah crew, pekerjaan aktif, sertifikat yang akan kedaluwarsa, dan ringkasan kontrak tanpa menambah backend baru.
+            This structure keeps the dashboard clear: crew count, active jobs, expiring certificates, and a contract-focused finance view without adding new backend logic.
           </p>
         </div>
         <Link href="/dashboard" className="text-sm font-semibold text-cyan-700 hover:text-cyan-800">
-          Muat ulang
+          Refresh overview
         </Link>
       </div>
       <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -627,19 +627,19 @@ function DirectorOverviewStructure({ data, pendingTasks }: { data: DashboardData
 function DirectorFinanceSummary({ data }: { data: DashboardData | null }) {
   const items = [
     {
-      label: "Kontrak ≤ 45 Hari",
+      label: "Contracts ≤ 45 Days",
       value: data?.contractsExpiring45Days ?? 0,
-      detail: "Perlu review biaya perjalanan, reliever, dan payroll.",
+      detail: "Review travel cost exposure, reliever planning, and payroll impact.",
     },
     {
-      label: "Kontrak ≤ 30 Hari",
+      label: "Contracts ≤ 30 Days",
       value: data?.contractsExpiring30Days ?? 0,
-      detail: "Prioritas keputusan perpanjangan atau sign-off.",
+      detail: "Priority renewal or sign-off decisions.",
     },
     {
-      label: "Kontrak ≤ 14 Hari",
+      label: "Contracts ≤ 14 Days",
       value: data?.contractsExpiring14Days ?? 0,
-      detail: "Eksposur paling dekat untuk tindak lanjut kantor.",
+      detail: "Most urgent contract exposure for office follow-up.",
     },
   ];
 
@@ -1246,26 +1246,26 @@ function QuickLinksSection() {
   const links = [
     {
       href: '/m/crew/profile',
-      label: 'Profil Saya',
-      description: 'Periksa dan perbarui data pribadi serta kontak darurat.',
+      label: 'My Profile',
+      description: 'Review and update personal data and emergency contact details.',
       icon: '👤',
     },
     {
       href: '/m/crew/documents',
-      label: 'Dokumen Saya',
+      label: 'My Documents',
       description: 'Upload or download certificates, passports, and important documents.',
       icon: '📄',
     },
     {
       href: '/m/crew',
-      label: 'Persiapan Keberangkatan',
-      description: 'Lihat status medis, tiket, dan pengurusan keberangkatan.',
+      label: 'Pre-Departure Preparation',
+      description: 'Review medical status, tickets, and pre-departure handling.',
       icon: '🧭',
     },
     {
       href: '/m/crew',
-      label: 'Asuransi & Welfare',
-      description: 'Cek polis asuransi dan klaim kesejahteraan crew.',
+      label: 'Insurance & Welfare',
+      description: 'Check insurance coverage and crew welfare claim status.',
       icon: '🛡️',
     },
   ];

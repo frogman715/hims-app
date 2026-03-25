@@ -3,6 +3,8 @@ import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { env } from "@/lib/env";
 import { canAccessOfficePath, getPrimaryOfficeRole } from "@/lib/office-access";
+import { getAdminMaintenanceScopes } from "@/lib/admin-maintenance-access";
+import { getAdminScopeForPath } from "@/lib/admin-access";
 
 const PUBLIC_PREFIXES = ["/auth", "/_next", "/favicon.ico", "/icons", "/manifest.json", "/sw.js"];
 const PUBLIC_API_PREFIXES = ["/api/auth", "/api/health"];
@@ -62,6 +64,17 @@ export async function middleware(request: NextRequest) {
     (typeof tokenUser.role === "string" ? tokenUser.role : null) ??
     (typeof tokenPayload.role === "string" ? tokenPayload.role : null);
   const primaryOfficeRoles = getPrimaryOfficeRole(tokenRoles, primaryRole);
+  const tokenUserId =
+    (typeof tokenUser.id === "string" ? tokenUser.id : null) ??
+    (typeof token.sub === "string" ? token.sub : null);
+  const tokenEmail =
+    (typeof tokenUser.email === "string" ? tokenUser.email : null) ??
+    (typeof tokenPayload.email === "string" ? tokenPayload.email : null);
+  const adminScope = getAdminScopeForPath(pathname);
+  const adminMaintenanceScopes = getAdminMaintenanceScopes({
+    userId: tokenUserId,
+    email: tokenEmail,
+  });
 
   if (
     forcePasswordChange &&
@@ -73,6 +86,10 @@ export async function middleware(request: NextRequest) {
   }
 
   if (!canAccessOfficePath(pathname, primaryOfficeRoles, isSystemAdmin, request.method)) {
+    if (adminScope && adminMaintenanceScopes.includes(adminScope)) {
+      return NextResponse.next();
+    }
+
     if (pathname.startsWith("/api/")) {
       return NextResponse.json(
         { error: "Access denied for this role", route: pathname },

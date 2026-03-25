@@ -124,9 +124,13 @@ export default function NonConformityPage() {
             </Link>
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Non-Conformities</h1>
-              <p className="text-gray-600 mt-1">Track and manage audit findings and non-conformities</p>
+              <p className="text-gray-600 mt-1">Review audit findings, severity, status, and closure deadlines from the active register.</p>
             </div>
           </div>
+        </div>
+
+        <div className="mb-6 rounded-xl border border-amber-100 bg-amber-50 px-5 py-4 text-sm text-amber-900">
+          Use this page to review findings that have already been recorded. If the list is empty, continue from Audit Management to create or open the related audit.
         </div>
 
         {/* Error Message */}
@@ -146,14 +150,14 @@ export default function NonConformityPage() {
             <AlertCircle className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-700 mb-2">No Non-Conformities Found</h3>
             <p className="text-gray-600 mb-6">
-              Non-conformities from audits will appear here
+              Non-conformities raised from audits and quality reviews will appear here.
             </p>
             <Link
               href="/audit"
               className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               <Plus className="w-5 h-5" />
-              View Audits
+              Open Audit Management
             </Link>
           </div>
         ) : (

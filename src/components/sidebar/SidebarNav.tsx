@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation";
 import { useSession as useSessionAuth } from "next-auth/react";
 import { ModuleName, PermissionLevel } from "@/lib/permissions";
 import { hasExplicitRoleAccess, hasModuleAccess } from "@/lib/authorization";
+import { canAccessOfficePath } from "@/lib/office-access";
+import { getAdminScopeForPath, hasAdminMaintenanceScope } from "@/lib/admin-access";
 import { isSystemAdmin } from "@/lib/type-guards";
 import type { AppRole } from "@/lib/roles";
 
@@ -42,16 +44,32 @@ export default function SidebarNav({ items }: SidebarNavProps) {
       role: session.user.role,
       isSystemAdmin: session.user.isSystemAdmin === true,
       permissionOverrides: session.user.permissionOverrides,
+      adminMaintenanceScopes: session.user.adminMaintenanceScopes,
     };
+
+    const adminScope = getAdminScopeForPath(item.href);
+    if (adminScope) {
+      return hasAdminMaintenanceScope(subject, adminScope);
+    }
 
     if (!hasExplicitRoleAccess(subject, item.allowedRoles)) {
       return false;
     }
 
-    return hasModuleAccess(
-      subject,
-      item.module,
-      item.requiredLevel ?? PermissionLevel.VIEW_ACCESS
+    if (
+      !hasModuleAccess(
+        subject,
+        item.module,
+        item.requiredLevel ?? PermissionLevel.VIEW_ACCESS
+      )
+    ) {
+      return false;
+    }
+
+    return canAccessOfficePath(
+      item.href.split("?")[0] || item.href,
+      session.user.roles ?? (session.user.role ? [session.user.role] : []),
+      session.user.isSystemAdmin === true
     );
   });
   

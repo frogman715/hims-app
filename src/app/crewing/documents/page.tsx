@@ -2,17 +2,19 @@
 
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { getDocumentTypeLabel } from "@/lib/document-types";
 import DocumentActions from "./DocumentActions";
+import { UserRole } from "@/lib/permissions";
+import { normalizeToUserRoles } from "@/lib/type-guards";
 
 interface SeafarerDocument {
   id: string;
   crewId: string;
   crew: {
     id: string;
-    fullName: string;
+    fullName: string | null;
   };
   docType: string;
   docNumber: string;
@@ -22,13 +24,50 @@ interface SeafarerDocument {
   fileUrl?: string | null;
 }
 
+function getCrewDisplayName(crew: SeafarerDocument["crew"]) {
+  const normalized = crew.fullName?.trim();
+  return normalized && normalized.length > 0 ? normalized : `Crew ${crew.id}`;
+}
+
 export default function Documents() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [documents, setDocuments] = useState<SeafarerDocument[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState('all'); // all, expiring, expired
   const [searchTerm, setSearchTerm] = useState('');
+  const userRoles = normalizeToUserRoles(session?.user?.roles ?? session?.user?.role);
+  const canManageDocuments = userRoles.includes(UserRole.CDMO);
+
+  const fetchDocuments = useCallback(async () => {
+    try {
+      setError(null);
+      const response = await fetch("/api/documents", { cache: "no-store" });
+      if (response.ok) {
+        const data = await response.json();
+        setDocuments(data);
+      } else {
+        const payload = await response.json().catch(() => null);
+        if (response.status === 401) {
+          router.push("/auth/signin");
+          return;
+        }
+        if (response.status === 403) {
+          setError(payload?.error || "Access to crew documents is restricted for your role.");
+          setDocuments([]);
+          return;
+        }
+        setError(payload?.error || "Document data could not be loaded. Please try again or contact admin.");
+        setDocuments([]);
+      }
+    } catch (error) {
+      console.error("Error fetching documents:", error);
+      setError("Document data could not be loaded. Please try again or contact admin.");
+    } finally {
+      setLoading(false);
+    }
+  }, [router]);
 
   // Read filter from URL query params on mount
   useEffect(() => {
@@ -63,21 +102,7 @@ export default function Documents() {
     } else {
       fetchDocuments();
     }
-  }, [session, status, router]);
-
-  const fetchDocuments = async () => {
-    try {
-      const response = await fetch("/api/documents");
-      if (response.ok) {
-        const data = await response.json();
-        setDocuments(data);
-      }
-    } catch (error) {
-      console.error("Error fetching documents:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [fetchDocuments, router, session, status]);
 
   const getExpiringThreshold = (reference: Date) => {
     const threshold = new Date(reference.getTime());
@@ -138,7 +163,7 @@ export default function Documents() {
     }
 
     return base.filter((doc) => {
-      const values = [doc.crew.fullName, doc.docType, doc.docNumber, doc.remarks ?? ""];
+      const values = [getCrewDisplayName(doc.crew), doc.docType, doc.docNumber, doc.remarks ?? ""];
       return values.some((value) => value?.toLowerCase().includes(query));
     });
   }, [documents, filter, searchTerm]);
@@ -180,33 +205,54 @@ export default function Documents() {
       <header className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900">Document Management</h1>
-            <p className="text-base md:text-lg text-gray-700 mt-2">Monitor STCW certificate, passport, medical, and visa document status.</p>
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900">Crew Documents</h1>
+            <p className="text-base md:text-lg text-gray-700 mt-2">Monitor STCW certificates, passports, medical records, visas, and document expiry.</p>
           </div>
           <div className="flex flex-wrap gap-3">
-            <Link
-              href="/crewing/documents/new"
-              className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold shadow-sm transition"
-            >
-              <span className="text-lg leading-none">＋</span>
-              Tambah Dokumen
-            </Link>
+            {canManageDocuments ? (
+              <Link
+                href="/crewing/documents/new"
+                className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold shadow-sm transition"
+              >
+                <span className="text-lg leading-none">＋</span>
+                Upload New Document
+              </Link>
+            ) : null}
             <Link
               href="/crewing"
               className="inline-flex items-center gap-2 px-5 py-3 rounded-xl border border-gray-300 text-sm font-semibold text-gray-800 hover:border-blue-500 hover:text-blue-600 transition"
             >
-              ← Back to Crewing
+              ← Back to Dashboard
             </Link>
           </div>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8 space-y-8">
+        <section className="rounded-2xl border border-blue-200 bg-blue-50 px-6 py-4">
+          <p className="text-sm font-semibold text-blue-900">Working guidance</p>
+          <p className="mt-1 text-sm text-blue-800">
+            {canManageDocuments
+              ? "Use this page to review document completeness and expiry. Document staff owns uploads, replacements, and metadata correction."
+              : "Use this page to view and cross-check document completeness and expiry. Document entry, replacement, and deletion remain with document staff."}
+          </p>
+        </section>
+
+        {error ? (
+          <section className="rounded-2xl border border-rose-200 bg-rose-50 px-6 py-4">
+            <p className="text-sm font-semibold text-rose-900">Document data could not be loaded</p>
+            <p className="mt-1 text-sm text-rose-800">{error}</p>
+          </section>
+        ) : null}
+
         <section className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h2 className="text-lg font-semibold text-gray-900">Filter Status Dokumen</h2>
+              <h2 className="text-lg font-semibold text-gray-900">Document Status Filter</h2>
               <p className="text-sm text-gray-600">Select to display specific documents based on expiration status or search by crew name, type, or document number.</p>
+              <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-amber-700">
+                Advisory only. Expiring document visibility supports manual office follow-up and does not approve readiness automatically.
+              </p>
             </div>
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-end">
               <div className="relative w-full md:w-72">
@@ -237,7 +283,7 @@ export default function Documents() {
                       : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
                   }`}
                 >
-                  Semua ({documents.length})
+                  All ({documents.length})
                 </button>
                 <button
                   onClick={() => setFilter('expiring')}
@@ -247,7 +293,7 @@ export default function Documents() {
                       : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
                   }`}
                 >
-                  Akan Kedaluwarsa ≤14 bln ({expiringSoonCount})
+                  Expiring ≤14 months ({expiringSoonCount})
                 </button>
                 <button
                   onClick={() => setFilter('expired')}
@@ -257,7 +303,7 @@ export default function Documents() {
                       : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
                   }`}
                 >
-                  Kedaluwarsa ({expiredCount})
+                  Expired ({expiredCount})
                 </button>
               </div>
             </div>
@@ -267,14 +313,14 @@ export default function Documents() {
         <section className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-900">
-              {filter === 'all' ? 'Seluruh Dokumen' : filter === 'expiring' ? 'Dokumen Akan Kedaluwarsa' : 'Dokumen Kedaluwarsa' }
+              {filter === 'all' ? 'All Documents' : filter === 'expiring' ? 'Expiring Documents' : 'Expired Documents' }
             </h2>
             <span className="text-sm font-medium text-gray-600">{formatSummaryLabel(filter, filteredDocuments.length)}</span>
           </div>
 
           {filteredDocuments.length === 0 ? (
             <div className="px-6 py-12 text-center text-sm text-gray-600">
-              No documents in this category.
+              No documents match the current filter.
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -282,10 +328,10 @@ export default function Documents() {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Seafarer</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Tipe Dokumen</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Nomor Dokumen</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Date Terbit</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Date Expired</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Document Type</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Document Number</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Issue Date</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Expiry Date</th>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
                   </tr>
@@ -293,7 +339,11 @@ export default function Documents() {
                 <tbody className="bg-white divide-y divide-gray-100">
                   {filteredDocuments.map((document) => (
                     <tr key={document.id} className="hover:bg-blue-50/40 transition">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">{document.crew.fullName}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
+                        <Link href={`/crewing/seafarers/${document.crew.id}/biodata`} className="hover:text-blue-700">
+                          {getCrewDisplayName(document.crew)}
+                        </Link>
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">{getDocumentTypeLabel(document.docType)}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">{document.docNumber}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
@@ -312,6 +362,8 @@ export default function Documents() {
                           documentId={document.id}
                           docNumber={document.docNumber}
                           fileUrl={document.fileUrl ?? null}
+                          canEdit={canManageDocuments}
+                          canDelete={canManageDocuments}
                           onDeleteSuccess={() => fetchDocuments()}
                         />
                       </td>
@@ -329,10 +381,10 @@ export default function Documents() {
 
 function formatSummaryLabel(filter: string, count: number) {
   if (filter === 'all') {
-    return `${count} dokumen terdaftar`;
+    return `${count} documents listed`;
   }
   if (filter === 'expiring') {
-    return `${count} dokumen perlu diperbarui ≤14 bulan`;
+    return `${count} documents need renewal within 14 months`;
   }
-  return `${count} dokumen melewati masa is valid`;
+  return `${count} documents already expired`;
 }

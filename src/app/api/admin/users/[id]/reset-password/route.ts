@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { handleApiError } from "@/lib/error-handler";
 import { ensureAdminApiAccess } from "@/lib/admin-authorization";
+import { ADMIN_MAINTENANCE_SCOPES } from "@/lib/admin-access";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 
@@ -18,7 +19,7 @@ export async function POST(
   try {
     const { id } = await params;
     const session = await getServerSession(authOptions);
-    const authError = ensureAdminApiAccess(session);
+    const authError = ensureAdminApiAccess(session, ADMIN_MAINTENANCE_SCOPES.USER_MANAGEMENT);
     if (authError) return authError;
 
     // Get user

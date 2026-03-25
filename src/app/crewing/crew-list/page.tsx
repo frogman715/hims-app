@@ -1,27 +1,132 @@
 "use client";
 
+import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+import {
+  buildContractExpiryAlert,
+  getContractExpiryBand,
+  selectLatestRelevantContract,
+  type ContractExpiryAlert,
+  type ContractLike,
+} from "@/lib/contract-expiry";
+
+interface AssignmentResponseItem {
+  id: string | number;
+  status: string;
+  rank: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  signOnDate?: string | null;
+  signOffDate?: string | null;
+  vesselId: string | number;
+  vessel?: {
+    name?: string | null;
+  } | null;
+  crew?: {
+    fullName?: string | null;
+    nationality?: string | null;
+  } | null;
+  crewId?: string | number | null;
+  principal?: {
+    name?: string | null;
+  } | null;
+}
 
 interface CrewMember {
-  id: number;
+  id: string;
+  crewId: string;
   seafarerName: string;
   rank: string;
   signOnDate: string;
   signOffDate?: string;
-  status: 'ONBOARD' | 'DEPARTED' | 'PLANNED';
-  vesselName: string;
-  vesselId: number;
+  status: "ONBOARD" | "DEPARTED" | "PLANNED" | "UNKNOWN";
+  principalName?: string;
+  contractAlert?: ContractExpiryAlert | null;
 }
 
 interface VesselCrew {
-  vesselId: number;
+  vesselId: string;
   vesselName: string;
   crewMembers: CrewMember[];
   totalCrew: number;
   activeCrew: number;
+}
+
+interface ContractResponseItem extends ContractLike {
+  crew?: {
+    id?: string | null;
+    fullName?: string | null;
+  } | null;
+  vessel?: {
+    id?: string | null;
+    name?: string | null;
+  } | null;
+  principal?: {
+    name?: string | null;
+  } | null;
+}
+
+function normalizeStatus(value: string): CrewMember["status"] {
+  if (value === "ONBOARD" || value === "ACTIVE") return "ONBOARD";
+  if (value === "COMPLETED") return "DEPARTED";
+  if (value === "PLANNED" || value === "ASSIGNED") return "PLANNED";
+  return "UNKNOWN";
+}
+
+function formatDate(value?: string) {
+  if (!value) return "-";
+  return new Date(value).toLocaleDateString("en-GB");
+}
+
+function getStatusColor(status: CrewMember["status"]) {
+  if (status === "ONBOARD") return "bg-emerald-100 text-emerald-800";
+  if (status === "DEPARTED") return "bg-rose-100 text-rose-800";
+  if (status === "PLANNED") return "bg-sky-100 text-sky-800";
+  return "bg-slate-100 text-slate-700";
+}
+
+function getStatusText(status: CrewMember["status"]) {
+  if (status === "ONBOARD") return "Onboard";
+  if (status === "DEPARTED") return "Departed";
+  if (status === "PLANNED") return "Planned";
+  return "Unknown";
+}
+
+function getNextAction(member: CrewMember) {
+  if (member.contractAlert && member.contractAlert.band !== "OK") {
+    return member.contractAlert.nextAction;
+  }
+  if (member.status === "ONBOARD") {
+    return "Monitor onboard status and keep the planned sign-off timing updated.";
+  }
+  if (member.status === "DEPARTED") {
+    return "Movement completed. Keep the assignment only for vessel history and audit trail.";
+  }
+  if (member.signOffDate) {
+    return "Review the planned sign-off timing and confirm any change from the assignment desk.";
+  }
+  return "Movement still planned. Confirm pickup, sign-on, and final vessel handover timing.";
+}
+
+function getContractAlertStyles(band?: ContractExpiryAlert["band"] | null) {
+  if (band === "EXPIRED") return "border-rose-300 bg-rose-50 text-rose-800";
+  if (band === "CRITICAL") return "border-rose-200 bg-rose-50 text-rose-700";
+  if (band === "URGENT") return "border-amber-200 bg-amber-50 text-amber-700";
+  if (band === "FOLLOW_UP") return "border-cyan-200 bg-cyan-50 text-cyan-800";
+  if (band === "EARLY_WARNING") return "border-slate-200 bg-slate-50 text-slate-700";
+  return "border-emerald-200 bg-emerald-50 text-emerald-700";
+}
+
+function getContractAlertLabel(alert?: ContractExpiryAlert | null) {
+  if (!alert) return "Contract not recorded";
+  if (alert.band === "EXPIRED") return `Expired ${Math.abs(alert.daysRemaining)} day(s) ago`;
+  if (alert.band === "CRITICAL") return `Critical · ${alert.daysRemaining} day(s) left`;
+  if (alert.band === "URGENT") return `Urgent · ${alert.daysRemaining} day(s) left`;
+  if (alert.band === "FOLLOW_UP") return `Follow up · ${alert.daysRemaining} day(s) left`;
+  if (alert.band === "EARLY_WARNING") return `Early warning · ${alert.daysRemaining} day(s) left`;
+  return `Valid · ${alert.daysRemaining} day(s) left`;
 }
 
 export default function CrewListPage() {
@@ -29,119 +134,129 @@ export default function CrewListPage() {
   const router = useRouter();
   const [vesselCrews, setVesselCrews] = useState<VesselCrew[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedVessel, setSelectedVessel] = useState<number | null>(null);
+  const [selectedVessel, setSelectedVessel] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     if (status === "loading") return;
     if (!session) {
       router.push("/auth/signin");
     }
-  }, [session, status, router]);
+  }, [router, session, status]);
 
   useEffect(() => {
-    if (session) {
-      fetchCrewList();
+    if (!session) return;
+
+    async function fetchCrewList() {
+      try {
+        setError(null);
+        const [assignmentsRes, contractsRes] = await Promise.all([fetch("/api/assignments"), fetch("/api/contracts")]);
+        if (!assignmentsRes.ok || !contractsRes.ok) {
+          throw new Error("Failed to fetch crew assignments");
+        }
+
+        const assignments = (await assignmentsRes.json()) as AssignmentResponseItem[];
+        const contracts = (await contractsRes.json()) as ContractResponseItem[];
+        const vesselMap = new Map<string, VesselCrew>();
+        const contractsByCrew = new Map<string, ContractResponseItem[]>();
+
+        for (const contract of contracts) {
+          const crewId = String(contract.crewId ?? contract.crew?.id ?? "");
+          if (!crewId) continue;
+          const current = contractsByCrew.get(crewId) ?? [];
+          current.push({
+            ...contract,
+            crewId,
+            vesselId: contract.vesselId ?? contract.vessel?.id ?? null,
+          });
+          contractsByCrew.set(crewId, current);
+        }
+
+        for (const assignment of assignments) {
+          const vesselId = String(assignment.vesselId);
+          const crewId = String(assignment.crewId ?? assignment.id);
+          const vesselName = assignment.vessel?.name?.trim() || "Unknown Vessel";
+          const contract = selectLatestRelevantContract(contractsByCrew.get(crewId) ?? [], vesselId);
+          const contractAlert = contract ? buildContractExpiryAlert(contract) : null;
+
+          if (!vesselMap.has(vesselId)) {
+            vesselMap.set(vesselId, {
+              vesselId,
+              vesselName,
+              crewMembers: [],
+              totalCrew: 0,
+              activeCrew: 0,
+            });
+          }
+
+          const vesselData = vesselMap.get(vesselId);
+          if (!vesselData) continue;
+
+          const member: CrewMember = {
+            id: String(assignment.id),
+            crewId,
+            seafarerName: assignment.crew?.fullName?.trim() || "Unknown Crew",
+            rank: assignment.rank?.trim() || "Rank not set",
+            signOnDate: assignment.signOnDate || assignment.startDate || "",
+            signOffDate: assignment.signOffDate || assignment.endDate || undefined,
+            status: normalizeStatus(assignment.status),
+            principalName: assignment.principal?.name?.trim() || undefined,
+            contractAlert,
+          };
+
+          vesselData.crewMembers.push(member);
+          if (member.status === "ONBOARD") {
+            vesselData.activeCrew += 1;
+          }
+        }
+
+        const nextVessels = Array.from(vesselMap.values())
+          .map((vessel) => ({
+            ...vessel,
+            totalCrew: vessel.crewMembers.length,
+          }))
+          .sort((left, right) => left.vesselName.localeCompare(right.vesselName));
+
+        setVesselCrews(nextVessels);
+      } catch (fetchError) {
+        console.error("Error fetching crew list:", fetchError);
+        setError(fetchError instanceof Error ? fetchError.message : "Failed to load crew list data.");
+        setVesselCrews([]);
+      } finally {
+        setLoading(false);
+      }
     }
+
+    fetchCrewList();
   }, [session]);
 
-  const fetchCrewList = async () => {
-    try {
-      setError(null);
-      // Fetch assignments with related data
-      const assignmentsRes = await fetch('/api/assignments');
-      if (!assignmentsRes.ok) {
-        setError("Failed to fetch crew assignments");
-        setLoading(false);
-        return;
-      }
+  const filteredVesselCrews = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) {
+      return vesselCrews;
+    }
 
-      const assignments = await assignmentsRes.json();
-
-      // Group assignments by vessel
-      const vesselMap = new Map();
-
-      for (const assignment of assignments) {
-        const vesselId = assignment.vesselId;
-        const vesselName = assignment.vessel?.name || 'Unknown Vessel';
-
-        if (!vesselMap.has(vesselId)) {
-          vesselMap.set(vesselId, {
-            vesselId,
-            vesselName,
-            crewMembers: [],
-            totalCrew: 0,
-            activeCrew: 0
-          });
-        }
-
-        const vesselData = vesselMap.get(vesselId);
-
-        // Add crew member data
-        const crewMember = {
-          id: assignment.id,
-          seafarerName: assignment.crew?.fullName || 'Unknown',
-          rank: assignment.rank,
-          signOnDate: assignment.signOnDate || assignment.startDate,
-          signOffDate: assignment.signOffDate || assignment.endDate,
-             status: assignment.status === 'ONBOARD' || assignment.status === 'ACTIVE' ? 'ONBOARD' :
-               assignment.status === 'COMPLETED' ? 'DEPARTED' :
-               assignment.status === 'PLANNED' || assignment.status === 'ASSIGNED' ? 'PLANNED' : 'UNKNOWN',
-          vesselName,
-          vesselId,
-          // Additional data from related models
-          nationality: assignment.crew?.nationality || '',
-          documents: assignment.crew?.documents || [],
-          application: assignment.crew?.applications?.[0] || null
-        };
-
-        vesselData.crewMembers.push(crewMember);
-
-        // Count active crew (currently onboard)
-        if (assignment.status === 'ONBOARD' || assignment.status === 'ACTIVE') {
-          vesselData.activeCrew++;
-        }
-      }
-
-      // Convert map to array and calculate totals
-      const vesselCrews = Array.from(vesselMap.values()).map(vessel => ({
+    return vesselCrews
+      .map((vessel) => ({
         ...vessel,
-        totalCrew: vessel.crewMembers.length
+        crewMembers: vessel.crewMembers.filter((member) =>
+          [vessel.vesselName, member.seafarerName, member.rank].join(" ").toLowerCase().includes(query)
+        ),
+      }))
+      .filter((vessel) => vessel.vesselName.toLowerCase().includes(query) || vessel.crewMembers.length > 0)
+      .map((vessel) => ({
+        ...vessel,
+        totalCrew: vessel.crewMembers.length,
+        activeCrew: vessel.crewMembers.filter((member) => member.status === "ONBOARD").length,
       }));
-
-      setVesselCrews(vesselCrews);
-    } catch (error) {
-      console.error("Error fetching crew list:", error);
-      setError("Failed to load crew list data. Please try again.");
-      setVesselCrews([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'ONBOARD': return 'bg-green-100 text-green-800';
-      case 'DEPARTED': return 'bg-red-100 text-red-800';
-      case 'PLANNED': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'ONBOARD': return 'Onboard';
-      case 'DEPARTED': return 'Departed';
-      case 'PLANNED': return 'Planned';
-      default: return status;
-    }
-  };
+  }, [searchQuery, vesselCrews]);
 
   if (status === "loading" || loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex flex-col items-center justify-center gap-4">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
-        <p className="text-sm font-semibold text-gray-700">Loading crew list…</p>
+        <p className="text-sm font-semibold text-gray-700">Loading crew list...</p>
       </div>
     );
   }
@@ -156,128 +271,124 @@ export default function CrewListPage() {
         <div className="max-w-7xl mx-auto">
           <div className="bg-red-50 border border-red-200 rounded-lg p-6">
             <h3 className="text-lg font-semibold text-red-800 mb-2">Error Loading Crew List</h3>
-            <p className="text-red-700 mb-4">{error}</p>
-            <button
-              onClick={() => fetchCrewList()}
-              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
-            >
-              Try Again
-            </button>
+            <p className="text-red-700">{error}</p>
           </div>
         </div>
       </div>
     );
   }
 
+  const totalActive = vesselCrews.reduce((sum, vessel) => sum + vessel.activeCrew, 0);
+  const totalDeparted = vesselCrews.reduce(
+    (sum, vessel) => sum + vessel.crewMembers.filter((member) => member.status === "DEPARTED").length,
+    0
+  );
+  const totalPlanned = vesselCrews.reduce(
+    (sum, vessel) => sum + vessel.crewMembers.filter((member) => member.status === "PLANNED").length,
+    0
+  );
+  const expiringContracts45 = vesselCrews.reduce(
+    (sum, vessel) =>
+      sum +
+      vessel.crewMembers.filter((member) => {
+        const band = member.contractAlert ? getContractExpiryBand(member.contractAlert.daysRemaining) : "OK";
+        return member.status === "ONBOARD" && ["EXPIRED", "CRITICAL", "URGENT"].includes(band);
+      }).length,
+    0
+  );
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-6">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-center space-x-4">
-              <Link
-                href="/crewing"
-                className="action-pill text-sm"
-              >
-                ← Back to Crewing
+              <Link href="/dashboard" className="action-pill text-sm">
+                Back to Dashboard
               </Link>
               <div>
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">Crew List Management</h1>
-                <p className="text-gray-800">Current crew complement per vessel with automatic departure tracking</p>
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">Crew Onboard</h1>
+                <p className="text-gray-800">Monitor onboard crew by vessel using active assignment data.</p>
               </div>
             </div>
-            <div className="flex items-center space-x-4">
-              <Link
-                href="/crewing/crew-list/new"
-                className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-indigo-600 to-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-md transition hover:shadow-lg"
-              >
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                Add Crew Member
-              </Link>
-            </div>
-          </div>
-          {error ? (
-            <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
-              {error}
-            </div>
-          ) : null}
-        </div>
-
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="surface-card p-6">
-            <div className="flex items-center">
-              <div className="badge-soft bg-blue-500/10 text-blue-600 text-xl">
-                🚢
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-slate-600">Total Vessels</p>
-                <p className="text-2xl font-extrabold text-slate-900">{vesselCrews.length}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="surface-card p-6">
-            <div className="flex items-center">
-              <div className="badge-soft bg-emerald-500/10 text-emerald-600 text-xl">
-                👥
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-slate-600">Active Crew</p>
-                <p className="text-2xl font-extrabold text-slate-900">
-                  {vesselCrews.reduce((sum, vessel) => sum + vessel.activeCrew, 0)}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="surface-card p-6">
-            <div className="flex items-center">
-              <div className="badge-soft bg-rose-500/10 text-rose-600 text-xl">
-                📤
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-slate-600">Departed This Month</p>
-                <p className="text-2xl font-extrabold text-slate-900">
-                  {vesselCrews.reduce((sum, vessel) =>
-                    sum + vessel.crewMembers.filter(member => member.status === 'DEPARTED').length, 0
-                  )}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="surface-card p-6">
-            <div className="flex items-center">
-              <div className="badge-soft bg-amber-500/10 text-amber-600 text-xl">
-                ⏰
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-slate-600">Avg. Contract</p>
-                <p className="text-2xl font-extrabold text-slate-900">6.2m</p>
-              </div>
-            </div>
+            <Link
+              href="/crewing/assignments/new"
+              className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-indigo-600 to-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-md transition hover:shadow-lg"
+            >
+              Create Assignment
+            </Link>
           </div>
         </div>
 
-        {/* Vessel Crew Lists */}
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
+          <div className="surface-card p-6">
+            <p className="text-sm font-medium text-slate-600">Total Vessels</p>
+            <p className="mt-2 text-2xl font-extrabold text-slate-900">{vesselCrews.length}</p>
+          </div>
+          <div className="surface-card p-6">
+            <p className="text-sm font-medium text-slate-600">Active Crew</p>
+            <p className="mt-2 text-2xl font-extrabold text-slate-900">{totalActive}</p>
+          </div>
+          <div className="surface-card p-6">
+            <p className="text-sm font-medium text-slate-600">Departed Records</p>
+            <p className="mt-2 text-2xl font-extrabold text-slate-900">{totalDeparted}</p>
+          </div>
+          <div className="surface-card p-6">
+            <p className="text-sm font-medium text-slate-600">Planned Movements</p>
+            <p className="mt-2 text-2xl font-extrabold text-slate-900">{totalPlanned}</p>
+          </div>
+          <div className="surface-card p-6">
+            <p className="text-sm font-medium text-slate-600">Contracts ≤ 45 Days</p>
+            <p className="mt-2 text-2xl font-extrabold text-rose-700">{expiringContracts45}</p>
+          </div>
+        </div>
+
+        <div className="mb-8 grid gap-4 lg:grid-cols-[1fr,320px]">
+          <div className="rounded-2xl border border-sky-200 bg-sky-50 p-5">
+            <p className="text-sm font-semibold text-sky-900">How to use this board</p>
+            <p className="mt-1 text-sm text-sky-800">
+              This page is generated from active assignment records. Create or update movements from the Transport Assignment page,
+              then return here to monitor onboard, planned, and departed crew by vessel.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <label htmlFor="crew-list-search" className="block text-sm font-semibold text-slate-900">
+              Search vessel, crew, or rank
+            </label>
+            <input
+              id="crew-list-search"
+              type="text"
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Type a keyword"
+              className="mt-2 w-full rounded-lg border border-slate-300 px-4 py-3 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        </div>
+
         <div className="space-y-8">
-          {vesselCrews.map((vessel) => (
+          {filteredVesselCrews.map((vessel) => (
             <div key={vessel.vesselId} className="surface-card overflow-hidden">
-              {/* Vessel Header */}
               <div className="bg-gradient-to-r from-indigo-600/95 via-indigo-500/90 to-blue-600/90 px-6 py-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
                     <div className="w-10 h-10 bg-white/90 rounded-lg flex items-center justify-center">
-                      <span className="text-indigo-600 text-lg font-bold">🚢</span>
+                      <span className="text-indigo-600 text-lg font-bold">V</span>
                     </div>
                     <div>
                       <h2 className="text-xl font-extrabold text-white">{vessel.vesselName}</h2>
                       <p className="text-indigo-100">
-                        {vessel.activeCrew} active crew • {vessel.totalCrew} total capacity
+                        {vessel.activeCrew} onboard • {vessel.totalCrew} records shown
+                      </p>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-indigo-100/90">
+                        {
+                          vessel.crewMembers.filter((member) =>
+                            member.status === "ONBOARD" &&
+                            member.contractAlert &&
+                            ["EXPIRED", "CRITICAL", "URGENT"].includes(member.contractAlert.band)
+                          ).length
+                        }{" "}
+                        contracts within 45 days
                       </p>
                     </div>
                   </div>
@@ -286,89 +397,65 @@ export default function CrewListPage() {
                       onClick={() => setSelectedVessel(selectedVessel === vessel.vesselId ? null : vessel.vesselId)}
                       className="action-pill text-xs bg-white/90 border-white/60 text-indigo-700 hover:bg-white"
                     >
-                      {selectedVessel === vessel.vesselId ? 'Hide Details' : 'Show Details'}
+                      {selectedVessel === vessel.vesselId ? "Hide Details" : "Open Quick View"}
                     </button>
                     <Link
                       href={`/crewing/crew-list/vessel/${vessel.vesselId}`}
                       className="action-pill text-xs bg-white/90 border-white/60 text-indigo-700 hover:bg-white"
                     >
-                      View Full List
+                      Vessel Board
                     </Link>
                   </div>
                 </div>
               </div>
 
-              {/* Crew Table */}
-              {selectedVessel === vessel.vesselId && (
+              {selectedVessel === vessel.vesselId ? (
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-slate-200">
                     <thead className="bg-slate-50">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                          Seafarer
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                          Rank
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                          Sign-On Date
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                          Sign-Off Date
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                          Status
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                          Actions
-                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Crew</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Rank</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Sign On</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Sign Off</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Status</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Contract Alert</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Next Action</th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-slate-100">
                       {vessel.crewMembers.map((member) => (
                         <tr key={member.id} className="hover:bg-slate-50">
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center">
-                              <div className="flex-shrink-0 h-10 w-10">
-                                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-400 to-blue-500 flex items-center justify-center">
-                                  <span className="text-sm font-medium text-white">
-                                    {member.seafarerName.split(' ').map(n => n[0]).join('').toUpperCase()}
-                                  </span>
-                                </div>
-                              </div>
-                              <div className="ml-4">
-                                <div className="text-sm font-medium text-slate-900">
-                                  {member.seafarerName}
-                                </div>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">
-                            {member.rank}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">
-                            {new Date(member.signOnDate).toLocaleDateString()}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">
-                            {member.signOffDate ? new Date(member.signOffDate).toLocaleDateString() : '-'}
-                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">{member.seafarerName}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">{member.rank}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">{formatDate(member.signOnDate)}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">{formatDate(member.signOffDate)}</td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span className={`inline-flex px-4 py-2 text-xs font-semibold rounded-full ${getStatusColor(member.status)}`}>
                               {getStatusText(member.status)}
                             </span>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <td className="px-6 py-4 text-sm">
+                            {member.contractAlert ? (
+                              <div className={`inline-flex rounded-2xl border px-3 py-2 text-xs font-semibold ${getContractAlertStyles(member.contractAlert.band)}`}>
+                                <div>
+                                  <p>{getContractAlertLabel(member.contractAlert)}</p>
+                                  <p className="mt-1 font-medium opacity-80">End {formatDate(member.contractAlert.contractEnd)}</p>
+                                </div>
+                              </div>
+                            ) : (
+                              <span className="inline-flex rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-600">
+                                Contract not linked
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 text-sm">
+                            <p className="mb-2 max-w-sm text-slate-700">{getNextAction(member)}</p>
                             <button
                               onClick={() => router.push(`/crewing/assignments/${member.id}`)}
-                              className="text-indigo-600 hover:text-indigo-700 mr-4"
+                              className="rounded-full border border-indigo-300 px-3 py-1 text-xs font-semibold text-indigo-700 hover:border-indigo-500 hover:text-indigo-800"
                             >
-                              View
-                            </button>
-                            <button
-                              onClick={() => router.push(`/crewing/assignments/${member.id}`)}
-                              className="text-emerald-600 hover:text-emerald-700"
-                            >
-                              Edit
+                              Open Assignment
                             </button>
                           </td>
                         </tr>
@@ -376,27 +463,38 @@ export default function CrewListPage() {
                     </tbody>
                   </table>
                 </div>
-              )}
-
-              {/* Collapsed View */}
-              {selectedVessel !== vessel.vesselId && (
+              ) : (
                 <div className="px-6 py-4 bg-slate-50">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      <div className="text-sm text-slate-700">
-                        <span className="font-semibold text-slate-900">{vessel.activeCrew}</span> active crew members
+                    <div className="flex items-center space-x-4 text-sm text-slate-700">
+                      <div>
+                        <span className="font-semibold text-slate-900">{vessel.activeCrew}</span> onboard records
                       </div>
-                      <div className="text-sm text-slate-700">
+                      <div>
                         <span className="font-semibold text-rose-600">
-                          {vessel.crewMembers.filter(m => m.status === 'DEPARTED').length}
-                        </span> departed this month
+                          {vessel.crewMembers.filter((member) => member.status === "DEPARTED").length}
+                        </span>{" "}
+                        departed records
+                      </div>
+                      <div>
+                        <span className="font-semibold text-rose-600">
+                          {
+                            vessel.crewMembers.filter(
+                              (member) =>
+                                member.status === "ONBOARD" &&
+                                member.contractAlert &&
+                                ["EXPIRED", "CRITICAL", "URGENT"].includes(member.contractAlert.band)
+                            ).length
+                          }
+                        </span>{" "}
+                        contracts within 45 days
                       </div>
                     </div>
                     <button
                       onClick={() => setSelectedVessel(vessel.vesselId)}
                       className="text-indigo-600 hover:text-indigo-700 text-sm font-semibold"
                     >
-                      Show Details →
+                      Open Quick View
                     </button>
                   </div>
                 </div>
@@ -405,14 +503,16 @@ export default function CrewListPage() {
           ))}
         </div>
 
-        {/* Empty State */}
-        {vesselCrews.length === 0 && (
+        {filteredVesselCrews.length === 0 ? (
           <div className="text-center py-12">
-            <svg className="mx-auto h-12 w-12 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
-            <h3 className="mt-2 text-sm font-medium text-gray-900">No crew data available</h3>
-            <p className="mt-1 text-sm text-gray-700">Crew lists will be automatically populated when assignments are made.</p>
+            <h3 className="mt-2 text-sm font-medium text-gray-900">
+              {vesselCrews.length === 0 ? "No crew data available" : "No crew record matches the current search"}
+            </h3>
+            <p className="mt-1 text-sm text-gray-700">
+              {vesselCrews.length === 0
+                ? "Crew lists are generated automatically from assignment records."
+                : "Adjust the keyword to see more vessels or crew members."}
+            </p>
             <div className="mt-6">
               <Link
                 href="/crewing/assignments/new"
@@ -422,7 +522,7 @@ export default function CrewListPage() {
               </Link>
             </div>
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );

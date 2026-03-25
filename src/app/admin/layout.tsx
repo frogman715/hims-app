@@ -1,12 +1,18 @@
 import type { ReactNode } from "react";
-import { requireAuthorizedUser } from "@/lib/authz";
-import { ADMIN_ALLOWED_ROLES } from "@/lib/admin-access";
+import { getServerSession } from "next-auth";
+import { redirect } from "next/navigation";
+import { authOptions } from "@/lib/auth";
+import { canAccessAdminArea } from "@/lib/admin-authorization";
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {
-  await requireAuthorizedUser({
-    redirectIfCrew: "/m/crew",
-    allowedRoles: ADMIN_ALLOWED_ROLES,
-    redirectOnDisallowed: "/dashboard",
-  });
+  const session = await getServerSession(authOptions);
+  if (!session?.user) {
+    redirect("/auth/signin");
+  }
+
+  if (!canAccessAdminArea(session)) {
+    redirect("/dashboard");
+  }
+
   return <>{children}</>;
 }

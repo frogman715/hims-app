@@ -90,9 +90,9 @@ export default async function AccountingPage() {
       <div className="page-shell space-y-8 px-6 py-10">
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900">Accounting & Finance</h1>
+            <h1 className="text-3xl font-bold text-slate-900">Finance</h1>
             <p className="mt-1 text-base text-slate-600">
-              Monitor payroll, office expenses, and finance follow-up from one clean control desk.
+              Monitor payroll, office expenses, and finance follow-up from one working page.
             </p>
           </div>
           <Link href="/dashboard" className="action-pill">
@@ -103,8 +103,8 @@ export default async function AccountingPage() {
         <section className="rounded-2xl border border-amber-200 bg-amber-50 px-6 py-4">
           <p className="text-sm font-semibold text-amber-900">How to use this page</p>
           <p className="mt-1 text-sm text-amber-800">
-            Use this dashboard as the finance entry point. Review the latest office expense activity here, then open
-            the dedicated payroll, leave pay, and exchange modules for detailed processing.
+            Use this page as the finance entry point. Review recent office expense activity here,
+            then open the payroll, leave pay, or exchange modules for detailed processing.
           </p>
         </section>
 

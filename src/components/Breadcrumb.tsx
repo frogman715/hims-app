@@ -47,7 +47,7 @@ function generateBreadcrumbs(
   // Breadcrumb mapping for user-friendly labels
   const labelMap: Record<string, string> = {
     dashboard: 'Dashboard',
-    accounting: 'Keuangan',
+    accounting: 'Finance',
     'leave-pay': 'Leave Pay',
     exchange: 'Exchange Expenses',
     allotments: 'Allotments',
@@ -55,20 +55,20 @@ function generateBreadcrumbs(
     billing: 'Billing',
     'office-expense': 'Office Expense',
     'crew-portal': 'Crew Portal',
-    documents: 'Dokumen',
-    'prepare-joining': 'Persiapan Keberangkatan',
+    documents: 'Documents',
+    'prepare-joining': 'Pre-Departure Preparation',
     applications: 'Lamaran',
-    assignments: 'Penugasan',
-    contracts: 'Kontrak',
-    dispatch: 'Keberangkatan',
-    compliance: 'Kepatuhan',
+    assignments: 'Assignments',
+    contracts: 'Contracts',
+    dispatch: 'Dispatch',
+    compliance: 'Compliance',
     audits: 'Audit',
-    'non-conformities': 'Ketidaksesuaian',
-    quality: 'Mutu',
-    settings: 'Pengaturan',
-    users: 'Kelola User',
-    roles: 'Role',
-    permissions: 'Hak Akses',
+    'non-conformities': 'Non-Conformities',
+    quality: 'Quality',
+    settings: 'Settings',
+    users: 'User Management',
+    roles: 'Roles',
+    permissions: 'Permissions',
   };
 
   let cumulativePath = '';
@@ -117,7 +117,7 @@ function buildSeafarerBreadcrumbs(
 
   return [
     { label: 'Dashboard', href: '/dashboard', current: false },
-    { label: 'Operasional Crew', href: '/crewing', current: false },
+    { label: 'Crew Operations', href: '/crewing', current: false },
     { label: 'Seafarers', href: '/crewing/seafarers', current: false },
     {
       label: seafarerLabel,

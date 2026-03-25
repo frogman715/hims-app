@@ -127,8 +127,8 @@ const PREPARE_JOINING_SEQUENCE = [
     helper: "Orientation and vessel briefing completed.",
   },
   {
-    label: "Keberangkatan",
-    helper: "Travel, rute, final review, dan pelepasan keberangkatan.",
+    label: "Dispatch",
+    helper: "Travel, routing, final review, and dispatch release.",
   },
 ] as const;
 
@@ -272,7 +272,7 @@ export default function PrepareJoiningPage() {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-emerald-50 p-8">
         <div className="max-w-7xl mx-auto">
           <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-red-800 mb-2">Gagal Memuat Persiapan Keberangkatan</h3>
+            <h3 className="text-lg font-semibold text-red-800 mb-2">Error Loading Pre-Departure Records</h3>
             <p className="text-red-700 mb-4">{error}</p>
             <button
               onClick={() => fetchPrepareJoinings(true)}
@@ -294,7 +294,7 @@ export default function PrepareJoiningPage() {
     { value: "TRAINING", label: "Training", icon: "📚" },
     { value: "TRAVEL", label: "Travel", icon: "✈️" },
     { value: "READY", label: "Ready for Review", icon: "✅" },
-    { value: "DISPATCHED", label: "Keberangkatan", icon: "🚢" },
+    { value: "DISPATCHED", label: "Dispatched", icon: "🚢" },
     { value: "CANCELLED", label: "Cancelled", icon: "❌" },
   ];
 
@@ -306,7 +306,7 @@ export default function PrepareJoiningPage() {
       TRAINING: { accent: "bg-purple-500/10 text-purple-600", text: "Training" },
       TRAVEL: { accent: "bg-orange-500/10 text-orange-600", text: "Travel" },
       READY: { accent: "bg-teal-500/10 text-teal-600", text: "Ready for Review" },
-      DISPATCHED: { accent: "bg-indigo-500/10 text-indigo-600", text: "Keberangkatan" },
+      DISPATCHED: { accent: "bg-indigo-500/10 text-indigo-600", text: "Dispatched" },
       CANCELLED: { accent: "bg-red-500/10 text-red-600", text: "Cancelled" },
     };
 
@@ -418,7 +418,7 @@ export default function PrepareJoiningPage() {
       TRAINING: "Confirm training or orientation completion before dispatch readiness.",
       TRAVEL: "Complete ticket, hotel, transport, and departure coordination.",
       READY: "Final office review before dispatch and onboard movement.",
-      DISPATCHED: "Tunggu konfirmasi onboard dan tutup checklist yang masih tersisa.",
+      DISPATCHED: "Wait for onboard confirmation and close any remaining checklist items.",
       CANCELLED: "Keep the record visible for history and stop operational processing.",
     };
 
@@ -463,13 +463,13 @@ export default function PrepareJoiningPage() {
       <div className="page-shell px-6 py-10 space-y-8">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900">Persiapan Keberangkatan</h1>
+            <h1 className="text-3xl font-bold text-slate-900">Pre-Departure Preparation</h1>
             <p className="text-base text-slate-600 mt-1">
-              Checklist operasional untuk menyiapkan crew yang sudah disetujui sampai siap berangkat.
+              Operational checklist for preparing approved crew members through to dispatch readiness.
             </p>
           </div>
           <Link href="/crewing/workflow" className="action-pill text-sm">
-            ← Alur Crew
+            ← Crew Workflow
           </Link>
         </div>
 
@@ -493,7 +493,7 @@ export default function PrepareJoiningPage() {
             ))}
           </div>
           <div className="mt-4 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-800">
-            Gunakan urutan kerja kantor ini: <span className="font-semibold">Medical → Visa → Contract → Briefing → Keberangkatan</span>. Checklist di bawah akan menandai posisi saat ini dan langkah berikutnya untuk setiap crew.
+            Follow this office sequence: <span className="font-semibold">Medical → Visa → Contract → Briefing → Dispatch</span>. The checklist below highlights the current step and the next step for each crew member.
           </div>
         </div>
 
@@ -656,7 +656,7 @@ export default function PrepareJoiningPage() {
                       </div>
                     </div>
                     <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
-                      <span className="font-semibold text-slate-900">Langkah berikutnya:</span> {getNextAction(pj.status)}
+                      <span className="font-semibold text-slate-900">Next action:</span> {getNextAction(pj.status)}
                     </div>
                     <div className="grid gap-4 xl:grid-cols-[1.2fr,0.8fr]">
                       <div className="rounded-xl border border-sky-200 bg-sky-50 px-4 py-4">
@@ -667,7 +667,7 @@ export default function PrepareJoiningPage() {
                         <p className="mt-2 text-sm text-sky-900">
                           {nextSequenceStep
                             ? `${nextSequenceStep.label}: ${nextSequenceStep.note}`
-                            : "Keberangkatan adalah tahap terakhir. Selesaikan final check lalu konfirmasi pergerakan crew."}
+                            : "Dispatch is the final step. Complete the final checks and confirm crew movement."}
                         </p>
                       </div>
                       <div className="rounded-xl border border-slate-200 bg-white px-4 py-4">
@@ -702,7 +702,7 @@ export default function PrepareJoiningPage() {
                     </div>
                     <div className="grid gap-4 md:grid-cols-3">
                       <div className={`rounded-xl border p-4 ${dispatchGate.tone}`}>
-                        <p className="text-xs font-semibold uppercase tracking-wide">Status Keberangkatan</p>
+                        <p className="text-xs font-semibold uppercase tracking-wide">Dispatch Status</p>
                         <p className="mt-2 text-sm font-semibold">{dispatchGate.label}</p>
                         <p className="mt-1 text-xs">{dispatchGate.helper}</p>
                       </div>
@@ -725,7 +725,7 @@ export default function PrepareJoiningPage() {
                           <div className="mt-2">{getStatusBadge(pj.status)}</div>
                         )}
                         <p className="mt-2 text-xs text-slate-500">
-                          Operational mengubah status bertahap. READY dan Keberangkatan akan tertahan bila checklist principal belum lengkap.
+                          Operational updates status step by step. READY and DISPATCHED will be held if the principal checklist is incomplete.
                         </p>
                       </div>
                       <div className="rounded-xl border border-slate-200 bg-white p-4">
@@ -756,7 +756,7 @@ export default function PrepareJoiningPage() {
                         const isActiveStep = currentIndex === index && !isCompletedStep;
                         return (
                           <div
-                            key={step}
+                            key={step.label}
                             className={`rounded-xl border px-3 py-3 text-sm ${
                               isCompletedStep
                                 ? "border-emerald-200 bg-emerald-50 text-emerald-900"

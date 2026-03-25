@@ -8,6 +8,8 @@ import { Plus, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import CreateAuditForm from '@/components/audit/CreateAuditForm';
 import AuditTable from '@/components/audit/AuditTable';
+import { canAccessOfficePath } from '@/lib/office-access';
+import { normalizeToUserRoles } from '@/lib/type-guards';
 
 interface Audit {
   id: string;
@@ -36,6 +38,9 @@ export default function AuditManagementPage() {
     status: '',
     auditType: '',
   });
+  const userRoles = normalizeToUserRoles(session?.user?.roles ?? session?.user?.role);
+  const isSystemAdmin = session?.user?.isSystemAdmin === true;
+  const canManageAudits = canAccessOfficePath('/api/audit/list', userRoles, isSystemAdmin, 'POST');
 
   // Fetch audits
   const fetchAudits = useCallback(async () => {
@@ -95,6 +100,9 @@ export default function AuditManagementPage() {
   };
 
   const handleEdit = (audit: Audit) => {
+    if (!canManageAudits) {
+      return;
+    }
     setSelectedAudit(audit);
     setShowCreateForm(true);
   };
@@ -124,22 +132,30 @@ export default function AuditManagementPage() {
           </Link>
           <div className="flex-1">
             <h1 className="text-3xl font-bold text-gray-900">Audit Management</h1>
-            <p className="text-gray-600 mt-2">Create and manage audit activities</p>
+            <p className="text-gray-600 mt-2">Manage active audits, schedules, and audit follow-up actions</p>
           </div>
           <Button
             onClick={() => {
+              if (!canManageAudits) {
+                return;
+              }
               setSelectedAudit(null);
               setShowCreateForm(true);
             }}
-            className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
+            disabled={!canManageAudits}
+            className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2 disabled:bg-slate-400"
           >
-            <Plus size={20} />
-            New Audit
+            {canManageAudits ? <Plus size={20} /> : null}
+            {canManageAudits ? 'New Audit' : 'View Only'}
           </Button>
         </div>
 
+        <div className="mb-6 rounded-xl border border-blue-100 bg-blue-50 px-5 py-4 text-sm text-blue-900">
+          Start from the active audit list. Open an existing audit to review findings and follow-up actions, or create a new audit when needed.
+        </div>
+
         {/* Create/Edit Form Modal */}
-        {showCreateForm && (
+        {showCreateForm && canManageAudits && (
           <div className="mb-8 bg-white rounded-lg shadow-lg p-6">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold">
@@ -232,7 +248,7 @@ export default function AuditManagementPage() {
           ) : (
             <AuditTable
               audits={audits}
-              onEdit={handleEdit}
+              onEdit={canManageAudits ? handleEdit : undefined}
               onView={handleView}
             />
           )}

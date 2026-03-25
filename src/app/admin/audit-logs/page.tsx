@@ -39,7 +39,7 @@ export default function AdminAuditLogsPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
-          <p className="mt-4 text-gray-600">Memuat riwayat aktivitas...</p>
+          <p className="mt-4 text-gray-600">Loading audit logs...</p>
         </div>
       </div>
     );
@@ -51,15 +51,15 @@ export default function AdminAuditLogsPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Riwayat Aktivitas</h1>
-              <p className="text-gray-700 mt-1">Pantau perubahan user, role, reset password, dan aktivasi</p>
+              <h1 className="text-3xl font-bold text-gray-900">Audit Logs</h1>
+              <p className="text-gray-700 mt-1">Track user changes, role updates, password resets, and activation history</p>
             </div>
             <div className="flex items-center gap-3">
               <Link
                 href="/admin/users"
                 className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
               >
-                Kembali ke Kelola User
+                Back to User Management
               </Link>
               <Link
                 href="/dashboard"
@@ -74,11 +74,11 @@ export default function AdminAuditLogsPage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6 rounded-xl border border-blue-100 bg-blue-50 px-5 py-4 text-sm text-blue-900">
-          Halaman ini hanya untuk Director dan HR Admin dalam memantau aktivitas admin yang sensitif.
+          This page is limited to Director and HR Admin for monitoring sensitive administrative activity.
         </div>
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">Aktivitas Admin Terbaru</h2>
+            <h2 className="text-xl font-semibold text-gray-900">Recent Administrative Activity</h2>
           </div>
           <div className="p-6">
             <AuditLogTable entityType="User" />
