@@ -3,7 +3,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { hasExplicitRoleAccess } from "@/lib/authorization";
+import { ADMIN_MAINTENANCE_SCOPES, hasAdminMaintenanceScope } from "@/lib/admin-access";
 
 export default async function SystemHealthPage() {
   const session = await getServerSession(authOptions);
@@ -13,11 +13,12 @@ export default async function SystemHealthPage() {
   }
 
   // Only DIRECTOR can access this page
-  if (!hasExplicitRoleAccess({
+  if (!hasAdminMaintenanceScope({
     roles: session.user.roles,
     role: session.user.role,
     isSystemAdmin: session.user.isSystemAdmin === true,
-  }, ['DIRECTOR'])) {
+    adminMaintenanceScopes: session.user.adminMaintenanceScopes,
+  }, ADMIN_MAINTENANCE_SCOPES.SYSTEM_HEALTH)) {
     redirect("/403");
   }
 
@@ -57,8 +58,8 @@ export default async function SystemHealthPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">System Health Dashboard</h1>
-              <p className="text-gray-700 mt-1">Overview of key system metrics and health indicators</p>
+              <h1 className="text-3xl font-bold text-gray-900">Status Sistem</h1>
+              <p className="text-gray-700 mt-1">Ringkasan kondisi data dan indikator operasional utama</p>
             </div>
             <Link
               href="/dashboard"
@@ -67,7 +68,7 @@ export default async function SystemHealthPage() {
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
-              <span>Back to Dashboard</span>
+              <span>Kembali ke Dashboard</span>
             </Link>
           </div>
         </div>
@@ -99,7 +100,7 @@ export default async function SystemHealthPage() {
               </svg>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-700">Active Contracts</p>
+              <p className="text-sm font-medium text-gray-700">Kontrak Aktif</p>
               <p className="text-2xl font-extrabold text-gray-900">{activeContracts.toLocaleString()}</p>
             </div>
           </div>
@@ -114,7 +115,7 @@ export default async function SystemHealthPage() {
               </svg>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-700">Expiring Soon (&lt; 30 days)</p>
+              <p className="text-sm font-medium text-gray-700">Kontrak Hampir Berakhir (&lt; 30 hari)</p>
               <p className="text-2xl font-extrabold text-gray-900">{expiringContracts.toLocaleString()}</p>
             </div>
           </div>
@@ -129,7 +130,7 @@ export default async function SystemHealthPage() {
               </svg>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-700">Total Principals</p>
+              <p className="text-sm font-medium text-gray-700">Total Principal</p>
               <p className="text-2xl font-extrabold text-gray-900">{totalPrincipals.toLocaleString()}</p>
             </div>
           </div>
@@ -144,7 +145,7 @@ export default async function SystemHealthPage() {
               </svg>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-700">Total Vessels</p>
+              <p className="text-sm font-medium text-gray-700">Total Kapal</p>
               <p className="text-2xl font-extrabold text-gray-900">{totalVessels.toLocaleString()}</p>
             </div>
           </div>

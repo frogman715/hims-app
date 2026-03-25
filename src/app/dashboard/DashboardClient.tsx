@@ -6,8 +6,11 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import type { AppRole } from '@/lib/roles';
 import { APP_ROLES } from '@/lib/roles';
-import { ModuleName, PermissionLevel } from '@/lib/permissions';
+import { PermissionLevel } from '@/lib/permissions';
 import { hasExplicitRoleAccess, hasModuleAccess } from '@/lib/authorization';
+import { canAccessOfficePath } from '@/lib/office-access';
+import { getAdminScopeForPath, hasAdminMaintenanceScope } from '@/lib/admin-access';
+import { OFFICE_NAV_ITEMS } from '@/lib/office-navigation';
 import SidebarHeader from '@/components/sidebar/SidebarHeader';
 import ComplianceStatusWidget from '@/components/compliance/ComplianceStatusWidget';
 import { getRoleDisplayName } from '@/lib/role-display';
@@ -95,150 +98,11 @@ interface SummaryCardConfig {
   icon: string;
 }
 
-interface OfficeNavigationItem {
-  module: ModuleName;
-  href: string;
-  label: string;
-  icon: string;
-  requiredLevel?: PermissionLevel;
-  group?: string;
-  allowedRoles?: AppRole[];
-}
-
 interface CompliancePriority {
   title: string;
   detail: string;
   href: string;
 }
-
-const OFFICE_NAV_ITEMS: OfficeNavigationItem[] = [
-  {
-    module: ModuleName.crewing,
-    href: '/crewing',
-    label: 'Crewing Operations',
-    icon: '⚓',
-    group: 'CREWING OPERATIONS',
-    allowedRoles: [APP_ROLES.DIRECTOR, APP_ROLES.CDMO, APP_ROLES.OPERATIONAL, APP_ROLES.GA_DRIVER, APP_ROLES.ACCOUNTING, APP_ROLES.HR, APP_ROLES.HR_ADMIN, APP_ROLES.QMR],
-  },
-  {
-    module: ModuleName.crewing,
-    href: '/crewing/readiness',
-    label: 'Crew Readiness',
-    icon: '✅',
-    group: 'CREWING OPERATIONS',
-    allowedRoles: [APP_ROLES.DIRECTOR, APP_ROLES.CDMO, APP_ROLES.OPERATIONAL, APP_ROLES.GA_DRIVER, APP_ROLES.ACCOUNTING, APP_ROLES.HR, APP_ROLES.HR_ADMIN, APP_ROLES.QMR],
-  },
-  {
-    module: ModuleName.crewing,
-    href: '/crewing/prepare-joining',
-    label: 'Prepare Joining',
-    icon: '🧾',
-    group: 'CREWING OPERATIONS',
-    allowedRoles: [APP_ROLES.DIRECTOR, APP_ROLES.CDMO, APP_ROLES.OPERATIONAL, APP_ROLES.GA_DRIVER, APP_ROLES.ACCOUNTING, APP_ROLES.HR, APP_ROLES.HR_ADMIN, APP_ROLES.QMR],
-  },
-  {
-    module: ModuleName.assignments,
-    href: '/crewing/assignments',
-    label: 'Vessel Assignment',
-    icon: '🚐',
-    group: 'CREWING OPERATIONS',
-    allowedRoles: [APP_ROLES.DIRECTOR, APP_ROLES.CDMO, APP_ROLES.OPERATIONAL, APP_ROLES.GA_DRIVER, APP_ROLES.ACCOUNTING, APP_ROLES.HR, APP_ROLES.HR_ADMIN, APP_ROLES.QMR],
-  },
-  {
-    module: ModuleName.contracts,
-    href: '/contracts',
-    label: 'Contracts',
-    icon: '📝',
-    group: 'CREWING OPERATIONS',
-    allowedRoles: [APP_ROLES.DIRECTOR, APP_ROLES.CDMO, APP_ROLES.OPERATIONAL, APP_ROLES.GA_DRIVER, APP_ROLES.ACCOUNTING, APP_ROLES.HR, APP_ROLES.HR_ADMIN, APP_ROLES.QMR],
-  },
-  {
-    module: ModuleName.documents,
-    href: '/crewing/documents',
-    label: 'Documents',
-    icon: '📁',
-    group: 'CREWING OPERATIONS',
-    allowedRoles: [APP_ROLES.DIRECTOR, APP_ROLES.CDMO, APP_ROLES.OPERATIONAL, APP_ROLES.GA_DRIVER, APP_ROLES.ACCOUNTING, APP_ROLES.HR, APP_ROLES.HR_ADMIN, APP_ROLES.QMR],
-  },
-  {
-    module: ModuleName.principals,
-    href: '/crewing/principals',
-    label: 'Fleet & Principals',
-    icon: '🚢',
-    group: 'CREWING OPERATIONS',
-    allowedRoles: [APP_ROLES.DIRECTOR, APP_ROLES.CDMO, APP_ROLES.OPERATIONAL, APP_ROLES.GA_DRIVER, APP_ROLES.ACCOUNTING, APP_ROLES.HR, APP_ROLES.HR_ADMIN, APP_ROLES.QMR],
-  },
-  {
-    module: ModuleName.accounting,
-    href: '/accounting',
-    label: 'Accounting',
-    icon: '💰',
-    group: 'FINANCE & ADMINISTRATION',
-    allowedRoles: [APP_ROLES.DIRECTOR, APP_ROLES.CDMO, APP_ROLES.OPERATIONAL, APP_ROLES.GA_DRIVER, APP_ROLES.ACCOUNTING, APP_ROLES.HR, APP_ROLES.HR_ADMIN, APP_ROLES.QMR],
-  },
-  {
-    module: ModuleName.crew,
-    href: '/hr',
-    label: 'HR Management',
-    icon: '👔',
-    group: 'HR & PERSONNEL',
-    allowedRoles: [APP_ROLES.DIRECTOR, APP_ROLES.CDMO, APP_ROLES.OPERATIONAL, APP_ROLES.GA_DRIVER, APP_ROLES.ACCOUNTING, APP_ROLES.HR, APP_ROLES.HR_ADMIN, APP_ROLES.QMR],
-  },
-  {
-    module: ModuleName.compliance,
-    href: '/compliance',
-    label: 'Compliance Command',
-    icon: '🧭',
-    group: 'QUALITY & COMPLIANCE',
-    requiredLevel: PermissionLevel.VIEW_ACCESS,
-    allowedRoles: [APP_ROLES.DIRECTOR, APP_ROLES.CDMO, APP_ROLES.OPERATIONAL, APP_ROLES.GA_DRIVER, APP_ROLES.ACCOUNTING, APP_ROLES.HR, APP_ROLES.HR_ADMIN, APP_ROLES.QMR],
-  },
-  {
-    module: ModuleName.quality,
-    href: '/quality/qms-dashboard',
-    label: 'QMS Dashboard',
-    icon: '📊',
-    group: 'QUALITY & COMPLIANCE',
-    requiredLevel: PermissionLevel.VIEW_ACCESS,
-    allowedRoles: [APP_ROLES.DIRECTOR, APP_ROLES.CDMO, APP_ROLES.OPERATIONAL, APP_ROLES.GA_DRIVER, APP_ROLES.ACCOUNTING, APP_ROLES.HR, APP_ROLES.HR_ADMIN, APP_ROLES.QMR],
-  },
-  {
-    module: ModuleName.quality,
-    href: '/audit',
-    label: 'Audit Management',
-    icon: '📋',
-    group: 'QUALITY & COMPLIANCE',
-    requiredLevel: PermissionLevel.VIEW_ACCESS,
-    allowedRoles: [APP_ROLES.DIRECTOR, APP_ROLES.CDMO, APP_ROLES.OPERATIONAL, APP_ROLES.GA_DRIVER, APP_ROLES.ACCOUNTING, APP_ROLES.HR, APP_ROLES.HR_ADMIN, APP_ROLES.QMR],
-  },
-  {
-    module: ModuleName.quality,
-    href: '/nonconformity',
-    label: 'Non-Conformities',
-    icon: '⚠️',
-    group: 'QUALITY & COMPLIANCE',
-    requiredLevel: PermissionLevel.VIEW_ACCESS,
-    allowedRoles: [APP_ROLES.DIRECTOR, APP_ROLES.CDMO, APP_ROLES.OPERATIONAL, APP_ROLES.GA_DRIVER, APP_ROLES.ACCOUNTING, APP_ROLES.HR, APP_ROLES.HR_ADMIN, APP_ROLES.QMR],
-  },
-  {
-    module: ModuleName.dashboard,
-    href: '/admin/system-health',
-    label: 'System Health',
-    icon: '⚙️',
-    group: 'SYSTEM ADMINISTRATION',
-    requiredLevel: PermissionLevel.FULL_ACCESS,
-    allowedRoles: [APP_ROLES.DIRECTOR, APP_ROLES.HR_ADMIN],
-  },
-  {
-    module: ModuleName.dashboard,
-    href: '/admin/users',
-    label: 'User Management',
-    icon: '👥',
-    group: 'SYSTEM ADMINISTRATION',
-    requiredLevel: PermissionLevel.FULL_ACCESS,
-    allowedRoles: [APP_ROLES.DIRECTOR, APP_ROLES.HR_ADMIN],
-  },
-];
 
 const CREW_PORTAL_NAV_ITEMS: Array<{ href: string; label: string; icon: string }> = [
   { href: '/m/crew', label: 'Crew Home', icon: '🏠' },
@@ -485,14 +349,28 @@ export default function DashboardClient() {
       role: session?.user?.role,
       isSystemAdmin: (session?.user as Record<string, unknown>)?.isSystemAdmin === true,
       permissionOverrides: (session?.user as Record<string, unknown>)?.permissionOverrides as never,
+      adminMaintenanceScopes: session?.user?.adminMaintenanceScopes,
     };
 
     const items = OFFICE_NAV_ITEMS.filter((item) => {
+      const adminScope = getAdminScopeForPath(item.href);
+      if (adminScope) {
+        return hasAdminMaintenanceScope(subject, adminScope);
+      }
+
       if (!hasExplicitRoleAccess(subject, item.allowedRoles)) {
         return false;
       }
 
-      return hasModuleAccess(subject, item.module, item.requiredLevel ?? PermissionLevel.VIEW_ACCESS);
+      if (!hasModuleAccess(subject, item.module, item.requiredLevel ?? PermissionLevel.VIEW_ACCESS)) {
+        return false;
+      }
+
+      return canAccessOfficePath(
+        item.href.split('?')[0] || item.href,
+        session?.user?.roles ?? (session?.user?.role ? [session.user.role] : []),
+        (session?.user as Record<string, unknown>)?.isSystemAdmin === true
+      );
     });
 
     // Group items by their group property
@@ -507,11 +385,12 @@ export default function DashboardClient() {
 
     // Define group order
     const groupOrder = [
-      'CREWING OPERATIONS',
-      'FINANCE & ADMINISTRATION',
-      'HR & PERSONNEL',
-      'QUALITY & COMPLIANCE',
-      'SYSTEM ADMINISTRATION',
+      'ALUR CREW',
+      'ALUR DOKUMEN',
+      'KEUANGAN & ADMIN',
+      'SDM',
+      'MUTU & KEPATUHAN',
+      'ADMIN SISTEM',
       'OTHER',
     ];
 
@@ -609,31 +488,47 @@ function DirectorDashboard({ data, crewMovement, expiringItems, contractAlerts, 
   return (
     <div className="space-y-6">
       <DashboardHeader
-        title="Executive Overview"
-        subtitle="Summary of fleet readiness, recruitment, and compliance"
+        title="Ringkasan Direksi"
+        subtitle="Ringkasan utama untuk crew, pekerjaan aktif, masa berlaku sertifikat, dan pengawasan keuangan"
       />
-      <ComplianceOperationsBanner />
+      <SectionHeading
+        title="Ringkasan Crew"
+        description="Lihat jumlah crew aktif dan gambaran armada yang sedang berjalan."
+      />
+      <DirectorOverviewStructure data={data} pendingTasks={pendingTasks} />
       <FleetSnapshot data={data} />
-      <SummaryCards data={data} />
+      <SectionHeading
+        title="Pekerjaan Aktif"
+        description="Pantau pekerjaan operasional yang masih bergerak dan butuh tindak lanjut kantor."
+      />
       <ContractAlertStrip data={data} items={contractAlerts} />
       <div className="grid gap-6 xl:grid-cols-3">
         <CrewMovementSection crewMovement={crewMovement} className="xl:col-span-2" />
-        <ExpiringItemsSection items={expiringItems} />
+        <PendingTasksSection tasks={pendingTasks} />
       </div>
+      <SectionHeading
+        title="Sertifikat Akan Kedaluwarsa"
+        description="Fokus pada sertifikat dan dokumen yang akan habis masa berlakunya."
+      />
       <div className="grid gap-6 xl:grid-cols-3">
-        <PendingTasksSection tasks={pendingTasks} className="xl:col-span-2" />
+        <ExpiringItemsSection items={expiringItems} className="xl:col-span-2" />
         <RecentActivitySection events={recentActivity} />
       </div>
+      <SectionHeading
+        title="Ringkasan Keuangan"
+        description="Ringkasan keuangan ringan memakai data yang sudah tersedia tanpa analitik tambahan."
+      />
+      <DirectorFinanceSummary data={data} />
       <div className="surface-card p-6">
         <div className="mb-4 flex items-center justify-between gap-4">
           <div>
-            <h3 className="text-lg font-semibold text-slate-900">Verification shortcuts</h3>
+            <h3 className="text-lg font-semibold text-slate-900">Shortcut operasional</h3>
             <p className="mt-1 text-sm text-slate-600">
-              Keep portal shortcuts available without placing a separate verification workflow on the dashboard.
+              Akses cepat tetap tersedia tanpa mengubah alur kerja utama di dashboard.
             </p>
           </div>
           <Link href="/compliance" className="text-sm font-semibold text-cyan-700 hover:text-cyan-800">
-            Open operations hub
+            Buka pusat kepatuhan
           </Link>
         </div>
         <div className="grid gap-4 md:grid-cols-3">
@@ -667,6 +562,99 @@ function DirectorDashboard({ data, crewMovement, expiringItems, contractAlerts, 
         </div>
       </div>
     </div>
+  );
+}
+
+function DirectorOverviewStructure({ data, pendingTasks }: { data: DashboardData | null; pendingTasks: PendingTask[] }) {
+  const structureCards = [
+    {
+      label: "Jumlah Crew",
+      value: (data?.totalCrew ?? 0).toLocaleString("id-ID"),
+      detail: "Jumlah crew aktif yang sedang dipantau kantor.",
+      href: "/crewing/seafarers",
+    },
+    {
+      label: "Pekerjaan Aktif",
+      value: pendingTasks.length.toLocaleString("id-ID"),
+      detail: "Tindak lanjut aktif di operasional dan kantor.",
+      href: "/crewing",
+    },
+    {
+      label: "Sertifikat Akan Kedaluwarsa",
+      value: (data?.expiringDocuments ?? 0).toLocaleString("id-ID"),
+      detail: "Dokumen dan sertifikat yang perlu diperpanjang.",
+      href: "/crewing/documents?filter=expiring",
+    },
+    {
+      label: "Kontrak Perlu Review",
+      value: (data?.contractsExpiring30Days ?? 0).toLocaleString("id-ID"),
+      detail: "Kontrak onboard yang perlu perhatian dekat dari sisi biaya dan rotasi.",
+      href: "/contracts",
+    },
+  ];
+
+  return (
+    <section className="surface-card p-6">
+      <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-700">Struktur Dashboard Direksi</p>
+          <h3 className="mt-2 text-xl font-semibold text-slate-900">Sinyal utama untuk pemantauan kantor</h3>
+          <p className="mt-1 text-sm leading-6 text-slate-600">
+            Struktur ini menjaga dashboard tetap jelas: jumlah crew, pekerjaan aktif, sertifikat yang akan kedaluwarsa, dan ringkasan kontrak tanpa menambah backend baru.
+          </p>
+        </div>
+        <Link href="/dashboard" className="text-sm font-semibold text-cyan-700 hover:text-cyan-800">
+          Muat ulang
+        </Link>
+      </div>
+      <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {structureCards.map((card) => (
+          <Link
+            key={card.label}
+            href={card.href}
+            className="rounded-2xl border border-slate-200 bg-slate-50 p-5 transition hover:border-cyan-300 hover:bg-white"
+          >
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{card.label}</p>
+            <p className="mt-3 text-3xl font-semibold text-slate-900">{card.value}</p>
+            <p className="mt-2 text-sm leading-6 text-slate-600">{card.detail}</p>
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function DirectorFinanceSummary({ data }: { data: DashboardData | null }) {
+  const items = [
+    {
+      label: "Kontrak ≤ 45 Hari",
+      value: data?.contractsExpiring45Days ?? 0,
+      detail: "Perlu review biaya perjalanan, reliever, dan payroll.",
+    },
+    {
+      label: "Kontrak ≤ 30 Hari",
+      value: data?.contractsExpiring30Days ?? 0,
+      detail: "Prioritas keputusan perpanjangan atau sign-off.",
+    },
+    {
+      label: "Kontrak ≤ 14 Hari",
+      value: data?.contractsExpiring14Days ?? 0,
+      detail: "Eksposur paling dekat untuk tindak lanjut kantor.",
+    },
+  ];
+
+  return (
+    <section className="surface-card p-6">
+      <div className="grid gap-4 md:grid-cols-3">
+        {items.map((item) => (
+          <div key={item.label} className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{item.label}</p>
+            <p className="mt-3 text-3xl font-semibold text-slate-900">{item.value.toLocaleString("id-ID")}</p>
+            <p className="mt-2 text-sm leading-6 text-slate-600">{item.detail}</p>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -873,6 +861,15 @@ function DashboardHeader({ title, subtitle }: { title: string; subtitle?: string
         </div>
         <span className="action-pill text-xs font-semibold tracking-wide">{formattedDate}</span>
       </div>
+    </div>
+  );
+}
+
+function SectionHeading({ title, description }: { title: string; description: string }) {
+  return (
+    <div className="surface-card p-5">
+      <h2 className="text-xl font-semibold text-slate-900">{title}</h2>
+      <p className="mt-1 text-sm text-slate-600">{description}</p>
     </div>
   );
 }

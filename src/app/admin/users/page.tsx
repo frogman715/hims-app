@@ -8,8 +8,7 @@ import AddUserModal from '@/components/admin/AddUserModal';
 import EditUserModal from '@/components/admin/EditUserModal';
 import ResetPasswordModal from '@/components/admin/ResetPasswordModal';
 import { getRoleDisplayName } from '@/lib/role-display';
-import { ADMIN_ALLOWED_ROLES } from '@/lib/admin-access';
-import { hasExplicitRoleAccess } from '@/lib/authorization';
+import { ADMIN_MAINTENANCE_SCOPES, hasAdminMaintenanceScope } from '@/lib/admin-access';
 
 interface User {
   id: string;
@@ -41,13 +40,14 @@ export default function UserManagementPage() {
       return;
     }
 
-    const hasAccess = hasExplicitRoleAccess(
+    const hasAccess = hasAdminMaintenanceScope(
       {
         roles: session.user.roles,
         role: session.user.role,
         isSystemAdmin: session.user.isSystemAdmin,
+        adminMaintenanceScopes: session.user.adminMaintenanceScopes,
       },
-      ADMIN_ALLOWED_ROLES
+      ADMIN_MAINTENANCE_SCOPES.USER_MANAGEMENT
     );
 
     if (!hasAccess) {
@@ -140,8 +140,8 @@ export default function UserManagementPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
-              <p className="text-gray-700 mt-1">Manage system users and their roles</p>
+              <h1 className="text-3xl font-bold text-gray-900">Kelola User</h1>
+              <p className="text-gray-700 mt-1">Kelola user aktif, role, dan status akses</p>
             </div>
             <Link
               href="/dashboard"
@@ -150,7 +150,7 @@ export default function UserManagementPage() {
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
-              <span>Back to Dashboard</span>
+              <span>Kembali ke Dashboard</span>
             </Link>
           </div>
         </div>
@@ -167,7 +167,7 @@ export default function UserManagementPage() {
                 </svg>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-700">Total Users</p>
+                <p className="text-sm font-medium text-gray-700">Total User</p>
                 <p className="text-2xl font-extrabold text-gray-900">{users.length}</p>
               </div>
             </div>
@@ -181,7 +181,7 @@ export default function UserManagementPage() {
                 </svg>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-700">Active Users</p>
+                <p className="text-sm font-medium text-gray-700">User Aktif</p>
                 <p className="text-2xl font-extrabold text-gray-900">
                   {users.filter(u => u.isActive).length}
                 </p>
@@ -197,7 +197,7 @@ export default function UserManagementPage() {
                 </svg>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-700">System Admins</p>
+                <p className="text-sm font-medium text-gray-700">Admin Sistem</p>
                 <p className="text-2xl font-extrabold text-gray-900">
                   {users.filter(u => u.isSystemAdmin).length}
                 </p>
@@ -209,13 +209,13 @@ export default function UserManagementPage() {
         {/* Users Table */}
         <div className="bg-white rounded-lg shadow-md overflow-hidden mb-8">
           <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-            <h2 className="text-xl font-semibold text-gray-900">All Users</h2>
+            <h2 className="text-xl font-semibold text-gray-900">Daftar User</h2>
             <div className="flex items-center gap-3">
               <Link
                 href="/admin/audit-logs"
                 className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
               >
-                Open Audit Logs
+                Buka Riwayat Aktivitas
               </Link>
               <button
                 onClick={() => setShowAddModal(true)}
@@ -224,7 +224,7 @@ export default function UserManagementPage() {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
-                <span>Add User</span>
+                <span>Tambah User</span>
               </button>
             </div>
           </div>

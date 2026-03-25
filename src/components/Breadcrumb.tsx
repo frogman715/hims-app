@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useSession } from 'next-auth/react';
 import { ChevronRight, Home } from 'lucide-react';
 
 /**
@@ -15,7 +17,24 @@ interface BreadcrumbItem {
   current: boolean;
 }
 
-function generateBreadcrumbs(pathname: string): BreadcrumbItem[] {
+function isOpaqueRouteSegment(segment: string): boolean {
+  if (segment.match(/^\d+$/) || segment.startsWith('[')) {
+    return true;
+  }
+
+  // Hide raw IDs such as Prisma cuid/UUID-like values from breadcrumbs.
+  return /^[a-z0-9]{16,}$/i.test(segment);
+}
+
+function generateBreadcrumbs(
+  pathname: string,
+  dynamicLabels: Record<string, string> = {}
+): BreadcrumbItem[] {
+  const seafarerBreadcrumbs = buildSeafarerBreadcrumbs(pathname, dynamicLabels);
+  if (seafarerBreadcrumbs) {
+    return seafarerBreadcrumbs;
+  }
+
   const segments = pathname.split('/').filter(Boolean);
   const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -28,7 +47,7 @@ function generateBreadcrumbs(pathname: string): BreadcrumbItem[] {
   // Breadcrumb mapping for user-friendly labels
   const labelMap: Record<string, string> = {
     dashboard: 'Dashboard',
-    accounting: 'Accounting',
+    accounting: 'Keuangan',
     'leave-pay': 'Leave Pay',
     exchange: 'Exchange Expenses',
     allotments: 'Allotments',
@@ -36,20 +55,20 @@ function generateBreadcrumbs(pathname: string): BreadcrumbItem[] {
     billing: 'Billing',
     'office-expense': 'Office Expense',
     'crew-portal': 'Crew Portal',
-    documents: 'Documents',
-    'prepare-joining': 'Prepare Joining',
-    applications: 'Applications',
-    assignments: 'Assignments',
-    contracts: 'Contracts',
-    dispatch: 'Dispatch',
-    compliance: 'Compliance',
-    audits: 'Audits',
-    'non-conformities': 'Non-Conformities',
-    quality: 'Quality',
-    settings: 'Settings',
-    users: 'Users',
-    roles: 'Roles',
-    permissions: 'Permissions',
+    documents: 'Dokumen',
+    'prepare-joining': 'Persiapan Keberangkatan',
+    applications: 'Lamaran',
+    assignments: 'Penugasan',
+    contracts: 'Kontrak',
+    dispatch: 'Keberangkatan',
+    compliance: 'Kepatuhan',
+    audits: 'Audit',
+    'non-conformities': 'Ketidaksesuaian',
+    quality: 'Mutu',
+    settings: 'Pengaturan',
+    users: 'Kelola User',
+    roles: 'Role',
+    permissions: 'Hak Akses',
   };
 
   let cumulativePath = '';
@@ -57,12 +76,11 @@ function generateBreadcrumbs(pathname: string): BreadcrumbItem[] {
     const segment = segments[i];
     cumulativePath += `/${segment}`;
 
-    // Skip numeric IDs or dynamic segments starting with [
-    if (segment.match(/^\d+$/) || segment.startsWith('[')) {
+    if (isOpaqueRouteSegment(segment) && !dynamicLabels[segment]) {
       continue;
     }
 
-    const label = labelMap[segment] || segment
+    const label = dynamicLabels[segment] || labelMap[segment] || segment
       .split('-')
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ');
@@ -85,9 +103,87 @@ function generateBreadcrumbs(pathname: string): BreadcrumbItem[] {
   return breadcrumbs;
 }
 
+function buildSeafarerBreadcrumbs(
+  pathname: string,
+  dynamicLabels: Record<string, string>
+): BreadcrumbItem[] | null {
+  const match = pathname.match(/^\/crewing\/seafarers\/([^/]+)(?:\/.*)?$/);
+  if (!match) {
+    return null;
+  }
+
+  const seafarerId = decodeURIComponent(match[1]);
+  const seafarerLabel = dynamicLabels[seafarerId] || 'Seafarer';
+
+  return [
+    { label: 'Dashboard', href: '/dashboard', current: false },
+    { label: 'Operasional Crew', href: '/crewing', current: false },
+    { label: 'Seafarers', href: '/crewing/seafarers', current: false },
+    {
+      label: seafarerLabel,
+      href: `/crewing/seafarers/${seafarerId}/biodata`,
+      current: true,
+    },
+  ];
+}
+
 export function Breadcrumb() {
   const pathname = usePathname();
-  const breadcrumbs = generateBreadcrumbs(pathname);
+  const { status } = useSession();
+  const [dynamicLabels, setDynamicLabels] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    async function resolveSeafarerLabel() {
+      const match = pathname.match(/^\/crewing\/seafarers\/([^/]+)(?:\/|$)/);
+      if (!match) {
+        setDynamicLabels({});
+        return;
+      }
+
+      if (status === 'loading') {
+        return;
+      }
+
+      const seafarerId = decodeURIComponent(match[1]);
+
+      try {
+        const response = await fetch(`/api/crewing/seafarers/${seafarerId}`, {
+          credentials: 'same-origin',
+        });
+
+        if (!response.ok) {
+          if (!isCancelled) {
+            setDynamicLabels({});
+          }
+          return;
+        }
+
+        const payload = await response.json();
+        const fullName =
+          typeof payload?.fullName === 'string' && payload.fullName.trim().length > 0
+            ? payload.fullName.trim()
+            : null;
+
+        if (!isCancelled) {
+          setDynamicLabels(fullName ? { [seafarerId]: fullName } : {});
+        }
+      } catch {
+        if (!isCancelled) {
+          setDynamicLabels({});
+        }
+      }
+    }
+
+    resolveSeafarerLabel();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [pathname, status]);
+
+  const breadcrumbs = generateBreadcrumbs(pathname, dynamicLabels);
 
   return (
     <nav aria-label="Breadcrumb" className="mb-4">
@@ -132,6 +228,12 @@ export function Breadcrumb() {
  * Use this in layouts to automatically show breadcrumbs on all pages
  */
 export function BreadcrumbWrapper() {
+  const pathname = usePathname();
+
+  if (pathname.startsWith("/auth")) {
+    return null;
+  }
+
   return (
     <div className="bg-white border-b border-gray-200 sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
