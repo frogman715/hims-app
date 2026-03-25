@@ -136,6 +136,13 @@ enum DocumentTypeCode {
   RETURN
 }
 
+enum CrewDocumentWorkspaceStatus {
+  NOT_LINKED
+  LINKED
+  REVIEW_PENDING
+  REVIEWED
+}
+
 enum PaymentStatus {
   DRAFT
   PENDING
@@ -487,6 +494,7 @@ model User {
   hgfSubmissionsRevisionsAsked HGFSubmission[] @relation("HGFSubmissionRevisionsAskedBy")
   documentsUploaded         DocumentUpload[]   @relation("DocumentUploadUploadedBy")
   documentsVerified         DocumentUpload[]   @relation("DocumentUploadVerifiedBy")
+  reviewedCrewDocumentWorkspaces CrewDocumentWorkspace[] @relation("CrewDocumentWorkspaceReviewedBy")
   formTemplatesCreated      FormTemplate[]    @relation("FormTemplateCreatedBy")
   hgfSubmissionAuditLogs    HGFSubmissionAuditLog[]
 
@@ -570,6 +578,7 @@ model Crew {
 
   // Relations
   documents           CrewDocument[]
+  documentWorkspace   CrewDocumentWorkspace?
   medicalChecks       MedicalCheck[]
   visaApplications    VisaApplication[]
   dispatches          Dispatch[]
@@ -657,6 +666,28 @@ model CrewDocument {
   @@index([crewId, docType])
   @@index([expiryDate])
   @@index([isActive])
+}
+
+model CrewDocumentWorkspace {
+  id                    String                      @id @default(cuid())
+  crewId                String                      @unique
+  officeFolderPath      String?
+  nextcloudUrl          String?
+  folderStatus          CrewDocumentWorkspaceStatus?
+  folderTemplateVersion String?
+  lastDocumentReviewAt  DateTime?
+  lastDocumentReviewBy  String?
+  notes                 String?
+
+  crew                  Crew                        @relation(fields: [crewId], references: [id], onDelete: Cascade)
+  reviewer              User?                       @relation("CrewDocumentWorkspaceReviewedBy", fields: [lastDocumentReviewBy], references: [id], onDelete: SetNull)
+
+  createdAt             DateTime                    @default(now())
+  updatedAt             DateTime                    @updatedAt
+
+  @@index([folderStatus])
+  @@index([lastDocumentReviewAt])
+  @@index([lastDocumentReviewBy])
 }
 
 // ==========================

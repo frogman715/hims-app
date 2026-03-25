@@ -5,6 +5,7 @@ import { PermissionLevel } from "@/lib/permission-middleware";
 import { handleApiError, ApiError } from "@/lib/error-handler";
 import { updateSeafarerSchema } from "@/types/crewing";
 import type { Prisma } from "@prisma/client";
+import { buildCrewDocumentWorkspaceView } from "@/lib/document-control";
 
 /**
  * GET /api/crewing/seafarers/[id]
@@ -21,6 +22,7 @@ export const GET = withPermission(
       const seafarer = await prisma.crew.findUnique({
         where: { id },
         include: {
+          documentWorkspace: true,
           documents: {
             where: { isActive: true },
             orderBy: { createdAt: "desc" },
@@ -57,7 +59,13 @@ export const GET = withPermission(
         throw new ApiError(404, "Seafarer not found", "NOT_FOUND");
       }
 
-      return NextResponse.json(seafarer);
+      return NextResponse.json({
+        ...seafarer,
+        documentWorkspace: buildCrewDocumentWorkspaceView({
+          documents: seafarer.documents,
+          stored: seafarer.documentWorkspace,
+        }),
+      });
     } catch (error) {
       return handleApiError(error);
     }
