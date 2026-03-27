@@ -4,26 +4,41 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { UserRole } from "@/lib/permissions";
+import { normalizeToUserRoles } from "@/lib/type-guards";
+import { canAccessOfficePath } from "@/lib/office-access";
 
 interface WorkflowStats {
-  received: number;
-  reviewing: number;
-  interview: number;
-  passed: number;
-  preparing: number;
-  ready: number;
+  draft: number;
+  documentCheck: number;
+  cvReady: number;
+  submittedToDirector: number;
+  directorApproved: number;
+  sentToOwner: number;
+  ownerRejected: number;
+  preJoining: number;
+  readyToOnboard: number;
+  onboarded: number;
 }
 
 export default function CrewManningWorkflow() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const userRoles = normalizeToUserRoles(session?.user?.roles ?? session?.user?.role);
+  const canManageApplications = userRoles.includes(UserRole.CDMO);
+  const isSystemAdmin = session?.user?.isSystemAdmin === true;
+  const canOpenPrepareJoining = canAccessOfficePath("/crewing/prepare-joining", userRoles, isSystemAdmin);
   const [stats, setStats] = useState<WorkflowStats>({
-    received: 0,
-    reviewing: 0,
-    interview: 0,
-    passed: 0,
-    preparing: 0,
-    ready: 0,
+    draft: 0,
+    documentCheck: 0,
+    cvReady: 0,
+    submittedToDirector: 0,
+    directorApproved: 0,
+    sentToOwner: 0,
+    ownerRejected: 0,
+    preJoining: 0,
+    readyToOnboard: 0,
+    onboarded: 0,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -89,75 +104,123 @@ export default function CrewManningWorkflow() {
   const workflowSteps = [
     {
       id: 1,
-      title: "Application Received",
-      description: "Seafarer submits application",
+      title: "Draft",
+      description: "Application is opened and waiting for document processing",
       icon: "📝",
       color: "from-blue-500 to-blue-600",
       bgColor: "bg-blue-100",
       borderColor: "border-blue-200",
-      count: stats.received,
-      link: "/crewing/applications?status=RECEIVED",
-      status: "RECEIVED"
+      count: stats.draft,
+      link: "/crewing/applications?stage=DRAFT",
+      status: "DRAFT"
     },
     {
       id: 2,
-      title: "HR Review",
-      description: "Review documents & qualifications",
+      title: "Document Check",
+      description: "Document role verifies certificates, expiry dates, and data completeness",
       icon: "🔍",
       color: "from-purple-500 to-purple-600",
       bgColor: "bg-purple-50",
       borderColor: "border-purple-200",
-      count: stats.reviewing,
-      link: "/crewing/applications?status=REVIEWING",
-      status: "REVIEWING"
+      count: stats.documentCheck,
+      link: "/crewing/applications?stage=DOCUMENT_CHECK",
+      status: "DOCUMENT_CHECK"
     },
     {
       id: 3,
-      title: "Interview",
-      description: "Schedule & conduct interview",
-      icon: "🎤",
+      title: "CV Ready",
+      description: "CV pack is complete and ready for director submission",
+      icon: "🗂️",
       color: "from-indigo-500 to-indigo-600",
       bgColor: "bg-indigo-50",
       borderColor: "border-indigo-200",
-      count: stats.interview,
-      link: "/crewing/interviews?status=SCHEDULED",
-      status: "INTERVIEW"
+      count: stats.cvReady,
+      link: "/crewing/applications?stage=CV_READY",
+      status: "CV_READY"
     },
     {
       id: 4,
-      title: "Passed/Offered",
-      description: "Offer position to candidate",
+      title: "Submitted to Director",
+      description: "Completed candidate package is waiting for director review",
       icon: "✅",
       color: "from-green-500 to-green-600",
       bgColor: "bg-green-50",
       borderColor: "border-green-200",
-      count: stats.passed,
-      link: "/crewing/applications?status=PASSED",
-      status: "PASSED"
+      count: stats.submittedToDirector,
+      link: "/crewing/applications?stage=SUBMITTED_TO_DIRECTOR",
+      status: "SUBMITTED_TO_DIRECTOR"
     },
     {
       id: 5,
-      title: "Prepare Joining",
-      description: "Documents, medical, training, travel",
+      title: "Director Approved",
+      description: "Director has approved the package and it is ready to send to owner",
       icon: "📋",
       color: "from-orange-500 to-orange-600",
       bgColor: "bg-orange-50",
       borderColor: "border-orange-200",
-      count: stats.preparing,
-      link: "/crewing/prepare-joining?status=PENDING",
-      status: "PREPARING"
+      count: stats.directorApproved,
+      link: "/crewing/applications?stage=DIRECTOR_APPROVED",
+      status: "DIRECTOR_APPROVED"
     },
     {
       id: 6,
-      title: "Ready to Join",
-      description: "All set, ready to dispatch",
-      icon: "🚢",
+      title: "Sent to Owner",
+      description: "Principal review is pending in the principal portal",
+      icon: "💼",
       color: "from-cyan-500 to-cyan-600",
       bgColor: "bg-cyan-50",
       borderColor: "border-cyan-200",
-      count: stats.ready,
+      count: stats.sentToOwner,
+      link: "/crewing/applications?stage=SENT_TO_OWNER",
+      status: "SENT_TO_OWNER"
+    },
+    {
+      id: 7,
+      title: "Pre-Joining",
+      description: "Owner-approved cases are active in the operational mobilization board",
+      icon: "🚢",
+      color: "from-teal-500 to-teal-600",
+      bgColor: "bg-teal-50",
+      borderColor: "border-teal-200",
+      count: stats.preJoining,
+      link: "/crewing/prepare-joining?status=PENDING",
+      status: "PRE_JOINING"
+    },
+    {
+      id: 8,
+      title: "Ready to Onboard",
+      description: "Operational checklist is complete and crew is cleared for release",
+      icon: "🟢",
+      color: "from-cyan-500 to-cyan-600",
+      bgColor: "bg-cyan-50",
+      borderColor: "border-cyan-200",
+      count: stats.readyToOnboard,
       link: "/crewing/prepare-joining?status=READY",
-      status: "READY"
+      status: "READY_TO_ONBOARD"
+    },
+    {
+      id: 9,
+      title: "Onboarded",
+      description: "Crew movement is completed and the operational handoff is finished",
+      icon: "🚢",
+      color: "from-indigo-500 to-indigo-600",
+      bgColor: "bg-indigo-50",
+      borderColor: "border-indigo-200",
+      count: stats.onboarded,
+      link: "/crewing/prepare-joining?status=DISPATCHED",
+      status: "ONBOARDED"
+    },
+    {
+      id: 10,
+      title: "Owner Rejected",
+      description: "Rejected by principal and kept for traceability",
+      icon: "❌",
+      color: "from-rose-500 to-rose-600",
+      bgColor: "bg-rose-50",
+      borderColor: "border-rose-200",
+      count: stats.ownerRejected,
+      link: "/crewing/applications?stage=OWNER_REJECTED",
+      status: "OWNER_REJECTED"
     }
   ];
 
@@ -169,10 +232,13 @@ export default function CrewManningWorkflow() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-4xl font-bold text-gray-900 mb-2">
-                Crew Manning Workflow
+                Crew Pipeline Workflow
               </h1>
               <p className="text-gray-800 font-medium">
-                Complete flow from application until seafarer is ready to depart to vessel
+                HGI office flow from document intake to owner decision and pre-joining
+              </p>
+              <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-amber-700">
+                Pilot guidance. Follow the office pipeline as Draft → Document Check → CV Ready → Submitted to Director → Director Approved → Sent to Owner → Pre-Joining.
               </p>
             </div>
             <Link
@@ -185,8 +251,21 @@ export default function CrewManningWorkflow() {
         </div>
 
         {/* Workflow Steps */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-          {workflowSteps.map((step) => (
+        <div className="mb-8 rounded-2xl border border-cyan-200 bg-cyan-50 p-5">
+          <p className="text-sm font-semibold text-cyan-900">How to use this page</p>
+            <p className="mt-1 text-sm text-cyan-800">
+            Follow the HGI sequence: Draft → Document Check → CV Ready → Submitted to Director → Director Approved → Sent to Owner → Pre-Joining. Owner rejection is recorded separately for traceability.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-12">
+          {workflowSteps
+            .filter((step) =>
+              ["PRE_JOINING", "READY_TO_ONBOARD", "ONBOARDED"].includes(step.status)
+                ? canOpenPrepareJoining
+                : true
+            )
+            .map((step) => (
             <Link
               key={step.id}
               href={step.link}
@@ -237,7 +316,13 @@ export default function CrewManningWorkflow() {
           </h2>
           
           <div className="flex items-center justify-between overflow-x-auto pb-4">
-            {workflowSteps.map((step, index) => (
+            {workflowSteps
+              .filter((step) =>
+                ["PRE_JOINING", "READY_TO_ONBOARD", "ONBOARDED"].includes(step.status)
+                  ? canOpenPrepareJoining
+                  : true
+              )
+              .map((step, index, filteredSteps) => (
               <div key={step.id} className="flex items-center">
                 {/* Step Card */}
                 <div className="flex flex-col items-center min-w-[140px]">
@@ -258,7 +343,7 @@ export default function CrewManningWorkflow() {
                 </div>
 
                 {/* Arrow */}
-                {index < workflowSteps.length - 1 && (
+                {index < filteredSteps.length - 1 && (
                   <div className="mx-4 text-3xl text-gray-700">
                     →
                   </div>
@@ -270,25 +355,35 @@ export default function CrewManningWorkflow() {
 
         {/* Quick Actions */}
         <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Link
-            href="/crewing/applications/new"
-            className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1"
-          >
-            <div className="text-4xl mb-3">➕</div>
-            <h3 className="text-xl font-extrabold mb-2">New Application</h3>
-            <p className="text-white text-sm opacity-95">
-              Input aplikasi baru dari seafarer
-            </p>
-          </Link>
+          {canManageApplications ? (
+            <Link
+              href="/crewing/applications/new"
+              className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1"
+            >
+              <div className="text-4xl mb-3">➕</div>
+              <h3 className="text-xl font-extrabold mb-2">New Application</h3>
+              <p className="text-white text-sm opacity-95">
+                Register a new application against an active seafarer and principal
+              </p>
+            </Link>
+          ) : (
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6 text-slate-700">
+              <div className="text-4xl mb-3">📝</div>
+              <h3 className="text-xl font-extrabold mb-2 text-slate-900">Application Entry</h3>
+              <p className="text-sm">
+                Review only. New application entry remains with Document Staff.
+              </p>
+            </div>
+          )}
 
           <Link
-            href="/crewing/interviews/schedule"
+            href="/crewing/interviews"
             className="bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl p-6 text-white hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1"
           >
             <div className="text-4xl mb-3">📅</div>
-            <h3 className="text-xl font-extrabold mb-2">Schedule Interview</h3>
+            <h3 className="text-xl font-extrabold mb-2">Interview Board</h3>
             <p className="text-white text-sm opacity-95">
-              Jadwalkan interview untuk kandidat
+              Review scheduled interviews and candidates awaiting interview
             </p>
           </Link>
 
@@ -299,7 +394,7 @@ export default function CrewManningWorkflow() {
             <div className="text-4xl mb-3">📊</div>
             <h3 className="text-xl font-extrabold mb-2">Reports</h3>
             <p className="text-white text-sm opacity-95">
-              Lihat laporan recruitment & manning
+              Open recruitment and manning reports
             </p>
           </Link>
         </div>

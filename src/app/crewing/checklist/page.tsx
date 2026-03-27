@@ -4,14 +4,16 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
+import { canAccessOfficePath } from "@/lib/office-access";
 
 interface ChecklistItem {
-  id: number;
+  id: string;
+  crewId: string;
   month: string;
   year: number;
-  seafarerName: string;
+  crewName: string | null;
   vessel: string;
-  rank: string;
+  rank: string | null;
   signOnDate?: string;
   signOffDate?: string;
   status: 'ON' | 'OFF' | 'CONTRACT_EXPIRING';
@@ -26,6 +28,8 @@ export default function MonthlyChecklistPage() {
   const router = useRouter();
   const [checklistItems, setChecklistItems] = useState<ChecklistItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
@@ -33,77 +37,47 @@ export default function MonthlyChecklistPage() {
     if (status === "loading") return;
     if (!session) {
       router.push("/auth/signin");
+      return;
     }
+
+    const allowed = canAccessOfficePath(
+      "/crewing/checklist",
+      [...(session.user?.roles ?? []), session.user?.role ?? ""].filter(Boolean),
+      session.user?.isSystemAdmin === true
+    );
+
+    if (!allowed) {
+      setIsAuthorized(false);
+      router.push("/dashboard");
+      return;
+    }
+    setIsAuthorized(true);
   }, [session, status, router]);
 
   const fetchChecklistItems = useCallback(async () => {
     try {
+      setLoadError(null);
       const response = await fetch(`/api/checklist?month=${selectedMonth}&year=${selectedYear}`);
-      if (!response.ok) throw new Error('Failed to fetch checklist');
+      if (!response.ok) {
+        throw new Error('Failed to fetch checklist');
+      }
 
       const data = await response.json();
       setChecklistItems(data);
     } catch (error) {
       console.error("Error fetching checklist items:", error);
-      // Fallback to mock data if API fails
-      const mockData: ChecklistItem[] = [
-        {
-          id: 1,
-          month: "November",
-          year: 2025,
-          seafarerName: "John Smith",
-          vessel: "MV Ocean Pride",
-          rank: "Captain",
-          signOnDate: "2025-11-01",
-          status: "ON",
-          documentsComplete: true,
-          medicalCheck: true,
-          trainingComplete: false,
-          notes: "Training scheduled for next week"
-        },
-        {
-          id: 2,
-          month: "November",
-          year: 2025,
-          seafarerName: "Maria Garcia",
-          vessel: "MV Sea Explorer",
-          rank: "Chief Engineer",
-          signOffDate: "2025-11-15",
-          status: "OFF",
-          documentsComplete: true,
-          medicalCheck: true,
-          trainingComplete: true,
-          notes: "All requirements completed"
-        },
-        {
-          id: 3,
-          month: "November",
-          year: 2025,
-          seafarerName: "David Chen",
-          vessel: "MV Pacific Star",
-          rank: "Chief Officer",
-          signOnDate: "2025-11-10",
-          status: "ON",
-          documentsComplete: false,
-          medicalCheck: true,
-          trainingComplete: false,
-          notes: "Waiting for passport renewal"
-        }
-      ];
-      setChecklistItems(mockData.filter(item =>
-        item.year === selectedYear &&
-        new Date(`${item.year}-${item.month}-01`).getMonth() + 1 === selectedMonth
-      ));
+      setChecklistItems([]);
+      setLoadError(error instanceof Error ? error.message : "Failed to load checklist");
     } finally {
       setLoading(false);
     }
   }, [selectedMonth, selectedYear]);
 
   useEffect(() => {
-    if (session) {
+    if (session && isAuthorized) {
       fetchChecklistItems();
     }
-  }, [session, selectedMonth, selectedYear, fetchChecklistItems]);
+  }, [session, isAuthorized, selectedMonth, selectedYear, fetchChecklistItems]);
 
   const months = [
     "January", "February", "March", "April", "May", "June",
@@ -113,10 +87,14 @@ export default function MonthlyChecklistPage() {
   const years = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i);
 
   if (status === "loading" || loading) {
-    return <div>Loading...</div>;
+    return <div>Loading monthly checklist...</div>;
   }
 
   if (!session) {
+    return null;
+  }
+
+  if (!isAuthorized) {
     return null;
   }
 
@@ -135,7 +113,7 @@ export default function MonthlyChecklistPage() {
               </Link>
               <div>
                 <h1 className="text-3xl font-bold text-gray-900 mb-2">Monthly Crew Checklist</h1>
-                <p className="text-gray-800">ON/OFF signers checklist - Connected to Crew List & Replacement Schedule</p>
+                <p className="text-gray-800">Auto-generated ON/OFF signer review board linked to assignments and replacement planning</p>
                 <div className="flex items-center space-x-4 mt-2">
                   <Link
                     href="/crewing/crew-list"
@@ -145,10 +123,10 @@ export default function MonthlyChecklistPage() {
                   </Link>
                   <span className="text-gray-700">|</span>
                   <Link
-                    href="/crewing/replacements"
+                    href="/crewing/readiness-board"
                     className="text-sm text-indigo-600 hover:text-indigo-800 font-medium"
                   >
-                    View Replacement Schedule →
+                    Open Readiness Board →
                   </Link>
                 </div>
               </div>
@@ -176,17 +154,24 @@ export default function MonthlyChecklistPage() {
                 </select>
               </div>
               <Link
-                href="/crewing/checklist/new"
+                href="/crewing/readiness-board"
                 className="inline-flex items-center px-6 py-3 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors shadow-lg"
               >
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                Add Entry
+                Open Readiness Board
               </Link>
             </div>
           </div>
         </div>
+
+        <div className="mb-8 rounded-xl border border-amber-200 bg-amber-50 px-6 py-4 text-sm text-amber-900 shadow-sm">
+          Reference board only. This checklist is derived from live assignment and replacement data. New manual entry is intentionally hidden so office staff do not create duplicate movement records.
+        </div>
+
+        {loadError ? (
+          <div className="mb-8 rounded-xl border border-rose-200 bg-rose-50 px-6 py-4 text-sm text-rose-700 shadow-sm">
+            {loadError}. Review the readiness board or assignment records, then retry this page.
+          </div>
+        ) : null}
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
@@ -280,13 +265,10 @@ export default function MonthlyChecklistPage() {
               <p className="mt-1 text-sm text-gray-700">No ON/OFF signers recorded for this month.</p>
               <div className="mt-6">
                 <Link
-                  href="/crewing/checklist/new"
+                  href="/crewing/readiness-board"
                   className="inline-flex items-center px-4 py-2 border border-transparent shadow-md text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                 >
-                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                  Add First Entry
+                  Open Readiness Board
                 </Link>
               </div>
             </div>
@@ -329,7 +311,7 @@ export default function MonthlyChecklistPage() {
                     <tr key={item.id} className="hover:bg-gray-100">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">
-                          {item.seafarerName}
+                          {item.crewName || 'Crew not recorded'}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
@@ -382,12 +364,7 @@ export default function MonthlyChecklistPage() {
                         >
                           View
                         </button>
-                        <button
-                          onClick={() => router.push(`/crewing/checklist/${item.id}/edit`)}
-                          className="text-green-600 hover:text-green-900"
-                        >
-                          Edit
-                        </button>
+                        <span className="text-slate-400">Review only</span>
                       </td>
                     </tr>
                   ))}
@@ -411,8 +388,8 @@ export default function MonthlyChecklistPage() {
                   scheduled for sign-on or sign-off in the selected month based on their assignment records.
                 </p>
                 <p>
-                  <strong>Connected to Replacement Schedule:</strong> Crew replacements planned in the replacement
-                  module will appear here when their replacement dates fall within the selected month.
+                  <strong>Connected to Readiness Board:</strong> Crew change coordination now follows the readiness
+                  board and assignment review flow, so this checklist only reflects validated movement records.
                 </p>
                 <p>
                   <strong>Document Verification:</strong> The system automatically checks for valid passports,

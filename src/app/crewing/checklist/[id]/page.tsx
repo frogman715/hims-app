@@ -6,13 +6,13 @@ import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 
 interface ChecklistItem {
-  id: number;
-  seafarerId?: number;
+  id: string;
+  crewId: string | null;
   month: string;
   year: number;
-  seafarerName: string;
+  crewName: string | null;
   vessel: string;
-  rank: string;
+  rank: string | null;
   signOnDate?: string;
   signOffDate?: string;
   status: 'ON' | 'OFF' | 'CONTRACT_EXPIRING';
@@ -93,11 +93,10 @@ export default function ChecklistDetailPage() {
 
   const fetchChecklistItem = useCallback(async () => {
     try {
-      // First try to get from checklist API
       const checklistResponse = await fetch(`/api/checklist?month=${new Date().getMonth() + 1}&year=${new Date().getFullYear()}`);
       if (checklistResponse.ok) {
         const checklistData = await checklistResponse.json();
-        const item = checklistData.find((item: ChecklistItem) => item.id === parseInt(params.id as string));
+        const item = checklistData.find((entry: ChecklistItem) => entry.id === (params.id as string));
         if (item) {
           // Get replacement data for this assignment
           const replacementResponse = await fetch(`/api/crew-replacements?assignmentId=${item.id}`);
@@ -109,53 +108,6 @@ export default function ChecklistDetailPage() {
           setLoading(false);
           return;
         }
-      }
-
-      // Fallback: get from assignments API
-      const assignmentResponse = await fetch(`/api/assignments`);
-      if (!assignmentResponse.ok) throw new Error('Failed to fetch assignment');
-
-      const assignments = await assignmentResponse.json();
-      const assignment = assignments.find((a: { id: number }) => a.id === parseInt(params.id as string));
-
-      if (assignment) {
-        const item: ChecklistItem = {
-          id: assignment.id,
-          seafarerId: assignment.seafarerId,
-          month: new Date().toLocaleString('default', { month: 'long' }),
-          year: new Date().getFullYear(),
-          seafarerName: assignment.seafarer?.fullName || 'Unknown',
-          vessel: assignment.vessel?.name || 'Unknown',
-          rank: assignment.rank,
-          signOnDate: assignment.signOnDate ? new Date(assignment.signOnDate).toISOString().split('T')[0] : undefined,
-          signOffDate: assignment.signOffDate ? new Date(assignment.signOffDate).toISOString().split('T')[0] :
-                      assignment.signOffPlan ? new Date(assignment.signOffPlan).toISOString().split('T')[0] : undefined,
-          status: assignment.status === 'ONBOARD' ? 'ON' : 'OFF',
-          documentsComplete: Math.random() > 0.3, // Mock
-          medicalCheck: Math.random() > 0.2, // Mock
-          trainingComplete: Math.random() > 0.4, // Mock
-          createdAt: assignment.createdAt || new Date().toISOString(),
-          updatedAt: assignment.updatedAt || new Date().toISOString(),
-          replacements: []
-        };
-
-        // Get replacement data for this assignment
-        const replacementResponse = await fetch(`/api/crew-replacements?assignmentId=${item.id}`);
-        if (replacementResponse.ok) {
-          const replacements = await replacementResponse.json();
-          item.replacements = replacements;
-        }
-
-        // Get external compliance data for this seafarer
-        if (item.seafarerId) {
-          const complianceResponse = await fetch(`/api/external-compliance?crewId=${item.seafarerId}`);
-          if (complianceResponse.ok) {
-            const complianceData = await complianceResponse.json();
-            item.externalCompliance = complianceData;
-          }
-        }
-
-        setChecklistItem(item);
       }
     } catch (error) {
       console.error("Error fetching checklist item:", error);
@@ -222,22 +174,26 @@ export default function ChecklistDetailPage() {
             </div>
             <div className="flex items-center space-x-4">
               <Link
-                href={`/crewing/seafarers/${checklistItem.seafarerId}/biodata`}
+                href={checklistItem.crewId ? `/crewing/seafarers/${checklistItem.crewId}/biodata` : "/crewing/seafarers"}
                 className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors shadow-lg"
               >
                 View Seafarer Biodata
               </Link>
               <Link
-                href={`/crewing/assignments/${checklistItem.id}`}
+                href={`/crewing/checklist/${checklistItem.id}/edit`}
                 className="inline-flex items-center px-6 py-3 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors shadow-lg"
               >
                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                 </svg>
-                Edit Assignment
+                Edit Checklist Entry
               </Link>
             </div>
           </div>
+        </div>
+
+        <div className="mb-8 rounded-xl border border-amber-200 bg-amber-50 px-6 py-4 text-sm text-amber-900 shadow-sm">
+          Reference view only. This checklist entry summarizes live movement and compliance data. Final status changes should still be completed in the underlying assignment, document, and Prepare Joining workflows.
         </div>
 
         {/* Status Banner */}
@@ -274,7 +230,7 @@ export default function ChecklistDetailPage() {
             <div className="space-y-6">
               <div>
                 <label className="block text-sm font-semibold text-gray-900 mb-2">Seafarer Name</label>
-                <div className="text-lg font-medium text-gray-900">{checklistItem.seafarerName}</div>
+                <div className="text-lg font-medium text-gray-900">{checklistItem.crewName || 'Crew not recorded'}</div>
               </div>
 
               <div>
@@ -493,15 +449,17 @@ export default function ChecklistDetailPage() {
         {/* Action Buttons */}
         <div className="mt-8 flex justify-end space-x-4">
           <button
-            onClick={() => router.push(`/crewing/assignments/${checklistItem.id}`)}
+            onClick={() => router.push(`/crewing/checklist/${checklistItem.id}/edit`)}
             className="inline-flex items-center px-4 py-2 border border-gray-400 rounded-lg text-sm font-semibold text-gray-900 bg-white hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
           >
-            Edit Assignment
+            Edit Checklist Entry
           </button>
           <button
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            type="button"
+            disabled
+            className="inline-flex items-center px-4 py-2 border border-slate-200 rounded-lg text-sm font-medium text-slate-400 bg-slate-100 cursor-not-allowed"
           >
-            Mark as Complete
+            Completion Update Not Live Yet
           </button>
         </div>
       </div>

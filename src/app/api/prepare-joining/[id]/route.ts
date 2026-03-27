@@ -182,7 +182,7 @@ export async function GET(
   const { id } = await context.params;
   try {
     const session = await getServerSession(authOptions);
-    const authError = ensureOfficeApiPathAccess(session, "/api/prepare-joining/detail", "GET");
+    const authError = ensureOfficeApiPathAccess(session, "/api/prepare-joining", "GET");
     if (authError) return authError;
 
     const prepareJoining = await prisma.prepareJoining.findUnique({
@@ -273,7 +273,7 @@ export async function PUT(
   const { id } = await context.params;
   try {
     const session = await getServerSession(authOptions);
-    const authError = ensureOfficeApiPathAccess(session, "/api/prepare-joining/detail", "PUT");
+    const authError = ensureOfficeApiPathAccess(session, "/api/prepare-joining", "PUT");
     if (authError) return authError;
 
     const parsedBody = prepareJoiningUpdateSchema.safeParse(await req.json());
@@ -904,12 +904,13 @@ export async function DELETE(
   try {
     const { id } = await context.params;
     const session = await getServerSession(authOptions);
-    if (!checkPermission(session, "crewing", PermissionLevel.FULL_ACCESS)) {
-      return NextResponse.json(
-        { error: "Insufficient permissions" },
-        { status: 403 }
-      );
-    }
+    const authError = ensureOfficeApiPathAccess(
+      session,
+      "/api/prepare-joining",
+      "DELETE",
+      "Insufficient permissions to delete prepare joining records"
+    );
+    if (authError) return authError;
 
     await prisma.prepareJoining.delete({
       where: { id },
