@@ -6,11 +6,20 @@
     "dev": "next dev",
     "prebuild": "node scripts/clean-next.cjs",
     "build": "NODE_OPTIONS='--max-old-space-size=1536 --require=./scripts/fs-rename-exdev-fallback.cjs' NEXT_TELEMETRY_DISABLED=1 next build",
+    "verify": "npm run typecheck && npm run lint",
+    "build:strict": "npm run verify && STRICT_BUILD=1 npm run build",
+    "ci": "npm run typecheck && npm run lint && npm run test:api && npm run test:lib:smoke && npm run build:strict",
     "postbuild": "mkdir -p .next/standalone/.next && cp -a .next/static .next/standalone/.next/ && cp -a public .next/standalone/ && cp .next/prerender-manifest.json .next/standalone/ && cp .next/routes-manifest.json .next/standalone/",
     "start": "next start -p 3000",
     "start:standalone": "node scripts/start-standalone.cjs",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
+    "test:api": "node --test $(find src/app/api -name '*.test.cjs' | sort)",
+    "test:lib": "npm run test:lib:full",
+    "test:lib:full": "node --test src/lib/*.test.cjs",
+    "test:lib:smoke": "node --test src/lib/application-flow-state.test.cjs src/lib/authorization.test.cjs src/lib/crewing-readiness.test.cjs src/lib/dashboard-transformers.test.cjs src/lib/document-control.config.test.cjs src/lib/document-expiry.test.cjs src/lib/documents.service.test.cjs src/lib/error-handler.test.cjs src/lib/fleet-metrics.test.cjs src/lib/office-access.test.cjs src/lib/permission-middleware.test.cjs src/lib/permissions.test.cjs src/lib/prepare-joining-continuity.test.cjs src/lib/risk-service.test.cjs src/lib/supplier.service.test.cjs src/lib/upload-path.test.cjs",
+    "test:lib:services": "node --test src/lib/audit-service.test.cjs src/lib/audit.service.test.cjs src/lib/compliance.service.test.cjs src/lib/documents.service.test.cjs src/lib/risk-service.test.cjs src/lib/supplier.service.test.cjs",
+    "test:fleet": "node --test src/lib/fleet-metrics.test.cjs src/lib/dashboard-summary.test.cjs src/lib/crewing-overview-summary.test.cjs src/lib/dashboard-transformers.test.cjs",
     "seed": "node scripts/seed.js"
   },
   "dependencies": {
@@ -39,7 +48,8 @@
     "react-dom": "19.2.0",
     "recharts": "^3.6.0",
     "tailwind-merge": "^3.4.0",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@prisma/client": "^6.19.2",
@@ -48,7 +58,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "autoprefixer": "^10.4.23",
-    "dotenv": "^17.2.3",
+    "dotenv": "^17.3.1",
     "eslint": "^9",
     "eslint-config-next": "^16.0.4",
     "postcss": "^8",
