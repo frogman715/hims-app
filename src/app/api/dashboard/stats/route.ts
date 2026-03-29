@@ -13,8 +13,6 @@ import {
   groupCrewDocumentsByCrew,
 } from "@/lib/dashboard-transformers";
 import {
-  ACTIVE_APPLICATION_STATUSES,
-  detectDuplicateApplicationGroups,
 } from "@/lib/crewing-hardening";
 import { buildMaritimeRegulatoryReadiness } from "@/lib/maritime-regulatory-readiness";
 import { getOfficeAutomationSnapshot } from "@/lib/office-automation";
@@ -87,6 +85,15 @@ export async function GET() {
       return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 });
     }
 
+    const now = new Date();
+    const ninetyDaysFromNow = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000);
+    const fifteenMonthsFromNow = new Date(now.getFullYear(), now.getMonth() + 15, now.getDate());
+
+    const MAX_PENDING_TASKS = 10;
+    const ITEMS_PER_QUERY = 5;
+    const DAYS_TO_MILLISECONDS = 24 * 60 * 60 * 1000;
+    const AUDIT_LOOKAHEAD_DAYS = 30;
+
     const {
       crewReady,
       crewOnBoard,
@@ -98,33 +105,222 @@ export async function GET() {
       operationalVessels,
     } = await getDashboardSummaryMetrics(prisma);
 
-    const crewRegulatoryRecords = await prisma.crew.findMany({
-      where: {
-        status: {
-          in: ["STANDBY", "ONBOARD"],
-        },
-      },
-      select: {
-        id: true,
-        passportExpiry: true,
-        seamanBookExpiry: true,
-        documents: {
-          where: { isActive: true },
-          select: {
-            docType: true,
-            expiryDate: true,
+    const [
+      crewRegulatoryRecords,
+      expiredDocuments,
+      documentsExpiringSoon,
+      crewWithExpiringDocuments,
+      onboardContracts,
+      crewWithExpiringContracts,
+      pendingApps,
+      prepareJoiningCases,
+      upcomingAudits,
+      recentAssignments,
+      automationSnapshot,
+    ] = await Promise.all([
+      prisma.crew.findMany({
+        where: {
+          status: {
+            in: ["STANDBY", "ONBOARD"],
           },
         },
-        medicalChecks: {
-          orderBy: { checkDate: "desc" },
-          take: 1,
-          select: {
-            result: true,
-            expiryDate: true,
+        select: {
+          id: true,
+          passportExpiry: true,
+          seamanBookExpiry: true,
+          documents: {
+            where: { isActive: true },
+            select: {
+              docType: true,
+              expiryDate: true,
+            },
+          },
+          medicalChecks: {
+            orderBy: { checkDate: "desc" },
+            take: 1,
+            select: {
+              result: true,
+              expiryDate: true,
+            },
           },
         },
-      },
-    });
+      }),
+      prisma.crewDocument.count({
+        where: {
+          expiryDate: {
+            lte: now,
+          },
+        },
+      }),
+      prisma.crewDocument.count({
+        where: {
+          expiryDate: {
+            gt: now,
+            lte: fifteenMonthsFromNow,
+          },
+        },
+      }),
+      prisma.crewDocument.findMany({
+        where: {
+          expiryDate: {
+            lte: fifteenMonthsFromNow,
+          },
+        },
+        include: {
+          crew: {
+            select: {
+              fullName: true,
+              id: true,
+            },
+          },
+        },
+        orderBy: {
+          expiryDate: "asc",
+        },
+      }),
+      prisma.employmentContract.findMany({
+        where: {
+          contractEnd: {
+            lte: ninetyDaysFromNow,
+          },
+          status: {
+            notIn: ["COMPLETED", "TERMINATED", "CANCELLED"],
+          },
+          crew: {
+            assignments: {
+              some: {
+                status: {
+                  in: ["ONBOARD", "ACTIVE"],
+                },
+              },
+            },
+          },
+        },
+      }),
+      prisma.employmentContract.findMany({
+        where: {
+          contractEnd: {
+            lte: ninetyDaysFromNow,
+          },
+          status: {
+            notIn: ["COMPLETED", "TERMINATED", "CANCELLED"],
+          },
+          crew: {
+            assignments: {
+              some: {
+                status: {
+                  in: ["ONBOARD", "ACTIVE"],
+                },
+              },
+            },
+          },
+        },
+        include: {
+          crew: {
+            select: {
+              fullName: true,
+              id: true,
+            },
+          },
+          vessel: {
+            select: {
+              name: true,
+            },
+          },
+          principal: {
+            select: {
+              name: true,
+            },
+          },
+        },
+        orderBy: {
+          contractEnd: "asc",
+        },
+      }),
+      prisma.application.findMany({
+        where: { status: { in: ["RECEIVED", "REVIEWING"] } },
+        include: {
+          crew: {
+            select: {
+              fullName: true,
+            },
+          },
+        },
+        take: ITEMS_PER_QUERY,
+        orderBy: {
+          createdAt: "desc",
+        },
+      }),
+      prisma.prepareJoining.findMany({
+        where: {
+          status: { in: ["PENDING", "DOCUMENTS", "MEDICAL", "TRAINING", "TRAVEL", "READY"] },
+        },
+        include: {
+          crew: {
+            select: {
+              fullName: true,
+            },
+          },
+          vessel: {
+            select: {
+              name: true,
+            },
+          },
+          principal: {
+            select: {
+              name: true,
+            },
+          },
+        },
+        take: ITEMS_PER_QUERY,
+        orderBy: [{ departureDate: "asc" }, { updatedAt: "asc" }],
+      }),
+      prisma.auditSchedule.findMany({
+        where: {
+          status: { in: ["SCHEDULED", "IN_PROGRESS"] },
+          startDate: {
+            lte: new Date(now.getTime() + AUDIT_LOOKAHEAD_DAYS * DAYS_TO_MILLISECONDS),
+          },
+        },
+        take: ITEMS_PER_QUERY,
+        orderBy: {
+          startDate: "asc",
+        },
+      }),
+      prisma.assignment.findMany({
+        where: {
+          status: { in: OPERATIONAL_ASSIGNMENT_STATUSES },
+        },
+        include: {
+          crew: {
+            select: {
+              fullName: true,
+              rank: true,
+            },
+          },
+          vessel: {
+            select: {
+              name: true,
+              principal: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
+          principal: {
+            select: {
+              name: true,
+            },
+          },
+        },
+        take: 10,
+        orderBy: {
+          startDate: "desc",
+        },
+      }),
+      getOfficeAutomationSnapshot(prisma, now),
+    ]);
 
     let mlcMedicalAlerts = 0;
     let stcwComplianceAlerts = 0;
@@ -153,118 +349,11 @@ export async function GET() {
       });
     }
 
-    // Calculate dates for warnings
-    const now = new Date();
-    const ninetyDaysFromNow = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000);
-    const fifteenMonthsFromNow = new Date(now.getFullYear(), now.getMonth() + 15, now.getDate());
-
-    const expiredDocuments = await prisma.crewDocument.count({
-      where: {
-        expiryDate: {
-          lte: now
-        }
-      }
-    });
-
-    // Documents Expiring Soon: 15 months threshold
-    // Count documents where expiryDate is on or before 15 months from now
-    const documentsExpiringSoon = await prisma.crewDocument.count({
-      where: {
-        expiryDate: {
-          gt: now,
-          lte: fifteenMonthsFromNow
-        }
-      }
-    });
-
-    // Get detailed info of crew with documents expiring soon (including already expired)
-    const crewWithExpiringDocuments = await prisma.crewDocument.findMany({
-      where: {
-        expiryDate: {
-          lte: fifteenMonthsFromNow
-        }
-      },
-      include: {
-        crew: {
-          select: {
-            fullName: true,
-            id: true
-          }
-        }
-      },
-      orderBy: {
-        expiryDate: 'asc'
-      }
-    });
-
     const crewWithExpiringDocumentsArray = groupCrewDocumentsByCrew(crewWithExpiringDocuments) as CrewWithDocuments[];
-
-    // Contracts Expiring Soon: live onboard contracts within the early warning window
-    const onboardContracts = await prisma.employmentContract.findMany({
-      where: {
-        contractEnd: {
-          lte: ninetyDaysFromNow,
-        },
-        status: {
-          notIn: ['COMPLETED', 'TERMINATED', 'CANCELLED'],
-        },
-        crew: {
-          assignments: {
-            some: {
-              status: {
-                in: ['ONBOARD', 'ACTIVE'],
-              },
-            },
-          },
-        },
-      }
-    });
     const contractAlerts = onboardContracts
       .map((contract) => buildContractExpiryAlert(contract))
       .filter((item) => getContractExpiryBand(item.daysRemaining) !== "OK");
     const contractsExpiringSoon = contractAlerts.length;
-
-    // Get detailed info of crew with contracts expiring soon
-    const crewWithExpiringContracts = await prisma.employmentContract.findMany({
-      where: {
-        contractEnd: {
-          lte: ninetyDaysFromNow
-        },
-        status: {
-          notIn: ['COMPLETED', 'TERMINATED', 'CANCELLED'],
-        },
-        crew: {
-          assignments: {
-            some: {
-              status: {
-                in: ['ONBOARD', 'ACTIVE'],
-              },
-            },
-          },
-        },
-      },
-      include: {
-        crew: {
-          select: {
-            fullName: true,
-            id: true
-          }
-        },
-        vessel: {
-          select: {
-            name: true
-          }
-        },
-        principal: {
-          select: {
-            name: true
-          }
-        }
-      },
-      orderBy: {
-        contractEnd: 'asc'
-      }
-    });
 
     const crewWithExpiringContractsArray = groupCrewContractsByCrew(
       crewWithExpiringContracts,
@@ -321,12 +410,6 @@ export async function GET() {
     // TODO: Add Complaint model when needed
     // const complaints = await prisma.complaint.count();
 
-    // Configuration constants
-    const MAX_PENDING_TASKS = 10;
-    const ITEMS_PER_QUERY = 5;
-    const DAYS_TO_MILLISECONDS = 24 * 60 * 60 * 1000;
-    const AUDIT_LOOKAHEAD_DAYS = 30;
-
     // Transform pending tasks into array format expected by frontend
     const pendingTasks: Array<{
       id?: string;
@@ -349,22 +432,6 @@ export async function GET() {
       return Math.ceil((targetDate.getTime() - new Date().getTime()) / DAYS_TO_MILLISECONDS);
     };
 
-    // Add applications as pending tasks
-    const pendingApps = await prisma.application.findMany({
-      where: { status: { in: ['RECEIVED', 'REVIEWING'] } },
-      include: {
-        crew: {
-          select: {
-            fullName: true
-          }
-        }
-      },
-      take: ITEMS_PER_QUERY,
-      orderBy: {
-        createdAt: 'desc'
-      }
-    });
-
     pendingApps.forEach(app => {
       pendingTasks.push({
         id: app.id,
@@ -381,34 +448,6 @@ export async function GET() {
         action: `Application from ${app.crew.fullName} entered the review queue.`,
         sortDate: app.createdAt.toISOString(),
       });
-    });
-
-    const prepareJoiningCases = await prisma.prepareJoining.findMany({
-      where: {
-        status: { in: ['PENDING', 'DOCUMENTS', 'MEDICAL', 'TRAINING', 'TRAVEL', 'READY'] },
-      },
-      include: {
-        crew: {
-          select: {
-            fullName: true,
-          },
-        },
-        vessel: {
-          select: {
-            name: true,
-          },
-        },
-        principal: {
-          select: {
-            name: true,
-          },
-        },
-      },
-      take: ITEMS_PER_QUERY,
-      orderBy: [
-        { departureDate: 'asc' },
-        { updatedAt: 'asc' },
-      ],
     });
 
     prepareJoiningCases.forEach((item) => {
@@ -432,20 +471,6 @@ export async function GET() {
         action: `${item.crew.fullName} is in ${item.status.toLowerCase()} pre-joining stage for ${vesselLabel}.`,
         sortDate: item.updatedAt.toISOString(),
       });
-    });
-
-    // Add scheduled audits as pending tasks
-    const upcomingAudits = await prisma.auditSchedule.findMany({
-      where: {
-        status: { in: ['SCHEDULED', 'IN_PROGRESS'] },
-        startDate: {
-          lte: new Date(new Date().getTime() + AUDIT_LOOKAHEAD_DAYS * DAYS_TO_MILLISECONDS)
-        }
-      },
-      take: ITEMS_PER_QUERY,
-      orderBy: {
-        startDate: 'asc'
-      }
     });
 
     upcomingAudits.forEach(audit => {
@@ -503,39 +528,6 @@ export async function GET() {
     //   console.warn('Warning: Could not fetch NonConformities for dashboard:', error instanceof Error ? error.message : 'Unknown error');
     // }
 
-    const recentAssignments = await prisma.assignment.findMany({
-      where: {
-        status: { in: OPERATIONAL_ASSIGNMENT_STATUSES }
-      },
-      include: {
-        crew: {
-          select: {
-            fullName: true,
-            rank: true
-          }
-        },
-        vessel: {
-          select: {
-            name: true,
-            principal: {
-              select: {
-                name: true
-              }
-            }
-          }
-        },
-        principal: {
-          select: {
-            name: true
-          }
-        }
-      },
-      take: 10,
-      orderBy: {
-        startDate: 'desc'
-      }
-    });
-
     const crewMovement = buildCrewMovementItems(recentAssignments);
 
     recentAssignments.slice(0, ITEMS_PER_QUERY).forEach((assignment) => {
@@ -547,33 +539,7 @@ export async function GET() {
       });
     });
 
-    const activeApplications = await prisma.application.findMany({
-      where: {
-        status: {
-          in: [...ACTIVE_APPLICATION_STATUSES],
-        },
-      },
-      select: {
-        id: true,
-        crewId: true,
-        principalId: true,
-        position: true,
-        status: true,
-        createdAt: true,
-        crew: {
-          select: {
-            fullName: true,
-          },
-        },
-        principal: {
-          select: {
-            name: true,
-          },
-        },
-      },
-    });
-
-    const duplicateNominationGroups = detectDuplicateApplicationGroups(activeApplications);
+    const duplicateNominationGroups = automationSnapshot.duplicateNominationGroups;
 
     duplicateNominationGroups.slice(0, ITEMS_PER_QUERY).forEach((group) => {
       const daysOpen = calculateDaysUntil(group.oldestCreatedAt);
@@ -595,7 +561,6 @@ export async function GET() {
       });
     });
 
-    const automationSnapshot = await getOfficeAutomationSnapshot(prisma, now);
     const failedEscalationNotifications = automationSnapshot.summary.failedEscalationNotifications;
 
     if (failedEscalationNotifications > 0) {

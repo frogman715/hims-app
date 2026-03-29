@@ -232,6 +232,98 @@ export default async function SystemHealthPage() {
     duplicateControlledDocumentAlerts +
     failedEscalationNotifications +
     totalRegulatoryAlerts;
+  const serviceChecks = [
+    { label: "Database", detail: "Connected", tone: "emerald" },
+    { label: "API Services", detail: "Operational", tone: "emerald" },
+    { label: "Authentication", detail: "Active", tone: "emerald" },
+  ];
+  const coverageCards = [
+    {
+      label: "Crew Records",
+      value: totalCrew,
+      detail: "Crew master data currently available to office and operational desks.",
+    },
+    {
+      label: "Active Contracts",
+      value: activeContracts,
+      detail: "Live employment agreements currently driving onboard and reliever planning.",
+    },
+    {
+      label: "Expiring ≤ 30 Days",
+      value: expiringContracts,
+      detail: "Contracts that will require renewal, relief, or sign-off decisions soon.",
+    },
+    {
+      label: "Principal Coverage",
+      value: totalPrincipals,
+      detail: "Principal records currently active in the commercial and crewing system.",
+    },
+    {
+      label: "Fleet Coverage",
+      value: totalVessels,
+      detail: "Vessel records currently available for assignment, readiness, and compliance control.",
+    },
+  ];
+  const workflowSignalCards = [
+    {
+      label: "Duplicate nomination alerts",
+      value: duplicateNominationAlerts,
+      detail: "Active nomination groups that should be consolidated into one workflow path.",
+      tone: "amber",
+    },
+    {
+      label: "Active prepare joining",
+      value: activePrepareJoining,
+      detail: "Live mobilization records currently carrying operational workload.",
+      tone: "cyan",
+    },
+    {
+      label: "Failed escalation deliveries",
+      value: failedEscalationNotifications,
+      detail: "Notification attempts that require email configuration or recipient follow-up.",
+      tone: "rose",
+    },
+  ];
+  const regulatorySignalCards = [
+    {
+      label: "MLC medical alerts",
+      value: regulatoryAlerts.mlcMedicalAlerts,
+      detail: "Crew records with medical fitness compliance gaps that can block deployment.",
+      tone: "cyan",
+    },
+    {
+      label: "STCW certificate alerts",
+      value: regulatoryAlerts.stcwComplianceAlerts,
+      detail: "Crew records with missing, expiring, or blocked STCW certificate coverage.",
+      tone: "violet",
+    },
+    {
+      label: "Travel document alerts",
+      value: regulatoryAlerts.travelDocumentAlerts,
+      detail: "Passport, seaman book, or visa readiness issues requiring office follow-up.",
+      tone: "amber",
+    },
+  ];
+  const dataQualityCards = [
+    {
+      label: "Contract overlap alerts",
+      value: contractOverlapAlerts,
+      detail: "Crew with overlapping active or draft contracts that should be consolidated into one live agreement path.",
+      tone: "orange",
+    },
+    {
+      label: "Duplicate recruitment alerts",
+      value: duplicateRecruitmentAlerts,
+      detail: "Candidate intake records that appear to represent the same person and should be merged into one workflow.",
+      tone: "fuchsia",
+    },
+    {
+      label: "Document registry alerts",
+      value: duplicateControlledDocumentAlerts,
+      detail: "Controlled documents that should move to revision control instead of duplicate registration.",
+      tone: "sky",
+    },
+  ];
 
   return (
     <div className="section-stack">
@@ -272,57 +364,92 @@ export default async function SystemHealthPage() {
           </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-3">
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
-            <p className="text-sm font-semibold text-amber-900">Duplicate nomination alerts</p>
-            <p className="mt-2 text-3xl font-semibold text-amber-900">{duplicateNominationAlerts.toLocaleString()}</p>
-            <p className="mt-2 text-sm text-amber-800">Active nomination groups that should be consolidated into one workflow path.</p>
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-semibold text-slate-900">Core service status</h2>
+              <p className="mt-1 text-sm text-slate-600">
+                Confirm that the platform foundation is stable before chasing workflow noise.
+              </p>
+            </div>
           </div>
-          <div className="rounded-2xl border border-cyan-200 bg-cyan-50 p-4">
-            <p className="text-sm font-semibold text-cyan-900">Active prepare joining</p>
-            <p className="mt-2 text-3xl font-semibold text-cyan-900">{activePrepareJoining.toLocaleString()}</p>
-            <p className="mt-2 text-sm text-cyan-800">Live mobilization records currently carrying operational workload.</p>
-          </div>
-          <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4">
-            <p className="text-sm font-semibold text-rose-900">Failed escalation deliveries</p>
-            <p className="mt-2 text-3xl font-semibold text-rose-900">{failedEscalationNotifications.toLocaleString()}</p>
-            <p className="mt-2 text-sm text-rose-800">Notification attempts that require email configuration or recipient follow-up.</p>
-          </div>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-3">
-          <div className="rounded-2xl border border-cyan-200 bg-cyan-50 p-4">
-            <p className="text-sm font-semibold text-cyan-900">MLC medical alerts</p>
-            <p className="mt-2 text-3xl font-semibold text-cyan-900">{regulatoryAlerts.mlcMedicalAlerts.toLocaleString()}</p>
-            <p className="mt-2 text-sm text-cyan-800">Crew records with medical fitness compliance gaps that can block deployment.</p>
-          </div>
-          <div className="rounded-2xl border border-violet-200 bg-violet-50 p-4">
-            <p className="text-sm font-semibold text-violet-900">STCW certificate alerts</p>
-            <p className="mt-2 text-3xl font-semibold text-violet-900">{regulatoryAlerts.stcwComplianceAlerts.toLocaleString()}</p>
-            <p className="mt-2 text-sm text-violet-800">Crew records with missing, expiring, or blocked STCW certificate coverage.</p>
-          </div>
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
-            <p className="text-sm font-semibold text-amber-900">Travel document alerts</p>
-            <p className="mt-2 text-3xl font-semibold text-amber-900">{regulatoryAlerts.travelDocumentAlerts.toLocaleString()}</p>
-            <p className="mt-2 text-sm text-amber-800">Passport, seaman book, or visa readiness issues requiring office follow-up.</p>
+          <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-3">
+            {serviceChecks.map((check) => (
+              <div key={check.label} className="flex items-center rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+                <div className="mr-3 h-3 w-3 rounded-full bg-emerald-500" />
+                <div>
+                  <p className="font-medium text-emerald-800">{check.label}</p>
+                  <p className="text-sm text-emerald-700">{check.detail}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-3">
-          <div className="rounded-2xl border border-orange-200 bg-orange-50 p-4">
-            <p className="text-sm font-semibold text-orange-900">Contract overlap alerts</p>
-            <p className="mt-2 text-3xl font-semibold text-orange-900">{contractOverlapAlerts.toLocaleString()}</p>
-            <p className="mt-2 text-sm text-orange-800">Crew with overlapping active or draft contracts that should be consolidated into one live agreement path.</p>
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="text-xl font-semibold text-slate-900">Platform coverage</h2>
+          <p className="mt-1 text-sm text-slate-600">
+            One coverage strip is enough to review master-data completeness without repeating the same totals in multiple blocks.
+          </p>
+          <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+            {coverageCards.map((card) => (
+              <div key={card.label} className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{card.label}</p>
+                <p className="mt-3 text-3xl font-semibold text-slate-900">{card.value.toLocaleString()}</p>
+                <p className="mt-2 text-sm leading-6 text-slate-600">{card.detail}</p>
+              </div>
+            ))}
           </div>
-          <div className="rounded-2xl border border-fuchsia-200 bg-fuchsia-50 p-4">
-            <p className="text-sm font-semibold text-fuchsia-900">Duplicate recruitment alerts</p>
-            <p className="mt-2 text-3xl font-semibold text-fuchsia-900">{duplicateRecruitmentAlerts.toLocaleString()}</p>
-            <p className="mt-2 text-sm text-fuchsia-800">Candidate intake records that appear to represent the same person and should be merged into one workflow.</p>
+        </div>
+
+        <div className="grid gap-4 xl:grid-cols-3">
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm xl:col-span-2">
+            <div>
+              <h2 className="text-xl font-semibold text-slate-900">Workflow pressure</h2>
+              <p className="mt-1 text-sm text-slate-600">
+                Use one watchboard for backlog, duplicate workflow, and failed delivery signals that need immediate owner follow-up.
+              </p>
+            </div>
+            <div className="mt-5 grid gap-4 md:grid-cols-3">
+              {workflowSignalCards.map((card) => (
+                <div
+                  key={card.label}
+                  className={`rounded-2xl border p-4 ${
+                    card.tone === "rose"
+                      ? "border-rose-200 bg-rose-50"
+                      : card.tone === "amber"
+                        ? "border-amber-200 bg-amber-50"
+                        : "border-cyan-200 bg-cyan-50"
+                  }`}
+                >
+                  <p className={`text-sm font-semibold ${card.tone === "rose" ? "text-rose-900" : card.tone === "amber" ? "text-amber-900" : "text-cyan-900"}`}>{card.label}</p>
+                  <p className={`mt-2 text-3xl font-semibold ${card.tone === "rose" ? "text-rose-900" : card.tone === "amber" ? "text-amber-900" : "text-cyan-900"}`}>{card.value.toLocaleString()}</p>
+                  <p className={`mt-2 text-sm ${card.tone === "rose" ? "text-rose-800" : card.tone === "amber" ? "text-amber-800" : "text-cyan-800"}`}>{card.detail}</p>
+                </div>
+              ))}
+            </div>
           </div>
-          <div className="rounded-2xl border border-sky-200 bg-sky-50 p-4">
-            <p className="text-sm font-semibold text-sky-900">Document registry alerts</p>
-            <p className="mt-2 text-3xl font-semibold text-sky-900">{duplicateControlledDocumentAlerts.toLocaleString()}</p>
-            <p className="mt-2 text-sm text-sky-800">Controlled documents with matching title, type, and department that should move to revision control instead of duplication.</p>
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h2 className="text-xl font-semibold text-slate-900">Regulatory readiness</h2>
+            <p className="mt-1 text-sm text-slate-600">
+              One grouped view keeps MLC, STCW, and travel blockers visible without repeating them in separate admin bands.
+            </p>
+            <div className="mt-5 space-y-3">
+              {regulatorySignalCards.map((card) => (
+                <div key={card.label} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900">{card.label}</p>
+                      <p className="mt-1 text-sm text-slate-600">{card.detail}</p>
+                    </div>
+                    <p className="text-2xl font-semibold text-slate-900">{card.value.toLocaleString()}</p>
+                  </div>
+                </div>
+              ))}
+              <Link href="/crewing/readiness">
+                <Button size="sm" variant="secondary">Open Readiness Desk</Button>
+              </Link>
+            </div>
           </div>
         </div>
 
@@ -364,6 +491,24 @@ export default async function SystemHealthPage() {
           <p className="mt-1 text-sm text-slate-600">
             Review overlapping contracts, duplicate candidate intake, and duplicate document registry records before they distort downstream reporting and approvals.
           </p>
+          <div className="mt-5 grid gap-4 md:grid-cols-3">
+            {dataQualityCards.map((card) => (
+              <div
+                key={card.label}
+                className={`rounded-2xl border p-4 ${
+                  card.tone === "orange"
+                    ? "border-orange-200 bg-orange-50"
+                    : card.tone === "fuchsia"
+                      ? "border-fuchsia-200 bg-fuchsia-50"
+                      : "border-sky-200 bg-sky-50"
+                }`}
+              >
+                <p className={`text-sm font-semibold ${card.tone === "orange" ? "text-orange-900" : card.tone === "fuchsia" ? "text-fuchsia-900" : "text-sky-900"}`}>{card.label}</p>
+                <p className={`mt-2 text-3xl font-semibold ${card.tone === "orange" ? "text-orange-900" : card.tone === "fuchsia" ? "text-fuchsia-900" : "text-sky-900"}`}>{card.value.toLocaleString()}</p>
+                <p className={`mt-2 text-sm ${card.tone === "orange" ? "text-orange-800" : card.tone === "fuchsia" ? "text-fuchsia-800" : "text-sky-800"}`}>{card.detail}</p>
+              </div>
+            ))}
+          </div>
           <div className="mt-5 grid gap-4 lg:grid-cols-3">
             <div className="rounded-2xl border border-slate-200 p-4">
               <p className="text-sm font-semibold text-slate-900">Contract overlaps</p>
@@ -462,108 +607,6 @@ export default async function SystemHealthPage() {
 
         <div className="rounded-2xl border border-cyan-100 bg-cyan-50/80 px-5 py-4 text-sm leading-6 text-slate-700">
           Use this board to review core data coverage and confirm that critical platform services remain available for office and operational users.
-        </div>
-
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-5">
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="flex items-center">
-            <div className="rounded-2xl bg-cyan-100 p-3">
-              <svg className="h-6 w-6 text-cyan-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-              </svg>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-slate-600">Total Crew</p>
-              <p className="text-2xl font-bold text-slate-900">{totalCrew.toLocaleString()}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="flex items-center">
-            <div className="rounded-2xl bg-emerald-100 p-3">
-              <svg className="h-6 w-6 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-slate-600">Active Contracts</p>
-              <p className="text-2xl font-bold text-slate-900">{activeContracts.toLocaleString()}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="flex items-center">
-            <div className="rounded-2xl bg-amber-100 p-3">
-              <svg className="h-6 w-6 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-              </svg>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-slate-600">Expiring Contracts (&lt; 30 days)</p>
-              <p className="text-2xl font-bold text-slate-900">{expiringContracts.toLocaleString()}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="flex items-center">
-            <div className="rounded-2xl bg-violet-100 p-3">
-              <svg className="h-6 w-6 text-violet-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-slate-600">Total Principals</p>
-              <p className="text-2xl font-bold text-slate-900">{totalPrincipals.toLocaleString()}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="flex items-center">
-            <div className="rounded-2xl bg-indigo-100 p-3">
-              <svg className="h-6 w-6 text-indigo-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-              </svg>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-slate-600">Total Vessels</p>
-              <p className="text-2xl font-bold text-slate-900">{totalVessels.toLocaleString()}</p>
-            </div>
-          </div>
-        </div>
-        </div>
-
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-xl font-semibold text-slate-900">System Status</h2>
-        <p className="mt-1 text-sm text-slate-600">
-          Core service indicators below reflect the current application availability used by office desks.
-        </p>
-        <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-3">
-          <div className="flex items-center rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
-            <div className="mr-3 h-3 w-3 rounded-full bg-emerald-500"></div>
-            <div>
-              <p className="font-medium text-emerald-800">Database</p>
-              <p className="text-sm text-emerald-700">Connected</p>
-            </div>
-          </div>
-          <div className="flex items-center rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
-            <div className="mr-3 h-3 w-3 rounded-full bg-emerald-500"></div>
-            <div>
-              <p className="font-medium text-emerald-800">API Services</p>
-              <p className="text-sm text-emerald-700">Operational</p>
-            </div>
-          </div>
-          <div className="flex items-center rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
-            <div className="mr-3 h-3 w-3 rounded-full bg-emerald-500"></div>
-            <div>
-              <p className="font-medium text-emerald-800">Authentication</p>
-              <p className="text-sm text-emerald-700">Active</p>
-            </div>
-          </div>
-        </div>
         </div>
       </section>
     </div>

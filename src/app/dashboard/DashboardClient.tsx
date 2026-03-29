@@ -379,7 +379,7 @@ function DirectorDashboard({ data, crewMovement, expiringItems, contractAlerts, 
       />
       <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
         <PendingTasksSection tasks={pendingTasks} />
-        <DirectorActionBoard data={data} />
+        <DirectorActionBoard />
       </div>
       <div className="grid gap-6 xl:grid-cols-[1.3fr_0.7fr]">
         <ContractAlertStrip data={data} items={contractAlerts} />
@@ -602,26 +602,26 @@ function DirectorCommandCenter({
   );
 }
 
-function DirectorActionBoard({ data }: { data: DashboardData | null }) {
+function DirectorActionBoard() {
   const actions = [
     {
       title: "Operations backlog",
-      detail: `${(data?.prepareJoiningAlerts ?? 0).toLocaleString('id-ID')} prepare joining records are still active across document, medical, training, or travel stages.`,
+      detail: "Open the mobilization queue to clear document, medical, training, travel, and release blockers from one desk.",
       href: "/crewing/prepare-joining",
     },
     {
       title: "Application decisions",
-      detail: `${(data?.pendingApplications ?? 0).toLocaleString('id-ID')} applications are waiting for nomination review or next-stage handling.`,
+      detail: "Review nomination intake and move each case forward without leaving duplicate candidate decisions in the queue.",
       href: "/crewing/applications",
     },
     {
       title: "Expired documents",
-      detail: `${(data?.expiredDocuments ?? 0).toLocaleString('id-ID')} documents are already expired and should not be left hidden behind summary charts.`,
+      detail: "Use the controlled document desk to clear expired or soon-to-expire crew documents before deployment is committed.",
       href: "/crewing/documents?filter=expiring",
     },
     {
       title: "Regulatory readiness",
-      detail: `${(data?.mlcMedicalAlerts ?? 0).toLocaleString('id-ID')} MLC medical, ${(data?.stcwComplianceAlerts ?? 0).toLocaleString('id-ID')} STCW, and ${(data?.travelDocumentAlerts ?? 0).toLocaleString('id-ID')} travel-document alerts are visible from the executive layer.`,
+      detail: "Review MLC medical fitness, STCW certificate coverage, and travel papers from one compliance-focused readiness desk.",
       href: "/crewing/readiness",
     },
     {
