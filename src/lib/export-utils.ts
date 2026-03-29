@@ -3,6 +3,8 @@
  * Export data to CSV, Excel, and PDF formats
  */
 
+import { pushAppNotice } from "@/lib/app-notice";
+
 type DataRecord = Record<string, string | number | boolean | null | undefined>;
 
 /**
@@ -13,7 +15,11 @@ export function exportToCSV(
   filename: string = 'export.csv'
 ): void {
   if (!data || data.length === 0) {
-    alert('No data to export');
+    pushAppNotice({
+      tone: 'warning',
+      title: 'Export unavailable',
+      message: 'There is no data available to export.',
+    });
     return;
   }
 
@@ -106,7 +112,11 @@ export async function exportTableToPDF(
     }
   } catch (err) {
     console.error('Failed to export to PDF:', err);
-    alert('PDF export failed. Please use browser print function instead.');
+    pushAppNotice({
+      tone: 'error',
+      title: 'PDF export failed',
+      message: 'Use the browser print function if PDF export remains unavailable.',
+    });
   }
 }
 
@@ -122,7 +132,11 @@ export function printDocument(elementId: string, title: string = 'Document'): vo
 
   const printWindow = window.open('', '', 'height=600,width=800');
   if (!printWindow) {
-    alert('Please allow pop-ups for printing');
+    pushAppNotice({
+      tone: 'warning',
+      title: 'Printing blocked',
+      message: 'Allow pop-ups in the browser to open the print preview.',
+    });
     return;
   }
 
@@ -191,7 +205,11 @@ export function exportTableToText(
   filename: string = 'export.txt'
 ): void {
   if (!data || data.length === 0) {
-    alert('No data to export');
+    pushAppNotice({
+      tone: 'warning',
+      title: 'Export unavailable',
+      message: 'There is no data available to export.',
+    });
     return;
   }
 

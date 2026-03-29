@@ -2,11 +2,15 @@
 
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
+import { canAccessOfficePath } from "@/lib/office-access";
+import { normalizeToUserRoles } from "@/lib/type-guards";
+import { WorkspaceHero } from "@/components/layout/WorkspaceHero";
 
 interface Risk {
-  id: number;
+  id: string;
+  title?: string;
   source: string;
   likelihood: number;
   consequence: number;
@@ -14,6 +18,7 @@ interface Risk {
   mitigation: string;
   pic: string;
   residual: number | null;
+  status?: string;
 }
 
 export default function Risks() {
@@ -31,6 +36,45 @@ export default function Risks() {
     pic: '',
     residual: '',
   });
+  const userRoles = normalizeToUserRoles(session?.user?.roles ?? session?.user?.role);
+  const isSystemAdmin = session?.user?.isSystemAdmin === true;
+  const canManageRisks = canAccessOfficePath("/api/risks", userRoles, isSystemAdmin, "POST");
+
+  const fetchRisks = useCallback(async () => {
+    try {
+      const response = await fetch("/api/risks");
+      if (response.ok) {
+        const data = await response.json();
+        const rows = Array.isArray(data?.data) ? data.data : [];
+        setRisks(rows.map((risk: {
+          id: string;
+          title?: string | null;
+          source?: string | null;
+          probability?: number | null;
+          impact?: number | null;
+          riskScore?: number | null;
+          treatmentPlan?: string | null;
+          createdBy?: { name?: string | null } | null;
+          status?: string | null;
+        }) => ({
+          id: risk.id,
+          title: risk.title ?? undefined,
+          source: risk.source ?? "Unknown source",
+          likelihood: risk.probability ?? 0,
+          consequence: risk.impact ?? 0,
+          level: calculateRiskLevel(risk.probability ?? 0, risk.impact ?? 0),
+          mitigation: risk.treatmentPlan ?? "",
+          pic: risk.createdBy?.name ?? "System",
+          residual: risk.riskScore ?? null,
+          status: risk.status ?? undefined,
+        })));
+      }
+    } catch (error) {
+      console.error("Error fetching risks:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (status === "loading") return;
@@ -39,21 +83,7 @@ export default function Risks() {
     } else {
       fetchRisks();
     }
-  }, [session, status, router]);
-
-  const fetchRisks = async () => {
-    try {
-      const response = await fetch("/api/quality/risks");
-      if (response.ok) {
-        const data = await response.json();
-        setRisks(data);
-      }
-    } catch (error) {
-      console.error("Error fetching risks:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [fetchRisks, session, status, router]);
 
   const calculateRiskLevel = (likelihood: number, consequence: number) => {
     const score = likelihood * consequence;
@@ -65,24 +95,24 @@ export default function Risks() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canManageRisks) {
+      return;
+    }
     const likelihood = parseInt(formData.likelihood);
     const consequence = parseInt(formData.consequence);
-    const level = calculateRiskLevel(likelihood, consequence);
-
     try {
-      const response = await fetch("/api/quality/risks", {
+      const response = await fetch("/api/risks", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          title: formData.source,
+          description: formData.mitigation,
           source: formData.source,
-          likelihood,
-          consequence,
-          level,
-          mitigation: formData.mitigation,
-          pic: formData.pic,
-          residual: formData.residual ? parseInt(formData.residual) : null,
+          probability: likelihood,
+          impact: consequence,
+          treatmentPlan: formData.mitigation,
         }),
       });
 
@@ -105,8 +135,12 @@ export default function Risks() {
     }
   };
 
+  const criticalCount = risks.filter((risk) => risk.level === "Critical").length;
+  const highCount = risks.filter((risk) => risk.level === "High").length;
+  const mediumCount = risks.filter((risk) => risk.level === "Medium").length;
+
   if (status === "loading" || loading) {
-    return <div>Loading...</div>;
+    return <div className="section-stack"><div className="surface-card px-6 py-12 text-center text-sm text-slate-600">Loading risk register...</div></div>;
   }
 
   if (!session) {
@@ -114,39 +148,49 @@ export default function Risks() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      {/* Header */}
-      <header className="bg-white backdrop-blur-lg shadow-2xl border-b border-white/20">
-        <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-red-600 to-red-700 bg-clip-text text-transparent">
-                Risk Register
-              </h1>
-              <p className="text-lg text-gray-700 mt-2 font-medium">Identify and mitigate operational risks</p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Link
-                href="/quality"
-                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
-              >
-                ← Back to Quality
-              </Link>
-              <button
-                onClick={() => setShowForm(true)}
-                className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
-              >
-                + Add Risk
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
+    <div className="section-stack mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+      <WorkspaceHero
+        eyebrow="Quality Risk Register"
+        title="Risk register"
+        subtitle="Identify, review, and mitigate operational or management risks from one structured quality workspace."
+        helperLinks={[
+          { href: "/quality", label: "Quality workspace" },
+          { href: "/quality/hgqs-compliance", label: "Compliance tracking" },
+          { href: "/dashboard", label: "Dashboard" },
+        ]}
+        highlights={[
+          { label: "Total Risks", value: risks.length.toLocaleString("id-ID"), detail: "All risks currently listed in the register." },
+          { label: "Critical", value: criticalCount.toLocaleString("id-ID"), detail: "Highest-exposure items needing fastest review." },
+          { label: "High", value: highCount.toLocaleString("id-ID"), detail: "Risks requiring active mitigation follow-up." },
+          { label: "Medium", value: mediumCount.toLocaleString("id-ID"), detail: "Items that should stay visible before escalation." },
+        ]}
+        actions={(
+          <>
+            <Link
+              href="/quality"
+              className="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-cyan-300 hover:text-cyan-700"
+            >
+              Back to quality
+            </Link>
+            <button
+              type="button"
+              onClick={() => {
+                if (!canManageRisks) return;
+                setShowForm(true);
+              }}
+              disabled={!canManageRisks}
+              className="inline-flex items-center rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {canManageRisks ? "Add risk" : "View only"}
+            </button>
+          </>
+        )}
+      />
 
-      <main className="max-w-7xl mx-auto py-8 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
+      <main>
+        <div>
           {/* Risk Register Table */}
-          <div className="bg-white backdrop-blur-md rounded-2xl shadow-lg border border-white overflow-hidden">
+          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
             <div className="px-6 py-4 border-b border-gray-300">
               <h2 className="text-xl font-semibold text-gray-900">Risk Assessment Matrix</h2>
             </div>
@@ -181,7 +225,10 @@ export default function Risks() {
                   {risks.map((risk) => (
                     <tr key={risk.id} className="hover:bg-gray-100">
                       <td className="px-6 py-4">
-                        <div className="text-sm font-medium text-gray-900">{risk.source}</div>
+                        <div className="text-sm font-medium text-gray-900">{risk.title || risk.source}</div>
+                        {risk.title && risk.title !== risk.source ? (
+                          <div className="text-xs text-gray-500 mt-1">{risk.source}</div>
+                        ) : null}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {risk.likelihood}/5
@@ -213,7 +260,7 @@ export default function Risks() {
       </main>
 
       {/* Add Risk Form Modal */}
-      {showForm && (
+      {showForm && canManageRisks ? (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl p-8 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
             <h3 className="text-xl font-extrabold text-gray-900 mb-6">Add Risk Assessment</h3>
@@ -323,7 +370,7 @@ export default function Risks() {
             </form>
           </div>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

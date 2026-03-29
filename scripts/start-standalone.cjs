@@ -3,6 +3,7 @@ const path = require('path');
 const dotenv = require('dotenv');
 
 const projectRoot = process.cwd();
+const standaloneRoot = path.join(projectRoot, '.next/standalone');
 const envFiles = [
   '.env',
   '.env.local',
@@ -20,6 +21,8 @@ function isPlaceholder(value) {
   return PLACEHOLDER_PATTERNS.some((pattern) => pattern.test(value));
 }
 
+const resolvedEnv = {};
+
 for (const file of envFiles) {
   const fullPath = path.join(projectRoot, file);
   if (!fs.existsSync(fullPath)) {
@@ -34,6 +37,17 @@ for (const file of envFiles) {
     }
 
     process.env[key] = value;
+    resolvedEnv[key] = value;
+  }
+}
+
+if (fs.existsSync(standaloneRoot)) {
+  const serializedEnv = Object.entries(resolvedEnv)
+    .map(([key, value]) => `${key}=${JSON.stringify(value)}`)
+    .join('\n');
+
+  for (const file of ['.env', '.env.production']) {
+    fs.writeFileSync(path.join(standaloneRoot, file), `${serializedEnv}\n`);
   }
 }
 

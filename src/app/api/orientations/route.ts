@@ -75,20 +75,73 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const orientation = await prisma.orientation.create({
-      data: {
-        crewId: crewId,
-        startDate: new Date(startDate),
-        remarks,
-      },
-      include: {
-        crew: {
-          select: {
-            fullName: true,
-            rank: true,
-          },
+    const parsedStartDate = new Date(startDate);
+    if (Number.isNaN(parsedStartDate.getTime())) {
+      return NextResponse.json(
+        { error: 'Orientation date must be a valid calendar date' },
+        { status: 400 }
+      );
+    }
+
+    const existingOrientation = await prisma.orientation.findFirst({
+      where: {
+        crewId,
+        status: {
+          notIn: ['COMPLETED', 'CANCELLED'],
         },
       },
+      select: {
+        id: true,
+        status: true,
+        startDate: true,
+      },
+      orderBy: {
+        startDate: 'desc',
+      },
+    });
+
+    if (existingOrientation) {
+      return NextResponse.json(
+        {
+          error: `This employee already has an open orientation workflow (${existingOrientation.status}) started on ${existingOrientation.startDate.toISOString().split('T')[0]}. Update that record instead of scheduling a duplicate session.`,
+        },
+        { status: 409 }
+      );
+    }
+
+    const orientation = await prisma.$transaction(async (tx) => {
+      const createdOrientation = await tx.orientation.create({
+        data: {
+          crewId: crewId,
+          startDate: parsedStartDate,
+          remarks,
+        },
+        include: {
+          crew: {
+            select: {
+              fullName: true,
+              rank: true,
+            },
+          },
+        },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          actorUserId: session.user.id,
+          action: "ORIENTATION_CREATED",
+          entityType: "Orientation",
+          entityId: createdOrientation.id,
+          metadataJson: {
+            crewId,
+            crewName: crew.fullName,
+            startDate: createdOrientation.startDate,
+            status: createdOrientation.status,
+          },
+        },
+      });
+
+      return createdOrientation;
     });
 
     return NextResponse.json(orientation, { status: 201 });

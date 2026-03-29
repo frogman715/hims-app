@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { checkPermission, PermissionLevel } from "@/lib/permission-middleware";
+import { ensureOfficeApiPathAccess } from "@/lib/office-api-access";
 
 
 interface CreateTemplatePayload {
@@ -40,12 +40,13 @@ function isCreateTemplatePayload(value: unknown): value is CreateTemplatePayload
 export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!checkPermission(session, "crew", PermissionLevel.VIEW_ACCESS)) {
-      return NextResponse.json(
-        { error: "Insufficient permissions" },
-        { status: 403 }
-      );
-    }
+    const authError = ensureOfficeApiPathAccess(
+      session,
+      "/api/form-templates",
+      "GET",
+      "Insufficient permissions to view principal form templates"
+    );
+    if (authError) return authError;
 
     const { searchParams } = new URL(req.url);
     const principalId = searchParams.get("principalId");
@@ -82,12 +83,13 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!checkPermission(session, "crew", PermissionLevel.FULL_ACCESS)) {
-      return NextResponse.json(
-        { error: "Insufficient permissions" },
-        { status: 403 }
-      );
-    }
+    const authError = ensureOfficeApiPathAccess(
+      session,
+      "/api/form-templates",
+      "POST",
+      "Insufficient permissions to manage principal form templates"
+    );
+    if (authError) return authError;
 
     const payload = (await req.json()) as unknown;
 

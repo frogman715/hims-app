@@ -8,6 +8,8 @@ import {
   principalCreateSchema,
   principalUpdateSchema,
 } from "@/lib/crewing-ops-schemas";
+import { resolveAuthorizationRoles } from "@/lib/authorization";
+import { UserRole } from "@/lib/permissions";
 
 export async function GET() {
   try {
@@ -17,24 +19,39 @@ export async function GET() {
       return authError;
     }
 
-    const principals = await prisma.principal.findMany({
-      include: {
-        vessels: {
+    const roles = resolveAuthorizationRoles(session.user.roles, session.user.role);
+    const hasPrincipalAdminAccess = roles.some((role) =>
+      [UserRole.DIRECTOR, UserRole.CDMO, UserRole.OPERATIONAL].includes(role)
+    );
+
+    const principals = hasPrincipalAdminAccess
+      ? await prisma.principal.findMany({
+          include: {
+            vessels: {
+              orderBy: {
+                name: 'asc'
+              }
+            },
+            _count: {
+              select: {
+                assignments: true,
+                vessels: true
+              }
+            }
+          },
           orderBy: {
             name: 'asc'
           }
-        },
-        _count: {
+        })
+      : await prisma.principal.findMany({
           select: {
-            assignments: true,
-            vessels: true
+            id: true,
+            name: true,
+          },
+          orderBy: {
+            name: 'asc'
           }
-        }
-      },
-      orderBy: {
-        name: 'asc'
-      }
-    });
+        });
 
     return NextResponse.json(principals);
   } catch (error) {

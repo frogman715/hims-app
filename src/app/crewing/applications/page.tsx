@@ -4,12 +4,21 @@ import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, Suspense, useCallback } from "react";
 import Link from "next/link";
+import { UserRole } from "@/lib/permissions";
+import { normalizeToUserRoles } from "@/lib/type-guards";
+import { getApplicationWorkflowMeta } from "@/lib/application-workflow";
+import { WorkspaceEmptyState } from "@/components/feedback/WorkspaceEmptyState";
+import { Button } from "@/components/ui/Button";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 
 interface Application {
   id: string;
   position: string;
   applicationDate: string;
   status: string;
+  hgiStage: string;
+  cvReadyAt: string | null;
+  hasPrepareJoining: boolean;
   reviewedBy: string | null;
   reviewedAt: string | null;
   remarks: string | null;
@@ -27,6 +36,39 @@ interface Application {
   } | null;
 }
 
+const STAGE_FILTERS = [
+  { value: 'ALL', label: 'All Workflow Stages', icon: '📋' },
+  { value: 'DRAFT', label: 'Draft Intake', icon: '📝' },
+  { value: 'DOCUMENT_CHECK', label: 'Document Review', icon: '🔍' },
+  { value: 'CV_READY', label: 'CV Ready for Internal Approval', icon: '🗂️' },
+  { value: 'SUBMITTED_TO_DIRECTOR', label: 'Waiting Director Review', icon: '🧭' },
+  { value: 'DIRECTOR_APPROVED', label: 'Approved for Principal Review', icon: '✅' },
+  { value: 'SENT_TO_OWNER', label: 'Waiting Principal Decision', icon: '💼' },
+  { value: 'OWNER_APPROVED', label: 'Principal Approved', icon: '🤝' },
+  { value: 'PRE_JOINING', label: 'Handed to Prepare Joining', icon: '✈️' },
+  { value: 'OWNER_REJECTED', label: 'Principal Rejected', icon: '❌' },
+] as const;
+
+function getWorkflowOwner(stage: string) {
+  switch (stage) {
+    case 'DRAFT':
+    case 'DOCUMENT_CHECK':
+    case 'CV_READY':
+      return 'Crewing Document Control';
+    case 'SUBMITTED_TO_DIRECTOR':
+    case 'DIRECTOR_APPROVED':
+      return 'Director';
+    case 'SENT_TO_OWNER':
+    case 'OWNER_APPROVED':
+    case 'OWNER_REJECTED':
+      return 'Principal';
+    case 'PRE_JOINING':
+      return 'Operational Control';
+    default:
+      return 'Review Only';
+  }
+}
+
 function ApplicationsContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -34,7 +76,11 @@ function ApplicationsContent() {
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedStatus, setSelectedStatus] = useState<string>(searchParams.get('status') || 'ALL');
+  const [selectedStatus, setSelectedStatus] = useState<string>(searchParams.get('stage') || 'ALL');
+  const userRoles = normalizeToUserRoles(session?.user?.roles);
+  const canDocumentFlow = userRoles.includes(UserRole.CDMO);
+  const canDirectorFlow = userRoles.includes(UserRole.DIRECTOR);
+  const canCreateApplications = canDocumentFlow;
 
   const fetchApplications = useCallback(async () => {
     if (status === "loading") {
@@ -47,9 +93,7 @@ function ApplicationsContent() {
     setLoading(true);
     setError(null);
     try {
-      const url = selectedStatus === 'ALL' 
-        ? '/api/applications'
-        : `/api/applications?status=${selectedStatus}`;
+      const url = '/api/applications';
       const response = await fetch(url);
       if (response.ok) {
         const data = await response.json();
@@ -63,32 +107,46 @@ function ApplicationsContent() {
     } finally {
       setLoading(false);
     }
-  }, [router, selectedStatus, session, status]);
+  }, [router, session, status]);
 
   useEffect(() => {
     fetchApplications();
   }, [fetchApplications]);
 
-  const handleStatusChange = async (applicationId: string, newStatus: string) => {
+  const handleStatusChange = async (applicationId: string, newStatus: string, requireNote = false) => {
     try {
-      const response = await fetch(`/api/applications/${applicationId}`, {
-        method: 'PUT',
+      setError(null);
+      let remarks: string | undefined;
+      if (requireNote) {
+        const note = window.prompt('Enter a rejection or cancellation note for audit trail:');
+        if (!note || note.trim().length < 3) {
+          setError('A clear rejection note is required.');
+          return;
+        }
+        remarks = note.trim();
+      }
+      const response = await fetch(`/api/crewing/applications/${applicationId}/transition`, {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus })
+        body: JSON.stringify({ newStatus, remarks })
       });
 
       if (response.ok) {
         fetchApplications();
+      } else {
+        const payload = await response.json().catch(() => null);
+        setError(payload?.error || "Failed to update application status");
       }
     } catch (error) {
       console.error("Error updating status:", error);
+      setError(error instanceof Error ? error.message : "Failed to update application status");
     }
   };
 
   if (status === "loading" || loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="flex min-h-[40vh] items-center justify-center">
+        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-slate-900" />
       </div>
     );
   }
@@ -99,173 +157,166 @@ function ApplicationsContent() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 p-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-red-800 mb-2">Error Loading Applications</h3>
-            <p className="text-red-700 mb-4">{error}</p>
-            <button
-              onClick={() => fetchApplications()}
-              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
-            >
-              Try Again
-            </button>
-          </div>
+      <section className="surface-card border-rose-200 bg-rose-50 p-6">
+        <h3 className="text-lg font-semibold text-rose-900">Error Loading Applications</h3>
+        <p className="mt-2 text-sm text-rose-700">{error}</p>
+        <div className="mt-4">
+          <Button type="button" variant="danger" size="sm" onClick={() => fetchApplications()}>
+            Try Again
+          </Button>
         </div>
-      </div>
+      </section>
     );
   }
 
-  const statusOptions = [
-    { value: 'ALL', label: 'Semua Status', color: 'gray', icon: '📋' },
-    { value: 'RECEIVED', label: 'New Sign In', color: 'blue', icon: '📝' },
-    { value: 'REVIEWING', label: 'Di-Review', color: 'yellow', icon: '🔍' },
-    { value: 'INTERVIEW', label: 'Interview', color: 'purple', icon: '🎤' },
-    { value: 'PASSED', label: 'Lulus', color: 'green', icon: '✅' },
-    { value: 'OFFERED', label: 'Ditawarkan', color: 'indigo', icon: '💼' },
-    { value: 'ACCEPTED', label: 'Diterima', color: 'teal', icon: '🤝' },
-    { value: 'REJECTED', label: 'Ditolak', color: 'red', icon: '❌' },
-  ];
-
-  const getStatusBadge = (status: string) => {
-    const statusConfig: Record<string, { color: string; text: string }> = {
-      RECEIVED: { color: 'bg-blue-100 text-blue-800', text: 'New Sign In' },
-      REVIEWING: { color: 'bg-yellow-100 text-yellow-800', text: 'Di-Review' },
-      INTERVIEW: { color: 'bg-purple-100 text-purple-800', text: 'Interview' },
-      PASSED: { color: 'bg-green-100 text-green-800', text: 'Lulus' },
-      OFFERED: { color: 'bg-indigo-100 text-indigo-800', text: 'Ditawarkan' },
-      ACCEPTED: { color: 'bg-teal-100 text-teal-800', text: 'Diterima' },
-      REJECTED: { color: 'bg-red-100 text-red-800', text: 'Ditolak' },
-      CANCELLED: { color: 'bg-gray-100 text-gray-800', text: 'Dibatalkan' },
-    };
-    
-    const config = statusConfig[status] || { color: 'bg-gray-100 text-gray-800', text: status };
-    return (
-      <span className={`px-3 py-2 rounded-full text-xs font-semibold ${config.color}`}>
-        {config.text}
-      </span>
-    );
+  const getStatusBadge = (stage: string) => {
+    const workflow = getApplicationWorkflowMeta(stage);
+    return <StatusBadge status={stage} label={workflow.label} className="px-3 py-2" />;
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-4xl font-bold text-gray-900 mb-2">
-                Applications
-              </h1>
-              <p className="text-gray-700">
-                Manage seafarer employment applications (Form CR-02)
-              </p>
-            </div>
-            <div className="flex gap-3">
-              <Link
-                href="/crewing/workflow"
-                className="px-6 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-700 font-semibold hover:border-blue-500 hover:text-blue-700 transition-all duration-200 shadow-md hover:shadow-md"
-              >
-                ← Workflow
-              </Link>
-              <Link
-                href="/crewing/applications/new"
-                className="px-6 py-3 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-200"
-              >
-                + New Application
-              </Link>
-            </div>
-          </div>
+  const getNextAction = (status: string) => {
+    const nextActions: Record<string, string> = {
+      RECEIVED: 'Crewing Document Control starts intake and validates the nomination package.',
+      REVIEWING: 'Crewing Document Control completes certificate review and confirms CV readiness.',
+      INTERVIEW: 'Director reviews the completed nomination package for internal approval.',
+      PASSED: 'Director releases the case to principal review.',
+      OFFERED: 'Wait for principal approval or rejection in the principal portal.',
+      ACCEPTED: 'Operational Control continues this case in Prepare Joining.',
+      REJECTED: 'Keep the principal rejection visible and traceable.',
+      CANCELLED: 'Stop workflow and keep the case closed for audit history.',
+      FAILED: 'Selection ended without hire. Keep the case for historical reference.',
+    };
 
-          {/* Status Filter */}
-          <div className="flex gap-3 overflow-x-auto pb-2">
-            {statusOptions.map((option) => {
-              const isActive = selectedStatus === option.value;
-              const baseClasses = "px-4 py-2 rounded-xl font-semibold whitespace-nowrap transition-all duration-200";
-              const activeClasses = isActive 
-                ? "bg-blue-600 text-white shadow-lg"
-                : "bg-white text-gray-700 border-2 border-gray-300 hover:border-blue-500";
-              
-              return (
-                <button
-                  key={option.value}
-                  onClick={() => setSelectedStatus(option.value)}
-                  className={`${baseClasses} ${activeClasses}`}
-                >
-                  {option.icon} {option.label}
-                </button>
-              );
-            })}
+    return nextActions[status] || 'Review the record and confirm the next office action.';
+  };
+
+  const visibleApplications = applications.filter((application) =>
+    selectedStatus === 'ALL' ? true : application.hgiStage === selectedStatus
+  );
+
+  return (
+    <div className="section-stack">
+      <section className="surface-card p-7">
+        <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+          <div className="max-w-4xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-sky-700">Nomination Workflow</p>
+            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950">Deployment applications</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              Track nomination, screening, internal approval, and handover to principal and operations in one office board.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <Button type="button" variant="secondary" onClick={() => router.push("/crewing/workflow")}>
+              Workflow
+            </Button>
+            {canCreateApplications ? (
+              <Link href="/crewing/applications/new" className="action-pill text-sm">
+                Register nomination
+              </Link>
+            ) : null}
           </div>
         </div>
+      </section>
 
-        {/* Applications List */}
-        {applications.length === 0 ? (
-          <div className="bg-white rounded-2xl shadow-lg p-12 text-center border-2 border-gray-100">
-            <div className="text-6xl mb-4">📝</div>
-            <h3 className="text-xl font-extrabold text-gray-900 mb-2">
-              Tidak ada aplikasi
-            </h3>
-            <p className="text-gray-700 mb-6">
-              No aplikasi dengan status {selectedStatus}
-            </p>
-            <Link
-              href="/crewing/applications/new"
-              className="inline-block px-6 py-3 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-200"
-            >
-              + Tambah Aplikasi New
-            </Link>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-4">
-            {applications.map((application) => (
+      <section className="surface-card border-sky-200 bg-sky-50/70 p-5">
+        <p className="text-sm font-semibold text-sky-900">Main flow</p>
+        <p className="mt-1 text-sm text-sky-800">
+          Recruitment → Hired → Seafarer → Readiness → Application → Principal Approval → Prepare Joining → Assignment / Onboard. Use this page only after readiness review is complete and the deployment case is tied to a real seafarer, rank, and principal.
+        </p>
+        <p className="mt-2 text-sm font-medium text-sky-900">
+          Next step: document control moves the case to CV Ready, director approves internally, principal decides, then Operations takes over only after the case is visible as Principal Approved or Pre-Joining.
+        </p>
+      </section>
+
+      <section className="surface-card p-5">
+        <div className="flex gap-3 overflow-x-auto pb-2">
+          {STAGE_FILTERS.map((option) => {
+            const isActive = selectedStatus === option.value;
+            const activeClasses = isActive
+              ? "border-sky-600 bg-sky-600 text-white shadow-sm"
+              : "border-slate-300 bg-white text-slate-700 hover:border-sky-400 hover:text-sky-700";
+
+            return (
+              <button
+                key={option.value}
+                onClick={() => setSelectedStatus(option.value)}
+                className={`rounded-xl border px-4 py-2 text-sm font-semibold whitespace-nowrap transition-all ${activeClasses}`}
+              >
+                {option.icon} {option.label}
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
+      {visibleApplications.length === 0 ? (
+        <section className="surface-card p-12 text-center">
+            <WorkspaceEmptyState
+              title="No nomination records in this workflow view"
+              message={`No nomination records are currently sitting in stage ${selectedStatus}.`}
+            />
+            <div className="mt-6">
+            {canCreateApplications ? (
+              <Link href="/crewing/applications/new" className="action-pill">
+                Register nomination
+              </Link>
+            ) : null}
+            </div>
+        </section>
+      ) : (
+        <div className="grid grid-cols-1 gap-4">
+            {visibleApplications.map((application) => (
               <div
                 key={application.id}
-                className="bg-white rounded-2xl shadow-lg p-6 border-2 border-gray-100 hover:border-blue-300 transition-all duration-200"
+                className="surface-card p-6 transition-all duration-200 hover:border-sky-300"
               >
+                {(() => {
+                  const workflow = getApplicationWorkflowMeta(application.hgiStage);
+                  return (
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    {/* Crew Info */}
                     <div className="flex items-center mb-3">
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-lg mr-4">
-                        {application.crew.fullName.charAt(0)}
+                      <div className="mr-4 flex h-12 w-12 items-center justify-center rounded-full bg-sky-600 text-lg font-bold text-white">
+                          {(application.crew.fullName || "C").charAt(0)}
                       </div>
                       <div>
-                        <h3 className="text-xl font-extrabold text-gray-900">
-                          {application.crew.fullName}
+                        <h3 className="text-xl font-semibold text-slate-900">
+                          {application.crew.fullName || `Crew ${application.crew.id}`}
                         </h3>
-                        <p className="text-sm text-gray-800">
+                        <p className="text-sm text-slate-600">
                           {application.crew.nationality || 'N/A'} • Current: {application.crew.rank}
                         </p>
                       </div>
                     </div>
 
-                    {/* Application Details */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-3">
                       <div>
-                        <div className="text-sm text-gray-700 mb-1">Applied Position</div>
-                        <div className="font-semibold text-gray-900">{application.position}</div>
+                        <div className="text-sm text-slate-500 mb-1">Applied Position</div>
+                        <div className="font-semibold text-slate-900">{application.position}</div>
                       </div>
                       <div>
-                        <div className="text-sm text-gray-700 mb-1">Principal</div>
-                        <div className="font-semibold text-gray-900">
+                        <div className="text-sm text-slate-500 mb-1">Principal</div>
+                        <div className="font-semibold text-slate-900">
                           {application.principal?.name || 'Any'}
                         </div>
                       </div>
                       <div>
-                        <div className="text-sm text-gray-700 mb-1">Application Date</div>
-                        <div className="font-semibold text-gray-900">
+                        <div className="text-sm text-slate-500 mb-1">Application Date</div>
+                        <div className="font-semibold text-slate-900">
                           {new Date(application.applicationDate).toLocaleDateString('id-ID')}
                         </div>
                       </div>
                       <div>
-                        <div className="text-sm text-gray-700 mb-1">Status</div>
-                        {getStatusBadge(application.status)}
+                        <div className="text-sm text-slate-500 mb-1">Status</div>
+                        {getStatusBadge(application.hgiStage)}
+                      </div>
+                      <div>
+                        <div className="text-sm text-slate-500 mb-1">Current Owner</div>
+                        <div className="font-semibold text-slate-900">{getWorkflowOwner(application.hgiStage)}</div>
                       </div>
                     </div>
 
-                    {/* Contact */}
-                    <div className="flex gap-4 text-sm text-gray-700">
+                    <div className="flex gap-4 text-sm text-slate-600">
                       {application.crew.phone && (
                         <div className="flex items-center gap-1">
                           📱 {application.crew.phone}
@@ -278,20 +329,23 @@ function ApplicationsContent() {
                       )}
                     </div>
 
-                    {/* Remarks */}
                     {application.remarks && (
-                      <div className="mt-3 p-3 bg-gray-100 rounded-lg">
-                        <div className="text-sm text-gray-700 mb-1">Remarks</div>
-                        <div className="text-sm text-gray-700">{application.remarks}</div>
+                      <div className="mt-3 rounded-lg bg-slate-100 p-3">
+                        <div className="text-sm text-slate-500 mb-1">Remarks</div>
+                        <div className="text-sm text-slate-700">{application.remarks}</div>
                       </div>
                     )}
+
+                    <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+                      <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Next Action</div>
+                      <div className="mt-1 text-sm text-slate-800">{workflow.nextStep || getNextAction(application.status)}</div>
+                    </div>
                   </div>
 
-                  {/* Actions */}
                   <div className="ml-4 flex flex-col gap-2">
                     <Link
                       href={`/crewing/applications/${application.id}`}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-all duration-200 text-center"
+                      className="rounded-lg bg-sky-600 px-4 py-2 text-center text-sm font-semibold text-white transition hover:bg-sky-700"
                     >
                       View Details
                     </Link>
@@ -300,70 +354,108 @@ function ApplicationsContent() {
                       href={`/api/forms/cr-02/${application.id}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="px-4 py-2 bg-purple-500 text-white rounded-lg text-sm font-semibold hover:bg-purple-600 transition-all duration-200 text-center"
+                      className="rounded-lg bg-violet-600 px-4 py-2 text-center text-sm font-semibold text-white transition hover:bg-violet-700"
                     >
                       📄 Download CR-02
                     </a>
                     
-                    {application.status === 'RECEIVED' && (
+                    {canDocumentFlow && application.hgiStage === 'DRAFT' && (
                       <button
                         onClick={() => handleStatusChange(application.id, 'REVIEWING')}
-                        className="px-4 py-2 bg-yellow-500 text-white rounded-lg text-sm font-semibold hover:bg-yellow-600 transition-all duration-200"
-                      >
-                        Start Review
-                      </button>
+                        className="rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-amber-600"
+                        >
+                          Begin Document Review
+                        </button>
                     )}
                     
-                    {application.status === 'REVIEWING' && (
+                    {canDocumentFlow && application.hgiStage === 'DOCUMENT_CHECK' && (
                       <>
                         <button
-                          onClick={() => handleStatusChange(application.id, 'INTERVIEW')}
-                          className="px-4 py-2 bg-purple-500 text-white rounded-lg text-sm font-semibold hover:bg-purple-600 transition-all duration-200"
+                          onClick={async () => {
+                            try {
+                              setError(null);
+                              const response = await fetch(`/api/crewing/applications/${application.id}/cv-ready`, {
+                                method: 'POST',
+                              });
+                              const payload = await response.json().catch(() => null);
+                          if (!response.ok) {
+                                setError(payload?.error || 'Failed to mark CV ready');
+                                return;
+                              }
+                              fetchApplications();
+                            } catch (markError) {
+                              setError(markError instanceof Error ? markError.message : 'Failed to mark CV ready');
+                            }
+                          }}
+                          className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-700"
                         >
-                          Schedule Interview
+                          Confirm CV Ready
                         </button>
                         <button
-                          onClick={() => handleStatusChange(application.id, 'REJECTED')}
-                          className="px-4 py-2 bg-red-500 text-white rounded-lg text-sm font-semibold hover:bg-red-600 transition-all duration-200"
+                          onClick={() => handleStatusChange(application.id, 'CANCELLED', true)}
+                          className="rounded-lg bg-rose-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-600"
                         >
-                          Reject
+                          Close with Note
                         </button>
                       </>
                     )}
 
-                    {application.status === 'INTERVIEW' && (
-                      <Link
-                        href={`/crewing/interviews/new?applicationId=${application.id}`}
-                        className="px-4 py-2 bg-indigo-500 text-white rounded-lg text-sm font-semibold hover:bg-indigo-600 transition-all duration-200 text-center"
-                      >
-                        Conduct Interview
-                      </Link>
+                    {canDocumentFlow && application.hgiStage === 'CV_READY' && (
+                      <>
+                        <button
+                          onClick={() => handleStatusChange(application.id, 'INTERVIEW')}
+                          className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-violet-700"
+                        >
+                          Submit for Director Review
+                        </button>
+                        <button
+                          onClick={() => handleStatusChange(application.id, 'CANCELLED', true)}
+                          className="rounded-lg bg-rose-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-600"
+                        >
+                          Close with Note
+                        </button>
+                      </>
                     )}
 
-                    {application.status === 'PASSED' && (
+                    {canDirectorFlow && application.hgiStage === 'SUBMITTED_TO_DIRECTOR' && (
+                      <>
+                        <button
+                          onClick={() => handleStatusChange(application.id, 'PASSED')}
+                          className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700"
+                        >
+                          Approve for Principal Review
+                        </button>
+                        <button
+                          onClick={() => handleStatusChange(application.id, 'CANCELLED', true)}
+                          className="rounded-lg bg-rose-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-600"
+                        >
+                          Close with Note
+                        </button>
+                      </>
+                    )}
+
+                    {canDirectorFlow && application.hgiStage === 'DIRECTOR_APPROVED' && (
                       <button
                         onClick={() => handleStatusChange(application.id, 'OFFERED')}
-                        className="px-4 py-2 bg-green-500 text-white rounded-lg text-sm font-semibold hover:bg-green-600 transition-all duration-200"
+                        className="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-600"
                       >
-                        Offer Position
+                        Release to Principal
                       </button>
                     )}
 
-                    {application.status === 'OFFERED' && (
-                      <button
-                        onClick={() => handleStatusChange(application.id, 'ACCEPTED')}
-                        className="px-4 py-2 bg-teal-500 text-white rounded-lg text-sm font-semibold hover:bg-teal-600 transition-all duration-200"
-                      >
-                        Mark Accepted
-                      </button>
-                    )}
+                    {application.hgiStage === 'SENT_TO_OWNER' ? (
+                      <div className="rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-2 text-xs font-semibold text-indigo-900">
+                        Waiting for principal decision
+                      </div>
+                    ) : null}
                   </div>
                 </div>
+                  );
+                })()}
               </div>
             ))}
-          </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -371,8 +463,8 @@ function ApplicationsContent() {
 export default function Applications() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="flex min-h-[40vh] items-center justify-center">
+        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-slate-900" />
       </div>
     }>
       <ApplicationsContent />

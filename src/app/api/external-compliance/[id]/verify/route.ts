@@ -3,6 +3,14 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
+function isExpiryValid(expiryDate: Date | string | null) {
+  if (!expiryDate) {
+    return true;
+  }
+
+  return new Date(expiryDate) >= new Date();
+}
+
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -37,7 +45,9 @@ export async function POST(
       );
     }
 
-    // Simulate verification process based on system type
+    const expiryCheck = isExpiryValid(compliance.expiryDate);
+
+    // Deterministic verification result based on stored record state.
     let verificationResult = {
       isValid: false,
       message: 'Verification failed',
@@ -46,46 +56,37 @@ export async function POST(
 
     switch (compliance.systemType) {
       case 'KOSMA_CERTIFICATE':
-        // Simulate KOSMA verification
         verificationResult = {
-          isValid: Math.random() > 0.1, // 90% success rate for demo
-          message: 'KOSMA certificate verified successfully',
+          isValid: expiryCheck,
+          message: expiryCheck ? 'KOSMA certificate verified successfully' : 'KOSMA certificate is expired',
           details: {
             verifiedAt: new Date().toISOString(),
-            certificateStatus: 'VALID',
-            expiryCheck: compliance.expiryDate
-              ? new Date(compliance.expiryDate) > new Date()
-              : true,
+            certificateStatus: expiryCheck ? 'VALID' : 'EXPIRED',
+            expiryCheck,
           },
         };
         break;
 
       case 'DEPHUB_CERTIFICATE':
-        // Simulate Dephub verification
         verificationResult = {
-          isValid: Math.random() > 0.15, // 85% success rate for demo
-          message: 'Dephub certificate verified successfully',
+          isValid: expiryCheck,
+          message: expiryCheck ? 'Dephub certificate verified successfully' : 'Dephub certificate is expired',
           details: {
             verifiedAt: new Date().toISOString(),
-            seafarerStatus: 'ACTIVE',
-            expiryCheck: compliance.expiryDate
-              ? new Date(compliance.expiryDate) > new Date()
-              : true,
+            seafarerStatus: expiryCheck ? 'ACTIVE' : 'EXPIRED',
+            expiryCheck,
           },
         };
         break;
 
       case 'SCHENGEN_VISA_NL':
-        // Simulate Schengen visa verification
         verificationResult = {
-          isValid: Math.random() > 0.05, // 95% success rate for demo
-          message: 'Schengen visa verified successfully',
+          isValid: expiryCheck,
+          message: expiryCheck ? 'Schengen visa verified successfully' : 'Schengen visa is expired',
           details: {
             verifiedAt: new Date().toISOString(),
-            visaStatus: 'VALID',
-            expiryCheck: compliance.expiryDate
-              ? new Date(compliance.expiryDate) > new Date()
-              : true,
+            visaStatus: expiryCheck ? 'VALID' : 'EXPIRED',
+            expiryCheck,
           },
         };
         break;

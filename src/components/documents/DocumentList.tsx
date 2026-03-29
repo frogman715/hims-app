@@ -6,11 +6,12 @@ import {
   Filter,
   ChevronDown,
   Eye,
-  FileText,
   Clock,
   User,
   Loader,
 } from 'lucide-react';
+import { WorkspaceEmptyState } from '@/components/feedback/WorkspaceEmptyState';
+import { StatusBadge } from '@/components/ui/StatusBadge';
 
 interface Document {
   id: string;
@@ -35,14 +36,6 @@ interface DocumentListProps {
   onEditDocument?: (documentId: string) => void;
   onApproveDocument?: (documentId: string) => void;
 }
-
-const STATUS_COLORS: Record<string, string> = {
-  DRAFT: 'bg-gray-100 text-gray-800',
-  FOR_APPROVAL: 'bg-yellow-100 text-yellow-800',
-  APPROVED: 'bg-green-100 text-green-800',
-  ACTIVE: 'bg-blue-100 text-blue-800',
-  OBSOLETE: 'bg-red-100 text-red-800',
-};
 
 export default function DocumentList({
   onSelectDocument,
@@ -191,10 +184,10 @@ export default function DocumentList({
           <Loader className="w-6 h-6 animate-spin text-gray-400" />
         </div>
       ) : documents.length === 0 ? (
-        <div className="text-center py-12">
-          <FileText className="w-12 h-12 text-gray-300 mx-auto mb-2" />
-          <p className="text-gray-500">No documents found</p>
-        </div>
+        <WorkspaceEmptyState
+          title="No controlled documents in this view"
+          message="Register a controlled document or adjust the current filters to review other records."
+        />
       ) : (
         <div className="border border-gray-200 rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
@@ -243,14 +236,7 @@ export default function DocumentList({
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              STATUS_COLORS[doc.status] ||
-                              'bg-gray-100 text-gray-800'
-                            }`}
-                          >
-                            {doc.status}
-                          </span>
+                          <StatusBadge status={doc.status} />
                           {pendingCount > 0 && (
                             <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-yellow-500 text-white text-xs font-bold">
                               {pendingCount}

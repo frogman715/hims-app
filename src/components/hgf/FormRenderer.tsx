@@ -8,6 +8,7 @@
 
 import React, { useState, useCallback } from 'react';
 import { HGFForm } from '@prisma/client';
+import { createRequiredFieldMessage } from '@/lib/ui-vocabulary';
 
 interface FormField {
   id: string;
@@ -78,7 +79,7 @@ export function FormRenderer({
       const value = formValues[field.name];
 
       if (field.required && !value) {
-        newErrors[field.name] = `${field.label} is required`;
+        newErrors[field.name] = createRequiredFieldMessage(field.label);
       }
 
       if (value && field.type === 'email') {

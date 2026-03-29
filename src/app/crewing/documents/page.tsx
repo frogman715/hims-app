@@ -6,8 +6,14 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { getDocumentTypeLabel } from "@/lib/document-types";
 import DocumentActions from "./DocumentActions";
-import { UserRole } from "@/lib/permissions";
+import { canAccessOfficePath } from "@/lib/office-access";
+import {
+  DOCUMENT_CONTROL_WARNING_MONTHS,
+  getDocumentExpiryPresentation,
+  getDocumentExpiryState,
+} from "@/lib/document-expiry";
 import { normalizeToUserRoles } from "@/lib/type-guards";
+import { WorkspaceHero } from "@/components/layout/WorkspaceHero";
 
 interface SeafarerDocument {
   id: string;
@@ -38,7 +44,8 @@ export default function Documents() {
   const [filter, setFilter] = useState('all'); // all, expiring, expired
   const [searchTerm, setSearchTerm] = useState('');
   const userRoles = normalizeToUserRoles(session?.user?.roles ?? session?.user?.role);
-  const canManageDocuments = userRoles.includes(UserRole.CDMO);
+  const isSystemAdmin = session?.user?.isSystemAdmin === true;
+  const canManageDocuments = canAccessOfficePath("/api/documents", userRoles, isSystemAdmin, "POST");
 
   const fetchDocuments = useCallback(async () => {
     try {
@@ -104,53 +111,27 @@ export default function Documents() {
     }
   }, [fetchDocuments, router, session, status]);
 
-  const getExpiringThreshold = (reference: Date) => {
-    const threshold = new Date(reference.getTime());
-    threshold.setMonth(threshold.getMonth() + 14);
-    return threshold;
-  };
-
   const getStatusColor = (expiryDate: string | null) => {
-    if (!expiryDate) return 'bg-gray-100 text-gray-800';
-
-    const now = new Date();
-    const expiry = new Date(expiryDate);
-    const expiringThreshold = getExpiringThreshold(now);
-
-    if (expiry <= now) return 'bg-rose-100 text-rose-700';
-    if (expiry <= expiringThreshold) return 'bg-amber-100 text-amber-700';
-    return 'bg-emerald-100 text-emerald-700';
+    return getDocumentExpiryPresentation(expiryDate).className;
   };
 
   const getStatusText = (expiryDate: string | null) => {
-    if (!expiryDate) return 'No Expiry';
-
-    const now = new Date();
-    const expiry = new Date(expiryDate);
-    const expiringThreshold = getExpiringThreshold(now);
-
-    if (expiry <= now) return 'Expired';
-    if (expiry <= expiringThreshold) return 'Expiring Soon';
-    return 'Valid';
+    return getDocumentExpiryPresentation(expiryDate).label;
   };
 
   const filteredDocuments = useMemo(() => {
     const now = new Date();
-    const expiringThreshold = getExpiringThreshold(now);
 
     const base = (() => {
       switch (filter) {
         case 'expiring':
           return documents.filter((doc) => {
             if (!doc.expiryDate) return false;
-            const expiry = new Date(doc.expiryDate);
-            return expiry > now && expiry <= expiringThreshold;
+            return getDocumentExpiryState(doc.expiryDate, now) === 'EXPIRING_SOON';
           });
         case 'expired':
           return documents.filter((doc) => {
-            if (!doc.expiryDate) return false;
-            const expiry = new Date(doc.expiryDate);
-            return expiry <= now;
+            return getDocumentExpiryState(doc.expiryDate, now) === 'EXPIRED';
           });
         default:
           return documents;
@@ -170,28 +151,26 @@ export default function Documents() {
 
   const expiringSoonCount = useMemo(() => {
     const now = new Date();
-    const threshold = getExpiringThreshold(now);
     return documents.filter((doc) => {
-      if (!doc.expiryDate) return false;
-      const expiry = new Date(doc.expiryDate);
-      return expiry > now && expiry <= threshold;
+      return getDocumentExpiryState(doc.expiryDate, now) === 'EXPIRING_SOON';
     }).length;
   }, [documents]);
 
   const expiredCount = useMemo(
     () =>
       documents.filter((doc) => {
-        if (!doc.expiryDate) return false;
-        return new Date(doc.expiryDate) <= new Date();
+        return getDocumentExpiryState(doc.expiryDate) === 'EXPIRED';
       }).length,
     [documents]
   );
 
   if (status === "loading" || loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 flex flex-col items-center justify-center gap-4">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
-        <p className="text-sm font-semibold text-gray-700">Loading documents…</p>
+      <div className="section-stack">
+        <section className="surface-card flex min-h-[320px] flex-col items-center justify-center gap-4 p-8">
+          <div className="h-10 w-10 animate-spin rounded-full border-2 border-slate-200 border-t-cyan-700" />
+          <p className="text-sm font-semibold text-gray-700">Loading documents…</p>
+        </section>
       </div>
     );
   }
@@ -201,40 +180,49 @@ export default function Documents() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900">Crew Documents</h1>
-            <p className="text-base md:text-lg text-gray-700 mt-2">Monitor STCW certificates, passports, medical records, visas, and document expiry.</p>
-          </div>
-          <div className="flex flex-wrap gap-3">
+    <div className="section-stack">
+      <WorkspaceHero
+        eyebrow="Document Control"
+        title="Document control register"
+        subtitle="Central register for STCW certificates, passports, visas, medical records, and renewal follow-up across the active crew pool."
+        helperLinks={[
+          { href: "/crewing/seafarers", label: "Seafarer records" },
+          { href: "/crewing/prepare-joining", label: "Prepare joining" },
+          { href: "/dashboard", label: "Dashboard" },
+        ]}
+        highlights={[
+          { label: "All Documents", value: documents.length.toLocaleString("id-ID"), detail: "Records currently visible in the controlled register." },
+          { label: `Expiring ≤ ${DOCUMENT_CONTROL_WARNING_MONTHS} Months`, value: expiringSoonCount.toLocaleString("id-ID"), detail: "Renewal cases that need follow-up soon." },
+          { label: "Expired", value: expiredCount.toLocaleString("id-ID"), detail: "Documents already outside valid operating window." },
+          { label: "Filtered View", value: filteredDocuments.length.toLocaleString("id-ID"), detail: "Records currently shown after filter and search." },
+        ]}
+        actions={(
+          <>
             {canManageDocuments ? (
               <Link
                 href="/crewing/documents/new"
-                className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold shadow-sm transition"
+                className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
               >
                 <span className="text-lg leading-none">＋</span>
-                Upload New Document
+                Upload new document
               </Link>
             ) : null}
             <Link
               href="/crewing"
-              className="inline-flex items-center gap-2 px-5 py-3 rounded-xl border border-gray-300 text-sm font-semibold text-gray-800 hover:border-blue-500 hover:text-blue-600 transition"
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-blue-500 hover:text-blue-600"
             >
-              ← Back to Dashboard
+              Back to crewing
             </Link>
-          </div>
-        </div>
-      </header>
+          </>
+        )}
+      />
 
-      <main className="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8 space-y-8">
         <section className="rounded-2xl border border-blue-200 bg-blue-50 px-6 py-4">
           <p className="text-sm font-semibold text-blue-900">Working guidance</p>
           <p className="mt-1 text-sm text-blue-800">
             {canManageDocuments
-              ? "Use this page to review document completeness and expiry. Document staff owns uploads, replacements, and metadata correction."
-              : "Use this page to view and cross-check document completeness and expiry. Document entry, replacement, and deletion remain with document staff."}
+              ? "Use this register to review completeness, expiry, and file quality. Document control owns uploads, replacements, and metadata correction."
+              : "Use this register to view and cross-check completeness and expiry. Document entry, replacement, and deletion remain with document control."}
           </p>
         </section>
 
@@ -245,11 +233,11 @@ export default function Documents() {
           </section>
         ) : null}
 
-        <section className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
+        <section className="surface-card p-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h2 className="text-lg font-semibold text-gray-900">Document Status Filter</h2>
-              <p className="text-sm text-gray-600">Select to display specific documents based on expiration status or search by crew name, type, or document number.</p>
+              <h2 className="text-lg font-semibold text-gray-900">Document status filter</h2>
+              <p className="text-sm text-gray-600">Filter by expiry status or search by crew name, document type, number, or remarks.</p>
               <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-amber-700">
                 Advisory only. Expiring document visibility supports manual office follow-up and does not approve readiness automatically.
               </p>
@@ -293,7 +281,7 @@ export default function Documents() {
                       : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
                   }`}
                 >
-                  Expiring ≤14 months ({expiringSoonCount})
+                  Expiring ≤{DOCUMENT_CONTROL_WARNING_MONTHS} months ({expiringSoonCount})
                 </button>
                 <button
                   onClick={() => setFilter('expired')}
@@ -310,7 +298,7 @@ export default function Documents() {
           </div>
         </section>
 
-        <section className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+        <section className="surface-card overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-900">
               {filter === 'all' ? 'All Documents' : filter === 'expiring' ? 'Expiring Documents' : 'Expired Documents' }
@@ -374,7 +362,6 @@ export default function Documents() {
             </div>
           )}
         </section>
-      </main>
     </div>
   );
 }
@@ -384,7 +371,7 @@ function formatSummaryLabel(filter: string, count: number) {
     return `${count} documents listed`;
   }
   if (filter === 'expiring') {
-    return `${count} documents need renewal within 14 months`;
+    return `${count} documents need renewal within ${DOCUMENT_CONTROL_WARNING_MONTHS} months`;
   }
   return `${count} documents already expired`;
 }

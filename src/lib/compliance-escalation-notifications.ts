@@ -8,6 +8,7 @@ function mapOwnerToRoles(owner: string): Role[] {
   const normalized = owner.toUpperCase();
 
   if (normalized.includes("QMR")) return [Role.QMR];
+  if (normalized.includes("DIRECTOR") && normalized.includes("OPERATIONAL")) return [Role.DIRECTOR, Role.OPERATIONAL];
   if (normalized.includes("CDMO")) return [Role.CDMO, Role.OPERATIONAL];
   if (normalized.includes("COMPLIANCE")) return [Role.QMR, Role.CDMO];
   if (normalized.includes("OPERATIONAL")) return [Role.OPERATIONAL, Role.CDMO];
@@ -21,6 +22,7 @@ function parseEntity(item: EscalationItem) {
   const entityType = (() => {
     if (item.ruleCode === "DOC-EXPIRY") return "CrewDocument";
     if (item.ruleCode === "CAPA-OVERDUE") return "CorrectiveAction";
+    if (item.ruleCode === "CONTRACT-EXPIRY") return "EmploymentContract";
     if (item.ruleCode === "DEPLOY-BLOCK") return "Crew";
     if (item.ruleCode === "EXT-COMPLIANCE") return "ExternalCompliance";
     return "ComplianceItem";
@@ -69,91 +71,95 @@ export async function dispatchEscalationNotifications() {
 
   for (const item of escalationData.items) {
     const ownerRoles = mapOwnerToRoles(item.owner);
-    const recipient = users.find(
+    const recipients = users.filter(
       (user) => ownerRoles.includes(user.role) && Boolean(user.email)
     );
     const entity = parseEntity(item);
     const subject = `[${item.severity}] ${item.title}`;
 
-    const existingLog = await prisma.escalationNotificationLog.findFirst({
-      where: {
-        ruleCode: item.ruleCode,
-        relatedEntityType: entity.entityType,
-        relatedEntityId: entity.entityId,
-        recipientEmail: recipient?.email ?? null,
-        createdAt: { gte: oneDayAgo },
-      },
-      orderBy: { createdAt: "desc" },
-    });
+    const resolvedRecipients = recipients.length > 0 ? recipients : [null];
 
-    if (existingLog) {
-      results.push({
-        itemId: item.id,
-        status: "SKIPPED_DUPLICATE",
-        recipientEmail: recipient?.email ?? null,
+    for (const recipient of resolvedRecipients) {
+      const existingLog = await prisma.escalationNotificationLog.findFirst({
+        where: {
+          ruleCode: item.ruleCode,
+          relatedEntityType: entity.entityType,
+          relatedEntityId: entity.entityId,
+          recipientEmail: recipient?.email ?? null,
+          createdAt: { gte: oneDayAgo },
+        },
+        orderBy: { createdAt: "desc" },
       });
-      continue;
-    }
 
-    const baseLog = await prisma.escalationNotificationLog.create({
-      data: {
-        ruleCode: item.ruleCode,
-        severity: item.severity,
-        ownerRole: ownerRoles.join(", "),
-        recipientEmail: recipient?.email ?? null,
-        recipientName: recipient?.name ?? null,
-        relatedEntityType: entity.entityType,
-        relatedEntityId: entity.entityId,
+      if (existingLog) {
+        results.push({
+          itemId: item.id,
+          status: "SKIPPED_DUPLICATE",
+          recipientEmail: recipient?.email ?? null,
+        });
+        continue;
+      }
+
+      const baseLog = await prisma.escalationNotificationLog.create({
+        data: {
+          ruleCode: item.ruleCode,
+          severity: item.severity,
+          ownerRole: ownerRoles.join(", "),
+          recipientEmail: recipient?.email ?? null,
+          recipientName: recipient?.name ?? null,
+          relatedEntityType: entity.entityType,
+          relatedEntityId: entity.entityId,
+          subject,
+          status: emailService && recipient?.email ? "PENDING" : "SKIPPED",
+          failureReason:
+            recipient?.email
+              ? emailService
+                ? null
+                : `Email config invalid: ${emailConfigValidation.errors.join(", ")}`
+              : "No active recipient mapped for owner role",
+          lastAttemptAt: new Date(),
+        },
+      });
+
+      if (!emailService || !recipient?.email) {
+        results.push({
+          itemId: item.id,
+          status: baseLog.status,
+          recipientEmail: recipient?.email ?? null,
+        });
+        continue;
+      }
+
+      const html = `
+        <p>Escalation rule <strong>${item.ruleCode}</strong> is active.</p>
+        <p><strong>${item.title}</strong></p>
+        <p>${item.detail}</p>
+        <p>Open item: ${item.href}</p>
+      `;
+
+      const sendResult = await emailService.send({
+        to: recipient.email,
         subject,
-        status: emailService && recipient?.email ? "PENDING" : "SKIPPED",
-        failureReason:
-          recipient?.email
-            ? emailService
-              ? null
-              : `Email config invalid: ${emailConfigValidation.errors.join(", ")}`
-            : "No active recipient mapped for owner role",
-        lastAttemptAt: new Date(),
-      },
-    });
+        html,
+        text: `${item.title}\n\n${item.detail}\n\nOpen item: ${item.href}`,
+      });
 
-    if (!emailService || !recipient?.email) {
+      await prisma.escalationNotificationLog.update({
+        where: { id: baseLog.id },
+        data: {
+          status: sendResult.success ? "SENT" : "FAILED",
+          sentAt: sendResult.success ? new Date() : null,
+          failureReason: sendResult.success ? null : sendResult.error ?? "Unknown email error",
+          lastAttemptAt: new Date(),
+        },
+      });
+
       results.push({
         itemId: item.id,
-        status: baseLog.status,
-        recipientEmail: recipient?.email ?? null,
-      });
-      continue;
-    }
-
-    const html = `
-      <p>Escalation rule <strong>${item.ruleCode}</strong> is active.</p>
-      <p><strong>${item.title}</strong></p>
-      <p>${item.detail}</p>
-      <p>Open item: ${item.href}</p>
-    `;
-
-    const sendResult = await emailService.send({
-      to: recipient.email,
-      subject,
-      html,
-      text: `${item.title}\n\n${item.detail}\n\nOpen item: ${item.href}`,
-    });
-
-    await prisma.escalationNotificationLog.update({
-      where: { id: baseLog.id },
-      data: {
         status: sendResult.success ? "SENT" : "FAILED",
-        sentAt: sendResult.success ? new Date() : null,
-        failureReason: sendResult.success ? null : sendResult.error ?? "Unknown email error",
-        lastAttemptAt: new Date(),
-      },
-    });
-
-    results.push({
-      itemId: item.id,
-      status: sendResult.success ? "SENT" : "FAILED",
-      recipientEmail: recipient.email,
-    });
+        recipientEmail: recipient.email,
+      });
+    }
   }
 
   return {

@@ -1,21 +1,14 @@
 'use client';
 
-import { useSession, signOut } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 import { useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import type { AppRole } from '@/lib/roles';
 import { APP_ROLES } from '@/lib/roles';
-import { PermissionLevel } from '@/lib/permissions';
-import { hasExplicitRoleAccess, hasModuleAccess } from '@/lib/authorization';
-import { canAccessOfficePath } from '@/lib/office-access';
-import { getAdminScopeForPath, hasAdminMaintenanceScope } from '@/lib/admin-access';
-import { OFFICE_NAV_ITEMS, type OfficeNavigationItem } from '@/lib/office-navigation';
-import SidebarHeader from '@/components/sidebar/SidebarHeader';
 import ComplianceStatusWidget from '@/components/compliance/ComplianceStatusWidget';
-import { getRoleDisplayName } from '@/lib/role-display';
-import { getFleetActivityBadgeClasses } from '@/lib/fleet-ui';
+import { getRoleDisplayName, getRoleWorkspaceProfile } from '@/lib/role-display';
 import StatCard from '@/components/ui/StatCard';
+import { StatusBadge } from '@/components/ui/StatusBadge';
 import { formatDateLabel, formatStatusLabel } from '@/lib/formatters';
 
 interface DashboardData {
@@ -23,11 +16,20 @@ interface DashboardData {
   activeVessels: number;
   operationalVessels: number;
   onboardVessels: number;
+  crewReady: number;
+  crewOnboard: number;
   pendingApplications: number;
   expiringDocuments: number;
+  expiredDocuments: number;
+  prepareJoiningAlerts: number;
+  readinessAlerts: number;
+  urgentCrewCases: number;
   contractsExpiring45Days: number;
   contractsExpiring30Days: number;
   contractsExpiring14Days: number;
+  mlcMedicalAlerts: number;
+  stcwComplianceAlerts: number;
+  travelDocumentAlerts: number;
 }
 
 interface CrewMovementItem {
@@ -104,13 +106,6 @@ interface CompliancePriority {
   href: string;
 }
 
-const CREW_PORTAL_NAV_ITEMS: Array<{ href: string; label: string; icon: string }> = [
-  { href: '/m/crew', label: 'Crew Home', icon: '🏠' },
-  { href: '/m/crew/documents', label: 'My Documents', icon: '📄' },
-  { href: '/m/crew/upload', label: 'Upload Documents', icon: '⬆️' },
-  { href: '/m/crew/profile', label: 'Profile', icon: '👤' },
-];
-
 const SUMMARY_CARDS: SummaryCardConfig[] = [
   {
     key: 'totalCrew',
@@ -169,7 +164,6 @@ const COMPLIANCE_PRIORITIES: CompliancePriority[] = [
 
 export default function DashboardClient() {
   const { data: session, status } = useSession();
-  const router = useRouter();
   const [data, setData] = useState<DashboardData | null>(null);
   const [crewMovement, setCrewMovement] = useState<CrewMovementItem[]>([]);
   const [expiringItems, setExpiringItems] = useState<ExpiringItem[]>([]);
@@ -198,11 +192,20 @@ export default function DashboardClient() {
           activeVessels: payload.activeVessels ?? 0,
           operationalVessels: payload.operationalVessels ?? 0,
           onboardVessels: payload.onboardVessels ?? 0,
+          crewReady: payload.crewReady ?? 0,
+          crewOnboard: payload.crewOnboard ?? 0,
           pendingApplications: payload.pendingApplications ?? 0,
           expiringDocuments: payload.expiringDocuments ?? 0,
+          expiredDocuments: payload.expiredDocuments ?? 0,
+          prepareJoiningAlerts: payload.prepareJoiningAlerts ?? 0,
+          readinessAlerts: payload.readinessAlerts ?? 0,
+          urgentCrewCases: payload.urgentCrewCases ?? 0,
           contractsExpiring45Days: payload.contractsExpiring45Days ?? 0,
           contractsExpiring30Days: payload.contractsExpiring30Days ?? 0,
           contractsExpiring14Days: payload.contractsExpiring14Days ?? 0,
+          mlcMedicalAlerts: payload.mlcMedicalAlerts ?? 0,
+          stcwComplianceAlerts: payload.stcwComplianceAlerts ?? 0,
+          travelDocumentAlerts: payload.travelDocumentAlerts ?? 0,
         });
 
         setCrewMovement(Array.isArray(payload.crewMovement) ? payload.crewMovement : []);
@@ -218,11 +221,20 @@ export default function DashboardClient() {
           activeVessels: 0,
           operationalVessels: 0,
           onboardVessels: 0,
+          crewReady: 0,
+          crewOnboard: 0,
           pendingApplications: 0,
           expiringDocuments: 0,
+          expiredDocuments: 0,
+          prepareJoiningAlerts: 0,
+          readinessAlerts: 0,
+          urgentCrewCases: 0,
           contractsExpiring45Days: 0,
           contractsExpiring30Days: 0,
           contractsExpiring14Days: 0,
+          mlcMedicalAlerts: 0,
+          stcwComplianceAlerts: 0,
+          travelDocumentAlerts: 0,
         });
         setCrewMovement([]);
         setExpiringItems([]);
@@ -242,11 +254,20 @@ export default function DashboardClient() {
         activeVessels: 0,
         operationalVessels: 0,
         onboardVessels: 0,
+        crewReady: 0,
+        crewOnboard: 0,
         pendingApplications: 0,
         expiringDocuments: 0,
+        expiredDocuments: 0,
+        prepareJoiningAlerts: 0,
+        readinessAlerts: 0,
+        urgentCrewCases: 0,
         contractsExpiring45Days: 0,
         contractsExpiring30Days: 0,
         contractsExpiring14Days: 0,
+        mlcMedicalAlerts: 0,
+        stcwComplianceAlerts: 0,
+        travelDocumentAlerts: 0,
       });
       setCrewMovement([]);
       setExpiringItems([]);
@@ -330,237 +351,46 @@ export default function DashboardClient() {
     }
   };
 
-  const renderRoleBasedNavigation = () => {
-    if (userRole === APP_ROLES.CREW_PORTAL) {
-      return CREW_PORTAL_NAV_ITEMS.map((item) => (
-        <Link
-          key={item.href}
-          href={item.href}
-          className="flex items-center gap-3 rounded-xl border border-transparent bg-white/75 px-4 py-3 font-medium text-slate-800 shadow-sm transition-all duration-200 hover:border-blue-200 hover:bg-white"
-        >
-          <span className="text-xl text-current" aria-hidden="true">{item.icon}</span>
-          <span className="text-current">{item.label}</span>
-        </Link>
-      ));
-    }
-
-    const subject = {
-      roles: session?.user?.roles,
-      role: session?.user?.role,
-      isSystemAdmin: (session?.user as Record<string, unknown>)?.isSystemAdmin === true,
-      permissionOverrides: (session?.user as Record<string, unknown>)?.permissionOverrides as never,
-      adminMaintenanceScopes: session?.user?.adminMaintenanceScopes,
-    };
-
-    const items = OFFICE_NAV_ITEMS.filter((item) => {
-      const adminScope = getAdminScopeForPath(item.href);
-      if (adminScope) {
-        return hasAdminMaintenanceScope(subject, adminScope);
-      }
-
-      if (!hasExplicitRoleAccess(subject, item.allowedRoles)) {
-        return false;
-      }
-
-      if (!hasModuleAccess(subject, item.module, item.requiredLevel ?? PermissionLevel.VIEW_ACCESS)) {
-        return false;
-      }
-
-      return canAccessOfficePath(
-        item.href.split('?')[0] || item.href,
-        session?.user?.roles ?? (session?.user?.role ? [session.user.role] : []),
-        (session?.user as Record<string, unknown>)?.isSystemAdmin === true
-      );
-    });
-
-    // Group items by their group property
-    const groupedItems = items.reduce((acc, item) => {
-      const group = item.group || 'OTHER';
-      if (!acc[group]) {
-        acc[group] = [];
-      }
-      acc[group].push(item);
-      return acc;
-    }, {} as Record<string, OfficeNavigationItem[]>);
-
-    // Define group order
-    const groupOrder = [
-      'CREW OPERATIONS',
-      'DOCUMENT CONTROL',
-      'FINANCE & ADMINISTRATION',
-      'HR & PERSONNEL',
-      'QUALITY & COMPLIANCE',
-      'SYSTEM ADMINISTRATION',
-      'OTHER',
-    ];
-
-    return (
-      <>
-        {groupOrder.map((group) => {
-          const groupItems = groupedItems[group];
-          if (!groupItems || groupItems.length === 0) return null;
-
-          return (
-            <div key={group} className="space-y-1">
-              <div className="px-4 py-2 text-xs font-semibold uppercase tracking-wider text-gray-500">
-                {group}
-              </div>
-              <div className="space-y-1 pl-2">
-                {groupItems.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className="flex items-center gap-3 rounded-lg border border-transparent bg-white/50 px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition-all duration-200 hover:border-blue-200 hover:bg-white hover:text-blue-600"
-                  >
-                    <span className="text-lg text-current" aria-hidden="true">{item.icon}</span>
-                    <span className="text-current">{item.label}</span>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          );
-        })}
-      </>
-    );
-  };
-
-  const handleLogout = async () => {
-    const result = await signOut({ redirect: false, callbackUrl: '/auth/signin' });
-    if (result?.url) {
-      router.replace(result.url);
-    } else {
-      router.replace('/auth/signin');
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      <div className="fixed left-0 top-0 h-full w-72 bg-white shadow-xl border-r border-gray-200 z-40 flex flex-col">
-        <SidebarHeader />
-
-        <nav className="flex-1 overflow-y-auto p-4">
-          <div className="space-y-2">
-            <Link
-              href="/dashboard"
-              className="flex items-center gap-3 rounded-xl border border-transparent bg-white text-slate-900 px-4 py-3 font-semibold shadow-md transition-all duration-200 hover:border-blue-200 hover:shadow-lg"
-            >
-              <span className="text-xl text-current" aria-hidden="true">📊</span>
-              <span className="leading-none text-current">Dashboard</span>
-            </Link>
-            {renderRoleBasedNavigation()}
-          </div>
-        </nav>
-
-        <div className="border-t border-gray-200 bg-gray-50 p-4">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white font-semibold text-sm">
-              {userName.charAt(0)}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="font-medium text-gray-900 text-sm truncate">{userName}</div>
-              <div className="text-xs text-gray-600">{getRoleDisplayName(userRole, (session?.user as Record<string, unknown>)?.isSystemAdmin as boolean | undefined)}</div>
-            </div>
-          </div>
-          {session ? (
-            <button
-              onClick={handleLogout}
-              className="w-full bg-red-500 hover:bg-red-600 text-white font-medium py-2.5 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors"
-            >
-              <span className="text-lg" aria-hidden="true">🚪</span>
-              <span>Logout</span>
-            </button>
-          ) : (
-            <div className="text-center text-xs text-gray-500 py-2">Preview Mode</div>
-          )}
-        </div>
-      </div>
-
-      <div className="ml-72 px-8 py-10">
-        <div className="page-shell section-stack">
-          {renderRoleBasedDashboard()}
-        </div>
-      </div>
+    <div className="section-stack">
+      {renderRoleBasedDashboard()}
     </div>
   );
 }
 
-function DirectorDashboard({ data, crewMovement, expiringItems, contractAlerts, pendingTasks, recentActivity }: DashboardSectionProps) {
+function DirectorDashboard({ data, crewMovement, expiringItems, contractAlerts, pendingTasks, recentActivity, user }: DashboardSectionProps) {
+  const primaryTask = pendingTasks[0] ?? null;
+  const criticalContract = contractAlerts[0] ?? null;
+  const topExpiringItem = expiringItems[0] ?? null;
+
   return (
     <div className="space-y-6">
       <DashboardHeader
-        title="Executive Overview"
-        subtitle="High-level visibility for crew, active jobs, expiring certificates, and finance monitoring"
-      />
-      <SectionHeading
-        title="Crew Overview"
-        description="Review active crew numbers and the current fleet picture."
+        role={user?.roles?.[0]}
+        title="Executive Command Center"
+        subtitle="One integrated workspace for crew readiness, contract exposure, operational backlog, and cross-department follow-up."
       />
       <DirectorOverviewStructure data={data} pendingTasks={pendingTasks} />
-      <FleetSnapshot data={data} />
-      <SectionHeading
-        title="Active Jobs"
-        description="Track operational work that is still moving and needs office follow-up."
+      <DirectorCommandCenter
+        data={data}
+        primaryTask={primaryTask}
+        criticalContract={criticalContract}
+        topExpiringItem={topExpiringItem}
       />
-      <ContractAlertStrip data={data} items={contractAlerts} />
-      <div className="grid gap-6 xl:grid-cols-3">
-        <CrewMovementSection crewMovement={crewMovement} className="xl:col-span-2" />
+      <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
         <PendingTasksSection tasks={pendingTasks} />
+        <DirectorActionBoard data={data} />
       </div>
-      <SectionHeading
-        title="Expiring Certificates"
-        description="Focus on certificates and controlled documents approaching expiry."
-      />
-      <div className="grid gap-6 xl:grid-cols-3">
-        <ExpiringItemsSection items={expiringItems} className="xl:col-span-2" />
-        <RecentActivitySection events={recentActivity} />
+      <div className="grid gap-6 xl:grid-cols-[1.3fr_0.7fr]">
+        <ContractAlertStrip data={data} items={contractAlerts} />
+        <FleetSnapshot data={data} />
       </div>
-      <SectionHeading
-        title="Finance Summary"
-        description="A simple finance summary based on existing data without additional analytics."
-      />
+      <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+        <CrewMovementSection crewMovement={crewMovement} />
+        <ExpiringItemsSection items={expiringItems} />
+      </div>
       <DirectorFinanceSummary data={data} />
-      <div className="surface-card p-6">
-        <div className="mb-4 flex items-center justify-between gap-4">
-          <div>
-            <h3 className="text-lg font-semibold text-slate-900">Operational shortcuts</h3>
-            <p className="mt-1 text-sm text-slate-600">
-              Keep practical shortcuts available without changing the main dashboard workflow.
-            </p>
-          </div>
-          <Link href="/compliance" className="text-sm font-semibold text-cyan-700 hover:text-cyan-800">
-            Open compliance center
-          </Link>
-        </div>
-        <div className="grid gap-4 md:grid-cols-3">
-          <Link
-            href="/compliance/external"
-            className="rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:border-cyan-300 hover:bg-cyan-50"
-          >
-            <p className="text-sm font-semibold text-slate-900">Verification shortcuts</p>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
-              Open the support launcher for KOSMA reference, Dephub checks, and visa portals.
-            </p>
-          </Link>
-          <Link
-            href="/crewing/documents?type=KOSMA"
-            className="rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:border-cyan-300 hover:bg-cyan-50"
-          >
-            <p className="text-sm font-semibold text-slate-900">KOSMA records</p>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
-              Review KOSMA training and certificate records under document control.
-            </p>
-          </Link>
-          <Link
-            href="/compliance/control-center"
-            className="rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:border-cyan-300 hover:bg-cyan-50"
-          >
-            <p className="text-sm font-semibold text-slate-900">Command view</p>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
-              Return to the MLC and IMO control center for the actual operating workflow.
-            </p>
-          </Link>
-        </div>
-      </div>
+      <RecentActivitySection events={recentActivity} />
     </div>
   );
 }
@@ -568,28 +398,32 @@ function DirectorDashboard({ data, crewMovement, expiringItems, contractAlerts, 
 function DirectorOverviewStructure({ data, pendingTasks }: { data: DashboardData | null; pendingTasks: PendingTask[] }) {
   const structureCards = [
     {
-      label: "Crew Count",
+      label: "Total Crew",
       value: (data?.totalCrew ?? 0).toLocaleString("id-ID"),
-      detail: "Active seafarers currently tracked by the office.",
+      detail: "Active seafarers managed across the office system.",
       href: "/crewing/seafarers",
+      tone: "slate" as const,
     },
     {
-      label: "Active Jobs",
+      label: "Open Tasks",
       value: pendingTasks.length.toLocaleString("id-ID"),
-      detail: "Current open follow-up work across operations and office control.",
-      href: "/crewing",
+      detail: "Actionable work currently visible from operations, audit, and contract review.",
+      href: "/dashboard",
+      tone: "cyan" as const,
     },
     {
-      label: "Expiring Certificates",
-      value: (data?.expiringDocuments ?? 0).toLocaleString("id-ID"),
-      detail: "Certificates and controlled documents requiring renewal attention.",
+      label: "Readiness Alerts",
+      value: (data?.readinessAlerts ?? 0).toLocaleString("id-ID"),
+      detail: "Combined document and contract alerts affecting deployment readiness.",
       href: "/crewing/documents?filter=expiring",
+      tone: "amber" as const,
     },
     {
-      label: "Contracts Requiring Review",
-      value: (data?.contractsExpiring30Days ?? 0).toLocaleString("id-ID"),
-      detail: "Onboard contracts that need closer finance and rotation attention.",
-      href: "/contracts",
+      label: "Urgent Cases",
+      value: (data?.urgentCrewCases ?? 0).toLocaleString("id-ID"),
+      detail: "Expired documents and active prepare-joining blockers needing immediate attention.",
+      href: "/crewing/prepare-joining",
+      tone: "rose" as const,
     },
   ];
 
@@ -600,7 +434,7 @@ function DirectorOverviewStructure({ data, pendingTasks }: { data: DashboardData
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-700">Director Dashboard Structure</p>
           <h3 className="mt-2 text-xl font-semibold text-slate-900">Core signals for office monitoring</h3>
           <p className="mt-1 text-sm leading-6 text-slate-600">
-            This structure keeps the dashboard clear: crew count, active jobs, expiring certificates, and a contract-focused finance view without adding new backend logic.
+            The dashboard is reduced to one hierarchy: enterprise count, action queue, readiness pressure, and urgent cases that need leadership intervention.
           </p>
         </div>
         <Link href="/dashboard" className="text-sm font-semibold text-cyan-700 hover:text-cyan-800">
@@ -612,13 +446,32 @@ function DirectorOverviewStructure({ data, pendingTasks }: { data: DashboardData
           <Link
             key={card.label}
             href={card.href}
-            className="rounded-2xl border border-slate-200 bg-slate-50 p-5 transition hover:border-cyan-300 hover:bg-white"
+            className="rounded-2xl border border-slate-200 bg-slate-50 p-5 transition hover:-translate-y-0.5 hover:border-cyan-300 hover:bg-white"
           >
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{card.label}</p>
+            <p className={`text-xs font-semibold uppercase tracking-wide ${card.tone === 'rose' ? 'text-rose-700' : card.tone === 'amber' ? 'text-amber-700' : card.tone === 'cyan' ? 'text-cyan-700' : 'text-slate-500'}`}>
+              {card.label}
+            </p>
             <p className="mt-3 text-3xl font-semibold text-slate-900">{card.value}</p>
             <p className="mt-2 text-sm leading-6 text-slate-600">{card.detail}</p>
           </Link>
         ))}
+      </div>
+      <div className="mt-5 grid gap-4 xl:grid-cols-3">
+        <div className="rounded-2xl border border-cyan-200 bg-cyan-50 p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-cyan-700">MLC 2006</p>
+          <p className="mt-3 text-3xl font-semibold text-cyan-950">{(data?.mlcMedicalAlerts ?? 0).toLocaleString('id-ID')}</p>
+          <p className="mt-2 text-sm leading-6 text-cyan-900">Crew with medical fitness records that still require compliance follow-up.</p>
+        </div>
+        <div className="rounded-2xl border border-violet-200 bg-violet-50 p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-violet-700">STCW 2010</p>
+          <p className="mt-3 text-3xl font-semibold text-violet-950">{(data?.stcwComplianceAlerts ?? 0).toLocaleString('id-ID')}</p>
+          <p className="mt-2 text-sm leading-6 text-violet-900">Crew records with missing, expiring, or blocked core STCW certificate coverage.</p>
+        </div>
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">Travel Readiness</p>
+          <p className="mt-3 text-3xl font-semibold text-amber-950">{(data?.travelDocumentAlerts ?? 0).toLocaleString('id-ID')}</p>
+          <p className="mt-2 text-sm leading-6 text-amber-900">Passport, seaman book, or visa packages that can block owner release or mobilization.</p>
+        </div>
       </div>
     </section>
   );
@@ -645,6 +498,10 @@ function DirectorFinanceSummary({ data }: { data: DashboardData | null }) {
 
   return (
     <section className="surface-card p-6">
+      <div className="mb-4">
+        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-rose-700">Finance Summary</p>
+        <h3 className="mt-2 text-xl font-semibold text-slate-900">Contract exposure</h3>
+      </div>
       <div className="grid gap-4 md:grid-cols-3">
         {items.map((item) => (
           <div key={item.label} className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
@@ -658,37 +515,196 @@ function DirectorFinanceSummary({ data }: { data: DashboardData | null }) {
   );
 }
 
-function CDMODashboard({ data, crewMovement, expiringItems, contractAlerts, pendingTasks, recentActivity }: DashboardSectionProps) {
+function DirectorCommandCenter({
+  data,
+  primaryTask,
+  criticalContract,
+  topExpiringItem,
+}: {
+  data: DashboardData | null;
+  primaryTask: PendingTask | null;
+  criticalContract: ContractAlertItem | null;
+  topExpiringItem: ExpiringItem | null;
+}) {
+  const cards = [
+    {
+      eyebrow: "Current Lead Task",
+      title: primaryTask?.type ?? "No open task in queue",
+      detail: primaryTask
+        ? `${primaryTask.description} Due ${formatDateLabel(primaryTask.dueDate, 'en-US')}.`
+        : "No pending tasks are currently registered for leadership follow-up.",
+      href: primaryTask?.link ?? "/dashboard",
+      cta: primaryTask?.link ? "Open task" : "Refresh dashboard",
+      accent: "border-cyan-200 bg-cyan-50/80",
+    },
+    {
+      eyebrow: "Contract Exposure",
+      title: criticalContract ? `${criticalContract.seafarer} • ${criticalContract.vessel}` : "No critical contract case",
+      detail: criticalContract
+        ? `${criticalContract.daysLeft} day(s) left. ${criticalContract.nextAction}`
+        : "No onboard contract is currently in the escalation band.",
+      href: criticalContract?.link ?? "/contracts",
+      cta: "Review contracts",
+      accent: "border-rose-200 bg-rose-50/80",
+    },
+    {
+      eyebrow: "Readiness Blocker",
+      title: topExpiringItem ? `${topExpiringItem.seafarer} • ${topExpiringItem.name}` : "No document blocker",
+      detail: topExpiringItem
+        ? `${topExpiringItem.daysLeft} day(s) remaining before expiry on ${formatDateLabel(topExpiringItem.expiryDate, 'en-US')}.`
+        : "No immediate document or contract blocker is visible in the current data set.",
+      href: "/crewing/documents?filter=expiring",
+      cta: "Open document control",
+      accent: "border-amber-200 bg-amber-50/80",
+    },
+  ];
+
+  return (
+    <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.12),_transparent_34%),linear-gradient(135deg,#ffffff_0%,#f8fbff_52%,#ecf5ff_100%)] p-6 shadow-sm">
+      <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-700">Leadership Action Grid</p>
+          <h3 className="mt-2 text-2xl font-semibold text-slate-950">Priorities, not duplicate modules</h3>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
+            Director view now highlights the next action, the most exposed contract, and the strongest readiness blocker from one integrated layer.
+          </p>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div className="rounded-2xl border border-slate-200 bg-white/90 px-4 py-3">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Crew Planned</p>
+            <p className="mt-2 text-2xl font-semibold text-slate-950">{(data?.crewReady ?? 0).toLocaleString('id-ID')}</p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white/90 px-4 py-3">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Crew Onboard</p>
+            <p className="mt-2 text-2xl font-semibold text-slate-950">{(data?.crewOnboard ?? 0).toLocaleString('id-ID')}</p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white/90 px-4 py-3">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Prepare Joining Alerts</p>
+            <p className="mt-2 text-2xl font-semibold text-slate-950">{(data?.prepareJoiningAlerts ?? 0).toLocaleString('id-ID')}</p>
+          </div>
+        </div>
+      </div>
+      <div className="mt-6 grid gap-4 xl:grid-cols-3">
+        {cards.map((card) => (
+          <Link
+            key={card.eyebrow}
+            href={card.href}
+            className={`rounded-[1.5rem] border p-5 transition hover:-translate-y-0.5 hover:border-slate-300 hover:bg-white ${card.accent}`}
+          >
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">{card.eyebrow}</p>
+            <h4 className="mt-3 text-lg font-semibold text-slate-950">{card.title}</h4>
+            <p className="mt-2 text-sm leading-6 text-slate-600">{card.detail}</p>
+            <p className="mt-4 text-sm font-semibold text-slate-900">{card.cta}</p>
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function DirectorActionBoard({ data }: { data: DashboardData | null }) {
+  const actions = [
+    {
+      title: "Operations backlog",
+      detail: `${(data?.prepareJoiningAlerts ?? 0).toLocaleString('id-ID')} prepare joining records are still active across document, medical, training, or travel stages.`,
+      href: "/crewing/prepare-joining",
+    },
+    {
+      title: "Application decisions",
+      detail: `${(data?.pendingApplications ?? 0).toLocaleString('id-ID')} applications are waiting for nomination review or next-stage handling.`,
+      href: "/crewing/applications",
+    },
+    {
+      title: "Expired documents",
+      detail: `${(data?.expiredDocuments ?? 0).toLocaleString('id-ID')} documents are already expired and should not be left hidden behind summary charts.`,
+      href: "/crewing/documents?filter=expiring",
+    },
+    {
+      title: "Regulatory readiness",
+      detail: `${(data?.mlcMedicalAlerts ?? 0).toLocaleString('id-ID')} MLC medical, ${(data?.stcwComplianceAlerts ?? 0).toLocaleString('id-ID')} STCW, and ${(data?.travelDocumentAlerts ?? 0).toLocaleString('id-ID')} travel-document alerts are visible from the executive layer.`,
+      href: "/crewing/readiness",
+    },
+    {
+      title: "Quality schedule",
+      detail: "Keep audits and escalations visible in the same command path, not on disconnected pages.",
+      href: "/audit",
+    },
+  ];
+
+  return (
+    <section className="surface-card p-6">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Department Routing</p>
+          <h3 className="mt-2 text-xl font-semibold text-slate-900">What needs to be opened next</h3>
+          <p className="mt-1 text-sm leading-6 text-slate-600">
+            Each route below maps one real office responsibility to one working page so users are not bounced between duplicate menus.
+          </p>
+        </div>
+        <Link href="/compliance/control-center" className="text-sm font-semibold text-cyan-700 hover:text-cyan-800">
+          Open control center
+        </Link>
+      </div>
+      <div className="mt-5 space-y-3">
+        {actions.map((action) => (
+          <Link
+            key={action.title}
+            href={action.href}
+            className="flex items-start justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 transition hover:border-cyan-300 hover:bg-white"
+          >
+            <div>
+              <p className="text-sm font-semibold text-slate-900">{action.title}</p>
+              <p className="mt-1 text-sm leading-6 text-slate-600">{action.detail}</p>
+            </div>
+            <span className="whitespace-nowrap text-sm font-semibold text-cyan-700">Open</span>
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function CDMODashboard({ data, crewMovement, expiringItems, contractAlerts, pendingTasks, recentActivity, user }: DashboardSectionProps) {
   return (
     <div className="space-y-6">
       <DashboardHeader
-        title="Document Control"
-        subtitle="Crew records, certificates, and document validity control"
+        role={user?.roles?.[0]}
+        title="Crewing Document Control"
+        subtitle="Professional control desk for crew records, certificate validity, and document follow-up"
       />
-      <ComplianceOperationsBanner />
-      <FleetSnapshot data={data} />
-      <SummaryCards data={data} />
-      <ContractAlertStrip data={data} items={contractAlerts} />
-      <div className="grid gap-6 xl:grid-cols-3">
-        <CrewMovementSection crewMovement={crewMovement} className="xl:col-span-2" />
+      <CDMOFocusPanel />
+      <CDMOKpiStrip data={data} items={expiringItems} tasks={pendingTasks} />
+      <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+        <CDMOQuickLinks />
         <div className="surface-card p-6">
-          <h3 className="mb-4 text-lg font-semibold text-gray-900">Verification Snapshot</h3>
+          <h3 className="mb-2 text-lg font-semibold text-slate-900">Verification Snapshot</h3>
+          <p className="mb-4 text-sm leading-6 text-slate-600">
+            Keep a clean view of document-control verification pressure without mixing it with unrelated workflow steps.
+          </p>
           <ComplianceStatusWidget />
         </div>
       </div>
-      <div className="grid gap-6 xl:grid-cols-3">
+      <div className="grid gap-6 xl:grid-cols-[1.25fr_0.75fr]">
         <ExpiringItemsSection items={expiringItems} />
-        <PendingTasksSection tasks={pendingTasks} className="xl:col-span-2" />
+        <CDMODocumentAttention items={expiringItems} />
       </div>
-      <RecentActivitySection events={recentActivity} />
+      <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+        <CrewMovementSection crewMovement={crewMovement} />
+        <PendingTasksSection tasks={pendingTasks} />
+      </div>
+      <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+        <ContractAlertStrip data={data} items={contractAlerts} />
+        <RecentActivitySection events={recentActivity} />
+      </div>
     </div>
   );
 }
 
-function AccountingDashboard({ data, pendingTasks }: DashboardSectionProps) {
+function AccountingDashboard({ data, pendingTasks, user }: DashboardSectionProps) {
   return (
     <div className="space-y-6">
       <DashboardHeader
+        role={user?.roles?.[0]}
         title="Accounting Overview"
         subtitle="Monitor payroll, allotments, and billing follow ups"
       />
@@ -700,10 +716,11 @@ function AccountingDashboard({ data, pendingTasks }: DashboardSectionProps) {
   );
 }
 
-function OperationalDashboard({ data, crewMovement, expiringItems, contractAlerts, pendingTasks }: DashboardSectionProps) {
+function OperationalDashboard({ data, crewMovement, expiringItems, contractAlerts, pendingTasks, user }: DashboardSectionProps) {
   return (
     <div className="space-y-6">
       <DashboardHeader
+        role={user?.roles?.[0]}
         title="Operational Control"
         subtitle="Crew logistics, sign-on readiness, and vessel documentation"
       />
@@ -720,10 +737,11 @@ function OperationalDashboard({ data, crewMovement, expiringItems, contractAlert
   );
 }
 
-function GADriverDashboard({ data, pendingTasks, recentActivity }: DashboardSectionProps) {
+function GADriverDashboard({ data, pendingTasks, recentActivity, user }: DashboardSectionProps) {
   return (
     <div className="space-y-6">
       <DashboardHeader
+        role={user?.roles?.[0]}
         title="General Affair and Driver"
         subtitle="Vessel assignment, transport coordination, and logistics support"
       />
@@ -749,10 +767,11 @@ function GADriverDashboard({ data, pendingTasks, recentActivity }: DashboardSect
   );
 }
 
-function HRDashboard({ data, expiringItems, contractAlerts, pendingTasks, recentActivity }: DashboardSectionProps) {
+function HRDashboard({ data, expiringItems, contractAlerts, pendingTasks, recentActivity, user }: DashboardSectionProps) {
   return (
     <div className="space-y-6">
       <DashboardHeader
+        role={user?.roles?.[0]}
         title="HR & Welfare"
         subtitle="Document renewals, onboarding status, and recent updates"
       />
@@ -769,10 +788,11 @@ function HRDashboard({ data, expiringItems, contractAlerts, pendingTasks, recent
   );
 }
 
-function HRAdminDashboard({ data, expiringItems, contractAlerts, pendingTasks, recentActivity }: DashboardSectionProps) {
+function HRAdminDashboard({ data, expiringItems, contractAlerts, pendingTasks, recentActivity, user }: DashboardSectionProps) {
   return (
     <div className="space-y-6">
       <DashboardHeader
+        role={user?.roles?.[0]}
         title="HR Administration"
         subtitle="User administration, HR control, and office support oversight"
       />
@@ -789,10 +809,11 @@ function HRAdminDashboard({ data, expiringItems, contractAlerts, pendingTasks, r
   );
 }
 
-function QMRDashboard({ data, contractAlerts, pendingTasks, recentActivity }: DashboardSectionProps) {
+function QMRDashboard({ data, contractAlerts, pendingTasks, recentActivity, user }: DashboardSectionProps) {
   return (
     <div className="space-y-6">
       <DashboardHeader
+        role={user?.roles?.[0]}
         title="Quality and Compliance"
         subtitle="Audit follow-up, QMS control, and MLC / IMO oversight"
       />
@@ -831,6 +852,7 @@ function CrewPortalDashboard({ expiringItems, pendingTasks, recentActivity, user
   return (
     <div className="space-y-6">
       <DashboardHeader
+        role={user?.roles?.[0]}
         title="Crew Portal"
         subtitle={`Welcome, ${user?.name ?? 'Crew Member'}`}
       />
@@ -844,32 +866,48 @@ function CrewPortalDashboard({ expiringItems, pendingTasks, recentActivity, user
   );
 }
 
-function DashboardHeader({ title, subtitle }: { title: string; subtitle?: string }) {
+function DashboardHeader({ title, subtitle, role }: { title: string; subtitle?: string; role?: AppRole }) {
   const today = new Date();
   const formattedDate = today.toLocaleDateString('en-US', {
     day: '2-digit',
     month: 'long',
     year: 'numeric',
   });
+  const roleLabel = getRoleDisplayName(role ?? APP_ROLES.STAFF);
+  const workspaceProfile = getRoleWorkspaceProfile(role ?? APP_ROLES.STAFF);
 
   return (
-    <div className="surface-card p-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-gradient-to-br from-slate-950 via-slate-900 to-cyan-950 p-6 text-white shadow-2xl">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">{title}</h1>
-          {subtitle && <p className="text-sm text-slate-600 mt-1">{subtitle}</p>}
+          <div className="inline-flex items-center rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-cyan-200">
+            Maritime Operations Dashboard
+          </div>
+          <h1 className="mt-4 text-3xl font-semibold tracking-tight text-white">{title}</h1>
+          {subtitle && <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-300">{subtitle}</p>}
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
+            <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-300">Primary Role</p>
+              <p className="mt-2 text-base font-semibold text-white">{roleLabel}</p>
+              <p className="mt-1 text-sm text-slate-300">{workspaceProfile.primaryDesk}</p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-300">Role Focus</p>
+              <p className="mt-2 text-sm leading-6 text-slate-200">{workspaceProfile.focus}</p>
+            </div>
+          </div>
         </div>
-        <span className="action-pill text-xs font-semibold tracking-wide">{formattedDate}</span>
+        <div className="grid gap-3 sm:grid-cols-2 lg:max-w-md">
+          <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-300">Snapshot Date</p>
+            <p className="mt-2 text-base font-semibold text-white">{formattedDate}</p>
+          </div>
+          <div className="rounded-2xl border border-cyan-400/20 bg-cyan-400/10 px-4 py-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-cyan-200">Dashboard Focus</p>
+            <p className="mt-2 text-base font-semibold text-white">{workspaceProfile.actionLabels[0] ?? 'Action first, history second'}</p>
+          </div>
+        </div>
       </div>
-    </div>
-  );
-}
-
-function SectionHeading({ title, description }: { title: string; description: string }) {
-  return (
-    <div className="surface-card p-5">
-      <h2 className="text-xl font-semibold text-slate-900">{title}</h2>
-      <p className="mt-1 text-sm text-slate-600">{description}</p>
     </div>
   );
 }
@@ -915,23 +953,210 @@ function ComplianceOperationsBanner() {
   );
 }
 
+function CDMOFocusPanel() {
+  return (
+    <section className="overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 text-white shadow-2xl">
+      <div className="grid gap-6 px-6 py-6 lg:grid-cols-[1.2fr,0.8fr] lg:px-8">
+        <div className="space-y-4">
+          <div className="inline-flex items-center rounded-full border border-cyan-400/30 bg-cyan-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200">
+            CDMO Control Desk
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-semibold tracking-tight">
+              Clean document control for crewing records, expiry review, and office follow-up
+            </h2>
+            <p className="max-w-3xl text-sm leading-6 text-slate-300">
+              This dashboard is focused on practical CDMO work: keep crew records complete, detect expiring certificates early,
+              and move document issues to the correct follow-up path without mixing them with unrelated operational screens.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2 text-xs font-semibold uppercase tracking-wide text-slate-200">
+            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">Crew records</span>
+            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">Certificate expiry</span>
+            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">Document verification</span>
+            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">Controlled follow-up</span>
+          </div>
+        </div>
+        <div className="grid gap-3">
+          <Link
+            href="/crewing/documents"
+            className="rounded-2xl border border-white/10 bg-white/5 p-4 transition hover:border-cyan-300/40 hover:bg-white/10"
+          >
+            <div className="text-sm font-semibold text-white">Open document register</div>
+            <p className="mt-1 text-sm leading-6 text-slate-300">
+              Review uploads, validity dates, and supporting files from one controlled list.
+            </p>
+          </Link>
+          <Link
+            href="/crewing?section=database"
+            className="rounded-2xl border border-white/10 bg-white/5 p-4 transition hover:border-cyan-300/40 hover:bg-white/10"
+          >
+            <div className="text-sm font-semibold text-white">Open crewing workspace</div>
+            <p className="mt-1 text-sm leading-6 text-slate-300">
+              Continue biodata review, applications, and crew profile maintenance from the department workspace.
+            </p>
+          </Link>
+          <Link
+            href="/compliance"
+            className="rounded-2xl border border-white/10 bg-white/5 p-4 transition hover:border-cyan-300/40 hover:bg-white/10"
+          >
+            <div className="text-sm font-semibold text-white">Open compliance oversight</div>
+            <p className="mt-1 text-sm leading-6 text-slate-300">
+              Use compliance pages only for monitoring and escalation once document control review is complete.
+            </p>
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function CDMOKpiStrip({
+  data,
+  items,
+  tasks,
+}: {
+  data: DashboardData | null;
+  items: ExpiringItem[];
+  tasks: PendingTask[];
+}) {
+  const cards = [
+    {
+      label: "Crew Records",
+      value: (data?.totalCrew ?? 0).toLocaleString("id-ID"),
+      detail: "Profiles currently controlled by the office.",
+      tone: "slate",
+    },
+    {
+      label: "Expiring Documents",
+      value: (data?.expiringDocuments ?? 0).toLocaleString("id-ID"),
+      detail: "Documents requiring renewal attention.",
+      tone: "amber",
+    },
+    {
+      label: "Review Queue",
+      value: tasks.length.toLocaleString("id-ID"),
+      detail: "Pending follow-up items for document control.",
+      tone: "blue",
+    },
+    {
+      label: "Priority Cases",
+      value: items.slice(0, 5).length.toLocaleString("id-ID"),
+      detail: "Immediate document cases visible on this dashboard.",
+      tone: "rose",
+    },
+  ] as const;
+
+  return (
+    <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      {cards.map((card) => (
+        <div key={card.label} className="surface-card p-5">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{card.label}</p>
+          <p className="mt-3 text-3xl font-semibold text-slate-900">{card.value}</p>
+          <p className="mt-2 text-sm leading-6 text-slate-600">{card.detail}</p>
+        </div>
+      ))}
+    </section>
+  );
+}
+
+function CDMOQuickLinks({ className = "" }: { className?: string }) {
+  const links = [
+    {
+      href: "/crewing/documents",
+      title: "Document Register",
+      description: "Main working page for uploads, expiry review, and document-file tracking.",
+    },
+    {
+      href: "/crewing/documents?filter=expiring",
+      title: "Expiry Follow-Up",
+      description: "Review documents approaching expiry and keep renewal actions visible.",
+    },
+    {
+      href: "/crewing/seafarers",
+      title: "Crew Profiles",
+      description: "Open seafarer records when document review requires biodata confirmation.",
+    },
+    {
+      href: "/crewing/applications",
+      title: "Applications Queue",
+      description: "Check new entries that may need document completeness review before next processing.",
+    },
+  ];
+
+  return (
+    <section className={`surface-card p-6 ${className}`}>
+      <div className="mb-4">
+        <h3 className="text-lg font-semibold text-slate-900">Document Control Shortcuts</h3>
+        <p className="mt-1 text-sm leading-6 text-slate-600">
+          Keep Rizkie’s daily path simple: document register first, then crew profile or application follow-up only when needed.
+        </p>
+      </div>
+      <div className="grid gap-4 md:grid-cols-2">
+        {links.map((link) => (
+          <Link
+            key={link.href}
+            href={link.href}
+            className="rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:border-cyan-300 hover:bg-white"
+          >
+            <p className="text-sm font-semibold text-slate-900">{link.title}</p>
+            <p className="mt-2 text-sm leading-6 text-slate-600">{link.description}</p>
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function CDMODocumentAttention({ items }: { items: ExpiringItem[] }) {
+  const topItems = items.slice(0, 4);
+
+  return (
+    <section className="surface-card p-6">
+      <h3 className="text-lg font-semibold text-slate-900">Attention Notes</h3>
+      <p className="mt-1 text-sm leading-6 text-slate-600">
+        A clean summary for quick office judgment before opening the full register.
+      </p>
+      {topItems.length === 0 ? (
+        <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-4 text-sm text-emerald-800">
+          No urgent document attention items are currently visible.
+        </div>
+      ) : (
+        <div className="mt-4 space-y-3">
+          {topItems.map((item, index) => (
+            <div key={`${item.seafarer}-${item.name}-${index}`} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <p className="text-sm font-semibold text-slate-900">{item.name}</p>
+              <p className="mt-1 text-sm text-slate-600">{item.seafarer}</p>
+              <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-amber-700">
+                {item.daysLeft} day(s) remaining
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
 function SummaryCards({ data }: { data: DashboardData | null }) {
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
       {SUMMARY_CARDS.map((card) => {
         const value = data?.[card.key] ?? 0;
         return (
           <Link
             key={card.key}
             href={card.href}
-            className="surface-card group flex items-center justify-between px-6 py-5"
+            className="surface-card group flex items-start justify-between gap-4 px-6 py-5 transition hover:-translate-y-0.5 hover:border-cyan-300"
           >
             <div className="space-y-1">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{card.label}</p>
               <p className="text-2xl font-bold text-slate-900">{value.toLocaleString('id-ID')}</p>
               <p className="text-sm text-slate-600">{card.description}</p>
             </div>
-            <span className="badge-soft bg-blue-500/10 text-blue-600 text-xl" aria-hidden="true">{card.icon}</span>
+            <span className="inline-flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-cyan-500/10 text-2xl text-cyan-700 ring-1 ring-cyan-200/70" aria-hidden="true">
+              {card.icon}
+            </span>
           </Link>
         );
       })}
@@ -970,13 +1195,6 @@ function FleetSnapshot({ data }: { data: DashboardData | null }) {
       </div>
     </section>
   );
-}
-
-function getContractBandStyles(band: string) {
-  if (band === 'EXPIRED' || band === 'CRITICAL') return 'bg-rose-100 text-rose-700';
-  if (band === 'URGENT') return 'bg-amber-100 text-amber-800';
-  if (band === 'FOLLOW_UP') return 'bg-cyan-100 text-cyan-800';
-  return 'bg-slate-100 text-slate-700';
 }
 
 function ContractAlertStrip({ data, items }: { data: DashboardData | null; items: ContractAlertItem[] }) {
@@ -1030,9 +1248,7 @@ function ContractAlertStrip({ data, items }: { data: DashboardData | null; items
                   <p className="font-semibold text-slate-900">{item.seafarer}</p>
                   <p className="text-sm text-slate-500">{item.principal} • {item.vessel}</p>
                 </div>
-                <span className={`rounded-full px-3 py-1 text-xs font-semibold ${getContractBandStyles(item.band)}`}>
-                  {item.band.replaceAll('_', ' ')}
-                </span>
+                <StatusBadge status={item.band} label={item.band.replaceAll('_', ' ')} />
               </div>
               <p className="mt-3 text-sm font-medium text-slate-700">
                 Contract end {formatDateLabel(item.expiryDate, 'id-ID')} • {item.daysLeft} day(s) left
@@ -1068,37 +1284,37 @@ function CrewMovementSection({ crewMovement, className = '' }: { crewMovement: C
       {crewMovement.length === 0 ? (
         <EmptyState message="No crew movement data yet." />
       ) : (
-        <div className="overflow-x-auto">
+        <div className="overflow-hidden rounded-2xl border border-slate-200">
+          <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
-            <thead className="text-left text-gray-500 uppercase tracking-wide text-xs">
+            <thead className="bg-slate-50 text-left text-gray-500 uppercase tracking-wide text-xs">
               <tr>
-                <th className="py-3 pr-4 font-medium">Crew</th>
-                <th className="py-3 pr-4 font-medium">Principal / Vessel</th>
-                <th className="py-3 pr-4 font-medium">Status</th>
-                <th className="py-3 font-medium">Next Action</th>
+                <th className="px-4 py-3 pr-4 font-medium">Crew</th>
+                <th className="px-4 py-3 pr-4 font-medium">Principal / Vessel</th>
+                <th className="px-4 py-3 pr-4 font-medium">Status</th>
+                <th className="px-4 py-3 font-medium">Next Action</th>
               </tr>
             </thead>
             <tbody>
               {crewMovement.map((item, index) => (
-                <tr key={`${item.seafarer}-${item.vessel}-${index}`} className="border-t border-gray-100">
-                  <td className="py-3 pr-4">
+                <tr key={`${item.seafarer}-${item.vessel}-${index}`} className="border-t border-gray-100 bg-white">
+                  <td className="px-4 py-3 pr-4">
                     <div className="font-medium text-gray-900">{item.seafarer}</div>
                     <div className="text-xs text-gray-500">{item.rank}</div>
                   </td>
-                  <td className="py-3 pr-4">
+                  <td className="px-4 py-3 pr-4">
                     <div className="text-sm text-gray-900">{item.principal}</div>
                     <div className="text-xs text-gray-500">{item.vessel}</div>
                   </td>
-                  <td className="py-3 pr-4">
-                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${getCrewStatusBadge(item.status)}`}>
-                      {formatStatusLabel(item.status)}
-                    </span>
+                  <td className="px-4 py-3 pr-4">
+                    <StatusBadge status={item.status} label={formatStatusLabel(item.status)} />
                   </td>
-                  <td className="py-3 text-sm text-gray-700">{item.nextAction}</td>
+                  <td className="px-4 py-3 text-sm text-gray-700">{item.nextAction}</td>
                 </tr>
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
     </section>
@@ -1174,16 +1390,18 @@ function PendingTasksSection({ tasks, className = '' }: { tasks: PendingTask[]; 
       ) : (
         <div className="space-y-3">
           {tasks.map((task, index) => {
-            const baseClassName = "border border-gray-200 rounded-lg p-4 flex items-start gap-4";
+            const baseClassName = "rounded-2xl border border-gray-200 bg-white p-4 flex items-start gap-4 shadow-sm";
             const hoverClassName = "hover:border-blue-300 hover:bg-blue-50/50 transition-all cursor-pointer";
             
             const taskContent = (
               <>
                 <div className="text-sm font-semibold text-gray-900 w-24">
                   <div>{formatDateLabel(task.dueDate, 'id-ID')}</div>
-                  <span className={`inline-flex mt-2 items-center px-2 py-0.5 rounded-full text-xs font-semibold ${getTaskStatusBadge(task.status)}`}>
-                    {formatStatusLabel(task.status)}
-                  </span>
+                  <StatusBadge
+                    status={task.status}
+                    label={formatStatusLabel(task.status)}
+                    className="mt-2"
+                  />
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-semibold text-gray-900">{task.type}</p>
@@ -1215,22 +1433,25 @@ function PendingTasksSection({ tasks, className = '' }: { tasks: PendingTask[]; 
 function RecentActivitySection({ events, className = '' }: { events: RecentActivity[]; className?: string }) {
   return (
     <section className={`surface-card p-6 ${className}`}>
-      <h3 className="text-lg font-semibold text-slate-900 mb-4">
-        Recent Activity
-        {events.length > 0 && (
-          <span className="ml-2 inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-semibold text-gray-700">
-            {events.length}
-          </span>
-        )}
-      </h3>
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <h3 className="text-lg font-semibold text-slate-900">
+          Recent Activity
+          {events.length > 0 && (
+            <span className="ml-2 inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-semibold text-gray-700">
+              {events.length}
+            </span>
+          )}
+        </h3>
+        <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">Audit trail feed</span>
+      </div>
       {events.length === 0 ? (
         <EmptyState message="Latest activity will appear after system receives updates." />
       ) : (
         <div className="space-y-4">
           {events.map((event, index) => (
-            <div key={`${event.timestamp}-${index}`} className="flex items-start gap-3">
-              <div className="w-16 text-xs text-gray-500 pt-0.5">{event.timestamp}</div>
-              <div className="flex-1 border-l border-gray-200 pl-3">
+            <div key={`${event.timestamp}-${index}`} className="flex items-start gap-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+              <div className="w-20 flex-shrink-0 text-xs font-medium text-gray-500 pt-0.5">{event.timestamp}</div>
+              <div className="flex-1 border-l border-gray-200 pl-4">
                 <p className="text-sm font-semibold text-gray-900">{event.user}</p>
                 <p className="text-sm text-gray-600">{event.action}</p>
               </div>
@@ -1258,7 +1479,7 @@ function QuickLinksSection() {
     },
     {
       href: '/m/crew',
-      label: 'Pre-Departure Preparation',
+      label: 'Prepare Joining',
       description: 'Review medical status, tickets, and pre-departure handling.',
       icon: '🧭',
     },
@@ -1300,19 +1521,4 @@ function EmptyState({ message }: { message: string }) {
       {message}
     </div>
   );
-}
-
-function getCrewStatusBadge(status: string) {
-  return getFleetActivityBadgeClasses(status);
-}
-
-const taskStatusBadges: Record<string, string> = {
-  OPEN: 'bg-blue-100 text-blue-700',
-  IN_PROGRESS: 'bg-amber-100 text-amber-700',
-  OVERDUE: 'bg-red-100 text-red-700',
-  COMPLETED: 'bg-green-100 text-green-700',
-};
-
-function getTaskStatusBadge(status: string) {
-  return taskStatusBadges[status] ?? 'bg-slate-100 text-slate-600';
 }

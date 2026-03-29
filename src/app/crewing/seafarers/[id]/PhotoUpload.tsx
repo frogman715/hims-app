@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 
 interface PhotoUploadProps {
@@ -14,10 +14,17 @@ export default function PhotoUpload({
   currentPhotoUrl,
   onPhotoUpdated,
 }: PhotoUploadProps) {
+  const fallbackSrc = "/logo.png";
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState("");
   const [preview, setPreview] = useState<string | null>(currentPhotoUrl || null);
+  const [hasImageError, setHasImageError] = useState(false);
+
+  useEffect(() => {
+    setPreview(currentPhotoUrl || fallbackSrc);
+    setHasImageError(false);
+  }, [currentPhotoUrl]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -61,16 +68,18 @@ export default function PhotoUpload({
       });
 
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Upload failed");
+        const data = await response.json().catch(() => null);
+        throw new Error(data?.error || data?.details || "Upload failed");
       }
 
       const data = await response.json();
-      setPreview(data.photoUrl);
+      setPreview(data.photoUrl || fallbackSrc);
+      setHasImageError(false);
       onPhotoUpdated(data.photoUrl);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Upload failed");
-      setPreview(currentPhotoUrl || null);
+      setPreview(currentPhotoUrl || fallbackSrc);
+      setHasImageError(false);
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) {
@@ -83,13 +92,22 @@ export default function PhotoUpload({
     <div className="flex flex-col items-center gap-4">
       {/* Photo Display */}
       <div className="relative w-32 h-32 rounded-lg overflow-hidden bg-gray-100 border-2 border-gray-200">
-        {preview ? (
+        {preview && !hasImageError ? (
           <Image
             src={preview}
             alt="Crew photo"
             width={128}
             height={128}
+            unoptimized
             className="object-cover"
+            onError={(event) => {
+              const target = event.currentTarget;
+              if (target.src.endsWith(fallbackSrc)) {
+                setHasImageError(true);
+                return;
+              }
+              target.src = fallbackSrc;
+            }}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">

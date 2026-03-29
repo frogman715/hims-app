@@ -6,6 +6,9 @@ import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { formatDocumentDate } from '@/lib/date-utils';
+import { getDocumentExpiryPresentation } from '@/lib/document-expiry';
+import { WorkspaceLoadingState, WorkspaceState } from '@/components/layout/WorkspaceState';
+import { Button } from '@/components/ui/Button';
 
 interface DocumentDetail {
   id: string;
@@ -17,8 +20,21 @@ interface DocumentDetail {
   fileUrl: string | null;
   crew: {
     id: string;
-    fullName: string;
+    fullName: string | null;
   };
+}
+
+function getCrewDisplayName(crew: DocumentDetail["crew"]) {
+  const normalized = crew.fullName?.trim();
+  return normalized && normalized.length > 0 ? normalized : `Crew ${crew.id}`;
+}
+
+function isImageAttachment(fileUrl: string | null | undefined) {
+  if (!fileUrl) {
+    return false;
+  }
+
+  return /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(fileUrl);
 }
 
 export default function ViewDocumentPage() {
@@ -30,19 +46,32 @@ export default function ViewDocumentPage() {
   const [document, setDocument] = useState<DocumentDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const fallbackPreviewSrc = "/logo.png";
+  const [previewSrc, setPreviewSrc] = useState(fallbackPreviewSrc);
 
   const loadDocument = useCallback(async () => {
     try {
       const response = await fetch(`/api/documents/${id}`);
       if (!response.ok) {
-        throw new Error('Failed to load document details');
+        const payload = await response.json().catch(() => null);
+
+        if (response.status === 403) {
+          throw new Error(payload?.error || 'You do not have access to this document.');
+        }
+
+        if (response.status === 404) {
+          throw new Error(payload?.error || 'Document not found or already removed.');
+        }
+
+        throw new Error(payload?.error || 'Failed to load document details');
       }
       const data = (await response.json()) as DocumentDetail;
       setDocument(data);
+      setPreviewSrc(data.fileUrl || fallbackPreviewSrc);
       setError(null);
     } catch (fetchError) {
       console.error(fetchError);
-      setError('Tidak can memuat detail dokumen. Silakan coba lagi.');
+      setError(fetchError instanceof Error ? fetchError.message : 'Could not load document details. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -61,40 +90,39 @@ export default function ViewDocumentPage() {
 
   const formattedDetails = useMemo(() => {
     if (!document) return null;
-
-    const now = new Date();
-    const expiry = document.expiryDate ? new Date(document.expiryDate) : null;
-    const expiringThreshold = new Date(now.getFullYear(), now.getMonth() + 15, now.getDate());
-
-    let statusLabel = 'Valid';
-    let statusClass = 'bg-emerald-100 text-emerald-700';
-
-    if (!expiry) {
-      statusLabel = 'No Expiry';
-      statusClass = 'bg-gray-100 text-gray-700';
-    } else if (expiry <= now) {
-      statusLabel = 'Expired';
-      statusClass = 'bg-rose-100 text-rose-700';
-    } else if (expiry <= expiringThreshold) {
-      statusLabel = 'Expiring Soon';
-      statusClass = 'bg-amber-100 text-amber-700';
-    }
+    const expiryPresentation = getDocumentExpiryPresentation(document.expiryDate);
 
     return {
       issueDate: formatDocumentDate(document.issueDate),
       expiryDate: formatDocumentDate(document.expiryDate),
-      statusLabel,
-      statusClass,
+      statusLabel: expiryPresentation.label,
+      statusClass: expiryPresentation.className,
     };
   }, [document]);
 
+  const isPdfAttachment = document?.fileUrl?.toLowerCase().includes(".pdf") ?? false;
+  const isImagePreview = isImageAttachment(document?.fileUrl);
+  const documentHealth =
+    formattedDetails?.statusLabel?.toLowerCase().includes("expired")
+      ? {
+          label: "Renew document",
+          helper: "This document is already expired. Update the record before assignment release or READY review.",
+          tone: "bg-rose-100 text-rose-800",
+        }
+      : formattedDetails?.statusLabel?.toLowerCase().includes("expire")
+        ? {
+            label: "Monitor expiry",
+            helper: "Expiry is approaching. Confirm whether a replacement upload is needed before movement planning.",
+            tone: "bg-amber-100 text-amber-800",
+          }
+        : {
+            label: "Document clear",
+            helper: "This attachment currently supports crew document readiness review.",
+            tone: "bg-emerald-100 text-emerald-800",
+          };
+
   if (status === 'loading' || loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 flex flex-col items-center justify-center gap-4">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
-        <p className="text-sm font-semibold text-gray-700">Loading detail dokumen…</p>
-      </div>
-    );
+    return <WorkspaceLoadingState label="Loading document detail..." />;
   }
 
   if (!session) {
@@ -103,91 +131,137 @@ export default function ViewDocumentPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
-        <div className="max-w-3xl mx-auto py-16 px-6">
-          <div className="surface-card p-8 text-center space-y-4">
-            <h1 className="text-2xl font-semibold text-gray-900">Failed to Load Document</h1>
-            <p className="text-sm text-gray-600">{error}</p>
-            <div className="flex items-center justify-center gap-3">
-              <Link
-                href="/crewing/documents"
-                className="action-pill"
-              >
-                ← Back to List
-              </Link>
-              <button
-                type="button"
-                onClick={() => {
-                  setLoading(true);
-                  loadDocument();
-                }}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition"
-              >
-                Coba Lagi
-              </button>
-            </div>
+      <WorkspaceState
+        eyebrow="Document Control"
+        title="Document record could not be opened"
+        description={error}
+        tone="danger"
+        action={(
+          <div className="flex flex-wrap justify-center gap-3">
+            <Link href="/crewing/documents" className="inline-flex items-center rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-cyan-600 hover:text-cyan-800">
+              Return to Document Register
+            </Link>
+            <Button
+              type="button"
+              onClick={() => {
+                setLoading(true);
+                loadDocument();
+              }}
+            >
+              Reload Record
+            </Button>
           </div>
-        </div>
-      </div>
+        )}
+      />
     );
   }
 
   if (!document || !formattedDetails) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
-        <div className="max-w-3xl mx-auto py-16 px-6">
-          <div className="surface-card p-8 text-center space-y-3">
-            <h1 className="text-2xl font-semibold text-gray-900">Dokumen tidak ditemukan</h1>
-            <p className="text-sm text-gray-600">Dokumen yang Anda cari mungkin telah dihapus atau tidak available.</p>
-            <Link href="/crewing/documents" className="action-pill">
-              ← Back to List
-            </Link>
-          </div>
-        </div>
-      </div>
+      <WorkspaceState
+        eyebrow="Document Control"
+        title="Document record not available"
+        description="The requested document may have been removed or is no longer available in the active register. Return to document control to reopen a valid record."
+        tone="danger"
+        action={(
+          <Link href="/crewing/documents" className="inline-flex items-center rounded-xl bg-cyan-700 px-4 py-3 text-sm font-semibold text-white transition hover:bg-cyan-800">
+            Return to Document Register
+          </Link>
+        )}
+      />
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-sm font-semibold text-blue-600 uppercase">Document Preview</p>
-            <h1 className="text-3xl font-bold text-gray-900 mt-1">{document.docType}</h1>
-            <p className="text-sm text-gray-600 mt-2">Diterbitkan untuk {document.crew.fullName}</p>
+    <div className="section-stack">
+      <section className="surface-card p-7">
+        <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+          <div className="max-w-4xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-sky-700">Document Control</p>
+            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950">{document.docType}</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">Issued for {getCrewDisplayName(document.crew)}</p>
           </div>
           <div className="flex flex-wrap gap-3">
-            <Link
-              href="/crewing/documents"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition"
-            >
-              ← Back to List
+            <Button type="button" variant="secondary" onClick={() => router.push('/crewing/documents')}>
+              Back to list
+            </Button>
+            <Link href={`/crewing/seafarers/${document.crew.id}/documents`} className="action-pill text-sm">
+              Crew document list
             </Link>
           </div>
         </div>
-      </header>
+      </section>
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
-        <section className="surface-card p-6">
+      <section className="surface-card border-sky-200 bg-sky-50 p-5">
+          <section className="rounded-2xl border border-blue-200 bg-blue-50 px-5 py-4">
+          <p className="text-sm font-semibold text-sky-900">How to use this page</p>
+          <p className="mt-1 text-sm text-sky-800">
+            Review the document metadata first, then open the file or preview to confirm the uploaded attachment matches the crew record.
+          </p>
+        </section>
+      </section>
+
+      <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Document Desk Action</p>
+            <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="text-lg font-semibold text-slate-900">{documentHealth.label}</p>
+                <p className="mt-1 max-w-2xl text-sm text-slate-600">{documentHealth.helper}</p>
+              </div>
+              <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${documentHealth.tone}`}>
+                {formattedDetails.statusLabel}
+              </span>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Related Desks</p>
+            <div className="mt-3 flex flex-col gap-2">
+              <Link
+                href={`/crewing/seafarers/${document.crew.id}/documents`}
+                className="inline-flex items-center justify-between rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-400 hover:text-blue-700"
+              >
+                Return to crew document list
+                <span>→</span>
+              </Link>
+              <Link
+                href={`/crewing/seafarers/${document.crew.id}/biodata`}
+                className="inline-flex items-center justify-between rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-400 hover:text-blue-700"
+              >
+                Open crew biodata
+                <span>→</span>
+              </Link>
+              <Link
+                href="/crewing/prepare-joining"
+                className="inline-flex items-center justify-between rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-400 hover:text-blue-700"
+              >
+                Check Prepare Joining queue
+                <span>→</span>
+              </Link>
+            </div>
+          </div>
+        </section>
+
+      <section className="surface-card p-6">
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <div className="space-y-4">
-              <h2 className="text-lg font-semibold text-gray-900">Informasi Dokumen</h2>
+              <h2 className="text-lg font-semibold text-gray-900">Document information</h2>
               <dl className="grid grid-cols-1 gap-4 text-sm">
                 <div>
                   <dt className="font-medium text-gray-600">Seafarer</dt>
-                  <dd className="text-gray-900">{document.crew.fullName}</dd>
+                  <dd className="text-gray-900">{getCrewDisplayName(document.crew)}</dd>
                 </div>
                 <div>
-                  <dt className="font-medium text-gray-600">Nomor Dokumen</dt>
+                  <dt className="font-medium text-gray-600">Document Number</dt>
                   <dd className="text-gray-900">{document.docNumber || '—'}</dd>
                 </div>
                 <div>
-                  <dt className="font-medium text-gray-600">Date Terbit</dt>
+                  <dt className="font-medium text-gray-600">Issue Date</dt>
                   <dd className="text-gray-900">{formattedDetails.issueDate}</dd>
                 </div>
                 <div>
-                  <dt className="font-medium text-gray-600">Date Kedaluwarsa</dt>
+                  <dt className="font-medium text-gray-600">Expiry Date</dt>
                   <dd className="text-gray-900">{formattedDetails.expiryDate}</dd>
                 </div>
                 <div>
@@ -199,47 +273,66 @@ export default function ViewDocumentPage() {
                   </dd>
                 </div>
                 <div>
-                  <dt className="font-medium text-gray-600">Catatan</dt>
+                  <dt className="font-medium text-gray-600">Remarks</dt>
                   <dd className="text-gray-900 whitespace-pre-wrap">{document.remarks?.trim() || '—'}</dd>
                 </div>
               </dl>
             </div>
 
             <div className="flex flex-col gap-4">
-              <h2 className="text-lg font-semibold text-gray-900">Lampiran Dokumen</h2>
+              <h2 className="text-lg font-semibold text-gray-900">Document attachment</h2>
               {document.fileUrl ? (
                 <div className="relative overflow-hidden rounded-xl border border-gray-200 bg-gray-50">
-                  <div className="relative w-full h-[420px] bg-white">
-                    <Image
-                      src={document.fileUrl}
-                      alt={`Dokumen ${document.docType}`}
-                      fill
-                      sizes="(min-width: 1024px) 50vw, 100vw"
-                      className="object-contain"
-                      priority
-                    />
-                  </div>
+                  {isPdfAttachment || !isImagePreview ? (
+                    <div className="flex h-[420px] flex-col items-center justify-center gap-3 bg-white p-8 text-center">
+                      <div className="text-5xl">📄</div>
+                      <p className="text-sm font-semibold text-slate-900">
+                        {isPdfAttachment ? "PDF preview opens in a new tab" : "Attachment is not an image file"}
+                      </p>
+                      <p className="max-w-sm text-sm text-slate-600">
+                        The file is available, but it cannot be rendered as an image preview on this page.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="relative w-full h-[420px] bg-white">
+                      <Image
+                        src={previewSrc}
+                        alt={`Document ${document.docType}`}
+                        fill
+                        unoptimized
+                        sizes="(min-width: 1024px) 50vw, 100vw"
+                        className="object-contain"
+                        priority
+                        onError={(event) => {
+                          const target = event.currentTarget;
+                          if (target.src.endsWith(fallbackPreviewSrc)) {
+                            return;
+                          }
+                          setPreviewSrc(fallbackPreviewSrc);
+                        }}
+                      />
+                    </div>
+                  )}
                   <div className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3">
-                    <span className="text-sm text-gray-600">Pratinjau dokumen</span>
+                    <span className="text-sm text-gray-600">Document preview</span>
                     <a
                       href={document.fileUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700"
                     >
-                      Buka file →
+                      Open file →
                     </a>
                   </div>
                 </div>
               ) : (
                 <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-8 text-center text-sm text-gray-600">
-                  Lampiran dokumen belum available.
+                  No document attachment is available yet.
                 </div>
               )}
             </div>
           </div>
-        </section>
-      </main>
+      </section>
     </div>
   );
 }

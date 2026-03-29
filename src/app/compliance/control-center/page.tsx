@@ -2,8 +2,8 @@ import Link from "next/link";
 import { requireAuthorizedUser } from "@/lib/authz";
 import { PermissionLevel } from "@/lib/permissions";
 import { getComplianceControlCenterData } from "@/lib/compliance-control-center";
-import { getSeverityBadgeClasses } from "@/lib/severity-ui";
 import StatCard from "@/components/ui/StatCard";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 import { formatDateLabel, formatDateTimeLabel, formatStatusLabel } from "@/lib/formatters";
 
 function getToneClasses(tone: "slate" | "emerald" | "amber" | "rose" | "cyan") {
@@ -19,14 +19,6 @@ function getToneClasses(tone: "slate" | "emerald" | "amber" | "rose" | "cyan") {
     default:
       return "border-slate-200 bg-white text-slate-950";
   }
-}
-
-function getContractToneClasses(band: string) {
-  if (band === "EXPIRED") return "bg-rose-100 text-rose-700";
-  if (band === "CRITICAL") return "bg-rose-100 text-rose-700";
-  if (band === "URGENT") return "bg-amber-100 text-amber-800";
-  if (band === "FOLLOW_UP") return "bg-cyan-100 text-cyan-800";
-  return "bg-slate-100 text-slate-700";
 }
 
 export default async function ComplianceControlCenterPage() {
@@ -258,9 +250,7 @@ export default async function ComplianceControlCenterPage() {
                           </p>
                           <p className="mt-2 text-sm leading-6 text-slate-600">{item.nextAction}</p>
                         </div>
-                        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${getContractToneClasses(item.band)}`}>
-                          {formatStatusLabel(item.band)}
-                        </span>
+                        <StatusBadge status={item.band} label={formatStatusLabel(item.band)} />
                       </div>
                       <p className="mt-2 text-sm font-medium text-slate-700">
                         Contract end {formatDateLabel(item.contractEnd, "en-GB")} • {item.daysRemaining} day(s) remaining
@@ -277,8 +267,8 @@ export default async function ComplianceControlCenterPage() {
                   <p className="text-sm font-semibold uppercase tracking-[0.22em] text-amber-700">Expiring Documents</p>
                   <h2 className="mt-2 text-xl font-semibold text-slate-900">Next 30 days</h2>
                 </div>
-                <Link href="/crewing/readiness-board" className="text-sm font-semibold text-amber-700 hover:text-amber-800">
-                  Open board
+                <Link href="/crewing/readiness" className="text-sm font-semibold text-amber-700 hover:text-amber-800">
+                  Open readiness hub
                 </Link>
               </div>
               <div className="mt-5 space-y-3">
@@ -330,9 +320,7 @@ export default async function ComplianceControlCenterPage() {
                           <p className="font-semibold text-slate-900">{item.crewName}</p>
                           <p className="text-sm text-slate-500">{item.rank} • {item.systemType}</p>
                         </div>
-                        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${getSeverityBadgeClasses(item.status)}`}>
-                          {formatStatusLabel(item.status)}
-                        </span>
+                        <StatusBadge status={item.status} label={formatStatusLabel(item.status)} />
                       </div>
                       <p className="mt-2 text-sm text-slate-600">Expiry: {formatDateLabel(item.expiryDate, "en-GB")}</p>
                     </Link>
@@ -365,9 +353,7 @@ export default async function ComplianceControlCenterPage() {
                         <p className="font-semibold text-slate-900">{alert.title}</p>
                         <p className="mt-1 text-sm leading-6 text-slate-600">{alert.description}</p>
                       </div>
-                      <span className={`rounded-full px-3 py-1 text-xs font-semibold ${getSeverityBadgeClasses(alert.severity)}`}>
-                        {alert.severity}
-                      </span>
+                      <StatusBadge status={alert.severity} />
                     </div>
                     <p className="mt-2 text-xs font-medium uppercase tracking-wide text-slate-500">
                       Due {formatDateLabel(alert.dueDate, "en-GB")}
@@ -403,9 +389,7 @@ export default async function ComplianceControlCenterPage() {
                         <p className="font-semibold text-slate-900">{item.title}</p>
                         <p className="mt-1 text-sm text-slate-500">{formatStatusLabel(item.status)}</p>
                       </div>
-                      <span className={`rounded-full px-3 py-1 text-xs font-semibold ${getSeverityBadgeClasses(item.severity)}`}>
-                        {item.severity}
-                      </span>
+                      <StatusBadge status={item.severity} />
                     </div>
                     <p className="mt-2 text-sm text-slate-600">Due {formatDateLabel(item.dueDate, "en-GB")}</p>
                   </Link>

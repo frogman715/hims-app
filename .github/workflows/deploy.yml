@@ -26,6 +26,18 @@ jobs:
       - name: Generate Prisma Client
         run: npx prisma generate
 
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Run API tests
+        run: npm run test:api
+
+      - name: Run smoke lib tests
+        run: npm run test:lib:smoke
+
       - name: Build application
         run: npm run build
         env:

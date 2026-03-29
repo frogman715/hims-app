@@ -6,6 +6,30 @@ import { useEffect, useState, useCallback, type ChangeEvent, type FocusEvent } f
 import Link from "next/link";
 import { normalizeToUserRoles } from "@/lib/type-guards";
 import { canAccessOfficePath } from "@/lib/office-access";
+import { getPrepareJoiningHgiStatusMeta } from "@/lib/prepare-joining-flow";
+import { buildOperationalRegulatoryReadiness } from "@/lib/maritime-regulatory-readiness";
+import { Button } from "@/components/ui/Button";
+import { WorkspaceHero } from "@/components/layout/WorkspaceHero";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+
+const PREPARE_JOINING_LINEAR_FLOW = [
+  {
+    label: "Principal Approved",
+    helper: "Principal has approved the candidate and operational receives the handoff here.",
+  },
+  {
+    label: "Pre-Joining",
+    helper: "Operational clears medical, documents, visa, contract release, and briefing.",
+  },
+  {
+    label: "Ready to Onboard",
+    helper: "Final checks are complete and the crew member can be released to move.",
+  },
+  {
+    label: "Onboarded",
+    helper: "Crew has moved out of office handling and the operational record remains for traceability.",
+  },
+] as const;
 
 interface PrepareJoining {
   id: string;
@@ -107,6 +131,22 @@ interface PrepareJoining {
     missingRequiredCount: number;
     blockers: string[];
   };
+  documentCompleteness?: {
+    status: "COMPLETE" | "INCOMPLETE" | "EXPIRED" | "NEEDS_REVIEW";
+    nextAction: string;
+    missing: string[];
+    needsReview: string[];
+    expired: number;
+  };
+  continuity?: {
+    currentStep: "APPROVED_APPLICATION" | "DOCUMENTS" | "PREPARE_JOINING" | "DISPATCH" | "DISPATCHED" | "CANCELLED";
+    currentStepLabel: string;
+    blockingIssue: string;
+    nextAction: string;
+    recommendedStatus: string;
+    statusAligned: boolean;
+    statusNote: string | null;
+  };
 }
 
 const PREPARE_JOINING_SEQUENCE = [
@@ -115,20 +155,20 @@ const PREPARE_JOINING_SEQUENCE = [
     helper: "MCU schedule, medical validity, and clinic result.",
   },
   {
-    label: "Visa",
-    helper: "Passport, seaman book, certificates, and visa check.",
+    label: "Visa / Seaman Book / Certificates",
+    helper: "Passport, seaman book, certificates, endorsements, and visa readiness.",
   },
   {
-    label: "Contract",
-    helper: "Contract signed and principal forms reviewed.",
+    label: "Contract / Principal Requirements",
+    helper: "Contract is signed and required principal forms are cleared.",
   },
   {
-    label: "Briefing",
-    helper: "Orientation and vessel briefing completed.",
+    label: "Briefing / Understanding",
+    helper: "Joining briefing and handover understanding are recorded.",
   },
   {
-    label: "Dispatch",
-    helper: "Travel, routing, final review, and dispatch release.",
+    label: "Ready to Onboard",
+    helper: "Travel, routing, final review, and release to onboard movement.",
   },
 ] as const;
 
@@ -238,10 +278,6 @@ export default function PrepareJoiningPage() {
     await updatePrepareJoining(id, { [field]: value });
   };
 
-  const handleCheckboxChange = (id: string, field: string) =>
-    (event: ChangeEvent<HTMLInputElement>) =>
-      updateChecklistItem(id, field, event.target.checked);
-
   const handleValueCommit = (id: string, field: string) =>
     (
       event:
@@ -254,11 +290,9 @@ export default function PrepareJoiningPage() {
 
   if (status === "loading" || loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-emerald-50 flex flex-col items-center justify-center gap-4">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500" />
-        <p className="text-sm font-semibold text-slate-600">
-          Loading data preparing crew…
-        </p>
+      <div className="flex min-h-[40vh] flex-col items-center justify-center gap-4">
+        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-emerald-500" />
+        <p className="text-sm font-semibold text-slate-600">Loading prepare joining desk...</p>
       </div>
     );
   }
@@ -269,49 +303,33 @@ export default function PrepareJoiningPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-emerald-50 p-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-red-800 mb-2">Error Loading Pre-Departure Records</h3>
-            <p className="text-red-700 mb-4">{error}</p>
-            <button
-              onClick={() => fetchPrepareJoinings(true)}
-              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
-            >
-              Try Again
-            </button>
-          </div>
+      <section className="surface-card border-rose-200 bg-rose-50 p-6">
+        <h3 className="text-lg font-semibold text-rose-900">Error Loading Prepare Joining Records</h3>
+        <p className="mt-2 text-sm text-rose-700">{error}</p>
+        <div className="mt-4">
+          <Button type="button" variant="danger" size="sm" onClick={() => fetchPrepareJoinings(true)}>
+            Try Again
+          </Button>
         </div>
-      </div>
+      </section>
     );
   }
 
   const statusOptions = [
-    { value: "ALL", label: "All Status", icon: "📋" },
-    { value: "PENDING", label: "Pending", icon: "⏳" },
-    { value: "DOCUMENTS", label: "Documents", icon: "📄" },
+    { value: "ALL", label: "All Stages", icon: "📋" },
+    { value: "PENDING", label: "Principal Approved Intake", icon: "⏳" },
+    { value: "DOCUMENTS", label: "Documents / Visa", icon: "📄" },
     { value: "MEDICAL", label: "Medical", icon: "🏥" },
-    { value: "TRAINING", label: "Training", icon: "📚" },
-    { value: "TRAVEL", label: "Travel", icon: "✈️" },
-    { value: "READY", label: "Ready for Review", icon: "✅" },
-    { value: "DISPATCHED", label: "Dispatched", icon: "🚢" },
+    { value: "TRAINING", label: "Briefing / Handover", icon: "📚" },
+    { value: "TRAVEL", label: "Contract / Travel", icon: "✈️" },
+    { value: "READY", label: "Ready to Onboard", icon: "✅" },
+    { value: "DISPATCHED", label: "Onboarded", icon: "🚢" },
     { value: "CANCELLED", label: "Cancelled", icon: "❌" },
   ];
 
   const getStatusBadge = (status: string) => {
-    const config: Record<string, { accent: string; text: string }> = {
-      PENDING: { accent: "bg-slate-500/10 text-slate-700", text: "Pending" },
-      DOCUMENTS: { accent: "bg-blue-500/10 text-blue-600", text: "Documents" },
-      MEDICAL: { accent: "bg-emerald-500/10 text-emerald-600", text: "Medical" },
-      TRAINING: { accent: "bg-purple-500/10 text-purple-600", text: "Training" },
-      TRAVEL: { accent: "bg-orange-500/10 text-orange-600", text: "Travel" },
-      READY: { accent: "bg-teal-500/10 text-teal-600", text: "Ready for Review" },
-      DISPATCHED: { accent: "bg-indigo-500/10 text-indigo-600", text: "Dispatched" },
-      CANCELLED: { accent: "bg-red-500/10 text-red-600", text: "Cancelled" },
-    };
-
-    const item = config[status] || { accent: "bg-slate-500/10 text-slate-700", text: status };
-    return <span className={`badge-soft ${item.accent}`}>{item.text}</span>;
+    const item = getPrepareJoiningHgiStatusMeta(status);
+    return <StatusBadge status={status} label={item.label} />;
   };
 
   const getProgressPercentage = (pj: PrepareJoining) => {
@@ -354,28 +372,28 @@ export default function PrepareJoiningPage() {
           : "Complete MCU and mark medical valid.",
       },
       {
-        label: "Visa",
+        label: "Visa / Seaman Book / Certificates",
         complete: Boolean(pj.passportValid && pj.seamanBookValid && pj.certificatesValid && pj.visaValid),
         note: pj.passportValid && pj.seamanBookValid && pj.certificatesValid && pj.visaValid
-          ? "Travel documents are valid."
-          : "Complete passport, seaman book, certificates, and visa checks.",
+          ? "Travel documents and marine papers are valid."
+          : "Complete passport, seaman book, certificates, endorsements, and visa checks.",
       },
       {
-        label: "Contract",
+        label: "Contract / Principal Requirements",
         complete: Boolean(pj.vesselContractSigned && blockers.length === 0),
         note: pj.vesselContractSigned && blockers.length === 0
-          ? "Contract and required principal forms are clear."
-          : "Confirm contract signed and clear required principal forms.",
+          ? "Contract release and required principal forms are clear."
+          : "Confirm contract release is signed and clear required principal forms.",
       },
       {
-        label: "Briefing",
+        label: "Briefing / Understanding",
         complete: Boolean(pj.orientationCompleted || pj.vesselOrientationDone || pj.vesselBriefingScheduled),
         note: pj.orientationCompleted || pj.vesselOrientationDone || pj.vesselBriefingScheduled
-          ? "Briefing or orientation is recorded."
-          : "Record office orientation or vessel briefing.",
+          ? "Briefing and handover understanding are recorded."
+          : "Record office orientation, vessel briefing, and handover understanding.",
       },
       {
-        label: "Dispatch",
+        label: "Ready to Onboard",
         complete: Boolean(
           pj.ticketBooked &&
           pj.transportArranged &&
@@ -388,7 +406,7 @@ export default function PrepareJoiningPage() {
           pj.preDepartureFinalCheck &&
           (pj.status === "READY" || pj.status === "DISPATCHED")
             ? "Dispatch readiness is complete."
-            : "Complete travel and final release before dispatch.",
+            : "Complete travel routing and final release before onboard movement.",
       },
     ];
   };
@@ -412,13 +430,13 @@ export default function PrepareJoiningPage() {
 
   const getNextAction = (status: string) => {
     const actions: Record<string, string> = {
-      PENDING: "Confirm Owner approval has been recorded, then start document checks.",
-      DOCUMENTS: "Complete required documents before moving to medical and travel steps.",
+      PENDING: "Principal approval is recorded. Operational starts the prepare joining checklist from this point.",
+      DOCUMENTS: "Complete visa, seaman book, certificate, and endorsement checks before moving to medical and contract steps.",
       MEDICAL: "Follow up medical result and update any outstanding remarks.",
-      TRAINING: "Confirm training or orientation completion before dispatch readiness.",
-      TRAVEL: "Complete ticket, hotel, transport, and departure coordination.",
-      READY: "Final office review before dispatch and onboard movement.",
-      DISPATCHED: "Wait for onboard confirmation and close any remaining checklist items.",
+      TRAINING: "Confirm briefing and handover understanding completion before final release.",
+      TRAVEL: "Complete contract release, ticket, hotel, transport, and departure coordination.",
+      READY: "Final office review before onboard movement.",
+      DISPATCHED: "Crew movement is complete. Keep the record for onboard traceability.",
       CANCELLED: "Keep the record visible for history and stop operational processing.",
     };
 
@@ -439,14 +457,68 @@ export default function PrepareJoiningPage() {
       return {
         label: "Clear",
         tone: "border-emerald-200 bg-emerald-50 text-emerald-900",
-        helper: "Required checklist is complete for final review.",
+        helper: "Required checklist is complete for final onboard release.",
       };
     }
 
     return {
-      label: "In Progress",
-      tone: "border-slate-200 bg-slate-50 text-slate-900",
-      helper: "Continue operational checklist work before final dispatch review.",
+        label: "In Progress",
+        tone: "border-slate-200 bg-slate-50 text-slate-900",
+        helper: "Continue operational checklist work before ready-to-onboard review.",
+    };
+  };
+
+  const getReadyGateBlockers = (pj: PrepareJoining) => {
+    const blockers: string[] = [];
+    const principalBlockers = pj.principalChecklistSummary?.blockers ?? [];
+
+    if (!pj.principal) blockers.push("Assign principal before moving this record to READY.");
+    if (principalBlockers.length > 0) blockers.push(...principalBlockers);
+    if (!pj.passportValid) blockers.push("Passport validity is not confirmed.");
+    if (!pj.seamanBookValid) blockers.push("Seaman book validity is not confirmed.");
+    if (!pj.certificatesValid) blockers.push("Certificate validity is not confirmed.");
+    if (!pj.medicalValid) blockers.push("Medical validity is not confirmed.");
+    if (!pj.visaValid) blockers.push("Visa validity is not confirmed.");
+    if (!pj.mcuCompleted) blockers.push("MCU completion is still pending.");
+    if (!(pj.orientationCompleted || pj.vesselOrientationDone || pj.vesselBriefingScheduled)) {
+      blockers.push("Orientation or vessel briefing is still pending.");
+    }
+    if (!pj.vesselContractSigned) blockers.push("Contract release is not signed.");
+    if (!pj.ticketBooked) blockers.push("Ticket booking is not recorded.");
+    if (!pj.transportArranged) blockers.push("Transport arrangement is not recorded.");
+    if (!pj.departureDate) blockers.push("Departure date is missing.");
+    if (!pj.departurePort) blockers.push("Departure port is missing.");
+    if (!pj.arrivalPort) blockers.push("Arrival port is missing.");
+
+    return blockers;
+  };
+
+  const getReadyGate = (pj: PrepareJoining) => {
+    const blockers = getReadyGateBlockers(pj);
+
+    if (blockers.length === 0) {
+      return {
+        label: "READY gate clear",
+        tone: "border-emerald-200 bg-emerald-50 text-emerald-900",
+        helper: "Core documents, medical, briefing, contract, and routing are already complete for READY review.",
+        blockers,
+      };
+    }
+
+    if (blockers.length <= 3) {
+      return {
+        label: "READY gate review required",
+        tone: "border-amber-200 bg-amber-50 text-amber-900",
+        helper: "A few final blockers still need follow-up before READY can be selected.",
+        blockers,
+      };
+    }
+
+    return {
+      label: "READY gate blocked",
+      tone: "border-rose-200 bg-rose-50 text-rose-900",
+      helper: "Critical operational requirements are still incomplete for READY status.",
+      blockers,
     };
   };
 
@@ -457,35 +529,53 @@ export default function PrepareJoiningPage() {
       count: prepareJoinings.filter((item) => item.status === option.value).length,
     }))
     .filter((option) => option.count > 0);
+  const blockedByPrincipalCount = prepareJoinings.filter(
+    (item) => (item.principalChecklistSummary?.blockers ?? []).length > 0
+  ).length;
+  const blockedByDocumentsCount = prepareJoinings.filter(
+    (item) => item.documentCompleteness?.status === "INCOMPLETE" || item.documentCompleteness?.status === "EXPIRED"
+  ).length;
+  const readyForOnboardCount = prepareJoinings.filter(
+    (item) => item.status === "READY" || item.status === "DISPATCHED"
+  ).length;
 
   return (
-    <div className="min-h-screen pb-12">
-      <div className="page-shell px-6 py-10 space-y-8">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900">Pre-Departure Preparation</h1>
-            <p className="text-base text-slate-600 mt-1">
-              Operational checklist for preparing approved crew members through to dispatch readiness.
-            </p>
-          </div>
-          <Link href="/crewing/workflow" className="action-pill text-sm">
-            ← Crew Workflow
-          </Link>
-        </div>
+    <div className="section-stack">
+        <WorkspaceHero
+          eyebrow="Operational Mobilization"
+          title="Prepare joining operational entry"
+          subtitle="Single operational entry point after principal approval, from pre-joining through ready-to-onboard and release to onboard movement."
+          helperLinks={[
+            { href: "/crewing/workflow", label: "Crew workflow" },
+            { href: "/crewing/assignments", label: "Assignments" },
+            { href: "/dashboard", label: "Dashboard" },
+          ]}
+          highlights={[
+            { label: "Active Joinings", value: prepareJoinings.length.toLocaleString("id-ID"), detail: "Crew currently inside operational joining workflow." },
+            { label: "Principal Blockers", value: blockedByPrincipalCount.toLocaleString("id-ID"), detail: "Cases waiting on principal checklist requirements." },
+            { label: "Document Blockers", value: blockedByDocumentsCount.toLocaleString("id-ID"), detail: "Cases blocked by document or validity issues." },
+            { label: "Ready / Onboard", value: readyForOnboardCount.toLocaleString("id-ID"), detail: "Records ready for release or already moved out of office handling." },
+          ]}
+          actions={(
+            <Link href="/crewing/workflow" className="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-cyan-300 hover:text-cyan-700">
+              Crew workflow
+            </Link>
+          )}
+        />
 
         <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4">
           <p className="text-sm font-semibold text-emerald-900">Pilot guidance</p>
           <p className="mt-1 text-sm text-emerald-800">
             {canEditPrepareJoining
-              ? "This page is for approved crew only. Operational Staff updates the checklist. Director reviews progress but does not perform routine checklist entry."
+              ? "This page is for principal-approved crew only. Operational updates medical, documents, visa, contract release, and briefing until the crew is ready to onboard."
               : "This role can review joining progress and checklist status. Routine checklist entry remains with the assigned operational owner."}
           </p>
         </div>
 
         <div className="surface-card p-5">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Operational sequence</p>
-          <div className="mt-4 grid gap-3 md:grid-cols-5">
-            {PREPARE_JOINING_SEQUENCE.map((step, index) => (
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Linear handoff</p>
+          <div className="mt-4 grid gap-3 md:grid-cols-4">
+            {PREPARE_JOINING_LINEAR_FLOW.map((step, index) => (
               <div key={step.label} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                 <p className="text-sm font-semibold text-slate-900">{index + 1}. {step.label}</p>
                 <p className="mt-1 text-xs text-slate-600">{step.helper}</p>
@@ -493,7 +583,7 @@ export default function PrepareJoiningPage() {
             ))}
           </div>
           <div className="mt-4 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-800">
-            Follow this office sequence: <span className="font-semibold">Medical → Visa → Contract → Briefing → Dispatch</span>. The checklist below highlights the current step and the next step for each crew member.
+            This board starts only after principal approval. Each row shows the current operational handoff point, the blocking issue, and the next required office action so the HGI flow stays linear.
           </div>
         </div>
 
@@ -548,6 +638,24 @@ export default function PrepareJoiningPage() {
           </div>
         </div>
 
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <div className="rounded-2xl border border-rose-200 bg-rose-50 p-5 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-wide text-rose-700">Blocked by principal forms</p>
+            <p className="mt-2 text-3xl font-bold text-rose-900">{blockedByPrincipalCount}</p>
+            <p className="mt-1 text-sm text-rose-800">Required principal checklist items still missing or not yet approved.</p>
+          </div>
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">Blocked by documents</p>
+            <p className="mt-2 text-3xl font-bold text-amber-900">{blockedByDocumentsCount}</p>
+            <p className="mt-1 text-sm text-amber-800">Passport, seaman book, certificate, or medical gate still needs office action.</p>
+          </div>
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">Ready / onboard</p>
+            <p className="mt-2 text-3xl font-bold text-emerald-900">{readyForOnboardCount}</p>
+            <p className="mt-1 text-sm text-emerald-800">Records that are ready to release or already moved out of office handling.</p>
+          </div>
+        </div>
+
         {prepareJoinings.length === 0 ? (
           <div className="surface-card p-12 text-center">
             <div className="text-6xl mb-4">📋</div>
@@ -555,7 +663,7 @@ export default function PrepareJoiningPage() {
               No active prepare joining records
             </h3>
             <p className="text-slate-600">
-              No approved crew has entered the joining workflow yet.
+              No principal-approved crew has entered operational pre-joining yet.
             </p>
           </div>
         ) : (
@@ -563,9 +671,18 @@ export default function PrepareJoiningPage() {
             {prepareJoinings.map((pj) => {
               const progress = getProgressPercentage(pj);
               const dispatchGate = getDispatchGate(pj);
+              const readyGate = getReadyGate(pj);
+              const regulatoryReadiness = buildOperationalRegulatoryReadiness({
+                passportValid: pj.passportValid,
+                seamanBookValid: pj.seamanBookValid,
+                certificatesValid: pj.certificatesValid,
+                medicalValid: pj.medicalValid,
+                visaValid: pj.visaValid,
+              });
               const sequenceCompletion = getSequenceCompletion(pj);
               const currentSequenceStep = getCurrentSequenceStep(pj);
               const nextSequenceStep = getNextSequenceStep(pj);
+              const hgiStatus = getPrepareJoiningHgiStatusMeta(pj.status);
               return (
                 <div key={pj.id} className="surface-card overflow-hidden">
                   <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-sky-50 border-b border-emerald-100/70 p-6">
@@ -606,6 +723,9 @@ export default function PrepareJoiningPage() {
                             Status
                           </p>
                           <div className="mt-1">{getStatusBadge(pj.status)}</div>
+                          <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                            {hgiStatus.detail}
+                          </p>
                         </div>
                         <div>
                           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -640,25 +760,62 @@ export default function PrepareJoiningPage() {
                         >
                           Crew Documents
                         </Link>
-                        <Link
-                          href="/crewing/forms"
-                          className="inline-flex items-center gap-2 rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
-                        >
-                          Principal Forms
-                        </Link>
-                        <Link
-                          href={`/api/forms/letter-guarantee/${pj.id}`}
-                          target="_blank"
-                          className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:shadow-lg"
-                        >
-                          Generate Letter Guarantee
-                        </Link>
+                        {pj.principal ? (
+                          <Link
+                            href="/crewing/forms"
+                            className="inline-flex items-center gap-2 rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
+                          >
+                            Principal Forms
+                          </Link>
+                        ) : (
+                          <span className="inline-flex items-center gap-2 rounded-full border border-dashed border-slate-300 px-4 py-2 text-sm font-semibold text-slate-500">
+                            Principal Forms locked
+                          </span>
+                        )}
+                        {pj.principal && readyGate.blockers.length === 0 ? (
+                          <Link
+                            href={`/api/forms/letter-guarantee/${pj.id}`}
+                            target="_blank"
+                            className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:shadow-lg"
+                          >
+                            Generate Letter Guarantee
+                          </Link>
+                        ) : (
+                          <span className="inline-flex items-center gap-2 rounded-full border border-dashed border-slate-300 px-4 py-2 text-sm font-semibold text-slate-500">
+                            Letter Guarantee locked
+                          </span>
+                        )}
                       </div>
                     </div>
-                    <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
-                      <span className="font-semibold text-slate-900">Next action:</span> {getNextAction(pj.status)}
-                    </div>
                     <div className="grid gap-4 xl:grid-cols-[1.2fr,0.8fr]">
+                      <div className="rounded-xl border border-cyan-200 bg-cyan-50 px-4 py-4">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-cyan-700">Linear continuity</p>
+                        <div className="mt-3 grid gap-4 md:grid-cols-3">
+                          <div>
+                            <p className="text-xs font-semibold uppercase tracking-wide text-cyan-700">Current step</p>
+                            <p className="mt-2 text-base font-semibold text-cyan-950">
+                              {pj.continuity?.currentStepLabel ?? "Pre-Joining"}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs font-semibold uppercase tracking-wide text-cyan-700">Blocking issue</p>
+                            <p className="mt-2 text-sm text-cyan-900">
+                              {pj.continuity?.blockingIssue ?? "Review the current joining record."}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs font-semibold uppercase tracking-wide text-cyan-700">Next action</p>
+                            <p className="mt-2 text-sm text-cyan-900">
+                              {pj.continuity?.nextAction ?? getNextAction(pj.status)}
+                            </p>
+                          </div>
+                        </div>
+                        {pj.continuity?.statusNote ? (
+                          <div className="mt-4 rounded-lg border border-cyan-300 bg-white/80 px-3 py-2 text-sm text-cyan-900">
+                            <span className="font-semibold">Status guidance:</span> {pj.continuity.statusNote}
+                          </div>
+                        ) : null}
+                      </div>
                       <div className="rounded-xl border border-sky-200 bg-sky-50 px-4 py-4">
                         <p className="text-xs font-semibold uppercase tracking-wide text-sky-700">Where you are now</p>
                         <p className="mt-2 text-base font-semibold text-sky-950">{currentSequenceStep.label}</p>
@@ -667,7 +824,7 @@ export default function PrepareJoiningPage() {
                         <p className="mt-2 text-sm text-sky-900">
                           {nextSequenceStep
                             ? `${nextSequenceStep.label}: ${nextSequenceStep.note}`
-                            : "Dispatch is the final step. Complete the final checks and confirm crew movement."}
+                            : "Ready-to-onboard is complete. Confirm crew movement and keep onboard traceability updated."}
                         </p>
                       </div>
                       <div className="rounded-xl border border-slate-200 bg-white px-4 py-4">
@@ -701,13 +858,44 @@ export default function PrepareJoiningPage() {
                       </div>
                     </div>
                     <div className="grid gap-4 md:grid-cols-3">
+                      <div className="rounded-xl border border-slate-200 bg-white px-4 py-4 md:col-span-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Regulatory Readiness</p>
+                            <p className="mt-1 text-sm text-slate-600">
+                              Operational framing for MLC 2006 medical fitness, STCW 2010 certificate validity, and travel paper clearance.
+                            </p>
+                          </div>
+                          <StatusBadge
+                            status={regulatoryReadiness.overallStatus}
+                            label={
+                              regulatoryReadiness.overallStatus === "APPROVED"
+                                ? "Regulatory Ready"
+                                : "Regulatory Review Pending"
+                            }
+                          />
+                        </div>
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          {regulatoryReadiness.buckets.map((bucket) => (
+                            <StatusBadge key={`${pj.id}-${bucket.code}`} status={bucket.status} label={bucket.label} />
+                          ))}
+                        </div>
+                      </div>
                       <div className={`rounded-xl border p-4 ${dispatchGate.tone}`}>
-                        <p className="text-xs font-semibold uppercase tracking-wide">Dispatch Status</p>
+                        <p className="text-xs font-semibold uppercase tracking-wide">Onboard Release Gate</p>
                         <p className="mt-2 text-sm font-semibold">{dispatchGate.label}</p>
                         <p className="mt-1 text-xs">{dispatchGate.helper}</p>
                       </div>
+                      <div className={`rounded-xl border p-4 ${readyGate.tone}`}>
+                        <p className="text-xs font-semibold uppercase tracking-wide">Ready Gate</p>
+                        <p className="mt-2 text-sm font-semibold">{readyGate.label}</p>
+                        <p className="mt-1 text-xs">{readyGate.helper}</p>
+                      </div>
                       <div className="rounded-xl border border-slate-200 bg-white p-4">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Workflow Status</p>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Operational Stage</p>
+                        <p className="mt-2 text-sm text-slate-700">
+                          Select only the current operational stage that is already supported by completed evidence and checklist status.
+                        </p>
                         {canEditPrepareJoining ? (
                           <select
                             value={pj.status}
@@ -715,18 +903,34 @@ export default function PrepareJoiningPage() {
                             disabled={updatingId === pj.id}
                             className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
                           >
-                            {statusOptions.filter((option) => option.value !== "ALL").map((option) => (
-                              <option key={option.value} value={option.value}>
+                            {statusOptions.filter((option) => option.value !== "ALL").map((option) => {
+                              const isReadyBlocked =
+                                readyGate.blockers.length > 0 &&
+                                (option.value === "READY" || option.value === "DISPATCHED");
+
+                              return (
+                              <option key={option.value} value={option.value} disabled={isReadyBlocked}>
                                 {option.label}
                               </option>
-                            ))}
+                              );
+                            })}
                           </select>
                         ) : (
                           <div className="mt-2">{getStatusBadge(pj.status)}</div>
                         )}
                         <p className="mt-2 text-xs text-slate-500">
-                          Operational updates status step by step. READY and DISPATCHED will be held if the principal checklist is incomplete.
+                          Operational updates status step by step. `READY` and `DISPATCHED` stay locked until the release gate is clear.
                         </p>
+                        {canEditPrepareJoining && readyGate.blockers.length > 0 ? (
+                          <p className="mt-2 text-xs font-medium text-rose-700">
+                            `READY` and `DISPATCHED` are locked until all release gate blockers are cleared.
+                          </p>
+                        ) : null}
+                        {pj.continuity?.recommendedStatus && pj.continuity.recommendedStatus !== pj.status ? (
+                          <p className="mt-2 text-xs font-medium text-amber-700">
+                            Recommended current stage: {pj.continuity.recommendedStatus}
+                          </p>
+                        ) : null}
                       </div>
                       <div className="rounded-xl border border-slate-200 bg-white p-4">
                         <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Principal Checklist</p>
@@ -749,6 +953,33 @@ export default function PrepareJoiningPage() {
                         </p>
                       </div>
                     </div>
+                    {readyGate.blockers.length > 0 ? (
+                      <div className={`rounded-xl border px-4 py-3 ${readyGate.tone}`}>
+                        <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+                          <div>
+                            <p className="text-sm font-semibold">READY gate blockers</p>
+                            <p className="mt-1 text-xs">{readyGate.helper}</p>
+                          </div>
+                          <span className="text-xs font-semibold uppercase tracking-wide">
+                            {readyGate.blockers.length} open item{readyGate.blockers.length > 1 ? "s" : ""}
+                          </span>
+                        </div>
+                        <ul className="mt-3 grid gap-2 md:grid-cols-2">
+                          {readyGate.blockers.map((blocker) => (
+                            <li key={blocker} className="rounded-lg bg-white/70 px-3 py-2 text-sm">
+                              {blocker}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : (
+                      <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+                        <p className="text-sm font-semibold text-emerald-900">READY gate is clear</p>
+                        <p className="mt-1 text-sm text-emerald-800">
+                          This crew record already meets the current operational requirements for READY status review.
+                        </p>
+                      </div>
+                    )}
                     <div className="grid gap-2 md:grid-cols-5">
                       {PREPARE_JOINING_SEQUENCE.map((step, index) => {
                         const currentIndex = getCurrentSequenceIndex(pj);
@@ -781,6 +1012,14 @@ export default function PrepareJoiningPage() {
                             <li key={blocker}>• {blocker}</li>
                           ))}
                         </ul>
+                      </div>
+                    ) : null}
+                    {pj.documentCompleteness && pj.documentCompleteness.status !== "COMPLETE" ? (
+                      <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3">
+                        <p className="text-sm font-semibold text-rose-900">Document continuity blocker</p>
+                        <p className="mt-2 text-sm text-rose-800">
+                          Status: {pj.documentCompleteness.status}. {pj.documentCompleteness.nextAction}
+                        </p>
                       </div>
                     ) : null}
                     {feedbackById[pj.id] ? (
@@ -845,7 +1084,7 @@ export default function PrepareJoiningPage() {
                       <div className="rounded-xl border border-emerald-200/70 bg-emerald-50/60 p-4">
                         <div className="mb-3 flex items-center gap-2 font-semibold text-slate-900">
                           <span className="badge-soft bg-emerald-500/10 text-emerald-600">🏥</span>
-                          <span>Medical & Training</span>
+                            <span>Medical & Briefing</span>
                         </div>
                         <div className="space-y-3">
                           <label className="flex items-center gap-3 text-sm text-slate-700">
@@ -901,7 +1140,7 @@ export default function PrepareJoiningPage() {
                       <div className="rounded-xl border border-amber-200/70 bg-amber-50/60 p-4">
                         <div className="mb-3 flex items-center gap-2 font-semibold text-slate-900">
                           <span className="badge-soft bg-amber-500/10 text-amber-600">✈️</span>
-                          <span>Travel & Logistics</span>
+                            <span>Contract / Travel</span>
                         </div>
                         <div className="space-y-3">
                           <label className="flex items-center gap-3 text-sm text-slate-700">
@@ -989,7 +1228,7 @@ export default function PrepareJoiningPage() {
 
                     {/* MCU SECTION */}
                     <div className="mt-6 pt-6 border-t border-slate-200">
-                      <h4 className="text-lg font-semibold text-slate-900 mb-4">💉 MCU (Medical Check-up)</h4>
+                      <h4 className="text-lg font-semibold text-slate-900 mb-4">💉 Medical Check-up</h4>
                       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <div className="rounded-xl border border-red-200/70 bg-red-50/60 p-4">
                           <div className="mb-3 flex items-center gap-2 font-semibold text-slate-900">
@@ -1439,9 +1678,9 @@ export default function PrepareJoiningPage() {
                       </div>
                     </div>
 
-                    {/* PRE-DEPARTURE SECTION */}
+                    {/* READY-TO-ONBOARD SECTION */}
                     <div className="mt-6 pt-6 border-t border-slate-200">
-                      <h4 className="text-lg font-semibold text-slate-900 mb-4">✅ Final Pre-Departure Check (48 Hours)</h4>
+                      <h4 className="text-lg font-semibold text-slate-900 mb-4">✅ Final Ready-to-Onboard Check</h4>
                       <div className="rounded-xl border border-emerald-200/70 bg-emerald-50/60 p-6">
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                           <label className="flex items-center gap-3 text-sm text-slate-700">
@@ -1522,7 +1761,7 @@ export default function PrepareJoiningPage() {
                               }
                               className="h-5 w-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
                             />
-                            <span>🎯 FINAL APPROVAL - Ready to Depart</span>
+                            <span>🎯 FINAL APPROVAL - Ready to Onboard</span>
                           </label>
                           
                           <div className="ml-8">
@@ -1573,7 +1812,6 @@ export default function PrepareJoiningPage() {
             })}
           </div>
         )}
-      </div>
     </div>
   );
 }

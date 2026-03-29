@@ -1,34 +1,125 @@
 "use client";
 
-import { useSession } from "next-auth/react";
-import { useRouter, useParams } from "next/navigation";
-import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
+import { useParams, useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+import {
+  buildContractExpiryAlert,
+  selectLatestRelevantContract,
+  type ContractExpiryAlert,
+  type ContractLike,
+} from "@/lib/contract-expiry";
+import { Button } from "@/components/ui/Button";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+
+interface AssignmentResponseItem {
+  id: string | number;
+  status: string;
+  rank: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  signOnDate?: string | null;
+  signOffDate?: string | null;
+  vesselId: string | number;
+  vessel?: {
+    name?: string | null;
+  } | null;
+  crew?: {
+    fullName?: string | null;
+  } | null;
+  seafarer?: {
+    fullName?: string | null;
+  } | null;
+  crewId?: string | number | null;
+  principal?: {
+    name?: string | null;
+  } | null;
+}
 
 interface CrewMember {
-  id: number;
+  id: string;
+  crewId: string;
   seafarerName: string;
   rank: string;
   signOnDate: string;
   signOffDate?: string;
-  status: 'ONBOARD' | 'DEPARTED' | 'PLANNED';
-  vesselName: string;
-  vesselId: number;
+  status: "ONBOARD" | "DEPARTED" | "PLANNED" | "UNKNOWN";
+  principalName?: string;
+  contractAlert?: ContractExpiryAlert | null;
 }
 
 interface VesselCrew {
-  vesselId: number;
+  vesselId: string;
   vesselName: string;
   crewMembers: CrewMember[];
   totalCrew: number;
   activeCrew: number;
 }
 
+interface ContractResponseItem extends ContractLike {
+  crew?: {
+    id?: string | null;
+    fullName?: string | null;
+  } | null;
+  vessel?: {
+    id?: string | null;
+    name?: string | null;
+  } | null;
+}
+
+function normalizeStatus(value: string): CrewMember["status"] {
+  if (value === "ONBOARD" || value === "ACTIVE") return "ONBOARD";
+  if (value === "COMPLETED") return "DEPARTED";
+  if (value === "PLANNED" || value === "ASSIGNED") return "PLANNED";
+  return "UNKNOWN";
+}
+
+function formatDate(value?: string) {
+  if (!value) return "-";
+  return new Date(value).toLocaleDateString("en-GB");
+}
+
+function getNextAction(member: CrewMember) {
+  if (member.contractAlert && member.contractAlert.band !== "OK") {
+    return member.contractAlert.nextAction;
+  }
+  if (member.status === "ONBOARD") {
+    return "Monitor onboard movement and keep the sign-off plan current.";
+  }
+  if (member.status === "DEPARTED") {
+    return "Movement completed. Keep this assignment for vessel history and audit trail.";
+  }
+  if (member.signOffDate) {
+    return "Review the planned sign-off date and confirm any change from the assignment desk.";
+  }
+  return "Movement still planned. Confirm pickup, sign-on, and final handover timing.";
+}
+
+function getContractAlertStyles(band?: ContractExpiryAlert["band"] | null) {
+  if (band === "EXPIRED") return "border-rose-300 bg-rose-50 text-rose-800";
+  if (band === "CRITICAL") return "border-rose-200 bg-rose-50 text-rose-700";
+  if (band === "URGENT") return "border-amber-200 bg-amber-50 text-amber-700";
+  if (band === "FOLLOW_UP") return "border-cyan-200 bg-cyan-50 text-cyan-800";
+  if (band === "EARLY_WARNING") return "border-slate-200 bg-slate-50 text-slate-700";
+  return "border-emerald-200 bg-emerald-50 text-emerald-700";
+}
+
+function getContractAlertLabel(alert?: ContractExpiryAlert | null) {
+  if (!alert) return "Contract not recorded";
+  if (alert.band === "EXPIRED") return `Expired ${Math.abs(alert.daysRemaining)} day(s) ago`;
+  if (alert.band === "CRITICAL") return `Critical · ${alert.daysRemaining} day(s) left`;
+  if (alert.band === "URGENT") return `Urgent · ${alert.daysRemaining} day(s) left`;
+  if (alert.band === "FOLLOW_UP") return `Follow up · ${alert.daysRemaining} day(s) left`;
+  if (alert.band === "EARLY_WARNING") return `Early warning · ${alert.daysRemaining} day(s) left`;
+  return `Valid · ${alert.daysRemaining} day(s) left`;
+}
+
 export default function VesselCrewListPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const params = useParams();
-  const vesselId = parseInt(params.id as string);
+  const vesselId = String(params.id);
   const [vessel, setVessel] = useState<VesselCrew | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -38,52 +129,61 @@ export default function VesselCrewListPage() {
     if (!session) {
       router.push("/auth/signin");
     }
-  }, [session, status, router]);
+  }, [router, session, status]);
 
   const fetchVesselCrew = useCallback(async () => {
     try {
       setError(null);
-      // Fetch assignments for this specific vessel
-      const assignmentsRes = await fetch(`/api/assignments?vesselId=${vesselId}`);
-      if (!assignmentsRes.ok) throw new Error('Failed to fetch assignments');
+      const [assignmentsRes, contractsRes] = await Promise.all([
+        fetch(`/api/assignments?vesselId=${vesselId}`),
+        fetch("/api/contracts"),
+      ]);
+      if (!assignmentsRes.ok) {
+        throw new Error("Failed to fetch assignments");
+      }
 
-      const assignments = await assignmentsRes.json();
+      const assignments = (await assignmentsRes.json()) as AssignmentResponseItem[];
+      const contracts = contractsRes.ok ? ((await contractsRes.json()) as ContractResponseItem[]) : [];
+      const contractsByCrew = new Map<string, ContractResponseItem[]>();
 
-      // Transform assignments to vessel crew format
-      const crewMembers = assignments.map((assignment: {
-        id: number;
-        seafarer?: { fullName: string };
-        rank: string;
-        signOnDate: string;
-        signOffDate?: string;
-        status: string;
-        vessel?: { name: string };
-        vesselId: number;
-      }) => ({
-        id: assignment.id,
-        seafarerName: assignment.seafarer?.fullName || 'Unknown',
-        rank: assignment.rank,
-        signOnDate: assignment.signOnDate,
-        signOffDate: assignment.signOffDate,
-         status: assignment.status === 'ONBOARD' || assignment.status === 'ACTIVE' ? 'ONBOARD' :
-           assignment.status === 'COMPLETED' ? 'DEPARTED' :
-           assignment.status === 'PLANNED' || assignment.status === 'ASSIGNED' ? 'PLANNED' : 'UNKNOWN',
-        vesselName: assignment.vessel?.name || 'Unknown Vessel',
-        vesselId: assignment.vesselId
+      for (const contract of contracts) {
+        const crewId = String(contract.crewId ?? contract.crew?.id ?? "");
+        if (!crewId) continue;
+        const current = contractsByCrew.get(crewId) ?? [];
+        current.push({
+          ...contract,
+          crewId,
+          vesselId: contract.vesselId ?? contract.vessel?.id ?? null,
+        });
+        contractsByCrew.set(crewId, current);
+      }
+
+      const crewMembers: CrewMember[] = assignments.map((assignment) => ({
+        crewId: String(assignment.crewId ?? assignment.id),
+        id: String(assignment.id),
+        seafarerName: assignment.seafarer?.fullName || assignment.crew?.fullName || "Unknown Crew",
+        rank: assignment.rank?.trim() || "Rank not set",
+        signOnDate: assignment.signOnDate || assignment.startDate || "",
+        signOffDate: assignment.signOffDate || assignment.endDate || undefined,
+        status: normalizeStatus(assignment.status),
+        principalName: assignment.principal?.name?.trim() || undefined,
+        contractAlert: (() => {
+          const crewId = String(assignment.crewId ?? assignment.id);
+          const contract = selectLatestRelevantContract(contractsByCrew.get(crewId) ?? [], vesselId);
+          return contract ? buildContractExpiryAlert(contract) : null;
+        })(),
       }));
 
-      const vesselData = {
-        vesselId: vesselId,
-        vesselName: assignments[0]?.vessel?.name || 'Unknown Vessel',
-        crewMembers: crewMembers,
+      setVessel({
+        vesselId,
+        vesselName: assignments[0]?.vessel?.name?.trim() || "Unknown Vessel",
+        crewMembers,
         totalCrew: crewMembers.length,
-        activeCrew: crewMembers.filter((m: { status: string }) => m.status === 'ONBOARD').length
-      };
-
-      setVessel(vesselData);
-    } catch (error) {
-      console.error("Error fetching vessel crew:", error);
-      setError("Failed to load crew data for this vessel.");
+        activeCrew: crewMembers.filter((member) => member.status === "ONBOARD").length,
+      });
+    } catch (fetchError) {
+      console.error("Error fetching vessel crew:", fetchError);
+      setError(fetchError instanceof Error ? fetchError.message : "Failed to load crew data for this vessel.");
       setVessel(null);
     } finally {
       setLoading(false);
@@ -94,31 +194,13 @@ export default function VesselCrewListPage() {
     if (session && vesselId) {
       fetchVesselCrew();
     }
-  }, [session, vesselId, fetchVesselCrew]);
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'ONBOARD': return 'bg-green-100 text-green-800';
-      case 'DEPARTED': return 'bg-red-100 text-red-800';
-      case 'PLANNED': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'ONBOARD': return 'Onboard';
-      case 'DEPARTED': return 'Departed';
-      case 'PLANNED': return 'Planned';
-      default: return status;
-    }
-  };
+  }, [fetchVesselCrew, session, vesselId]);
 
   if (status === "loading" || loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex flex-col items-center justify-center gap-4">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
-        <p className="text-sm font-semibold text-gray-700">Loading crew vessel…</p>
+      <div className="flex min-h-[40vh] flex-col items-center justify-center gap-4">
+        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-slate-900" />
+        <p className="text-sm font-semibold text-slate-600">Loading vessel crew board...</p>
       </div>
     );
   }
@@ -129,192 +211,130 @@ export default function VesselCrewListPage() {
 
   if (!vessel) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="mb-8 flex items-center justify-between">
-            <Link
-              href="/crewing/crew-list"
-              className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
-            >
-              ← Back to Crew List
-            </Link>
-            {error ? (
-              <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700">
-                {error}
-              </div>
-            ) : null}
-          </div>
-          <div className="text-center py-12">
-            <svg className="mx-auto h-12 w-12 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.29-.98-5.5-2.5M12 4.5C7.305 4.5 3.5 8.305 3.5 13S7.305 21.5 12 21.5 20.5 17.695 20.5 13 16.695 4.5 12 4.5z" />
-            </svg>
-            <h3 className="mt-2 text-sm font-medium text-gray-900">Data vessel tidak ditemukan</h3>
-            <p className="mt-1 text-sm text-gray-700">Ensure vessel has active crew assignment.</p>
-          </div>
+      <section className="surface-card border-rose-200 bg-rose-50 p-8">
+        <h3 className="text-sm font-medium text-rose-900">Vessel data not found</h3>
+        <p className="mt-1 text-sm text-rose-700">
+          {error || "Ensure this vessel already has live assignment records."}
+        </p>
+        <div className="mt-4">
+          <Button type="button" variant="secondary" onClick={() => router.push("/crewing/crew-list")}>
+            Back to crew list
+          </Button>
         </div>
-      </div>
+      </section>
     );
   }
 
+  const totalDeparted = vessel.crewMembers.filter((member) => member.status === "DEPARTED").length;
+  const totalPlanned = vessel.crewMembers.filter((member) => member.status === "PLANNED").length;
+  const expiringContracts45 = vessel.crewMembers.filter(
+    (member) =>
+      member.status === "ONBOARD" &&
+      member.contractAlert &&
+      ["EXPIRED", "CRITICAL", "URGENT"].includes(member.contractAlert.band)
+  ).length;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Link
-                href="/crewing/crew-list"
-                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
-              >
-                ← Back to Crew List
-              </Link>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">{vessel.vesselName} - Crew List</h1>
-                <p className="text-gray-800">Current crew complement with automatic departure tracking</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Link
-                href="/crewing/crew-list/new"
-                className="inline-flex items-center px-6 py-3 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors shadow-lg"
-              >
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                Add Crew Member
-              </Link>
-            </div>
+    <div className="section-stack">
+      <section className="surface-card p-7">
+        <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+          <div className="max-w-4xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-indigo-700">Vessel Manning</p>
+            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950">{vessel.vesselName} crew board</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              Live crew complement for this vessel based on assignment records.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <Button type="button" variant="secondary" onClick={() => router.push("/crewing/crew-list")}>
+              Back to crew list
+            </Button>
+            <Link href="/crewing/assignments/new" className="action-pill text-sm">
+              Create assignment
+            </Link>
+          </div>
+        </div>
+      </section>
+
+        <section className="surface-card border-sky-200 bg-sky-50 p-5">
+          <p className="text-sm font-semibold text-sky-900">How to use this board</p>
+          <p className="mt-1 text-sm text-sky-800">
+            This vessel page is a monitoring board only. Update movement timing, onboard status, and sign-off plans from
+            the assignment record linked in each row.
+          </p>
+        </section>
+
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-5">
+          <div className="surface-card p-6">
+            <p className="text-sm font-medium text-gray-700">Vessel</p>
+            <p className="mt-2 text-2xl font-extrabold text-gray-900">{vessel.vesselName}</p>
+          </div>
+          <div className="surface-card p-6">
+            <p className="text-sm font-medium text-gray-700">Active Crew</p>
+            <p className="mt-2 text-2xl font-extrabold text-gray-900">{vessel.activeCrew}</p>
+          </div>
+          <div className="surface-card p-6">
+            <p className="text-sm font-medium text-gray-700">Departed Records</p>
+            <p className="mt-2 text-2xl font-extrabold text-gray-900">{totalDeparted}</p>
+          </div>
+          <div className="surface-card p-6">
+            <p className="text-sm font-medium text-gray-700">Planned Movements</p>
+            <p className="mt-2 text-2xl font-extrabold text-gray-900">{totalPlanned}</p>
+          </div>
+          <div className="surface-card p-6">
+            <p className="text-sm font-medium text-gray-700">Contracts ≤ 45 Days</p>
+            <p className="mt-2 text-2xl font-extrabold text-rose-700">{expiringContracts45}</p>
           </div>
         </div>
 
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <span className="text-2xl">🚢</span>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-700">Vessel</p>
-                <p className="text-2xl font-extrabold text-gray-900">{vessel.vesselName}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <span className="text-2xl">👥</span>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-700">Active Crew</p>
-                <p className="text-2xl font-extrabold text-gray-900">{vessel.activeCrew}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
-                <span className="text-2xl">📤</span>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-700">Departed This Month</p>
-                <p className="text-2xl font-extrabold text-gray-900">
-                  {vessel.crewMembers.filter(member => member.status === 'DEPARTED').length}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                <span className="text-2xl">⏰</span>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-700">Total Capacity</p>
-                <p className="text-2xl font-extrabold text-gray-900">{vessel.totalCrew}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Crew Table */}
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4">
+        <div className="surface-card overflow-hidden">
+          <div className="bg-gradient-to-r from-indigo-600 to-blue-600 px-6 py-4">
             <h2 className="text-xl font-extrabold text-white">Crew Members</h2>
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-300">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Seafarer
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Rank
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Sign-On Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Sign-Off Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Crew</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rank</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sign On</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sign Off</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contract Alert</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Next Action</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {vessel.crewMembers.map((member) => (
                   <tr key={member.id} className="hover:bg-gray-100">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{member.seafarerName}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{member.rank}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{formatDate(member.signOnDate)}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{formatDate(member.signOffDate)}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10">
-                          <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center">
-                            <span className="text-sm font-medium text-white">
-                              {member.seafarerName.split(' ').map(n => n[0]).join('').toUpperCase()}
-                            </span>
+                      <StatusBadge status={member.status} className="px-4 py-2" />
+                    </td>
+                    <td className="px-6 py-4 text-sm">
+                      {member.contractAlert ? (
+                        <div className={`inline-flex rounded-2xl border px-3 py-2 text-xs font-semibold ${getContractAlertStyles(member.contractAlert.band)}`}>
+                          <div>
+                            <p>{getContractAlertLabel(member.contractAlert)}</p>
+                            <p className="mt-1 font-medium opacity-80">End {formatDate(member.contractAlert.contractEnd)}</p>
                           </div>
                         </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
-                            {member.seafarerName}
-                          </div>
-                        </div>
-                      </div>
+                      ) : (
+                        <span className="inline-flex rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-600">
+                          Contract not linked
+                        </span>
+                      )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {member.rank}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {new Date(member.signOnDate).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {member.signOffDate ? new Date(member.signOffDate).toLocaleDateString() : '-'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-4 py-2 text-xs font-semibold rounded-full ${getStatusColor(member.status)}`}>
-                        {getStatusText(member.status)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <td className="px-6 py-4 text-sm font-medium">
+                      <p className="mb-2 max-w-sm text-slate-700">{getNextAction(member)}</p>
                       <button
-                        onClick={() => router.push(`/crewing/crew-list/${member.id}`)}
-                        className="text-indigo-600 hover:text-indigo-900 mr-4"
+                        onClick={() => router.push(`/crewing/assignments/${member.id}`)}
+                        className="rounded-full border border-indigo-300 px-3 py-1 text-xs font-semibold text-indigo-700 hover:border-indigo-500 hover:text-indigo-800"
                       >
-                        View
-                      </button>
-                      <button
-                        onClick={() => router.push(`/crewing/crew-list/${member.id}/edit`)}
-                        className="text-green-600 hover:text-green-900"
-                      >
-                        Edit
+                        Open Assignment
                       </button>
                     </td>
                   </tr>
@@ -324,25 +344,17 @@ export default function VesselCrewListPage() {
           </div>
         </div>
 
-        {/* Empty State */}
-        {vessel.crewMembers.length === 0 && (
-          <div className="text-center py-12">
-            <svg className="mx-auto h-12 w-12 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
-            <h3 className="mt-2 text-sm font-medium text-gray-900">No crew members assigned</h3>
-            <p className="mt-1 text-sm text-gray-700">This vessel currently has no crew members assigned.</p>
+        {vessel.crewMembers.length === 0 ? (
+          <section className="surface-card py-12 text-center">
+            <h3 className="mt-2 text-sm font-medium text-slate-900">No crew members assigned</h3>
+            <p className="mt-1 text-sm text-slate-600">This vessel currently has no live assignment records.</p>
             <div className="mt-6">
-              <Link
-                href="/crewing/assignments/new"
-                className="inline-flex items-center px-4 py-2 border border-transparent shadow-md text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700"
-              >
+              <Link href="/crewing/assignments/new" className="action-pill">
                 Create Assignment
               </Link>
             </div>
-          </div>
-        )}
-      </div>
+          </section>
+        ) : null}
     </div>
   );
 }

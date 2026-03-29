@@ -2,25 +2,37 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { checkPermission, PermissionLevel } from "@/lib/permission-middleware";
+import { hasExplicitRoleAccess } from "@/lib/authorization";
+import { ensureOfficeApiPathAccess } from "@/lib/office-api-access";
 import { handleApiError, ApiError } from "@/lib/error-handler";
+import {
+  ACTIVE_CONTRACT_STATUSES,
+  contractDateRangesOverlap,
+  normalizeContractNumber,
+} from "@/lib/data-quality-hardening";
 
 export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Check contracts permission for viewing
-    if (!checkPermission(session, 'contracts', PermissionLevel.VIEW_ACCESS)) {
-      return NextResponse.json({ error: "Insufficient permissions to view contracts" }, { status: 403 });
-    }
+    const authError = ensureOfficeApiPathAccess(
+      session,
+      "/api/contracts",
+      "GET",
+      "Insufficient permissions to view contracts"
+    );
+    if (authError) return authError;
 
     const { searchParams } = new URL(req.url);
     const crewId = searchParams.get('crewId');
 
     const whereClause: Record<string, unknown> = {};
+    const subject = {
+      roles: session.user.roles,
+      role: session.user.role,
+      isSystemAdmin: session.user.isSystemAdmin === true,
+    };
+    const canViewIdentityFields = hasExplicitRoleAccess(subject, ["DIRECTOR", "OPERATIONAL"]);
+    const canViewWageScaleItems = hasExplicitRoleAccess(subject, ["DIRECTOR", "ACCOUNTING"]);
 
     // If crewId is provided, filter contracts for that crew
     if (crewId) {
@@ -43,15 +55,15 @@ export async function GET(req: NextRequest) {
             id: true,
             fullName: true,
             rank: true,
-            passportNumber: session.user.roles.includes('DIRECTOR') || session.user.roles.includes('CDMO') ? true : false,
-            seamanBookNumber: session.user.roles.includes('DIRECTOR') || session.user.roles.includes('CDMO') ? true : false,
+            passportNumber: canViewIdentityFields,
+            seamanBookNumber: canViewIdentityFields,
             dateOfBirth: true
           }
         },
         vessel: true,
         principal: true,
         wageScaleHeader: true,
-        wageScaleItems: session.user.roles.includes('DIRECTOR') || session.user.roles.includes('ACCOUNTING') ? {
+        wageScaleItems: canViewWageScaleItems ? {
           include: {
             wageScaleHeader: true
           }
@@ -68,14 +80,13 @@ export async function GET(req: NextRequest) {
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Check contracts permission for editing
-    if (!checkPermission(session, 'contracts', PermissionLevel.EDIT_ACCESS)) {
-      return NextResponse.json({ error: "Insufficient permissions to create contracts" }, { status: 403 });
-    }
+    const authError = ensureOfficeApiPathAccess(
+      session,
+      "/api/contracts",
+      "POST",
+      "Insufficient permissions to create contracts"
+    );
+    if (authError) return authError;
 
     const body = await request.json();
 
@@ -107,30 +118,118 @@ export async function POST(request: Request) {
       templateVersion
     } = body;
 
-    const contract = await prisma.employmentContract.create({
-      data: {
-        contractNumber,
-        crewId,
-        vesselId,
-        principalId,
-        rank,
-        contractStart: new Date(contractStart),
-        contractEnd: new Date(contractEnd),
-        status: 'DRAFT',
-        contractKind: contractKind || 'SEA',
-        seaType,
-        maritimeLaw,
-        cbaReference,
-        wageScaleHeaderId,
-        guaranteedOTHours: guaranteedOTHours ? parseInt(guaranteedOTHours) : null,
-        overtimeRate,
-        onboardAllowance: onboardAllowance ? parseFloat(onboardAllowance) : null,
-        homeAllotment: homeAllotment ? parseFloat(homeAllotment) : null,
-        specialAllowance: specialAllowance ? parseFloat(specialAllowance) : null,
-        templateVersion,
-        basicWage: parseFloat(basicWage),
-        currency: currency || 'USD'
-      }
+    const normalizedContractNumber = normalizeContractNumber(contractNumber);
+    const parsedContractStart = new Date(contractStart);
+    const parsedContractEnd = new Date(contractEnd);
+    const normalizedRank = String(rank).trim();
+
+    if (
+      Number.isNaN(parsedContractStart.getTime()) ||
+      Number.isNaN(parsedContractEnd.getTime())
+    ) {
+      throw new ApiError(400, "Contract start and end dates must be valid calendar dates", "VALIDATION_ERROR");
+    }
+
+    if (parsedContractEnd <= parsedContractStart) {
+      throw new ApiError(400, "Contract end date must be later than the contract start date", "VALIDATION_ERROR");
+    }
+
+    const [crew, duplicateContractNumber, overlappingContract] = await Promise.all([
+      prisma.crew.findUnique({
+        where: { id: crewId },
+        select: { id: true, fullName: true },
+      }),
+      prisma.employmentContract.findFirst({
+        where: { contractNumber: normalizedContractNumber },
+        select: { id: true },
+      }),
+      prisma.employmentContract.findFirst({
+        where: {
+          crewId,
+          status: { in: [...ACTIVE_CONTRACT_STATUSES] },
+          contractKind: contractKind || "SEA",
+          contractStart: { lte: parsedContractEnd },
+          contractEnd: { gte: parsedContractStart },
+        },
+        select: {
+          id: true,
+          contractNumber: true,
+          contractStart: true,
+          contractEnd: true,
+          status: true,
+        },
+      }),
+    ]);
+
+    if (!crew) {
+      throw new ApiError(404, "Crew record was not found for this contract", "NOT_FOUND");
+    }
+
+    if (duplicateContractNumber) {
+      throw new ApiError(409, "Contract number is already registered. Use the existing contract record instead of creating a duplicate.", "DUPLICATE_CONTRACT_NUMBER");
+    }
+
+    if (
+      overlappingContract &&
+      contractDateRangesOverlap(
+        overlappingContract.contractStart,
+        overlappingContract.contractEnd,
+        parsedContractStart,
+        parsedContractEnd
+      )
+    ) {
+      throw new ApiError(
+        409,
+        `Crew already has an overlapping ${overlappingContract.status.toLowerCase()} contract (${overlappingContract.contractNumber}) in this date range.`,
+        "CONTRACT_OVERLAP"
+      );
+    }
+
+    const contract = await prisma.$transaction(async (tx) => {
+      const createdContract = await tx.employmentContract.create({
+        data: {
+          contractNumber: normalizedContractNumber,
+          crewId,
+          vesselId,
+          principalId,
+          rank: normalizedRank,
+          contractStart: parsedContractStart,
+          contractEnd: parsedContractEnd,
+          status: 'DRAFT',
+          contractKind: contractKind || 'SEA',
+          seaType,
+          maritimeLaw,
+          cbaReference,
+          wageScaleHeaderId,
+          guaranteedOTHours: guaranteedOTHours ? parseInt(guaranteedOTHours) : null,
+          overtimeRate,
+          onboardAllowance: onboardAllowance ? parseFloat(onboardAllowance) : null,
+          homeAllotment: homeAllotment ? parseFloat(homeAllotment) : null,
+          specialAllowance: specialAllowance ? parseFloat(specialAllowance) : null,
+          templateVersion,
+          basicWage: parseFloat(basicWage),
+          currency: currency || 'USD'
+        }
+      });
+
+      await tx.auditLog.create({
+        data: {
+          actorUserId: session.user.id,
+          action: "CONTRACT_CREATED",
+          entityType: "EmploymentContract",
+          entityId: createdContract.id,
+          metadataJson: {
+            crewId,
+            crewName: crew.fullName,
+            contractNumber: createdContract.contractNumber,
+            contractKind: createdContract.contractKind,
+            contractStart: createdContract.contractStart,
+            contractEnd: createdContract.contractEnd,
+          },
+        },
+      });
+
+      return createdContract;
     });
 
     return NextResponse.json(contract);

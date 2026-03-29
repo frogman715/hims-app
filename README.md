@@ -235,6 +235,25 @@ Common production deployment guides:
 - [VPS Deployment](./docs/deployment/DEPLOY_TO_VPS.md)
 - [Niagahoster/Hostinger](./docs/deployment/DEPLOYMENT_PRODUCTION_NIAGAHOSTER.md)
 - [General Production Guide](./docs/deployment/DEPLOYMENT_PRODUCTION_GUIDE.md)
+- [Final VPS Setup & Burn-In](./docs/deployment/FINAL_VPS_SETUP.md)
+- [Post Go-Live Operations Checklist](./docs/deployment/POST_GO_LIVE_OPERATIONS_CHECKLIST.md)
+
+### Production Automation
+
+HIMS includes two production background jobs that should be wired on the server:
+
+- `npm run escalation:notify` for compliance escalation delivery
+- `npm run automation:office` for workflow integrity checks, SLA follow-up, and system-health automation
+
+If you deploy with PM2, both jobs are already declared in [ecosystem.config.js](./ecosystem.config.js):
+
+```bash
+pm2 startOrReload ecosystem.config.js --env production
+pm2 save
+pm2 status
+```
+
+The office automation runner calls the protected internal route `/api/admin/system-health/automation` using `COMPLIANCE_JOB_TOKEN` or `NEXTAUTH_SECRET`. Set one of these in production before enabling the scheduler.
 
 ## Contributing
 

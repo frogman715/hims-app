@@ -5,12 +5,9 @@ import { PermissionLevel } from "@/lib/permission-middleware";
 import { handleApiError, ApiError } from "@/lib/error-handler";
 
 enum ComplianceStatus {
-  NOT_STARTED = "NOT_STARTED",
-  IN_PROGRESS = "IN_PROGRESS",
-  COMPLETED = "COMPLETED",
-  FAILED = "FAILED",
-  PENDING_REVIEW = "PENDING_REVIEW",
-  APPROVED = "APPROVED",
+  PENDING = "PENDING",
+  VERIFIED = "VERIFIED",
+  EXPIRED = "EXPIRED",
   REJECTED = "REJECTED",
 }
 

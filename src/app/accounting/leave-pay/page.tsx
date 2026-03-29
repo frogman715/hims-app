@@ -1,94 +1,142 @@
 'use client';
 
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { WorkspaceHero } from "@/components/layout/WorkspaceHero";
+import { pushAppNotice } from "@/lib/app-notice";
+
+interface CrewOption {
+  id: string;
+  fullName: string;
+  rank: string;
+}
+
+interface ContractOption {
+  id: string;
+  crewId: string;
+  contractNumber: string;
+}
 
 interface LeavePay {
   id: string;
-  seafarerId: number;
-  seafarerName: string;
-  rank: string;
   amount: number;
   currency: string;
-  paymentDate: string;
+  leaveType: string;
+  startDate: string;
+  endDate: string;
+  days: number;
   status: string;
+  crew: {
+    id: string;
+    fullName: string;
+    rank: string;
+  };
+  contract?: {
+    id: string;
+    contractNumber: string;
+  } | null;
 }
 
 export default function LeavePayPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [leavePays, setLeavePays] = useState<LeavePay[]>([]);
+  const [crews, setCrews] = useState<CrewOption[]>([]);
+  const [contracts, setContracts] = useState<ContractOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
-    seafarerId: '',
+    crewId: '',
+    contractId: '',
+    leaveType: 'ANNUAL',
     amount: '',
     currency: 'USD',
-    paymentDate: new Date().toISOString().split('T')[0],
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: new Date().toISOString().split('T')[0],
   });
 
   useEffect(() => {
     if (status === "loading") return;
     if (!session) {
       router.push("/auth/signin");
-    } else {
-      fetchLeavePays();
+      return;
     }
+    void fetchData();
   }, [session, status, router]);
 
-  const fetchLeavePays = async () => {
+  async function fetchData() {
     try {
-      const response = await fetch("/api/accounting/leave-pay");
-      if (response.ok) {
-        const data = await response.json();
+      const [leavePayResponse, crewResponse, contractResponse] = await Promise.all([
+        fetch("/api/accounting/leave-pay"),
+        fetch("/api/crew?limit=1000"),
+        fetch("/api/contracts"),
+      ]);
+
+      if (leavePayResponse.ok) {
+        const data = await leavePayResponse.json();
         setLeavePays(data.data || []);
-      } else {
-        console.error("Failed to fetch leave pays:", response.statusText);
+      }
+      if (crewResponse.ok) {
+        const data = await crewResponse.json();
+        setCrews(data.crews || []);
+      }
+      if (contractResponse.ok) {
+        setContracts(await contractResponse.json());
       }
     } catch (error) {
       console.error("Error fetching leave pays:", error);
     } finally {
       setLoading(false);
     }
-  };
+  }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  async function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
+
     try {
       const response = await fetch("/api/accounting/leave-pay", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          seafarerId: parseInt(formData.seafarerId),
-          amount: parseFloat(formData.amount as string),
+          crewId: formData.crewId,
+          contractId: formData.contractId || undefined,
+          leaveType: formData.leaveType,
+          amount: Number(formData.amount),
           currency: formData.currency,
-          paymentDate: new Date(formData.paymentDate),
+          startDate: formData.startDate,
+          endDate: formData.endDate,
         }),
       });
-      
-      if (response.ok) {
-        const newRecord = await response.json();
-        setLeavePays([newRecord.data, ...leavePays]);
-        setShowForm(false);
-        setFormData({
-          seafarerId: '',
-          amount: '',
-          currency: 'USD',
-          paymentDate: new Date().toISOString().split('T')[0],
-        });
-      } else {
-        alert("Failed to create leave pay record");
+
+      if (!response.ok) {
+        throw new Error("Failed to save leave pay");
       }
+
+      setShowForm(false);
+      setFormData({
+        crewId: '',
+        contractId: '',
+        leaveType: 'ANNUAL',
+        amount: '',
+        currency: 'USD',
+        startDate: new Date().toISOString().split('T')[0],
+        endDate: new Date().toISOString().split('T')[0],
+      });
+      await fetchData();
     } catch (error) {
       console.error("Error creating leave pay:", error);
-      alert("Error creating record");
+      pushAppNotice({
+        tone: "error",
+        title: "Leave pay could not be saved",
+        message: "The leave pay record could not be saved.",
+      });
     }
-  };
+  }
 
   if (status === "loading" || loading) {
-    return <div>Loading...</div>;
+    return <div className="section-stack"><section className="surface-card flex min-h-[320px] items-center justify-center p-8"><div className="text-center"><div className="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-slate-200 border-t-cyan-700" /><p className="mt-4 text-sm text-slate-600">Loading leave pay register...</p></div></section></div>;
   }
 
   if (!session) {
@@ -96,223 +144,165 @@ export default function LeavePayPage() {
   }
 
   const totalLeavePay = leavePays.reduce((sum, pay) => sum + pay.amount, 0);
+  const activeRecords = leavePays.filter((pay) => pay.status !== "PAID" && pay.status !== "CANCELLED").length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      {/* Header */}
-      <header className="bg-white backdrop-blur-lg shadow-2xl border-b border-white/20">
-        <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-amber-600 to-amber-700 bg-clip-text text-transparent">
-                Leave Pay Management
-              </h1>
-              <p className="text-lg text-gray-700 mt-2 font-medium">Handle off-signing disbursements and leave compensation</p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Link
-                href="/accounting"
-                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
-              >
-                ← Back to Accounting
-              </Link>
-              <button
-                onClick={() => setShowForm(true)}
-                className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
-              >
-                + Add Leave Pay
-              </button>
-            </div>
-          </div>
+    <div className="section-stack mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+      <WorkspaceHero
+        eyebrow="Finance Leave Pay"
+        title="Leave pay management"
+        subtitle="Track leave pay items per crew and contract in one finance-controlled workspace for post-sign-off and contract-related disbursements."
+        helperLinks={[
+          { href: "/accounting/salary", label: "Payroll hub" },
+          { href: "/accounting", label: "Finance workspace" },
+          { href: "/dashboard", label: "Dashboard" },
+        ]}
+        highlights={[
+          { label: "Total Leave Pay", value: `USD ${totalLeavePay.toLocaleString("en-US", { minimumFractionDigits: 2 })}`, detail: "Current value across all listed leave pay records." },
+          { label: "Records", value: leavePays.length.toLocaleString("id-ID"), detail: "Leave pay entries currently stored." },
+          { label: "Open Items", value: activeRecords.toLocaleString("id-ID"), detail: "Items still active in finance processing." },
+        ]}
+        actions={(
+          <>
+            <Link href="/accounting" className="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-cyan-300 hover:text-cyan-700">
+              Back to accounting
+            </Link>
+            <button type="button" onClick={() => setShowForm(true)} className="inline-flex items-center rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800">
+              Add leave pay
+            </button>
+          </>
+        )}
+      />
+
+      <main className="space-y-6">
+        <div className="surface-card p-6">
+          <p className="text-sm font-semibold uppercase tracking-wide text-gray-500">Total Leave Pay</p>
+          <p className="text-3xl font-extrabold text-gray-900 mt-2">
+            USD {totalLeavePay.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+          </p>
         </div>
-      </header>
 
-      <main className="max-w-7xl mx-auto py-8 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          {/* Summary Card */}
-          <div className="bg-white backdrop-blur-md rounded-2xl shadow-lg border border-white p-6 mb-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-wide text-gray-500">Total Leave Pay</p>
-                <p className="text-3xl font-extrabold text-gray-900 mt-2">
-                  USD {totalLeavePay.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                </p>
-                <p className="text-sm text-gray-600 mt-1">All time disbursements</p>
-              </div>
-              <div className="text-5xl">🌴</div>
-            </div>
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="px-6 py-4 border-b border-gray-300">
+            <h2 className="text-xl font-semibold text-gray-900">Leave Pay Records</h2>
           </div>
-
-          {/* Info Card */}
-          <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-2xl p-6 mb-6">
-            <div className="flex items-start gap-4">
-              <div className="text-3xl">ℹ️</div>
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">About Leave Pay</h3>
-                <p className="text-gray-700 text-sm leading-relaxed">
-                  Leave pay is compensation for seafarers upon sign-off, calculated based on contract duration and 
-                  applicable maritime regulations (MLC 2006). This includes accrued vacation pay, end-of-contract bonuses, 
-                  and any other final settlements due to the seafarer.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Leave Pay Records Table */}
-          <div className="bg-white backdrop-blur-md rounded-2xl shadow-lg border border-white overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-300">
-              <h2 className="text-xl font-semibold text-gray-900">Leave Pay Records</h2>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-300">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Seafarer
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Rank
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Payment Date
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Amount
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-300">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Crew</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contract</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Leave</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {leavePays.map((pay) => (
+                  <tr key={pay.id} className="hover:bg-gray-100">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">{pay.crew.fullName}</div>
+                      <div className="text-xs text-gray-500">{pay.crew.rank}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                      {pay.contract?.contractNumber || "No contract"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                      {pay.leaveType}
+                      <div className="text-xs text-gray-500">
+                        {new Date(pay.startDate).toLocaleDateString("id-ID")} - {new Date(pay.endDate).toLocaleDateString("id-ID")} ({pay.days} days)
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {pay.currency} {pay.amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{pay.status}</td>
                   </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {leavePays.map((pay) => (
-                    <tr key={pay.id} className="hover:bg-gray-100">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{pay.seafarerName}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                        {pay.rank}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {new Date(pay.paymentDate).toLocaleDateString('id-ID')}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {pay.currency} {pay.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-4 py-2 text-xs font-semibold rounded-full ${
-                          pay.status === 'PAID'
-                            ? 'bg-green-100 text-green-800'
-                            : pay.status === 'PENDING'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-gray-100 text-gray-800'
-                        }`}>
-                          {pay.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                  {leavePays.length === 0 && (
-                    <tr>
-                      <td className="px-6 py-8 text-center text-gray-500" colSpan={5}>
-                        No leave pay records yet. Add a new record when processing seafarer sign-offs.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                ))}
+                {leavePays.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                      No leave pay records yet.
+                    </td>
+                  </tr>
+                ) : null}
+              </tbody>
+            </table>
           </div>
         </div>
       </main>
 
-      {/* Add Leave Pay Form Modal */}
-      {showForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4">
+      {showForm ? (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-8 max-w-lg w-full mx-4">
             <h3 className="text-xl font-extrabold text-gray-900 mb-6">Add Leave Pay Record</h3>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
-                  Seafarer ID
-                </label>
-                <input
-                  type="number"
-                  required
-                  value={formData.seafarerId}
-                  onChange={(e) => setFormData({ ...formData, seafarerId: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                  placeholder="Enter seafarer ID"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
-                  Payment Date
-                </label>
-                <input
-                  type="date"
-                  required
-                  value={formData.paymentDate}
-                  onChange={(e) => setFormData({ ...formData, paymentDate: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                />
-              </div>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <select
+                required
+                value={formData.crewId}
+                onChange={(event) => setFormData((current) => ({ ...current, crewId: event.target.value, contractId: '' }))}
+                className="w-full px-3 py-2 border border-gray-400 rounded-lg"
+              >
+                <option value="">Select crew</option>
+                {crews.map((crew) => (
+                  <option key={crew.id} value={crew.id}>
+                    {crew.fullName} - {crew.rank}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                value={formData.contractId}
+                onChange={(event) => setFormData((current) => ({ ...current, contractId: event.target.value }))}
+                className="w-full px-3 py-2 border border-gray-400 rounded-lg"
+              >
+                <option value="">Optional contract</option>
+                {contracts
+                  .filter((contract) => !formData.crewId || contract.crewId === formData.crewId)
+                  .map((contract) => (
+                    <option key={contract.id} value={contract.id}>
+                      {contract.contractNumber}
+                    </option>
+                  ))}
+              </select>
+
+              <select
+                value={formData.leaveType}
+                onChange={(event) => setFormData((current) => ({ ...current, leaveType: event.target.value }))}
+                className="w-full px-3 py-2 border border-gray-400 rounded-lg"
+              >
+                <option value="ANNUAL">Annual</option>
+                <option value="SICK">Sick</option>
+                <option value="EMERGENCY">Emergency</option>
+                <option value="UNPAID">Unpaid</option>
+                <option value="OTHER">Other</option>
+              </select>
+
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
-                    Amount
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    required
-                    value={formData.amount}
-                    onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
-                    Currency
-                  </label>
-                  <select
-                    required
-                    value={formData.currency}
-                    onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                  >
-                    <option value="USD">USD</option>
-                    <option value="EUR">EUR</option>
-                    <option value="IDR">IDR</option>
-                    <option value="SGD">SGD</option>
-                  </select>
-                </div>
+                <input type="date" required value={formData.startDate} onChange={(event) => setFormData((current) => ({ ...current, startDate: event.target.value }))} className="w-full px-3 py-2 border border-gray-400 rounded-lg" />
+                <input type="date" required value={formData.endDate} onChange={(event) => setFormData((current) => ({ ...current, endDate: event.target.value }))} className="w-full px-3 py-2 border border-gray-400 rounded-lg" />
               </div>
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                <p className="text-xs text-gray-700">
-                  <strong>Note:</strong> Ensure all leave pay calculations comply with the seafarer&apos;s contract terms 
-                  and applicable maritime regulations before processing payment.
-                </p>
+
+              <div className="grid grid-cols-2 gap-4">
+                <input type="number" step="0.01" required value={formData.amount} onChange={(event) => setFormData((current) => ({ ...current, amount: event.target.value }))} className="w-full px-3 py-2 border border-gray-400 rounded-lg" placeholder="Amount" />
+                <select value={formData.currency} onChange={(event) => setFormData((current) => ({ ...current, currency: event.target.value }))} className="w-full px-3 py-2 border border-gray-400 rounded-lg">
+                  <option value="USD">USD</option>
+                  <option value="IDR">IDR</option>
+                </select>
               </div>
+
               <div className="flex space-x-3 pt-4">
-                <button
-                  type="submit"
-                  className="flex-1 bg-amber-600 hover:bg-amber-700 text-white py-2 px-4 rounded-lg font-medium transition-colors"
-                >
-                  Add Record
+                <button type="submit" className="flex-1 bg-amber-600 text-white py-2 px-4 rounded-lg font-medium">
+                  Save
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setShowForm(false)}
-                  className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-2 px-4 rounded-lg font-medium transition-colors"
-                >
+                <button type="button" onClick={() => setShowForm(false)} className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-lg font-medium">
                   Cancel
                 </button>
               </div>
             </form>
           </div>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

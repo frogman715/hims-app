@@ -8,6 +8,7 @@ import {
   isValidFormApprovalTransition,
 } from "@/lib/form-submission-workflow";
 import { handleApiError } from "@/lib/error-handler";
+import { ensureOfficeApiPathAccess } from "@/lib/office-api-access";
 
 function mergeApprovalNotes(formData: unknown, notes: string): unknown {
   if (formData && typeof formData === "object" && !Array.isArray(formData)) {
@@ -28,6 +29,14 @@ export async function POST(
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const authError = ensureOfficeApiPathAccess(
+      session,
+      "/api/form-submissions",
+      "PUT",
+      "Insufficient permissions to approve form submissions"
+    );
+    if (authError) return authError;
 
     if (!isReviewerSession(session)) {
       return NextResponse.json(

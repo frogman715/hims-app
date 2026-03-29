@@ -9,6 +9,7 @@
 
 import { UserRole } from './permissions';
 import type { Session } from 'next-auth';
+import { normalizeRoleToken, normalizeRoleTokens } from './role-normalization';
 
 /**
  * Extended session type with HIMS-specific user fields
@@ -42,8 +43,8 @@ export function areValidUserRoles(roles: string[]): roles is UserRole[] {
  * Normalizes a role string to a valid UserRole or returns default
  */
 export function normalizeToUserRole(role: string | null | undefined, defaultRole: UserRole = UserRole.CREW_PORTAL): UserRole {
-  if (!role) return defaultRole;
-  const upperRole = role.toUpperCase();
+  const upperRole = normalizeRoleToken(role);
+  if (!upperRole) return defaultRole;
   return isValidUserRole(upperRole) ? upperRole : defaultRole;
 }
 
@@ -53,10 +54,7 @@ export function normalizeToUserRole(role: string | null | undefined, defaultRole
 export function normalizeToUserRoles(roles: string | string[] | null | undefined): UserRole[] {
   if (!roles) return [UserRole.CREW_PORTAL];
   
-  const roleArray = Array.isArray(roles) ? roles : [roles];
-  const normalized = roleArray
-    .map(r => r.toUpperCase())
-    .filter(isValidUserRole);
+  const normalized = normalizeRoleTokens(roles).filter(isValidUserRole);
   
   return normalized.length > 0 ? normalized : [UserRole.CREW_PORTAL];
 }

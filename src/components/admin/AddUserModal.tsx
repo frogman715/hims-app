@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Modal from '@/components/Modal';
+import { InlineNotice } from '@/components/feedback/InlineNotice';
 import { Button, Input, Label, Select } from '@/components/ui';
 
 interface AddUserModalProps {
@@ -13,8 +14,9 @@ interface AddUserModalProps {
 
 const ROLES = [
   { value: 'DIRECTOR', label: 'Director' },
-  { value: 'CDMO', label: 'CDMO' },
+  { value: 'CDMO', label: 'Document Control' },
   { value: 'OPERATIONAL', label: 'Operational' },
+  { value: 'GA_DRIVER', label: 'General Affair / Driver' },
   { value: 'ACCOUNTING', label: 'Accounting' },
   { value: 'HR', label: 'HR' },
   { value: 'HR_ADMIN', label: 'HR Admin' },
@@ -67,7 +69,7 @@ export default function AddUserModal({ isOpen, onClose, onUserAdded, canSetSyste
       onUserAdded();
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : 'User registration could not be completed.');
     } finally {
       setLoading(false);
     }
@@ -87,15 +89,13 @@ export default function AddUserModal({ isOpen, onClose, onUserAdded, canSetSyste
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Add New User"
-      subtitle="Create a new user account with assigned role"
+      title="Register User"
+      subtitle="Create a controlled office user account and assign the operational role."
       size="md"
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">
-            {error}
-          </div>
+          <InlineNotice tone="error" message={error} />
         )}
 
         <div>
@@ -134,7 +134,7 @@ export default function AddUserModal({ isOpen, onClose, onUserAdded, canSetSyste
         </div>
 
         <div>
-          <Label htmlFor="password">Password *</Label>
+          <Label htmlFor="password">Temporary Password *</Label>
           <div className="flex gap-2">
             <Input
               id="password"
@@ -153,7 +153,7 @@ export default function AddUserModal({ isOpen, onClose, onUserAdded, canSetSyste
               Generate
             </Button>
           </div>
-          <p className="text-xs text-gray-500 mt-1">Minimum 6 characters required</p>
+          <p className="text-xs text-gray-500 mt-1">Set a temporary password the user can change after first sign-in.</p>
         </div>
 
         {canSetSystemAdmin && (
@@ -184,7 +184,7 @@ export default function AddUserModal({ isOpen, onClose, onUserAdded, canSetSyste
             type="submit"
             disabled={loading}
           >
-            {loading ? 'Creating...' : 'Create User'}
+            {loading ? 'Registering...' : 'Register User'}
           </Button>
         </div>
       </form>

@@ -8,6 +8,10 @@ import {
 import {
   hasDocumentPermission,
 } from './permissions';
+import {
+  ACTIVE_DOCUMENT_CONTROL_STATUSES,
+  buildDocumentRegistryConflictKey,
+} from "@/lib/data-quality-hardening";
 
 /**
  * Create a new document
@@ -25,22 +29,62 @@ export async function createDocument(input: {
   fileName?: string;
   fileSize?: number;
 }) {
+  const normalizedCode = input.code.trim().toUpperCase();
+  const normalizedTitle = input.title.trim();
+  const normalizedDocumentType = input.documentType.trim().toUpperCase();
+  const normalizedDepartment = input.department.trim().toUpperCase();
+
   // Check if code already exists
   const existing = await prisma.documentControl.findUnique({
-    where: { code: input.code },
+    where: { code: normalizedCode },
   });
 
   if (existing) {
-    throw new Error(`Document code ${input.code} already exists`);
+    throw new Error(`Document code ${normalizedCode} already exists`);
+  }
+
+  const duplicateRegistryEntry = await prisma.documentControl.findMany({
+    where: {
+      status: { in: ACTIVE_DOCUMENT_CONTROL_STATUSES },
+    },
+    select: {
+      id: true,
+      code: true,
+      title: true,
+      documentType: true,
+      department: true,
+      status: true,
+      createdAt: true,
+    },
+  });
+
+  const registryConflictKey = buildDocumentRegistryConflictKey({
+    title: normalizedTitle,
+    documentType: normalizedDocumentType,
+    department: normalizedDepartment,
+  });
+  const existingRegistryConflict = duplicateRegistryEntry.find(
+    (document) =>
+      buildDocumentRegistryConflictKey({
+        title: document.title,
+        documentType: document.documentType,
+        department: document.department,
+      }) === registryConflictKey
+  );
+
+  if (existingRegistryConflict) {
+    throw new Error(
+      `A controlled document with the same title, type, and department already exists (${existingRegistryConflict.code}). Revise the existing record instead of creating a duplicate.`
+    );
   }
 
   const document = await prisma.documentControl.create({
     data: {
-      code: input.code,
-      title: input.title,
+      code: normalizedCode,
+      title: normalizedTitle,
       description: input.description,
-      documentType: input.documentType,
-      department: input.department,
+      documentType: normalizedDocumentType,
+      department: normalizedDepartment,
       retentionPeriod: input.retentionPeriod as RetentionPeriod,
       effectiveDate: input.effectiveDate,
       status: DocumentControlStatus.DRAFT,
@@ -105,13 +149,53 @@ export async function updateDocument(
     );
   }
 
+  const nextTitle = input.title?.trim() || document.title;
+  const nextDocumentType = input.documentType?.trim().toUpperCase() || document.documentType;
+  const nextDepartment = input.department?.trim().toUpperCase() || document.department;
+  const registryConflictKey = buildDocumentRegistryConflictKey({
+    title: nextTitle,
+    documentType: nextDocumentType,
+    department: nextDepartment,
+  });
+  const duplicateRegistryEntries = await prisma.documentControl.findMany({
+    where: {
+      id: { not: documentId },
+      status: { in: ACTIVE_DOCUMENT_CONTROL_STATUSES },
+    },
+    select: {
+      id: true,
+      code: true,
+      title: true,
+      documentType: true,
+      department: true,
+    },
+  });
+
+  const duplicateRegistryEntry = duplicateRegistryEntries.find(
+    (entry) =>
+      buildDocumentRegistryConflictKey({
+        title: entry.title,
+        documentType: entry.documentType,
+        department: entry.department,
+      }) === registryConflictKey
+  );
+
+  if (
+    duplicateRegistryEntry &&
+    duplicateRegistryEntry.code
+  ) {
+    throw new Error(
+      `A controlled document with the same title, type, and department already exists (${duplicateRegistryEntry.code}). Revise that record instead of duplicating it.`
+    );
+  }
+
   const updated = await prisma.documentControl.update({
     where: { id: documentId },
     data: {
-      title: input.title || document.title,
+      title: nextTitle,
       description: input.description || document.description,
-      documentType: input.documentType || document.documentType,
-      department: input.department || document.department,
+      documentType: nextDocumentType,
+      department: nextDepartment,
       contentUrl: input.contentUrl || document.contentUrl,
       fileName: input.fileName || document.fileName,
       fileSize: input.fileSize || document.fileSize,

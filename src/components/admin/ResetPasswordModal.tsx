@@ -2,7 +2,9 @@
 
 import { useState } from 'react';
 import Modal from '@/components/Modal';
+import { InlineNotice } from '@/components/feedback/InlineNotice';
 import { Button } from '@/components/ui';
+import { pushAppNotice } from '@/lib/app-notice';
 
 interface User {
   id: string;
@@ -41,14 +43,14 @@ export default function ResetPasswordModal({ isOpen, onClose, onPasswordReset, u
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to reset password');
+        throw new Error(data.error || 'Password reset could not be completed.');
       }
 
       setTempPassword(data.tempPassword);
       setShowPassword(true);
       onPasswordReset();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : 'Password reset could not be completed.');
     } finally {
       setLoading(false);
     }
@@ -63,7 +65,11 @@ export default function ResetPasswordModal({ isOpen, onClose, onPasswordReset, u
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(tempPassword);
-    alert('Password copied to clipboard!');
+    pushAppNotice({
+      tone: 'success',
+      title: 'Password copied',
+      message: 'Temporary password copied to the clipboard.',
+    });
   };
 
   if (!user) return null;
@@ -73,14 +79,12 @@ export default function ResetPasswordModal({ isOpen, onClose, onPasswordReset, u
       isOpen={isOpen}
       onClose={handleClose}
       title="Reset User Password"
-      subtitle={showPassword ? 'Password has been reset' : `Reset password for ${user.name}`}
+      subtitle={showPassword ? 'Temporary password is ready to share securely.' : `Reset password for ${user.name}`}
       size="md"
     >
       <div className="space-y-4">
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">
-            {error}
-          </div>
+          <InlineNotice tone="error" message={error} />
         )}
 
         {!showPassword ? (
@@ -99,7 +103,7 @@ export default function ResetPasswordModal({ isOpen, onClose, onPasswordReset, u
                   <div className="mt-2 text-sm text-yellow-700">
                     <p>
                       This will generate a new temporary password for <strong>{user.name}</strong> ({user.email}).
-                      The user will need to use this password to log in.
+                      The user must use this password at the next sign-in.
                     </p>
                   </div>
                 </div>
@@ -135,11 +139,11 @@ export default function ResetPasswordModal({ isOpen, onClose, onPasswordReset, u
                 </div>
                 <div className="ml-3">
                   <h3 className="text-sm font-medium text-green-800">
-                    Password Reset Successful
+                    Temporary Password Generated
                   </h3>
                   <div className="mt-2 text-sm text-green-700">
                     <p className="mb-2">
-                      A new temporary password has been generated. Please share this with the user securely.
+                      A new temporary password has been generated. Share it through an approved secure channel.
                     </p>
                   </div>
                 </div>
@@ -166,7 +170,7 @@ export default function ResetPasswordModal({ isOpen, onClose, onPasswordReset, u
                 </Button>
               </div>
               <p className="text-xs text-gray-500 mt-2">
-                Make sure to save this password before closing this dialog.
+                Save this password before closing the dialog. It will not be shown again.
               </p>
             </div>
 

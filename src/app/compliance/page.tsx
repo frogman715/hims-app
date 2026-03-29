@@ -15,10 +15,10 @@ const workflowSteps = [
     step: "02",
     title: "Readiness Monitoring",
     detail: "Review readiness exposure, blocked crew, and deployment watch items before the crewing desk continues with joining actions.",
-    href: "/crewing/readiness-board",
-    cta: "Open readiness watch",
-    secondaryHref: "/crewing/readiness",
-    secondaryLabel: "Open action desk",
+    href: "/crewing/readiness",
+    cta: "Open readiness hub",
+    secondaryHref: "/crewing/prepare-joining",
+    secondaryLabel: "Open Prepare Joining",
   },
   {
     step: "03",
@@ -52,7 +52,7 @@ const workflowSteps = [
 const quickLinks = [
   { label: "Control Center", href: "/compliance/control-center" },
   { label: "Fleet Readiness", href: "/compliance/fleet-board" },
-  { label: "Readiness Watch", href: "/crewing/readiness-board" },
+  { label: "Readiness Hub", href: "/crewing/readiness" },
   { label: "Welfare Tracker", href: "/compliance/welfare" },
   { label: "Rest-Hour Register", href: "/compliance/rest-hours" },
   { label: "Requirement Matrix", href: "/compliance/requirement-matrix" },
@@ -69,8 +69,7 @@ export default async function CompliancePage() {
   });
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(14,116,144,0.14),_transparent_30%),linear-gradient(180deg,_#f8fafc_0%,_#eef6ff_55%,_#f8fafc_100%)] px-6 py-8">
-      <div className="mx-auto max-w-7xl space-y-6">
+    <div className="section-stack">
         <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-slate-950 text-slate-50 shadow-2xl">
           <div className="grid gap-6 px-6 py-8 lg:grid-cols-[1.2fr,0.8fr] lg:px-8">
             <div className="space-y-4">
@@ -226,7 +225,6 @@ export default async function CompliancePage() {
           </div>
           <ExternalComplianceManager compact />
         </section>
-      </div>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { pushAppNotice } from "@/lib/app-notice";
 
 
 interface AuditSchedule {
@@ -90,7 +91,11 @@ export default function AuditDetailContent({ auditId, canEdit }: AuditDetailProp
       setShowFindingForm(false);
       fetchAudit();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Error");
+      pushAppNotice({
+        tone: "error",
+        title: "Finding could not be added",
+        message: err instanceof Error ? err.message : "The finding could not be added.",
+      });
     }
   }
 
@@ -111,7 +116,11 @@ export default function AuditDetailContent({ auditId, canEdit }: AuditDetailProp
       setShowReportForm(false);
       fetchAudit();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Error");
+      pushAppNotice({
+        tone: "error",
+        title: "Report could not be generated",
+        message: err instanceof Error ? err.message : "The audit report could not be generated.",
+      });
     }
   }
 

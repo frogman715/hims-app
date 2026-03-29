@@ -4,6 +4,8 @@ import { useSession } from "next-auth/react";
 import { useRouter, useParams } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
+import { Button } from "@/components/ui/Button";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 
 interface ChecklistItem {
   id: string;
@@ -123,7 +125,11 @@ export default function ChecklistDetailPage() {
   }, [session, params.id, fetchChecklistItem]);
 
   if (status === "loading" || loading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center">
+        <div className="text-sm font-medium text-slate-600">Loading checklist entry...</div>
+      </div>
+    );
   }
 
   if (!session) {
@@ -132,84 +138,56 @@ export default function ChecklistDetailPage() {
 
   if (!checklistItem) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-6">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center py-12">
-            <svg className="mx-auto h-12 w-12 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-            </svg>
-            <h3 className="mt-2 text-sm font-medium text-gray-900">Checklist item not found</h3>
-            <p className="mt-1 text-sm text-gray-700">The checklist entry you&apos;re looking for doesn&apos;t exist.</p>
-            <div className="mt-6">
-              <Link
-                href="/crewing/checklist"
-                className="inline-flex items-center px-4 py-2 border border-transparent shadow-md text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700"
-              >
-                Back to Checklist
-              </Link>
-            </div>
-          </div>
+      <section className="surface-card p-8 text-center">
+        <h3 className="mt-2 text-sm font-medium text-slate-900">Checklist item not found</h3>
+        <p className="mt-1 text-sm text-slate-600">The checklist entry you&apos;re looking for doesn&apos;t exist.</p>
+        <div className="mt-6">
+          <Button type="button" variant="secondary" onClick={() => router.push("/crewing/checklist")}>
+            Back to checklist
+          </Button>
         </div>
-      </div>
+      </section>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-6">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Link
-                href="/crewing/checklist"
-                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
-              >
-                ← Back to Checklist
-              </Link>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">Checklist Entry Details</h1>
-                <p className="text-gray-800">ON/OFF signers compliance tracking</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Link
-                href={checklistItem.crewId ? `/crewing/seafarers/${checklistItem.crewId}/biodata` : "/crewing/seafarers"}
-                className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors shadow-lg"
-              >
-                View Seafarer Biodata
-              </Link>
-              <Link
-                href={`/crewing/checklist/${checklistItem.id}/edit`}
-                className="inline-flex items-center px-6 py-3 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors shadow-lg"
-              >
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
-                Edit Checklist Entry
-              </Link>
-            </div>
+    <div className="section-stack">
+      <section className="surface-card p-7">
+        <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+          <div className="max-w-4xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-indigo-700">Movement Compliance</p>
+            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950">Checklist entry detail</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">ON/OFF signer compliance tracking summary.</p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <Button type="button" variant="secondary" onClick={() => router.push("/crewing/checklist")}>
+              Back to checklist
+            </Button>
+            <Link
+              href={checklistItem.crewId ? `/crewing/seafarers/${checklistItem.crewId}/biodata` : "/crewing/seafarers"}
+              className="action-pill text-sm"
+            >
+              View seafarer biodata
+            </Link>
+            <Link href={`/crewing/checklist/${checklistItem.id}/edit`} className="action-pill text-sm">
+              Edit entry
+            </Link>
           </div>
         </div>
+      </section>
 
-        <div className="mb-8 rounded-xl border border-amber-200 bg-amber-50 px-6 py-4 text-sm text-amber-900 shadow-sm">
+      <section className="surface-card border-amber-200 bg-amber-50 px-6 py-4 text-sm text-amber-900 shadow-sm">
           Reference view only. This checklist entry summarizes live movement and compliance data. Final status changes should still be completed in the underlying assignment, document, and Prepare Joining workflows.
-        </div>
+      </section>
 
-        {/* Status Banner */}
-        <div className="mb-8">
-          <div className="bg-white rounded-xl shadow-lg p-6">
+      <section className="surface-card p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
-                <span className={`inline-flex px-3 py-2 text-sm font-semibold rounded-full ${
-                  checklistItem.status === 'ON' ? 'bg-green-100 text-green-800' :
-                  checklistItem.status === 'OFF' ? 'bg-blue-100 text-blue-800' :
-                  'bg-orange-100 text-orange-800'
-                }`}>
-                  {checklistItem.status === 'ON' ? 'Sign-On' :
-                   checklistItem.status === 'OFF' ? 'Sign-Off' :
-                   'Contract Expiring'}
-                </span>
+                <StatusBadge
+                  status={checklistItem.status === 'ON' ? 'ONBOARD' : checklistItem.status === 'OFF' ? 'OFF_SIGNED' : 'PENDING_REVIEW'}
+                  label={checklistItem.status === 'ON' ? 'Sign-On' : checklistItem.status === 'OFF' ? 'Sign-Off' : 'Contract Expiring'}
+                  className="px-3 py-2 text-sm"
+                />
                 <span className="text-sm text-gray-800">
                   {checklistItem.month} {checklistItem.year}
                 </span>
@@ -218,13 +196,10 @@ export default function ChecklistDetailPage() {
                 </span>
               </div>
             </div>
-          </div>
-        </div>
+      </section>
 
-        {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Seafarer Details */}
-          <div className="bg-white rounded-xl shadow-lg p-6">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+          <div className="surface-card p-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-6">Seafarer Details</h2>
 
             <div className="space-y-6">
@@ -260,35 +235,35 @@ export default function ChecklistDetailPage() {
           </div>
 
           {/* Compliance Status */}
-          <div className="bg-white rounded-xl shadow-lg p-6">
+          <div className="surface-card p-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-6">Compliance Status</h2>
 
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-semibold text-gray-900">Documents Complete</span>
-                <span className={`inline-flex px-4 py-2 text-xs font-semibold rounded-full ${
-                  checklistItem.documentsComplete ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                }`}>
-                  {checklistItem.documentsComplete ? 'Complete' : 'Pending'}
-                </span>
+                <StatusBadge
+                  status={checklistItem.documentsComplete ? 'APPROVED' : 'PENDING'}
+                  label={checklistItem.documentsComplete ? 'Complete' : 'Pending Review'}
+                  className="px-4 py-2"
+                />
               </div>
 
               <div className="flex items-center justify-between">
                 <span className="text-sm font-semibold text-gray-900">Medical Check</span>
-                <span className={`inline-flex px-4 py-2 text-xs font-semibold rounded-full ${
-                  checklistItem.medicalCheck ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                }`}>
-                  {checklistItem.medicalCheck ? 'Pass' : 'Fail'}
-                </span>
+                <StatusBadge
+                  status={checklistItem.medicalCheck ? 'APPROVED' : 'REJECTED'}
+                  label={checklistItem.medicalCheck ? 'Passed' : 'Declined'}
+                  className="px-4 py-2"
+                />
               </div>
 
               <div className="flex items-center justify-between">
                 <span className="text-sm font-semibold text-gray-900">Training Complete</span>
-                <span className={`inline-flex px-4 py-2 text-xs font-semibold rounded-full ${
-                  checklistItem.trainingComplete ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                }`}>
-                  {checklistItem.trainingComplete ? 'Complete' : 'Pending'}
-                </span>
+                <StatusBadge
+                  status={checklistItem.trainingComplete ? 'APPROVED' : 'PENDING'}
+                  label={checklistItem.trainingComplete ? 'Complete' : 'Pending Review'}
+                  className="px-4 py-2"
+                />
               </div>
 
               {/* External Compliance Checks */}
@@ -304,14 +279,7 @@ export default function ChecklistDetailPage() {
                            'Schengen Visa NL'}
                         </span>
                         <div className="flex items-center space-x-2">
-                          <span className={`inline-flex px-4 py-2 text-xs font-semibold rounded-full ${
-                            compliance.status === 'VERIFIED' ? 'bg-green-100 text-green-800' :
-                            compliance.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
-                            compliance.status === 'REJECTED' ? 'bg-red-100 text-red-800' :
-                            'bg-gray-100 text-gray-700'
-                          }`}>
-                            {compliance.status}
-                          </span>
+                          <StatusBadge status={compliance.status} className="px-4 py-2" />
                           {compliance.verificationUrl && (
                             <a
                               href={compliance.verificationUrl}
@@ -336,18 +304,25 @@ export default function ChecklistDetailPage() {
               <div className="pt-4 border-t border-gray-300">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-semibold text-gray-900">Overall Status</span>
-                  <span className={`inline-flex px-3 py-2 text-sm font-semibold rounded-full ${
-                    checklistItem.documentsComplete && checklistItem.medicalCheck && checklistItem.trainingComplete &&
-                    (!checklistItem.externalCompliance || checklistItem.externalCompliance.every(c => c.status === 'VERIFIED'))
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-yellow-100 text-yellow-800'
-                  }`}>
-                    {checklistItem.documentsComplete && checklistItem.medicalCheck && checklistItem.trainingComplete &&
-                     (!checklistItem.externalCompliance || checklistItem.externalCompliance.every(c => c.status === 'VERIFIED'))
-                      ? 'Fully Compliant'
-                      : 'Needs Attention'
+                  <StatusBadge
+                    status={
+                      checklistItem.documentsComplete &&
+                      checklistItem.medicalCheck &&
+                      checklistItem.trainingComplete &&
+                      (!checklistItem.externalCompliance || checklistItem.externalCompliance.every(c => c.status === 'VERIFIED'))
+                        ? 'APPROVED'
+                        : 'PENDING_REVIEW'
                     }
-                  </span>
+                    label={
+                      checklistItem.documentsComplete &&
+                      checklistItem.medicalCheck &&
+                      checklistItem.trainingComplete &&
+                      (!checklistItem.externalCompliance || checklistItem.externalCompliance.every(c => c.status === 'VERIFIED'))
+                        ? 'Fully Compliant'
+                        : 'Needs Attention'
+                    }
+                    className="px-3 py-2 text-sm"
+                  />
                 </div>
               </div>
             </div>
@@ -355,19 +330,19 @@ export default function ChecklistDetailPage() {
         </div>
 
         {/* Crew Replacements */}
-        {checklistItem.replacements && checklistItem.replacements.length > 0 && (
-          <div className="mt-8 bg-white rounded-xl shadow-lg p-6">
+      {checklistItem.replacements && checklistItem.replacements.length > 0 && (
+          <section className="surface-card p-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-6">Crew Replacement Candidates</h2>
             <div className="space-y-6">
               {checklistItem.replacements.map((replacement) => (
                 <div key={replacement.id} className="border border-gray-300 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center space-x-3">
-                      <span className={`inline-flex px-4 py-2 text-xs font-semibold rounded-full ${
-                        replacement.candidateType === 'EX_CREW' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
-                      }`}>
-                        {replacement.candidateType === 'EX_CREW' ? 'Ex-Crew' : 'New Applicant'}
-                      </span>
+                      <StatusBadge
+                        status={replacement.candidateType === 'EX_CREW' ? 'UNDER_REVIEW' : 'APPROVED'}
+                        label={replacement.candidateType === 'EX_CREW' ? 'Ex-Crew' : 'New Applicant'}
+                        className="px-4 py-2"
+                      />
                       <span className={`inline-flex px-4 py-2 text-xs font-semibold rounded-full ${
                         replacement.status === 'APPROVED' ? 'bg-green-100 text-green-800' :
                         replacement.status === 'PROPOSED' ? 'bg-yellow-100 text-yellow-800' :
@@ -433,35 +408,29 @@ export default function ChecklistDetailPage() {
                 </div>
               ))}
             </div>
-          </div>
-        )}
+          </section>
+      )}
 
-        {/* Notes */}
-        {checklistItem.notes && (
-          <div className="mt-8 bg-white rounded-xl shadow-lg p-6">
+      {checklistItem.notes && (
+          <section className="surface-card p-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Notes</h2>
             <div className="text-sm text-gray-900 bg-gray-100 p-4 rounded-lg">
               {checklistItem.notes}
             </div>
-          </div>
-        )}
+          </section>
+      )}
 
-        {/* Action Buttons */}
-        <div className="mt-8 flex justify-end space-x-4">
-          <button
-            onClick={() => router.push(`/crewing/checklist/${checklistItem.id}/edit`)}
-            className="inline-flex items-center px-4 py-2 border border-gray-400 rounded-lg text-sm font-semibold text-gray-900 bg-white hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-          >
-            Edit Checklist Entry
-          </button>
-          <button
-            type="button"
-            disabled
-            className="inline-flex items-center px-4 py-2 border border-slate-200 rounded-lg text-sm font-medium text-slate-400 bg-slate-100 cursor-not-allowed"
-          >
-            Completion Update Not Live Yet
-          </button>
-        </div>
+      <div className="flex justify-end space-x-4">
+        <Button type="button" variant="secondary" onClick={() => router.push(`/crewing/checklist/${checklistItem.id}/edit`)}>
+          Edit checklist entry
+        </Button>
+        <button
+          type="button"
+          disabled
+          className="inline-flex items-center rounded-lg border border-slate-200 bg-slate-100 px-4 py-2 text-sm font-medium text-slate-400 cursor-not-allowed"
+        >
+          Completion update not live yet
+        </button>
       </div>
     </div>
   );

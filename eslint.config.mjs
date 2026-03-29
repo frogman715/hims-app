@@ -26,6 +26,12 @@ const eslintConfig = defineConfig([
     },
   },
   {
+    files: ["src/**/*.test.cjs", "src/**/*.cjs"],
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
+    },
+  },
+  {
     files: ["src/lib/audit/service.ts"],
     rules: {
       "@typescript-eslint/no-explicit-any": "off",

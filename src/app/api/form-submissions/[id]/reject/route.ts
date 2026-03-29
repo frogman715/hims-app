@@ -7,6 +7,7 @@ import {
   isValidFormApprovalTransition,
 } from "@/lib/form-submission-workflow";
 import { handleApiError } from "@/lib/error-handler";
+import { ensureOfficeApiPathAccess } from "@/lib/office-api-access";
 
 // POST /api/form-submissions/[id]/reject - Reject form submission
 export async function POST(
@@ -20,6 +21,14 @@ export async function POST(
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const authError = ensureOfficeApiPathAccess(
+      session,
+      "/api/form-submissions",
+      "PUT",
+      "Insufficient permissions to reject form submissions"
+    );
+    if (authError) return authError;
 
     if (!isReviewerSession(session)) {
       return NextResponse.json(

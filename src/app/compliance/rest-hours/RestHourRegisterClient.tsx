@@ -2,18 +2,12 @@
 
 import { useState, useTransition } from "react";
 import type { RestHourRegisterData } from "@/lib/compliance-rest-hours";
+import StatCard from "@/components/ui/StatCard";
+import { formatDateLabel } from "@/lib/formatters";
 
 type Props = {
   initialData: RestHourRegisterData;
 };
-
-function formatDate(value: string) {
-  return new Date(value).toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-}
 
 export default function RestHourRegisterClient({ initialData }: Props) {
   const [data, setData] = useState(initialData);
@@ -84,22 +78,10 @@ export default function RestHourRegisterClient({ initialData }: Props) {
     <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
       <section className="space-y-6">
         <div className="grid gap-4 md:grid-cols-4">
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <p className="text-sm text-slate-500">Entries last 7 days</p>
-            <p className="mt-2 text-3xl font-semibold text-slate-900">{data.summary.entriesLast7Days}</p>
-          </div>
-          <div className="rounded-2xl border border-rose-200 bg-rose-50 p-5 shadow-sm">
-            <p className="text-sm text-rose-700">Non-compliant entries</p>
-            <p className="mt-2 text-3xl font-semibold text-rose-900">{data.summary.nonCompliantEntries}</p>
-          </div>
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <p className="text-sm text-slate-500">Active vessels tracked</p>
-            <p className="mt-2 text-3xl font-semibold text-slate-900">{data.summary.activeVesselsTracked}</p>
-          </div>
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
-            <p className="text-sm text-amber-700">Coverage gaps</p>
-            <p className="mt-2 text-3xl font-semibold text-amber-900">{data.summary.coverageGapCrews}</p>
-          </div>
+          <StatCard label="Entries last 7 days" value={data.summary.entriesLast7Days} description="Digital logs captured during the last rolling week." tone="slate" />
+          <StatCard label="Non-compliant entries" value={data.summary.nonCompliantEntries} description="Entries breaching minimum rest-hour control." tone="rose" />
+          <StatCard label="Active fleet tracked" value={data.summary.activeVesselsTracked} description="Active vessels with digital rest-hour coverage." tone="cyan" />
+          <StatCard label="Coverage gaps" value={data.summary.coverageGapCrews} description="Crew still needing manual or missing rest logs." tone="amber" />
         </div>
 
         <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
@@ -121,7 +103,7 @@ export default function RestHourRegisterClient({ initialData }: Props) {
               <tbody className="divide-y divide-slate-100">
                 {data.recentEntries.map((entry) => (
                   <tr key={entry.id}>
-                    <td className="px-6 py-4 text-slate-700">{formatDate(entry.logDate)}</td>
+                    <td className="px-6 py-4 text-slate-700">{formatDateLabel(entry.logDate, "en-GB")}</td>
                     <td className="px-6 py-4 text-slate-700">
                       <div className="font-semibold text-slate-900">{entry.crewName}</div>
                       <div className="text-slate-500">{entry.rank}</div>

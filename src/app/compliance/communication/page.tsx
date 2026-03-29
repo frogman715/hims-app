@@ -1,9 +1,25 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { WorkspaceHero } from "@/components/layout/WorkspaceHero";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+
+const COMMUNICATION_TYPE_STYLES: Record<string, string> = {
+  MEDIA_INTERVIEW: "border-sky-300 bg-sky-50",
+  COMPLAINT: "border-rose-300 bg-rose-50",
+  APPRAISAL_REPORT: "border-emerald-300 bg-emerald-50",
+  CREW_DISPUTE: "border-amber-300 bg-amber-50",
+  CREW_SICK: "border-violet-300 bg-violet-50",
+  CREW_DEATH: "border-slate-300 bg-slate-100",
+  EMERGENCY: "border-red-300 bg-red-50",
+  GENERAL_INQUIRY: "border-cyan-300 bg-cyan-50",
+};
 
 export default function CommunicationManagementPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const [communications, setCommunications] = useState<Array<{
     id: string;
     status: string;
@@ -15,6 +31,7 @@ export default function CommunicationManagementPage() {
   }>>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("ALL");
+  const [error, setError] = useState<string | null>(null);
 
   const communicationTypes = [
     { value: "MEDIA_INTERVIEW", label: "Media Interview", icon: "📰", color: "blue" },
@@ -30,39 +47,56 @@ export default function CommunicationManagementPage() {
   const fetchCommunications = useCallback(async () => {
     setLoading(true);
     try {
-      const url = filter === "ALL" 
-        ? "/api/compliance/communication"
-        : `/api/compliance/communication?type=${filter}`;
-      const res = await fetch(url);
-      if (res.ok) {
-        const data = await res.json();
-        setCommunications(data.communications || []);
+      setError(null);
+      const params = new URLSearchParams();
+
+      if (filter !== "ALL") {
+        if (["PENDING", "IN_PROGRESS", "RESOLVED", "ESCALATED", "CLOSED"].includes(filter)) {
+          params.set("status", filter);
+        } else if (["LOW", "MEDIUM", "HIGH", "CRITICAL"].includes(filter)) {
+          params.set("priority", filter);
+        } else {
+          params.set("type", filter);
+        }
       }
+
+      const query = params.toString();
+      const url = query
+        ? `/api/compliance/communication?${query}`
+        : "/api/compliance/communication";
+      const res = await fetch(url);
+      if (res.status === 401) {
+        router.push("/auth/signin");
+        return;
+      }
+
+      if (!res.ok) {
+        const payload = await res.json().catch(() => null);
+        throw new Error(payload?.error || "Failed to fetch communications");
+      }
+
+      const data = await res.json();
+      setCommunications(data.communications || []);
     } catch (error) {
       console.error("Failed to fetch communications:", error);
+      setCommunications([]);
+      setError(error instanceof Error ? error.message : "Failed to fetch communications");
     } finally {
       setLoading(false);
     }
-  }, [filter]);
+  }, [filter, router]);
 
   useEffect(() => {
-    fetchCommunications();
-  }, [fetchCommunications]);
+    if (status === "unauthenticated") {
+      router.push("/auth/signin");
+    }
+  }, [router, status]);
 
-  const handleNewFormClick = useCallback(() => {
-    console.info("New communication form modal not yet implemented");
-  }, []);
-
-  const getStatusBadge = (status: string) => {
-    const styles: Record<string, string> = {
-      PENDING: "bg-yellow-100 text-yellow-800",
-      IN_PROGRESS: "bg-blue-100 text-blue-800",
-      RESOLVED: "bg-green-100 text-green-800",
-      ESCALATED: "bg-red-100 text-red-800",
-      CLOSED: "bg-gray-100 text-gray-800",
-    };
-    return styles[status] || "bg-gray-100 text-gray-800";
-  };
+  useEffect(() => {
+    if (status === "authenticated" && session?.user) {
+      fetchCommunications();
+    }
+  }, [fetchCommunications, session, status]);
 
   const getPriorityBadge = (priority: string) => {
     const styles: Record<string, string> = {
@@ -74,48 +108,31 @@ export default function CommunicationManagementPage() {
     return styles[priority] || "bg-gray-100 text-gray-700";
   };
 
-  return (
-    <div className="min-h-screen bg-gray-100 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-8">
-          <nav className="flex mb-4" aria-label="Breadcrumb">
-            <ol className="inline-flex items-center space-x-1 md:space-x-3">
-              <li className="inline-flex items-center">
-                <Link href="/dashboard" className="text-gray-700 hover:text-blue-700">Dashboard</Link>
-              </li>
-              <li>
-                <div className="flex items-center">
-                  <svg className="w-6 h-6 text-gray-700" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                  </svg>
-                  <Link href="/compliance" className="ml-1 text-gray-700 hover:text-blue-700">Compliance</Link>
-                </div>
-              </li>
-              <li>
-                <div className="flex items-center">
-                  <svg className="w-6 h-6 text-gray-700" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                  </svg>
-                  <span className="ml-1 text-gray-500">Communication Management</span>
-                </div>
-              </li>
-            </ol>
-          </nav>
+  const criticalItems = communications.filter((item) => item.priority === "CRITICAL").length;
+  const openItems = communications.filter((item) => item.status !== "CLOSED" && item.status !== "RESOLVED").length;
 
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Communication Management</h1>
-              <p className="text-gray-700 mt-1">HGQS Annex C - MLC 2006 Reg 5.1.5 Compliant</p>
-            </div>
-            <button
-              onClick={handleNewFormClick}
-              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg hover:from-blue-700 hover:to-cyan-700 font-medium shadow-lg"
-            >
-              + New Communication
-            </button>
+  return (
+    <div className="section-stack mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+      <WorkspaceHero
+        eyebrow="Compliance Communication"
+        title="Communication management"
+        subtitle="Track complaints, emergency communications, appraisal reports, and escalation-sensitive correspondence in one monitoring board."
+        helperLinks={[
+          { href: '/compliance', label: 'Compliance center' },
+          { href: '/compliance/escalations', label: 'Escalations' },
+          { href: '/dashboard', label: 'Dashboard' },
+        ]}
+        highlights={[
+          { label: 'Open Cases', value: openItems.toLocaleString('id-ID'), detail: 'Communication items still under follow-up.' },
+          { label: 'Critical Cases', value: criticalItems.toLocaleString('id-ID'), detail: 'Entries requiring leadership awareness.' },
+          { label: 'Scope', value: 'MLC 2006', detail: 'Supports grievance and controlled communication monitoring.' },
+        ]}
+        actions={(
+          <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            New communication entry is not available from this page yet. Use the tracked log below for monitoring and follow-up only.
           </div>
-        </div>
+        )}
+      />
 
         {/* Communication Type Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
@@ -125,7 +142,7 @@ export default function CommunicationManagementPage() {
               onClick={() => setFilter(type.value)}
               className={`p-4 rounded-xl border-2 text-left transition-all ${
                 filter === type.value
-                  ? `border-${type.color}-500 bg-${type.color}-50`
+                  ? COMMUNICATION_TYPE_STYLES[type.value] || "border-slate-300 bg-slate-50"
                   : "border-gray-300 bg-white hover:border-gray-400"
               }`}
             >
@@ -194,6 +211,12 @@ export default function CommunicationManagementPage() {
         </div>
 
         {/* Communications List */}
+        {error ? (
+          <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+            {error}
+          </div>
+        ) : null}
+
         {loading ? (
           <div className="flex justify-center items-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -211,9 +234,7 @@ export default function CommunicationManagementPage() {
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <span className={`px-3 py-2 rounded-full text-xs font-semibold ${getStatusBadge(comm.status)}`}>
-                        {comm.status}
-                      </span>
+                      <StatusBadge status={comm.status} className="px-3 py-2" />
                       <span className={`px-3 py-2 rounded-full text-xs font-semibold border ${getPriorityBadge(comm.priority)}`}>
                         {comm.priority} PRIORITY
                       </span>
@@ -243,7 +264,6 @@ export default function CommunicationManagementPage() {
         <div className="mt-12 text-center text-gray-500 text-sm">
           <p>HGQS Procedures Manual - Annex C | MLC 2006 Regulation 5.1.5 - On-board Complaint Procedures</p>
         </div>
-      </div>
     </div>
   );
 }

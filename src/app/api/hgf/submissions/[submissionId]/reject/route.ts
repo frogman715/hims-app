@@ -5,6 +5,7 @@ import { authOptions } from '@/lib/auth';
 import { env } from '@/lib/env';
 import { getEmailServiceInstance } from '@/lib/email';
 import { createHGFEmailNotifications } from '@/lib/email/hgf-notifications';
+import { hasExplicitRoleAccess } from '@/lib/authorization';
 
 export async function POST(
   request: NextRequest,
@@ -17,7 +18,16 @@ export async function POST(
     }
 
     // Only HR, CDMO, and DIRECTOR can reject
-    if (!['HR', 'HR_ADMIN', 'CDMO', 'DIRECTOR'].includes(session.user.role || '')) {
+    if (
+      !hasExplicitRoleAccess(
+        {
+          roles: session.user.roles,
+          role: session.user.role,
+          isSystemAdmin: session.user.isSystemAdmin === true,
+        },
+        ['HR', 'HR_ADMIN', 'CDMO', 'DIRECTOR']
+      )
+    ) {
       return NextResponse.json(
         { error: 'Insufficient permissions to reject submissions' },
         { status: 403 }

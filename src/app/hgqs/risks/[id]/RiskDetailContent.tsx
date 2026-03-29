@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 
 import Link from "next/link";
+import { pushAppNotice } from "@/lib/app-notice";
 
 interface Risk {
   id: string;
@@ -85,7 +86,11 @@ export default function RiskDetailContent({ riskId, canEdit }: RiskDetailProps) 
       setShowActionForm(false);
       fetchRisk();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Error adding action");
+      pushAppNotice({
+        tone: "error",
+        title: "Action could not be added",
+        message: err instanceof Error ? err.message : "The mitigation action could not be added.",
+      });
     }
   }
 
@@ -103,7 +108,11 @@ export default function RiskDetailContent({ riskId, canEdit }: RiskDetailProps) 
       setShowReviewForm(false);
       fetchRisk();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Error adding review");
+      pushAppNotice({
+        tone: "error",
+        title: "Review could not be added",
+        message: err instanceof Error ? err.message : "The risk review could not be added.",
+      });
     }
   }
 

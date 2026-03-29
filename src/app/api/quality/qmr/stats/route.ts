@@ -2,17 +2,19 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { checkPermission, PermissionLevel } from "@/lib/permission-middleware";
+import { ensureOfficeApiPathAccess } from "@/lib/office-api-access";
 
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    if (!checkPermission(session, "quality", PermissionLevel.VIEW_ACCESS)) {
-      return NextResponse.json({ error: "Forbidden - Insufficient permissions" }, { status: 403 });
+    const authError = ensureOfficeApiPathAccess(
+      session,
+      "/api/quality/qmr/stats",
+      "GET",
+      "Insufficient permissions to view QMR dashboard statistics"
+    );
+    if (authError) {
+      return authError;
     }
 
     const [pendingAudits, openCAPAs, pendingApprovals, overdueItems] = await Promise.all([

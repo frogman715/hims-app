@@ -4,6 +4,9 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { WorkspaceHero } from "@/components/layout/WorkspaceHero";
+import { WorkspaceEmptyState } from "@/components/feedback/WorkspaceEmptyState";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 
 interface Attendance {
   id: string;
@@ -18,6 +21,14 @@ interface Attendance {
     department?: string;
   };
 }
+
+const ATTENDANCE_STATUS_LABELS: Record<string, string> = {
+  present: "Present",
+  absent: "Absent",
+  late: "Late",
+  "half-day": "Half Day",
+  leave: "On Leave",
+};
 
 export default function AttendancePage() {
   const { data: session, status } = useSession();
@@ -54,11 +65,8 @@ export default function AttendancePage() {
 
   if (status === "loading" || loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-          <p className="mt-4 text-gray-800">Loading attendance records...</p>
-        </div>
+      <div className="section-stack">
+        <div className="surface-card px-6 py-12 text-center text-sm text-slate-600">Loading attendance records...</div>
       </div>
     );
   }
@@ -67,54 +75,61 @@ export default function AttendancePage() {
     return null;
   }
 
+  const presentCount = attendances.filter((item) => item.status === "present").length;
+  const lateCount = attendances.filter((item) => item.status === "late").length;
+  const leaveCount = attendances.filter((item) => item.status === "leave").length;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Attendance Management</h1>
-              <p className="text-gray-800">Track employee attendance, check-in/out times, and work hours</p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Link
-                href="/hr"
-                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
-              >
-                ← Back to HR
-              </Link>
-              <Link
-                href="/hr/attendance/new"
-                className="inline-flex items-center px-6 py-3 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors shadow-lg"
-              >
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                Record Attendance
-              </Link>
-            </div>
+    <div className="section-stack">
+      <WorkspaceHero
+        eyebrow="Attendance Workspace"
+        title="Attendance management"
+        subtitle="Track employee attendance, check-in and check-out times, and current attendance status."
+        helperLinks={[
+          { href: "/hr", label: "HR Workspace" },
+          { href: "/hr/employees", label: "Employee Register" },
+        ]}
+        highlights={[
+          { label: "Attendance Records", value: attendances.length, detail: "Current attendance records loaded in the register." },
+          { label: "Present", value: presentCount, detail: "Employees recorded as present in the current data set." },
+          { label: "Late", value: lateCount, detail: "Records that still need lateness review or acknowledgement." },
+          { label: "On Leave", value: leaveCount, detail: "Attendance entries already tied to approved leave handling." },
+        ]}
+        actions={(
+          <>
+            <Link href="/hr" className="inline-flex items-center rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-cyan-600 hover:text-cyan-800">
+              Back to HR
+            </Link>
+            <Link href="/hr/attendance/new" className="inline-flex items-center rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800">
+              Record Attendance
+            </Link>
+          </>
+        )}
+      />
+
+      <section className="surface-card p-6">
+        <div className="mb-6 grid gap-3 md:grid-cols-3">
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <p className="text-sm font-semibold text-slate-900">1. Keep one daily result</p>
+            <p className="mt-2 text-sm text-slate-600">Each record should represent one employee on one workday with one final attendance outcome.</p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <p className="text-sm font-semibold text-slate-900">2. Review timing accuracy</p>
+            <p className="mt-2 text-sm text-slate-600">Check-in and check-out should match the real attendance trail before editing or deleting.</p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <p className="text-sm font-semibold text-slate-900">3. Use delete carefully</p>
+            <p className="mt-2 text-sm text-slate-600">Delete only incorrect duplicates or invalid entries, not normal attendance corrections.</p>
           </div>
         </div>
-
-        {/* Attendance Records */}
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
           {attendances.length === 0 ? (
             <div className="text-center py-12">
-              <svg className="mx-auto h-12 w-12 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-              </svg>
-              <h3 className="mt-2 text-sm font-medium text-gray-900">No attendance records</h3>
-              <p className="mt-1 text-sm text-gray-700">Get started by recording your first attendance entry.</p>
+              <h3 className="mt-2 text-sm font-medium text-slate-900">No attendance records</h3>
+              <p className="mt-1 text-sm text-slate-600">Get started by recording the first attendance entry.</p>
               <div className="mt-6">
-                <Link
-                  href="/hr/attendance/new"
-                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-md text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                >
-                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                  Record First Attendance
+                <Link href="/hr/attendance/new" className="inline-flex items-center rounded-lg bg-cyan-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-800">
+                  Register First Attendance
                 </Link>
               </div>
             </div>
@@ -145,47 +160,39 @@ export default function AttendancePage() {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {attendances.map((attendance) => (
-                    <tr key={attendance.id} className="hover:bg-gray-100">
+                    <tr key={attendance.id} className="hover:bg-slate-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div>
-                            <div className="text-sm font-medium text-gray-900">
+                            <div className="text-sm font-medium text-slate-900">
                               {attendance.employee.fullName}
                             </div>
-                            <div className="text-sm text-gray-800">
+                            <div className="text-sm text-slate-600">
                               {attendance.employee.position} • {attendance.employee.department}
                             </div>
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">
                         {new Date(attendance.date).toLocaleDateString()}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">
                         {attendance.checkIn ? new Date(attendance.checkIn).toLocaleTimeString() : '-'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">
                         {attendance.checkOut ? new Date(attendance.checkOut).toLocaleTimeString() : '-'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-4 py-2 text-xs font-semibold rounded-full ${
-                          attendance.status === 'present'
-                            ? 'bg-green-100 text-green-800'
-                            : attendance.status === 'absent'
-                            ? 'bg-red-100 text-red-800'
-                            : attendance.status === 'late'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : attendance.status === 'half-day'
-                            ? 'bg-orange-100 text-orange-800'
-                            : 'bg-gray-100 text-gray-800'
-                        }`}>
-                          {attendance.status.charAt(0).toUpperCase() + attendance.status.slice(1)}
-                        </span>
+                        <StatusBadge
+                          status={attendance.status}
+                          label={ATTENDANCE_STATUS_LABELS[attendance.status] ?? attendance.status}
+                          className="px-4 py-2"
+                        />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <button
                           onClick={() => router.push(`/hr/attendance/${attendance.id}`)}
-                          className="text-indigo-600 hover:text-indigo-900 mr-4"
+                          className="mr-4 text-cyan-700 hover:text-cyan-900"
                         >
                           Edit
                         </button>
@@ -198,12 +205,22 @@ export default function AttendancePage() {
                       </td>
                     </tr>
                   ))}
+                  {attendances.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="px-6 py-10">
+                        <WorkspaceEmptyState
+                          title="No attendance records in this view"
+                          message="Add attendance or adjust the selected review period to continue."
+                        />
+                      </td>
+                    </tr>
+                  ) : null}
                 </tbody>
               </table>
             </div>
           )}
         </div>
-      </div>
+      </section>
     </div>
   );
 }

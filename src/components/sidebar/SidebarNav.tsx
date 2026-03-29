@@ -4,9 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession as useSessionAuth } from "next-auth/react";
 import { ModuleName, PermissionLevel } from "@/lib/permissions";
-import { hasExplicitRoleAccess, hasModuleAccess } from "@/lib/authorization";
-import { canAccessOfficePath } from "@/lib/office-access";
-import { getAdminScopeForPath, hasAdminMaintenanceScope } from "@/lib/admin-access";
+import { canAccessOfficeNavigationItem } from "@/lib/office-navigation-access";
 import { isSystemAdmin } from "@/lib/type-guards";
 import type { AppRole } from "@/lib/roles";
 
@@ -22,9 +20,20 @@ export interface NavItem {
 
 interface SidebarNavProps {
   items: NavItem[];
+  onNavigate?: () => void;
 }
 
-export default function SidebarNav({ items }: SidebarNavProps) {
+const GROUP_ORDER = [
+  "CREW OPERATIONS",
+  "DOCUMENT CONTROL",
+  "FINANCE & ADMINISTRATION",
+  "HR & PERSONNEL",
+  "QUALITY & COMPLIANCE",
+  "SYSTEM ADMINISTRATION",
+  "OTHER",
+];
+
+export default function SidebarNav({ items, onNavigate }: SidebarNavProps) {
   const pathname = usePathname();
   const { data: session } = useSessionAuth();
   
@@ -47,29 +56,13 @@ export default function SidebarNav({ items }: SidebarNavProps) {
       adminMaintenanceScopes: session.user.adminMaintenanceScopes,
     };
 
-    const adminScope = getAdminScopeForPath(item.href);
-    if (adminScope) {
-      return hasAdminMaintenanceScope(subject, adminScope);
-    }
-
-    if (!hasExplicitRoleAccess(subject, item.allowedRoles)) {
-      return false;
-    }
-
-    if (
-      !hasModuleAccess(
-        subject,
-        item.module,
-        item.requiredLevel ?? PermissionLevel.VIEW_ACCESS
-      )
-    ) {
-      return false;
-    }
-
-    return canAccessOfficePath(
-      item.href.split("?")[0] || item.href,
-      session.user.roles ?? (session.user.role ? [session.user.role] : []),
-      session.user.isSystemAdmin === true
+    return canAccessOfficeNavigationItem(
+      {
+        ...item,
+        module: item.module,
+        requiredLevel: item.requiredLevel ?? PermissionLevel.VIEW_ACCESS,
+      },
+      subject
     );
   });
   
@@ -82,51 +75,50 @@ export default function SidebarNav({ items }: SidebarNavProps) {
   }, {} as Record<string, NavItem[]>);
 
   return (
-    <nav className="flex-1 overflow-y-auto p-3 space-y-1">
-      {/* Dashboard - Always First */}
+    <nav className="space-y-5">
       <Link
         href="/dashboard"
-        className={`flex items-center gap-3 rounded-lg px-3 py-2.5 font-semibold border border-transparent shadow-md transition-all duration-200 ${
+        onClick={onNavigate}
+        className={`flex items-center gap-3 rounded-2xl border px-4 py-3 font-semibold transition ${
           pathname === "/dashboard"
-            ? "bg-white text-slate-900 hover:border-blue-200"
-            : "bg-blue-600 text-white hover:bg-blue-500"
+            ? "border-cyan-200 bg-cyan-50 text-cyan-900 shadow-sm"
+            : "border-slate-200 bg-white text-slate-700 hover:border-cyan-200 hover:bg-cyan-50/60 hover:text-cyan-800"
         }`}
       >
-        <span className="text-xl text-current">📊</span>
+        <span className="text-lg text-current">📊</span>
         <span className="text-sm text-current">Dashboard</span>
       </Link>
 
-      <div className="h-px bg-white/10 my-2"></div>
-
-      {/* Grouped Navigation Items */}
-      {Object.entries(groupedItems)
-        .filter(([group]) => group !== "MAIN") // Exclude MAIN group since Dashboard is hardcoded above
-        .map(([group, groupItems]) => (
-          <div key={group} className="pt-1">
-            <div className="px-3 py-1.5 text-xs font-bold text-white/50 uppercase tracking-wider">
+      {GROUP_ORDER.filter((group) => group !== "MAIN" && groupedItems[group]?.length).map((group) => {
+        const groupItems = groupedItems[group];
+        return (
+          <div key={group} className="space-y-2">
+            <div className="px-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
               {group}
             </div>
-            <div className="space-y-1 pl-1">
+            <div className="space-y-1">
               {groupItems.map((item, index) => {
-                const isActive = pathname.startsWith(item.href);
+                const isActive = item.href === "/dashboard" ? pathname === item.href : pathname.startsWith(item.href);
                 return (
                   <Link
                     key={index}
                     href={item.href}
-                    className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all duration-200 border border-transparent text-sm font-medium ${
+                    onClick={onNavigate}
+                    className={`flex items-center gap-3 rounded-xl border px-4 py-3 text-sm font-medium transition ${
                       isActive
-                        ? "bg-white text-slate-900 shadow-md hover:border-blue-200"
-                        : "bg-blue-500/20 text-white/90 hover:bg-blue-500/35 hover:text-white"
+                        ? "border-slate-900 bg-slate-900 text-white shadow-sm"
+                        : "border-transparent bg-transparent text-slate-600 hover:border-slate-200 hover:bg-white hover:text-slate-900"
                     }`}
                   >
                     <span className="text-lg">{item.icon}</span>
-                    <span>{item.label}</span>
+                    <span className="leading-5">{item.label}</span>
                   </Link>
                 );
               })}
             </div>
           </div>
-        ))}
+        );
+      })}
     </nav>
   );
 }

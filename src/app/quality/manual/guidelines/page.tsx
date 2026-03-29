@@ -3,7 +3,7 @@
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import Link from "next/link";
+import { QualityReferenceLayout } from "@/components/quality/QualityReferenceLayout";
 
 export default function HGQSManagementGuidelines() {
   const { data: session, status } = useSession();
@@ -17,7 +17,7 @@ export default function HGQSManagementGuidelines() {
   }, [session, status, router]);
 
   if (status === "loading") {
-    return <div>Loading...</div>;
+    return <div className="section-stack"><div className="surface-card px-6 py-12 text-center text-sm text-slate-600">Loading HGQS management guidelines...</div></div>;
   }
 
   if (!session) {
@@ -25,38 +25,13 @@ export default function HGQSManagementGuidelines() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      {/* Header */}
-      <header className="bg-white backdrop-blur-lg shadow-2xl border-b border-white/20">
-        <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <Link
-                href="/quality"
-                className="text-blue-600 hover:text-blue-800 font-medium"
-              >
-                ← Back to Quality Management
-              </Link>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-700 to-slate-900 bg-clip-text text-transparent mt-2">
-                HGQS Management Guidelines
-              </h1>
-              <p className="text-lg text-gray-700 mt-1">Doc. No.: HGQS-MG | Rev. No.: 00 | Enf. Date: 2023.07.03</p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="bg-blue-100 text-blue-800 px-3 py-2 rounded-full text-sm font-medium">
-                Office Employees
-              </div>
-              <div className="bg-green-100 text-green-800 px-3 py-2 rounded-full text-sm font-medium">
-                Policies & Ethics
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        <div className="bg-white backdrop-blur-md rounded-xl shadow-lg border border-gray-100 p-8">
-          <div className="prose prose-slate max-w-none">
+    <QualityReferenceLayout
+      eyebrow="Quality Reference"
+      title="HGQS management guidelines"
+      subtitle="Office-employee management guideline covering ethics, personnel files, discipline, conduct, and internal office policy reference."
+      docInfo="Doc. No.: HGQS-MG | Rev. 00 | Enf. Date: 2023.07.03"
+      badges={["Office Employees", "Policies & Ethics"]}
+    >
             <h2>HGQSMANAGEMENT GUIDELINE FOR OFFICE EMPLOYEES</h2>
             <p>Doc. No.: HGQS - MG<br/>Leg. Date: 2023.07.03<br/>Rev. No.: 00<br/>Enf. Date: 2023.07.03</p>
             <p>Prepared by Reviewed by Approved by<br/>Quality Management Representative<br/>Mr. Afrian Al Hadino Director<br/>Mr. Mochamad Rinaldy Director<br/>Mr. Mochamad Rinaldy<br/>Signature Signature Signature<br/>2023.07.03 2023.07.03 2023.07.03</p>
@@ -172,9 +147,6 @@ export default function HGQSManagementGuidelines() {
               </tbody>
             </table>
             <p><em>Note: This is a comprehensive summary of the Management Guidelines for Office Employees. The full document contains detailed policies and procedures for employee conduct, discipline, and company operations.</em></p>
-          </div>
-        </div>
-      </main>
-    </div>
+    </QualityReferenceLayout>
   );
 }

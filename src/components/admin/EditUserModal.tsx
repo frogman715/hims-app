@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Modal from '@/components/Modal';
+import { InlineNotice } from '@/components/feedback/InlineNotice';
 import { Button, Input, Label, Select } from '@/components/ui';
 
 interface User {
@@ -23,8 +24,9 @@ interface EditUserModalProps {
 
 const ROLES = [
   { value: 'DIRECTOR', label: 'Director' },
-  { value: 'CDMO', label: 'CDMO' },
+  { value: 'CDMO', label: 'Document Control' },
   { value: 'OPERATIONAL', label: 'Operational' },
+  { value: 'GA_DRIVER', label: 'General Affair / Driver' },
   { value: 'ACCOUNTING', label: 'Accounting' },
   { value: 'HR', label: 'HR' },
   { value: 'HR_ADMIN', label: 'HR Admin' },
@@ -78,7 +80,7 @@ export default function EditUserModal({ isOpen, onClose, onUserUpdated, user, ca
       onUserUpdated();
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : 'User access changes could not be saved.');
     } finally {
       setLoading(false);
     }
@@ -90,15 +92,13 @@ export default function EditUserModal({ isOpen, onClose, onUserUpdated, user, ca
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Edit User"
-      subtitle={`Update details for ${user.email}`}
+      title="Update User Access"
+      subtitle={`Review role assignment and account settings for ${user.email}`}
       size="md"
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">
-            {error}
-          </div>
+          <InlineNotice tone="error" message={error} />
         )}
 
         <div>
@@ -110,7 +110,7 @@ export default function EditUserModal({ isOpen, onClose, onUserUpdated, user, ca
             disabled
             className="bg-gray-50"
           />
-          <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
+          <p className="text-xs text-gray-500 mt-1">Email identity is fixed for this user record.</p>
         </div>
 
         <div>
@@ -164,7 +164,7 @@ export default function EditUserModal({ isOpen, onClose, onUserUpdated, user, ca
             type="submit"
             disabled={loading}
           >
-            {loading ? 'Updating...' : 'Update User'}
+            {loading ? 'Saving...' : 'Save Changes'}
           </Button>
         </div>
       </form>

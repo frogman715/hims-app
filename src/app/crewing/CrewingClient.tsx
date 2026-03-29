@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { canAccessOfficePath, getPrimaryOfficeRole } from "@/lib/office-access";
 import { hasExplicitRoleAccess, hasModuleAccess } from "@/lib/authorization";
+import { getRoleDisplayName, getRoleWorkspaceProfile } from "@/lib/role-display";
 import { ModuleName, PermissionLevel } from "@/lib/permissions";
 import StatCard from "@/components/ui/StatCard";
 
@@ -159,6 +160,8 @@ export default function CrewingClient() {
   const [isOverviewLoading, setIsOverviewLoading] = useState(false);
   const userRoles = getPrimaryOfficeRole(session?.user?.roles, session?.user?.role);
   const isSystemAdmin = session?.user?.isSystemAdmin === true;
+  const canViewOverview = canAccessOfficePath("/api/crewing/overview", userRoles, isSystemAdmin);
+  const canSearchCrew = canAccessOfficePath("/api/seafarers/search", userRoles, isSystemAdmin);
 
   useEffect(() => {
     if (status === "loading") {
@@ -172,6 +175,13 @@ export default function CrewingClient() {
 
   useEffect(() => {
     if (status !== "authenticated") {
+      return;
+    }
+
+    if (!canViewOverview) {
+      setOverviewData(null);
+      setOverviewError(null);
+      setIsOverviewLoading(false);
       return;
     }
 
@@ -212,9 +222,16 @@ export default function CrewingClient() {
     return () => {
       isMounted = false;
     };
-  }, [status]);
+  }, [canViewOverview, status]);
 
   useEffect(() => {
+    if (!canSearchCrew) {
+      setSearchResults([]);
+      setSearchError(null);
+      setIsSearching(false);
+      return;
+    }
+
     const trimmedQuery = searchQuery.trim();
 
     if (trimmedQuery.length === 0) {
@@ -263,7 +280,7 @@ export default function CrewingClient() {
       controller.abort();
       clearTimeout(timeout);
     };
-  }, [searchQuery]);
+  }, [canSearchCrew, searchQuery]);
 
   if (status === "loading") {
     return (
@@ -317,9 +334,9 @@ export default function CrewingClient() {
 
   const overviewCards: OverviewCard[] = [
     {
-      label: "Active Seafarers",
+      label: "Active Crew Pool",
       value: formatNumber(stats?.activeSeafarers),
-      description: "Crew currently on assignment",
+      description: "Standby, onboard, and recently off-signed crew in office pool",
       icon: "👥",
       accent: "bg-blue-500/10 text-blue-600",
     },
@@ -378,15 +395,6 @@ export default function CrewingClient() {
       description: "Departure checklist & travel",
       icon: "✈️",
       accent: "bg-teal-500/10 text-teal-600",
-      module: ModuleName.crewing,
-      allowedRoles: ["DIRECTOR", "OPERATIONAL"],
-    },
-    {
-      href: "/crewing/readiness-board",
-      label: "Readiness Follow-Up",
-      description: "Operational follow-up queue after readiness review",
-      icon: "🧭",
-      accent: "bg-emerald-500/10 text-emerald-700",
       module: ModuleName.crewing,
       allowedRoles: ["DIRECTOR", "OPERATIONAL"],
     },
@@ -452,16 +460,6 @@ export default function CrewingClient() {
           module: ModuleName.crewing,
           allowedRoles: ["DIRECTOR", "CDMO"],
         },
-        {
-          title: "Interviews",
-          description: "Review interview queue and recorded results",
-          href: "/crewing/interviews",
-          icon: "💼",
-          color: "from-indigo-600 to-indigo-700",
-          stats: formatStat(stats?.scheduledInterviews, "Scheduled"),
-          module: ModuleName.crewing,
-          allowedRoles: ["DIRECTOR", "CDMO"],
-        },
       ],
     },
     {
@@ -489,16 +487,6 @@ export default function CrewingClient() {
           allowedRoles: ["DIRECTOR", "OPERATIONAL"],
         },
         {
-          title: "Readiness Follow-Up",
-          description: "Operational follow-up queue only; queued items are not auto-sent",
-          href: "/crewing/readiness-board",
-          icon: "🧭",
-          color: "from-emerald-600 to-green-700",
-          stats: formatStat(stats?.prepareJoiningInProgress, "Queued"),
-          module: ModuleName.crewing,
-          allowedRoles: ["DIRECTOR", "OPERATIONAL"],
-        },
-        {
           title: "Prepare Joining",
           description: "Pre-joining checklist, travel & Letter Guarantee",
           href: "/crewing/prepare-joining",
@@ -517,16 +505,6 @@ export default function CrewingClient() {
           stats: formatStat(stats?.vesselCount, "Active Fleet"),
           module: ModuleName.assignments,
           allowedRoles: ["DIRECTOR", "OPERATIONAL", "GA_DRIVER"],
-        },
-        {
-          title: "Crew Replacements",
-          description: "Crew change follow-up is managed from the readiness board and checklist review",
-          href: "/crewing/readiness-board",
-          icon: "🔄",
-          color: "from-orange-600 to-red-600",
-          stats: formatStat(stats?.crewReplacementPending, "Queued"),
-          module: ModuleName.crewing,
-          allowedRoles: ["DIRECTOR", "OPERATIONAL"],
         },
         {
           title: "Sign-Off Records",
@@ -598,6 +576,8 @@ export default function CrewingClient() {
     }))
     .filter((category) => category.modules.length > 0);
   const canOpenCrewingReports = canAccessOfficePath("/crewing/reports", userRoles, isSystemAdmin);
+  const primaryRoleLabel = getRoleDisplayName(session?.user?.role ?? userRoles[0] ?? "STAFF");
+  const roleProfile = getRoleWorkspaceProfile(session?.user?.role ?? userRoles[0] ?? "STAFF");
 
   const sanitizedQuery = searchQuery.trim();
   const hasMinimumSearch = sanitizedQuery.length >= 2;
@@ -612,14 +592,21 @@ export default function CrewingClient() {
               <div>
                 <h1 className="text-3xl font-bold text-slate-900">Crewing Department</h1>
                 <p className="mt-2 max-w-3xl text-base text-slate-600">
-                  CV review, crew biodata, document control, joining preparation, and active-fleet deployment work in one execution desk.
+                  Structured workspace for crew profiles, document review, applications, and controlled deployment follow-up.
+                </p>
+                <p className="mt-2 text-sm text-slate-600">
+                  <span className="font-semibold text-slate-900">{primaryRoleLabel}</span>: {roleProfile.focus}
                 </p>
                 <p className="mt-2 text-sm font-medium text-emerald-700">
-                  Start here for input, update, and processing work. Compliance pages are used separately for monitoring, escalation, and oversight.
+                  Use this as the operational working desk. Compliance pages remain separate for oversight, escalation, and audit visibility.
+                </p>
+                <p className="mt-3 text-sm text-slate-600">
+                  Recommended office flow: Recruitment/Hired Crew → Seafarer Master → Readiness Review → Application & Principal Approval → Prepare Joining → Assignment / Onboard → Sign-Off.
                 </p>
                 <div className="mt-4 flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-600">
                   <span className="action-pill text-xs">System Online</span>
                   <span className="action-pill text-xs">Last update: {lastUpdated}</span>
+                  <span className="action-pill text-xs">Primary Desk: {roleProfile.primaryDesk}</span>
                 </div>
               </div>
             </div>
@@ -636,13 +623,37 @@ export default function CrewingClient() {
           </div>
         </div>
 
-        {overviewError && (
+        {canViewOverview && overviewError && (
           <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
             {overviewError}
           </div>
         )}
 
-        <div className="surface-card space-y-4 border border-emerald-100/60 bg-gradient-to-br from-emerald-50/40 via-white to-white p-6 shadow-sm">
+        <div className="grid gap-4 md:grid-cols-4">
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Step 1</p>
+            <p className="mt-2 text-lg font-semibold text-slate-900">Crew Master</p>
+            <p className="mt-1 text-sm text-slate-600">Use Seafarers and Documents to keep biodata and certificates complete.</p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Step 2</p>
+            <p className="mt-2 text-lg font-semibold text-slate-900">Nomination Flow</p>
+            <p className="mt-1 text-sm text-slate-600">Applications and Workflow are the internal approval line until principal decision.</p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Step 3</p>
+            <p className="mt-2 text-lg font-semibold text-slate-900">Mobilization</p>
+            <p className="mt-1 text-sm text-slate-600">Prepare Joining handles travel, medical, training, and release readiness.</p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Step 4</p>
+            <p className="mt-2 text-lg font-semibold text-slate-900">Onboard & Sign-Off</p>
+            <p className="mt-1 text-sm text-slate-600">Assignments, Crew List, and Sign-Off keep vessel movement and completion traceable.</p>
+          </div>
+        </div>
+
+        {canSearchCrew ? (
+          <div className="surface-card space-y-4 border border-emerald-100/60 bg-gradient-to-br from-emerald-50/40 via-white to-white p-6 shadow-sm">
           <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
             <div>
               <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-emerald-600">
@@ -785,7 +796,20 @@ export default function CrewingClient() {
               )
             )}
           </div>
-        </div>
+          </div>
+        ) : (
+          <div className="surface-card border border-sky-100 bg-sky-50/50 p-6 shadow-sm">
+            <div className="flex items-start gap-3">
+              <span className="badge-soft bg-sky-500/15 text-sky-700 text-lg">🚐</span>
+              <div>
+                <h2 className="text-lg font-semibold text-slate-900">Transport Desk View</h2>
+                <p className="mt-2 text-sm text-slate-600">
+                  This role uses the crewing section for transport assignment and onboard crew follow-up. Global crew search and department analytics are restricted to crewing office roles.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         <section className="rounded-3xl border border-cyan-100 bg-cyan-50/60 p-4 shadow-sm">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -801,33 +825,35 @@ export default function CrewingClient() {
           </div>
         </section>
 
-        <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
-          {overviewCards.map((card) => (
-            <StatCard
-              key={card.label}
-              label={card.label}
-              value={card.value}
-              description={card.description}
-              tone={
-                card.label === "Active Fleet"
-                  ? "cyan"
-                  : card.label === "Expiring Documents"
-                    ? "amber"
-                    : card.label === "Pending Applications"
-                      ? "emerald"
-                      : "slate"
-              }
-              icon={<span className={`badge-soft text-xl ${card.accent}`}>{card.icon}</span>}
-              className="surface-card border border-slate-200/70"
-            />
-          ))}
-        </section>
+        {canViewOverview ? (
+          <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
+            {overviewCards.map((card) => (
+              <StatCard
+                key={card.label}
+                label={card.label}
+                value={card.value}
+                description={card.description}
+                tone={
+                  card.label === "Active Fleet"
+                    ? "cyan"
+                    : card.label === "Expiring Documents"
+                      ? "amber"
+                      : card.label === "Pending Applications"
+                        ? "emerald"
+                        : "slate"
+                }
+                icon={<span className={`badge-soft text-xl ${card.accent}`}>{card.icon}</span>}
+                className="surface-card border border-slate-200/70"
+              />
+            ))}
+          </section>
+        ) : null}
 
         <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <div className="surface-card p-6">
             <div className="surface-card__header">
               <h2 className="text-lg font-semibold text-slate-900">Quick Actions</h2>
-              <p className="mt-1 text-sm text-slate-600">Operational actions for daily crewing processing and record updates.</p>
+              <p className="mt-1 text-sm text-slate-600">Operational actions for {primaryRoleLabel}. Prioritized around the current workspace responsibility.</p>
             </div>
             <div className="space-y-3">
               {visibleQuickActions.map((action) => (

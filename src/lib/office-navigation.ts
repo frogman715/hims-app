@@ -1,5 +1,6 @@
 import { ModuleName, PermissionLevel } from "@/lib/permissions";
-import { APP_ROLES, type AppRole } from "@/lib/roles";
+import { getSidebarAllowedRolesForHref } from "@/lib/hgi-rbac";
+import type { AppRole } from "@/lib/roles";
 
 export interface OfficeNavigationItem {
   module: ModuleName;
@@ -15,10 +16,10 @@ export const OFFICE_NAV_ITEMS: OfficeNavigationItem[] = [
   {
     module: ModuleName.crewing,
     href: "/crewing",
-    label: "Crew Operations",
+    label: "Crewing Department",
     icon: "⚓",
     group: "CREW OPERATIONS",
-    allowedRoles: [APP_ROLES.DIRECTOR, APP_ROLES.OPERATIONAL, APP_ROLES.GA_DRIVER, APP_ROLES.HR, APP_ROLES.HR_ADMIN],
+    allowedRoles: getSidebarAllowedRolesForHref("/crewing"),
   },
   {
     module: ModuleName.crewing,
@@ -26,15 +27,15 @@ export const OFFICE_NAV_ITEMS: OfficeNavigationItem[] = [
     label: "Crew Readiness",
     icon: "✅",
     group: "CREW OPERATIONS",
-    allowedRoles: [APP_ROLES.DIRECTOR, APP_ROLES.OPERATIONAL, APP_ROLES.HR, APP_ROLES.HR_ADMIN],
+    allowedRoles: getSidebarAllowedRolesForHref("/crewing/readiness"),
   },
   {
     module: ModuleName.crewing,
     href: "/crewing/prepare-joining",
-    label: "Pre-Departure Preparation",
+    label: "Prepare Joining",
     icon: "🧾",
     group: "CREW OPERATIONS",
-    allowedRoles: [APP_ROLES.DIRECTOR, APP_ROLES.OPERATIONAL],
+    allowedRoles: getSidebarAllowedRolesForHref("/crewing/prepare-joining"),
   },
   {
     module: ModuleName.assignments,
@@ -42,7 +43,7 @@ export const OFFICE_NAV_ITEMS: OfficeNavigationItem[] = [
     label: "Transport Assignment",
     icon: "🚐",
     group: "CREW OPERATIONS",
-    allowedRoles: [APP_ROLES.DIRECTOR, APP_ROLES.OPERATIONAL, APP_ROLES.GA_DRIVER],
+    allowedRoles: getSidebarAllowedRolesForHref("/crewing/assignments"),
   },
   {
     module: ModuleName.assignments,
@@ -50,7 +51,7 @@ export const OFFICE_NAV_ITEMS: OfficeNavigationItem[] = [
     label: "Crew Onboard",
     icon: "🚢",
     group: "CREW OPERATIONS",
-    allowedRoles: [APP_ROLES.DIRECTOR, APP_ROLES.OPERATIONAL, APP_ROLES.GA_DRIVER],
+    allowedRoles: getSidebarAllowedRolesForHref("/crewing/crew-list"),
   },
   {
     module: ModuleName.crew,
@@ -58,7 +59,7 @@ export const OFFICE_NAV_ITEMS: OfficeNavigationItem[] = [
     label: "Seafarer Records",
     icon: "👤",
     group: "CREW OPERATIONS",
-    allowedRoles: [APP_ROLES.DIRECTOR, APP_ROLES.OPERATIONAL, APP_ROLES.HR, APP_ROLES.HR_ADMIN],
+    allowedRoles: getSidebarAllowedRolesForHref("/crewing/seafarers"),
   },
   {
     module: ModuleName.contracts,
@@ -66,15 +67,15 @@ export const OFFICE_NAV_ITEMS: OfficeNavigationItem[] = [
     label: "Contracts",
     icon: "📝",
     group: "CREW OPERATIONS",
-    allowedRoles: [APP_ROLES.DIRECTOR, APP_ROLES.OPERATIONAL, APP_ROLES.ACCOUNTING],
+    allowedRoles: getSidebarAllowedRolesForHref("/contracts"),
   },
   {
     module: ModuleName.documents,
     href: "/crewing/documents",
-    label: "Crew Documents",
+    label: "Document Control",
     icon: "📁",
     group: "DOCUMENT CONTROL",
-    allowedRoles: [APP_ROLES.DIRECTOR, APP_ROLES.CDMO, APP_ROLES.OPERATIONAL, APP_ROLES.HR, APP_ROLES.HR_ADMIN],
+    allowedRoles: getSidebarAllowedRolesForHref("/crewing/documents"),
   },
   {
     module: ModuleName.principals,
@@ -82,7 +83,7 @@ export const OFFICE_NAV_ITEMS: OfficeNavigationItem[] = [
     label: "Fleet & Principals",
     icon: "🚢",
     group: "CREW OPERATIONS",
-    allowedRoles: [APP_ROLES.DIRECTOR, APP_ROLES.OPERATIONAL],
+    allowedRoles: getSidebarAllowedRolesForHref("/crewing/principals"),
   },
   {
     module: ModuleName.accounting,
@@ -90,7 +91,7 @@ export const OFFICE_NAV_ITEMS: OfficeNavigationItem[] = [
     label: "Finance",
     icon: "💰",
     group: "FINANCE & ADMINISTRATION",
-    allowedRoles: [APP_ROLES.DIRECTOR, APP_ROLES.ACCOUNTING],
+    allowedRoles: getSidebarAllowedRolesForHref("/accounting"),
   },
   {
     module: ModuleName.crew,
@@ -98,7 +99,7 @@ export const OFFICE_NAV_ITEMS: OfficeNavigationItem[] = [
     label: "HR Management",
     icon: "👔",
     group: "HR & PERSONNEL",
-    allowedRoles: [APP_ROLES.DIRECTOR, APP_ROLES.HR, APP_ROLES.HR_ADMIN],
+    allowedRoles: getSidebarAllowedRolesForHref("/hr"),
   },
   {
     module: ModuleName.compliance,
@@ -107,7 +108,7 @@ export const OFFICE_NAV_ITEMS: OfficeNavigationItem[] = [
     icon: "🧭",
     requiredLevel: PermissionLevel.VIEW_ACCESS,
     group: "QUALITY & COMPLIANCE",
-    allowedRoles: [APP_ROLES.DIRECTOR, APP_ROLES.CDMO, APP_ROLES.HR_ADMIN, APP_ROLES.QMR],
+    allowedRoles: getSidebarAllowedRolesForHref("/compliance"),
   },
   {
     module: ModuleName.quality,
@@ -116,7 +117,7 @@ export const OFFICE_NAV_ITEMS: OfficeNavigationItem[] = [
     icon: "📊",
     requiredLevel: PermissionLevel.VIEW_ACCESS,
     group: "QUALITY & COMPLIANCE",
-    allowedRoles: [APP_ROLES.DIRECTOR, APP_ROLES.CDMO, APP_ROLES.HR_ADMIN, APP_ROLES.QMR],
+    allowedRoles: getSidebarAllowedRolesForHref("/quality/qms-dashboard"),
   },
   {
     module: ModuleName.quality,
@@ -125,7 +126,7 @@ export const OFFICE_NAV_ITEMS: OfficeNavigationItem[] = [
     icon: "📋",
     requiredLevel: PermissionLevel.VIEW_ACCESS,
     group: "QUALITY & COMPLIANCE",
-    allowedRoles: [APP_ROLES.DIRECTOR, APP_ROLES.CDMO, APP_ROLES.HR_ADMIN, APP_ROLES.QMR],
+    allowedRoles: getSidebarAllowedRolesForHref("/audit"),
   },
   {
     module: ModuleName.quality,
@@ -134,7 +135,7 @@ export const OFFICE_NAV_ITEMS: OfficeNavigationItem[] = [
     icon: "⚠️",
     requiredLevel: PermissionLevel.VIEW_ACCESS,
     group: "QUALITY & COMPLIANCE",
-    allowedRoles: [APP_ROLES.DIRECTOR, APP_ROLES.CDMO, APP_ROLES.HR_ADMIN, APP_ROLES.QMR],
+    allowedRoles: getSidebarAllowedRolesForHref("/nonconformity"),
   },
   {
     module: ModuleName.dashboard,
@@ -143,7 +144,7 @@ export const OFFICE_NAV_ITEMS: OfficeNavigationItem[] = [
     icon: "👥",
     requiredLevel: PermissionLevel.FULL_ACCESS,
     group: "SYSTEM ADMINISTRATION",
-    allowedRoles: [APP_ROLES.DIRECTOR, APP_ROLES.HR_ADMIN],
+    allowedRoles: getSidebarAllowedRolesForHref("/admin/users"),
   },
   {
     module: ModuleName.dashboard,
@@ -152,7 +153,7 @@ export const OFFICE_NAV_ITEMS: OfficeNavigationItem[] = [
     icon: "⚙️",
     requiredLevel: PermissionLevel.FULL_ACCESS,
     group: "SYSTEM ADMINISTRATION",
-    allowedRoles: [APP_ROLES.DIRECTOR, APP_ROLES.HR_ADMIN],
+    allowedRoles: getSidebarAllowedRolesForHref("/admin/system-health"),
   },
   {
     module: ModuleName.dashboard,
@@ -161,6 +162,6 @@ export const OFFICE_NAV_ITEMS: OfficeNavigationItem[] = [
     icon: "📜",
     requiredLevel: PermissionLevel.FULL_ACCESS,
     group: "SYSTEM ADMINISTRATION",
-    allowedRoles: [APP_ROLES.DIRECTOR, APP_ROLES.HR_ADMIN],
+    allowedRoles: getSidebarAllowedRolesForHref("/admin/audit-logs"),
   },
 ];

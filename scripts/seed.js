@@ -5,54 +5,58 @@ const { Role } = require('@prisma/client');
 const { prisma } = require('./prismaClient');
 const bcrypt = require('bcryptjs');
 
+if (process.env.NODE_ENV === 'production' && process.env.ALLOW_PRODUCTION_SEED !== 'true') {
+  console.error('Seed script is blocked in production. Set ALLOW_PRODUCTION_SEED=true only for controlled recovery.');
+  process.exit(1);
+}
+
 async function main() {
   console.log('Seeding HIMS users...');
 
-  const users = [
-    {
-      name: 'Rinaldy (Director)',
-      email: 'rinaldy@hanmarine.co',
-      password: 'director2025',
-      role: Role.DIRECTOR,
-      isSystemAdmin: true,
-    },
-    {
-      name: 'Arief',
-      email: 'arief@hanmarine.co',
-      password: 'admin2025',
-      role: Role.DIRECTOR,
-    },
-    {
-      name: 'Dino (Accounting)',
-      email: 'dino@hanmarine.co',
-      password: 'accounting2025',
-      role: Role.ACCOUNTING,
-    },
-    {
-      name: 'CDMO',
-      email: 'cdmo@hanmarine.co',
-      password: 'cdmo123',
-      role: Role.CDMO,
-    },
-    {
-      name: 'Operational Manager',
-      email: 'operational@hanmarine.co',
-      password: 'operational123',
-      role: Role.OPERATIONAL,
-    },
-    {
-      name: 'HR Officer',
-      email: 'hr@hanmarine.co',
-      password: 'hr123',
-      role: Role.HR,
-    },
-    {
-      name: 'Crew Portal',
-      email: 'crew@hanmarine.co',
-      password: 'crew2025',
-      role: Role.CREW_PORTAL,
-    },
-  ];
+const users = [
+  {
+    name: 'Director HGI',
+    email: 'director@hanmarine.co',
+    password: 'Director2026!',
+    role: Role.DIRECTOR,
+    isSystemAdmin: false,
+  },
+  {
+    name: 'Owner HGI',
+    email: 'owner@hanmarine.co',
+    password: 'Owner2026!',
+    role: Role.DIRECTOR,
+    isSystemAdmin: false,
+  },
+  {
+    name: 'Accounting HGI',
+    email: 'accounting@hanmarine.co',
+    password: 'Accounting2026!',
+    role: Role.ACCOUNTING,
+    isSystemAdmin: false,
+  },
+  {
+    name: 'Document Staff HGI',
+    email: 'document@hanmarine.co',
+    password: 'Document2026!',
+    role: Role.CDMO,
+    isSystemAdmin: false,
+  },
+  {
+    name: 'Operational Staff HGI',
+    email: 'operational@hanmarine.co',
+    password: 'Operational2026!',
+    role: Role.OPERATIONAL,
+    isSystemAdmin: false,
+  },
+  {
+    name: 'Admin HGI',
+    email: 'admin@hanmarine.co',
+    password: 'Admin2026!',
+    role: Role.HR_ADMIN,
+    isSystemAdmin: true,
+  }
+]; 
 
   for (const u of users) {
     const hashed = await bcrypt.hash(u.password, 10);

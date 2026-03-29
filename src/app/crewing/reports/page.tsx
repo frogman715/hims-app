@@ -4,6 +4,8 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { canAccessOfficePath } from "@/lib/office-access";
+import { WorkspaceHero } from "@/components/layout/WorkspaceHero";
 
 interface ApplicationStage {
   status: string;
@@ -77,9 +79,9 @@ function formatNumber(value: number | null | undefined) {
 function formatDate(isoDate: string) {
   const date = new Date(isoDate);
   if (Number.isNaN(date.getTime())) {
-    return "Date tidak diketahui";
+    return "Unknown date";
   }
-  return date.toLocaleDateString("id-ID", {
+  return date.toLocaleDateString("en-GB", {
     weekday: "short",
     day: "2-digit",
     month: "short",
@@ -104,6 +106,7 @@ export default function CrewingReportsPage() {
   const [report, setReport] = useState<CrewingReportSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isAuthorized, setIsAuthorized] = useState(false);
 
   useEffect(() => {
     if (status === "loading") {
@@ -115,19 +118,33 @@ export default function CrewingReportsPage() {
       return;
     }
 
+    const allowed = canAccessOfficePath(
+      "/crewing/reports",
+      [...(session.user?.roles ?? []), session.user?.role ?? ""].filter(Boolean),
+      session.user?.isSystemAdmin === true
+    );
+
+    if (!allowed) {
+      setIsAuthorized(false);
+      router.push("/dashboard");
+      return;
+    }
+
+    setIsAuthorized(true);
+
     const fetchReport = async () => {
       try {
         setLoading(true);
         setError(null);
         const res = await fetch("/api/crewing/reports/summary", { cache: "no-store" });
         if (!res.ok) {
-          throw new Error("Failed to load data laporan crewing");
+          throw new Error("Failed to load crewing report data");
         }
         const payload: CrewingReportSummary = await res.json();
         setReport(payload);
       } catch (err) {
         console.error("Error loading crewing report:", err);
-        setError(err instanceof Error ? err.message : "Failed to load laporan");
+        setError(err instanceof Error ? err.message : "Failed to load report");
         setReport(null);
       } finally {
         setLoading(false);
@@ -139,11 +156,8 @@ export default function CrewingReportsPage() {
 
   if (status === "loading" || loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
-          <p className="text-sm font-semibold text-gray-700">Loading laporan crewing…</p>
-        </div>
+      <div className="section-stack">
+        <div className="surface-card px-6 py-12 text-center text-sm text-slate-600">Loading crewing reports...</div>
       </div>
     );
   }
@@ -152,77 +166,52 @@ export default function CrewingReportsPage() {
     return null;
   }
 
+  if (!isAuthorized) {
+    return null;
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
-      <div className="relative overflow-hidden bg-gradient-to-r from-blue-700 via-blue-600 to-cyan-600">
-        <div className="absolute inset-0 opacity-10">
-          <div
-            className="absolute inset-0"
-            style={{
-              backgroundImage:
-                "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.12'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")",
-            }}
-          />
-        </div>
+    <div className="section-stack">
+      <WorkspaceHero
+        eyebrow="Crewing Reports"
+        title="Crewing performance reports"
+        subtitle="Consolidated overview of recruitment pipeline, joining readiness, and document compliance to support operational decisions."
+        helperLinks={[
+          { href: '/crewing/workflow', label: 'Workflow' },
+          { href: '/crewing/prepare-joining', label: 'Prepare joining' },
+        ]}
+        highlights={[
+          { label: 'Applications', value: formatNumber(report?.stats.totalApplications), detail: 'All registered application records in the report set.' },
+          { label: 'Crew Ready', value: formatNumber(report?.stats.crewReady), detail: 'Crew currently meeting the readiness threshold.' },
+          { label: 'Active Assignments', value: formatNumber(report?.stats.activeAssignments), detail: 'Assignments still live in the operational queue.' },
+        ]}
+        actions={(
+          <>
+            <Link href="/crewing" className="inline-flex items-center rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-cyan-600 hover:text-cyan-800">
+              Back to Crewing
+            </Link>
+            <Link href="/crewing/workflow" className="inline-flex items-center rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800">
+              View Workflow
+            </Link>
+          </>
+        )}
+      />
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
-            <div className="max-w-2xl">
-              <div className="flex items-center gap-3 text-white/80 text-sm uppercase tracking-widest mb-3">
-                <span className="inline-flex h-2 w-2 rounded-full bg-green-400 animate-pulse" />
-                Live Crewing Intelligence
-              </div>
-              <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight mb-4">
-                Crewing Performance Reports
-              </h1>
-              <p className="text-white/90 text-lg font-medium leading-relaxed">
-                Comprehensive overview of recruitment pipeline, joining readiness, and document compliance to support operational decisions.
-                untuk mendukung keputusan operasional.
-              </p>
-              {error ? (
-                <div className="mt-5 inline-flex items-center gap-3 rounded-xl bg-red-500/10 border border-red-400/60 px-6 py-3 text-sm font-semibold text-white">
-                  ⚠️ {error}
-                </div>
-              ) : null}
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <Link
-                href="/crewing"
-                className="group bg-white/95 hover:bg-white text-blue-900 px-5 py-4 rounded-2xl border border-white/40 shadow-lg hover:shadow-2xl transition transform hover:-translate-y-1"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center text-xl font-semibold">
-                    ←
-                  </div>
-                  <div>
-                    <p className="text-xs uppercase font-semibold text-blue-700">Navigasi</p>
-                    <p className="text-sm font-semibold text-gray-900">Back to Crewing Module</p>
-                  </div>
-                </div>
-              </Link>
-              <Link
-                href="/crewing/workflow"
-                className="group bg-blue-900/40 hover:bg-blue-900/60 text-white px-5 py-4 rounded-2xl border border-white/30 shadow-lg hover:shadow-2xl transition transform hover:-translate-y-1"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-white/15 text-white flex items-center justify-center text-xl font-semibold">
-                    ➝
-                  </div>
-                  <div>
-                    <p className="text-xs uppercase font-semibold text-white/80">Pipeline</p>
-                    <p className="text-sm font-semibold text-white">View manning flow</p>
-                  </div>
-                </div>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
+      <section className="surface-card border-sky-200 bg-sky-50/70 p-5">
+        <p className="text-sm font-semibold text-sky-900">Report usage</p>
+        <p className="mt-1 text-sm text-sky-800">
+          Use this page for management review and operational trend checks. Final action should still be taken from the live workflow, readiness, assignment, and prepare joining desks.
+        </p>
+      </section>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-10">
+      <section className="surface-card space-y-10 p-6">
+        {error ? (
+          <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">{error}</div>
+        ) : null}
+
         {/* Summary Stats */}
         <section>
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Summary</h2>
+          <h2 className="mb-4 text-xl font-semibold text-slate-900">Quick Summary</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             {[
               {
@@ -253,13 +242,13 @@ export default function CrewingReportsPage() {
             ].map((card) => (
               <div
                 key={card.label}
-                className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition p-5"
+                className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md"
               >
-                <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-500">
                   {card.label}
                 </p>
-                <p className="text-3xl font-bold text-gray-900">{card.value}</p>
-                <p className="text-sm text-gray-700 mt-3">{card.subtext}</p>
+                <p className="text-3xl font-bold text-slate-900">{card.value}</p>
+                <p className="mt-3 text-sm text-slate-600">{card.subtext}</p>
               </div>
             ))}
           </div>
@@ -267,11 +256,11 @@ export default function CrewingReportsPage() {
 
         {/* Application Funnel & Prepare Joining */}
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between mb-5">
               <div>
-                <h3 className="text-lg font-bold text-gray-900">Application Funnel</h3>
-                <p className="text-sm text-gray-700">Distribusi status kandidat saat ini</p>
+                <h3 className="text-lg font-semibold text-slate-900">Application Funnel</h3>
+                <p className="text-sm text-slate-600">Current candidate status distribution</p>
               </div>
               <div className="text-sm font-semibold text-blue-700">
                 Total {formatNumber(report?.applicationFunnel?.reduce((acc, stage) => acc + stage.count, 0))}
@@ -281,12 +270,12 @@ export default function CrewingReportsPage() {
               {report?.applicationFunnel?.map((stage) => (
                 <div key={stage.status}>
                   <div className="flex items-center justify-between mb-1">
-                    <p className="text-sm font-semibold text-gray-900">{stage.label}</p>
-                    <p className="text-sm font-semibold text-gray-800">
+                    <p className="text-sm font-semibold text-slate-900">{stage.label}</p>
+                    <p className="text-sm font-semibold text-slate-700">
                       {formatNumber(stage.count)} · {stage.percentage}%
                     </p>
                   </div>
-                  <div className="h-3 rounded-full bg-gray-100 overflow-hidden">
+                  <div className="h-3 overflow-hidden rounded-full bg-slate-100">
                     <div
                       className="h-full rounded-full bg-gradient-to-r from-blue-500 to-blue-700"
                       style={{ width: `${Math.min(stage.percentage, 100)}%` }}
@@ -297,11 +286,11 @@ export default function CrewingReportsPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between mb-5">
               <div>
-                <h3 className="text-lg font-bold text-gray-900">Prepare Joining Status</h3>
-                <p className="text-sm text-gray-700">Checklist dokumen, medical, training, travel</p>
+                <h3 className="text-lg font-semibold text-slate-900">Prepare Joining Status</h3>
+                <p className="text-sm text-slate-600">Documents, medical, training, and travel progress</p>
               </div>
               <Link href="/crewing/prepare-joining" className="text-sm font-semibold text-blue-700 hover:text-blue-900">
                 Open module →
@@ -309,10 +298,10 @@ export default function CrewingReportsPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               {report?.prepareJoining?.map((stage) => (
-                <div key={stage.status} className="rounded-xl border border-gray-200 p-4 bg-gradient-to-br from-gray-50 to-white">
-                  <p className="text-xs font-semibold text-gray-500 uppercase">{stage.label}</p>
-                  <p className="text-2xl font-bold text-gray-900 mt-2">{formatNumber(stage.count)}</p>
-                  <p className="text-xs text-gray-600 mt-3">Crew in this stage</p>
+                <div key={stage.status} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-xs font-semibold uppercase text-slate-500">{stage.label}</p>
+                  <p className="mt-2 text-2xl font-bold text-slate-900">{formatNumber(stage.count)}</p>
+                  <p className="mt-3 text-xs text-slate-600">Crew in this stage</p>
                 </div>
               ))}
             </div>
@@ -321,32 +310,32 @@ export default function CrewingReportsPage() {
 
         {/* Document Compliance & Principal Distribution */}
         <section className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between mb-5">
               <div>
-                <h3 className="text-lg font-bold text-gray-900">Document Compliance</h3>
-                <p className="text-sm text-gray-700">Crew document compliance performance</p>
+                <h3 className="text-lg font-semibold text-slate-900">Document Compliance</h3>
+                <p className="text-sm text-slate-600">Crew document compliance performance</p>
               </div>
               <Link href="/crewing/documents" className="text-sm font-semibold text-blue-700 hover:text-blue-900">
                 Manage documents →
               </Link>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div className="rounded-xl border border-gray-200 p-5">
-                <p className="text-xs font-semibold text-gray-500 uppercase">Compliance Rate</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">
+              <div className="rounded-xl border border-slate-200 p-5">
+                <p className="text-xs font-semibold uppercase text-slate-500">Compliance Rate</p>
+                <p className="mt-2 text-3xl font-bold text-slate-900">
                   {report?.documentCompliance.complianceRate !== null
                     ? `${report.documentCompliance.complianceRate}%`
                     : "—"}
                 </p>
-                <p className="text-xs text-gray-600 mt-3">Valid documents compared to total</p>
+                <p className="mt-3 text-xs text-slate-600">Valid documents compared to total</p>
               </div>
-              <div className="rounded-xl border border-gray-200 p-5">
-                <p className="text-xs font-semibold text-gray-500 uppercase">Total Documents</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">
+              <div className="rounded-xl border border-slate-200 p-5">
+                <p className="text-xs font-semibold uppercase text-slate-500">Total Documents</p>
+                <p className="mt-2 text-3xl font-bold text-slate-900">
                   {formatNumber(report?.documentCompliance.total)}
                 </p>
-                <div className="mt-4 space-y-2 text-sm text-gray-700">
+                <div className="mt-4 space-y-2 text-sm text-slate-700">
                   <div className="flex items-center justify-between">
                     <span className="font-medium text-green-700">Valid</span>
                     <span>{formatNumber(report?.documentCompliance.compliant)}</span>
@@ -364,11 +353,11 @@ export default function CrewingReportsPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between mb-5">
               <div>
-                <h3 className="text-lg font-bold text-gray-900">Principal & Fleet Snapshot</h3>
-                <p className="text-sm text-gray-700">Active crew per principal/fleet</p>
+                <h3 className="text-lg font-semibold text-slate-900">Principal And Active Fleet Snapshot</h3>
+                <p className="text-sm text-slate-600">Active crew per principal across the active fleet</p>
               </div>
               <Link href="/crewing/principals" className="text-sm font-semibold text-blue-700 hover:text-blue-900">
                 Principal details →
@@ -377,10 +366,10 @@ export default function CrewingReportsPage() {
             <div className="space-y-3">
               {report?.principalDistribution?.length
                 ? report.principalDistribution.map((item) => (
-                    <div key={item.principalName} className="flex items-center justify-between rounded-xl border border-gray-200 p-4 bg-gradient-to-r from-white to-blue-50/40">
+                    <div key={item.principalName} className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 p-4">
                       <div>
-                        <p className="text-sm font-semibold text-gray-900">{item.principalName}</p>
-                        <p className="text-xs text-gray-600 mt-1">Crew onboard / assigned</p>
+                        <p className="text-sm font-semibold text-slate-900">{item.principalName}</p>
+                        <p className="mt-1 text-xs text-slate-600">Crew onboard / assigned</p>
                       </div>
                       <div className="text-2xl font-bold text-blue-700">
                         {formatNumber(item.activeCrew)}
@@ -388,7 +377,7 @@ export default function CrewingReportsPage() {
                     </div>
                   ))
                 : (
-                    <div className="text-sm text-gray-700">No active principals.</div>
+                    <div className="text-sm text-slate-600">No active principals.</div>
                   )}
             </div>
           </div>
@@ -396,11 +385,11 @@ export default function CrewingReportsPage() {
 
         {/* Upcoming Assignments & Activity */}
         <section className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between mb-5">
               <div>
-                <h3 className="text-lg font-bold text-gray-900">Upcoming Deployments</h3>
-                <p className="text-sm text-gray-700">Scheduled assignments in pipeline</p>
+                <h3 className="text-lg font-semibold text-slate-900">Upcoming Deployments</h3>
+                <p className="text-sm text-slate-600">Scheduled assignments in pipeline</p>
               </div>
               <Link href="/crewing/assignments" className="text-sm font-semibold text-blue-700 hover:text-blue-900">
                 View assignments →
@@ -409,39 +398,39 @@ export default function CrewingReportsPage() {
             <div className="space-y-3">
               {report?.upcomingAssignments?.length ? (
                 report.upcomingAssignments.map((assignment) => (
-                  <div key={assignment.id} className="border border-gray-200 rounded-xl p-4 flex flex-col gap-2">
+                  <div key={assignment.id} className="flex flex-col gap-2 rounded-xl border border-slate-200 p-4">
                     <div className="flex items-center justify-between">
-                      <p className="text-sm font-semibold text-gray-900">
+                      <p className="text-sm font-semibold text-slate-900">
                         {assignment.crewName}
                         {assignment.rank ? ` • ${assignment.rank}` : ""}
                       </p>
-                      <span className="text-xs font-semibold text-blue-700 bg-blue-100 px-3 py-1 rounded-full">
+                      <span className="rounded-lg bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
                         {formatStatus(assignment.status)}
                       </span>
                     </div>
-                    <div className="flex flex-wrap gap-2 text-sm text-gray-700">
-                      <span>Vessel: <span className="font-semibold text-gray-900">{assignment.vesselName}</span></span>
+                    <div className="flex flex-wrap gap-2 text-sm text-slate-700">
+                      <span>Vessel: <span className="font-semibold text-slate-900">{assignment.vesselName}</span></span>
                       {assignment.vesselType ? (
-                        <span className="text-gray-600">({assignment.vesselType})</span>
+                        <span className="text-slate-500">({assignment.vesselType})</span>
                       ) : null}
                     </div>
-                    <div className="flex items-center justify-between text-sm text-gray-700">
-                      <span>Principal: <span className="font-semibold text-gray-900">{assignment.principalName}</span></span>
+                    <div className="flex items-center justify-between text-sm text-slate-700">
+                      <span>Principal: <span className="font-semibold text-slate-900">{assignment.principalName}</span></span>
                       <span>{formatDate(assignment.startDate)}</span>
                     </div>
                   </div>
                 ))
               ) : (
-                <p className="text-sm text-gray-700">No upcoming assignments.</p>
+                <p className="text-sm text-slate-600">No upcoming assignments.</p>
               )}
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between mb-5">
               <div>
-                <h3 className="text-lg font-bold text-gray-900">Recent Activity</h3>
-                <p className="text-sm text-gray-700">Important activity log in crewing module</p>
+                <h3 className="text-lg font-semibold text-slate-900">Recent Activity</h3>
+                <p className="text-sm text-slate-600">Important activity log in crewing module</p>
               </div>
               <Link href="/crewing" className="text-sm font-semibold text-blue-700 hover:text-blue-900">
                 Main module →
@@ -450,25 +439,25 @@ export default function CrewingReportsPage() {
             <div className="space-y-3">
               {report?.recentActivities?.length ? (
                 report.recentActivities.map((activity) => (
-                  <div key={activity.id} className="border border-gray-200 rounded-xl p-4">
+                  <div key={activity.id} className="rounded-xl border border-slate-200 p-4">
                     <div className="flex items-center justify-between">
-                      <p className="text-sm font-semibold text-gray-900">{activity.action}</p>
-                      <span className="text-xs font-medium text-gray-600">
+                      <p className="text-sm font-semibold text-slate-900">{activity.action}</p>
+                      <span className="text-xs font-medium text-slate-600">
                         {formatDate(activity.createdAt)}
                       </span>
                     </div>
-                    <p className="text-xs text-gray-600 mt-2">
+                    <p className="mt-2 text-xs text-slate-600">
                       {activity.userName} • {activity.entityType} #{activity.entityId}
                     </p>
                   </div>
                 ))
               ) : (
-                <p className="text-sm text-gray-700">No recent activity.</p>
+                <p className="text-sm text-slate-600">No recent activity.</p>
               )}
             </div>
           </div>
         </section>
-      </main>
+      </section>
     </div>
   );
 }

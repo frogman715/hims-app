@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { checkPermission, PermissionLevel } from "@/lib/permission-middleware";
 
 export async function GET(
   request: NextRequest,
@@ -11,6 +12,13 @@ export async function GET(
     const session = await getServerSession(authOptions);
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    if (!checkPermission(session, "crew", PermissionLevel.VIEW_ACCESS)) {
+      return NextResponse.json(
+        { error: "Access to crew biodata is restricted for your role." },
+        { status: 403 }
+      );
     }
 
     const { id } = await params;
@@ -89,7 +97,7 @@ export async function GET(
   } catch (error) {
     console.error("Error fetching seafarer biodata:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Crew biodata could not be loaded. Please try again or contact admin." },
       { status: 500 }
     );
   }

@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { requireCrew } from "@/lib/authz";
+import { getStatusPresentation } from "@/lib/ui-vocabulary";
 import MobileShell from "./MobileShell";
 
 const cardClass = "rounded-3xl border border-slate-800/50 bg-gradient-to-br from-slate-950/90 via-slate-900/75 to-slate-950/90 p-6 shadow-[0_20px_45px_-22px_rgba(16,185,129,0.55)] backdrop-blur";
 const statCardClass = "rounded-3xl border border-slate-800/40 bg-slate-950/65 p-4 shadow-inner shadow-slate-900/40";
-const badgeClass = "inline-flex items-center gap-1 rounded-full border border-emerald-500/50 bg-emerald-500/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-emerald-100";
 
 type CrewSummary = {
   name: string;
@@ -52,6 +52,25 @@ function formatDateDisplay(value: string) {
     month: "short",
     year: "numeric",
   }).format(parsed);
+}
+
+function getMobileStatusBadgeClass(status: string) {
+  const tone = getStatusPresentation(status).tone;
+
+  switch (tone) {
+    case "success":
+      return "border-emerald-500/50 bg-emerald-500/15 text-emerald-100";
+    case "warning":
+      return "border-amber-500/50 bg-amber-500/15 text-amber-100";
+    case "danger":
+      return "border-rose-500/50 bg-rose-500/15 text-rose-100";
+    case "progress":
+      return "border-indigo-500/50 bg-indigo-500/15 text-indigo-100";
+    case "info":
+      return "border-sky-500/50 bg-sky-500/15 text-sky-100";
+    default:
+      return "border-slate-500/50 bg-slate-500/15 text-slate-100";
+  }
 }
 
 async function getCrewSummary(userId: string | undefined): Promise<CrewSummary> {
@@ -162,7 +181,9 @@ export default async function CrewHomePage() {
                 </p>
               </div>
             </div>
-            <span className={badgeClass}>{safeStatus}</span>
+            <span className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-wide ${getMobileStatusBadgeClass(safeStatus)}`}>
+              {getStatusPresentation(safeStatus).label}
+            </span>
           </div>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">

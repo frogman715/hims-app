@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Upload, X, AlertCircle, CheckCircle, Loader } from 'lucide-react';
+import { Upload, X, CheckCircle, Loader } from 'lucide-react';
+import { InlineNotice } from '@/components/feedback/InlineNotice';
 
 interface DocumentUploadFormProps {
   onSuccess?: (document: Record<string, unknown>) => void;
@@ -21,15 +22,15 @@ const DOCUMENT_TYPES = [
 const DEPARTMENTS = ['QMS', 'OPERATIONS', 'HR', 'FINANCE', 'MARINE', 'OTHER'];
 
 const RETENTION_PERIODS = [
-  { value: 'THREE_MONTHS', label: '3 Bulan' },
-  { value: 'SIX_MONTHS', label: '6 Bulan' },
-  { value: 'ONE_YEAR', label: '1 Tahun' },
-  { value: 'TWO_YEARS', label: '2 Tahun' },
-  { value: 'THREE_YEARS', label: '3 Tahun' },
-  { value: 'FIVE_YEARS', label: '5 Tahun' },
-  { value: 'SEVEN_YEARS', label: '7 Tahun' },
-  { value: 'TEN_YEARS', label: '10 Tahun' },
-  { value: 'PERMANENT', label: 'Permanen' },
+  { value: 'THREE_MONTHS', label: '3 Months' },
+  { value: 'SIX_MONTHS', label: '6 Months' },
+  { value: 'ONE_YEAR', label: '1 Year' },
+  { value: 'TWO_YEARS', label: '2 Years' },
+  { value: 'THREE_YEARS', label: '3 Years' },
+  { value: 'FIVE_YEARS', label: '5 Years' },
+  { value: 'SEVEN_YEARS', label: '7 Years' },
+  { value: 'TEN_YEARS', label: '10 Years' },
+  { value: 'PERMANENT', label: 'Permanent' },
 ];
 
 export default function DocumentUploadForm({
@@ -96,12 +97,12 @@ export default function DocumentUploadForm({
     const allowedTypes = ['application/pdf', 'application/msword'];
 
     if (selectedFile.size > maxSize) {
-      setError('File size must be less than 50 MB');
+      setError('File size must remain below 50 MB.');
       return;
     }
 
     if (!allowedTypes.includes(selectedFile.type)) {
-      setError('Only PDF and Word documents are allowed');
+      setError('Only PDF or Word document files are accepted.');
       return;
     }
 
@@ -113,12 +114,12 @@ export default function DocumentUploadForm({
     e.preventDefault();
 
     if (!formData.code || !formData.title) {
-      setError('Code and Title are required');
+      setError('Document code and title are required before saving.');
       return;
     }
 
     if (!file) {
-      setError('Please select a document file');
+      setError('Select a controlled document file before continuing.');
       return;
     }
 
@@ -145,7 +146,7 @@ export default function DocumentUploadForm({
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create document');
+        throw new Error(errorData.error || 'Document registration could not be completed.');
       }
 
       const newDocument = await response.json();
@@ -167,7 +168,7 @@ export default function DocumentUploadForm({
         setSuccess(false);
       }, 1500);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create document');
+      setError(err instanceof Error ? err.message : 'Document registration could not be completed.');
       setLoading(false);
     }
   };
@@ -177,9 +178,9 @@ export default function DocumentUploadForm({
       <div className="flex flex-col items-center justify-center py-8">
         <CheckCircle className="w-12 h-12 text-green-500 mb-4" />
         <h3 className="text-lg font-semibold text-green-700">
-          Document Created Successfully!
+          Controlled Document Registered
         </h3>
-        <p className="text-gray-600 mt-2">Redirecting...</p>
+        <p className="text-gray-600 mt-2">Returning to the document desk...</p>
       </div>
     );
   }
@@ -187,10 +188,7 @@ export default function DocumentUploadForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {error && (
-        <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-          <p className="text-sm text-red-700">{error}</p>
-        </div>
+        <InlineNotice tone="error" message={error} />
       )}
 
       <div className="grid grid-cols-2 gap-4">
@@ -391,7 +389,7 @@ export default function DocumentUploadForm({
           className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400 transition-colors flex items-center justify-center gap-2"
         >
           {loading && <Loader className="w-4 h-4 animate-spin" />}
-          {loading ? 'Creating...' : 'Create Document'}
+          {loading ? 'Registering...' : 'Register Document'}
         </button>
       </div>
     </form>

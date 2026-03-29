@@ -141,6 +141,13 @@ export async function getPrepareJoiningComplianceSnapshot(
       item.status !== "MISSING" &&
       item.status !== FormApprovalStatus.APPROVED
   );
+  const blockers = [
+    ...(basePrepareJoining.principalId
+      ? []
+      : ["Assign principal before moving this joining workflow to final review or dispatch."]),
+    ...missingRequiredForms.map((item) => `Missing required principal form: ${item.formName}`),
+    ...pendingRequiredForms.map((item) => `Required form not approved: ${item.formName}`),
+  ];
 
   return {
     prepareJoiningId: basePrepareJoining.id,
@@ -153,10 +160,7 @@ export async function getPrepareJoiningComplianceSnapshot(
     missingRequiredForms,
     pendingRequiredForms,
     checklist,
-    blockers: [
-      ...missingRequiredForms.map((item) => `Missing required principal form: ${item.formName}`),
-      ...pendingRequiredForms.map((item) => `Required form not approved: ${item.formName}`),
-    ],
+    blockers,
   };
 }
 

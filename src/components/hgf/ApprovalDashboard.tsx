@@ -1,17 +1,21 @@
 /**
  * Approval Dashboard Component
- * Manager dapat review dan approve/reject submissions
+ * Managers can review and approve or reject submissions.
  */
 
 'use client';
 
 import React, { useEffect, useState } from 'react';
 import { HGFSubmission, HGFForm } from '@prisma/client';
+import { pushAppNotice } from '@/lib/app-notice';
+import { InlineNotice } from '@/components/feedback/InlineNotice';
+import { WorkspaceEmptyState } from '@/components/feedback/WorkspaceEmptyState';
+import { StatusBadge } from '@/components/ui/StatusBadge';
 import {
   Search,
   Loader,
-  AlertCircle,
 } from 'lucide-react';
+import { formatStatusLabel } from '@/lib/formatters';
 
 interface HGFSubmissionWithRelations extends HGFSubmission {
   form: HGFForm | null;
@@ -26,15 +30,6 @@ interface HGFSubmissionWithRelations extends HGFSubmission {
     fileUrl: string;
   }[];
 }
-
-const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
-  SUBMITTED: { bg: 'bg-blue-100', text: 'text-blue-700' },
-  PENDING_REVIEW: { bg: 'bg-yellow-100', text: 'text-yellow-700' },
-  UNDER_REVIEW: { bg: 'bg-yellow-100', text: 'text-yellow-700' },
-  APPROVED: { bg: 'bg-green-100', text: 'text-green-700' },
-  REJECTED: { bg: 'bg-red-100', text: 'text-red-700' },
-  REVISIONS_NEEDED: { bg: 'bg-orange-100', text: 'text-orange-700' },
-};
 
 export function ApprovalDashboard() {
   const [submissions, setSubmissions] = useState<HGFSubmissionWithRelations[]>([]);
@@ -61,7 +56,7 @@ export function ApprovalDashboard() {
           `/api/hgf/submissions?${params.toString()}`
         );
         if (!response.ok) {
-          throw new Error('Failed to fetch submissions');
+          throw new Error('Submission approval queue could not be loaded.');
         }
 
         const data = (await response.json()) as {
@@ -69,7 +64,7 @@ export function ApprovalDashboard() {
         };
         setSubmissions(data.data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
+        setError(err instanceof Error ? err.message : 'Submission approval queue could not be loaded.');
       } finally {
         setIsLoading(false);
       }
@@ -111,13 +106,7 @@ export function ApprovalDashboard() {
 
   if (error) {
     return (
-      <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
-        <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-        <div>
-          <p className="font-medium text-red-900">Error</p>
-          <p className="text-red-800 text-sm">{error}</p>
-        </div>
-      </div>
+      <InlineNotice tone="error" title="Approval Desk Unavailable" message={error} />
     );
   }
 
@@ -128,7 +117,7 @@ export function ApprovalDashboard() {
         {/* Header */}
         <div>
           <h1 className="text-3xl font-bold text-gray-900">
-            Approvals Pending
+            Pending Approvals
           </h1>
           <p className="text-gray-600 mt-1">
             Review and approve crew submissions
@@ -153,7 +142,7 @@ export function ApprovalDashboard() {
             onChange={(e) => setStatusFilter(e.target.value)}
             className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <option value="ALL">All Status</option>
+            <option value="ALL">All review statuses</option>
             <option value="SUBMITTED">Submitted</option>
             <option value="PENDING_REVIEW">Pending Review</option>
             <option value="UNDER_REVIEW">Under Review</option>
@@ -162,9 +151,10 @@ export function ApprovalDashboard() {
 
         {/* Submissions List */}
         {filteredSubmissions.length === 0 ? (
-          <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
-            <p className="text-gray-600">No submissions to review</p>
-          </div>
+          <WorkspaceEmptyState
+            title="No submissions require review"
+            message="Approved workflow items will appear here when they enter the review queue."
+          />
         ) : (
           <div className="space-y-3">
             {filteredSubmissions.map((submission) => (
@@ -184,8 +174,11 @@ export function ApprovalDashboard() {
         {selectedSubmissionId ? (
           <ApprovalPanel submissionId={selectedSubmissionId} />
         ) : (
-          <div className="sticky top-4 p-6 bg-gray-50 rounded-lg border border-gray-200 text-center">
-            <p className="text-gray-600">Select a submission to review</p>
+          <div className="sticky top-4">
+            <WorkspaceEmptyState
+              title="No submission selected"
+              message="Select a submission from the queue to open the review panel."
+            />
           </div>
         )}
       </div>
@@ -207,8 +200,6 @@ function ApprovalCard({
   isSelected,
   onSelect,
 }: ApprovalCardProps) {
-  const statusColor = STATUS_COLORS[submission.status] || STATUS_COLORS.SUBMITTED;
-
   const formatDate = (date: Date | null | undefined) => {
     if (!date) return '—';
     return new Date(date).toLocaleDateString('id-ID', {
@@ -237,11 +228,7 @@ function ApprovalCard({
               {submission.form?.name || 'Unknown Form'}
             </p>
           </div>
-          <span
-            className={`${statusColor.bg} ${statusColor.text} text-xs font-medium px-2 py-1 rounded whitespace-nowrap`}
-          >
-            {submission.status.replace(/_/g, ' ')}
-          </span>
+          <StatusBadge status={submission.status} label={formatStatusLabel(submission.status)} />
         </div>
 
         {/* Timeline */}
@@ -277,7 +264,7 @@ function ApprovalPanel({ submissionId }: ApprovalPanelProps) {
         const response = await fetch(
           `/api/hgf/submissions/${submissionId}`
         );
-        if (!response.ok) throw new Error('Failed to fetch submission');
+        if (!response.ok) throw new Error('Submission details could not be loaded.');
 
         const data = (await response.json()) as {
           data: HGFSubmissionWithRelations;
@@ -307,14 +294,21 @@ function ApprovalPanel({ submissionId }: ApprovalPanelProps) {
         }
       );
 
-      if (!response.ok) throw new Error('Failed to approve');
+      if (!response.ok) throw new Error('Approval could not be completed.');
 
-      // Success - show message and refresh
-      alert('Submission approved successfully!');
+      pushAppNotice({
+        tone: 'success',
+        title: 'Submission approved',
+        message: 'The submission has been approved and moved forward in the workflow.',
+      });
       setRemarks('');
       setAction(null);
     } catch (error) {
-      alert(error instanceof Error ? error.message : 'Failed to approve');
+      pushAppNotice({
+        tone: 'error',
+        title: 'Approval failed',
+        message: error instanceof Error ? error.message : 'The submission could not be approved.',
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -334,13 +328,21 @@ function ApprovalPanel({ submissionId }: ApprovalPanelProps) {
         }
       );
 
-      if (!response.ok) throw new Error('Failed to reject');
+      if (!response.ok) throw new Error('Rejection could not be completed.');
 
-      alert('Submission rejected successfully!');
+      pushAppNotice({
+        tone: 'success',
+        title: 'Submission rejected',
+        message: 'The submission has been declined and returned for follow-up.',
+      });
       setRejectionReason('');
       setAction(null);
     } catch (error) {
-      alert(error instanceof Error ? error.message : 'Failed to reject');
+      pushAppNotice({
+        tone: 'error',
+        title: 'Rejection failed',
+        message: error instanceof Error ? error.message : 'The submission could not be rejected.',
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -356,8 +358,11 @@ function ApprovalPanel({ submissionId }: ApprovalPanelProps) {
 
   if (!submission) {
     return (
-      <div className="sticky top-4 p-6 bg-gray-50 rounded-lg border border-gray-200 text-center">
-        <p className="text-gray-600 text-sm">Failed to load submission</p>
+      <div className="sticky top-4">
+        <WorkspaceEmptyState
+          title="Submission details unavailable"
+          message="Reload the approval queue and select the submission again."
+        />
       </div>
     );
   }
@@ -383,7 +388,7 @@ function ApprovalPanel({ submissionId }: ApprovalPanelProps) {
           <div className="flex justify-between">
             <dt>Status:</dt>
             <dd className="font-medium text-gray-900">
-              {submission.status.replace(/_/g, ' ')}
+              <StatusBadge status={submission.status} label={formatStatusLabel(submission.status)} />
             </dd>
           </div>
         </dl>

@@ -1,10 +1,13 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useCallback, useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/Button';
+import { WorkspaceHero } from '@/components/layout/WorkspaceHero';
+import { StatusBadge } from '@/components/ui/StatusBadge';
 
 interface MedicalRecord {
-  id: number;
+  id: string;
   type: string;
   date: string | null;
   result: string | null;
@@ -13,8 +16,21 @@ interface MedicalRecord {
 }
 
 interface Seafarer {
-  id: number;
-  fullName: string;
+  id: string;
+  fullName: string | null;
+  medicalChecks?: Array<{
+    id: string;
+    checkDate: string;
+    clinicName: string;
+    doctorName: string | null;
+    result: string;
+    remarks: string | null;
+  }>;
+}
+
+function getCrewDisplayName(seafarer: Pick<Seafarer, 'id' | 'fullName'>) {
+  const normalized = seafarer.fullName?.trim();
+  return normalized && normalized.length > 0 ? normalized : `Crew ${seafarer.id}`;
 }
 
 export default function SeafarerMedicalPage() {
@@ -25,29 +41,52 @@ export default function SeafarerMedicalPage() {
   const [seafarer, setSeafarer] = useState<Seafarer | null>(null);
   const [medicalRecords, setMedicalRecords] = useState<MedicalRecord[]>([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [errorCode, setErrorCode] = useState<string | null>(null);
 
   const fetchSeafarer = useCallback(async () => {
     try {
-      const response = await fetch(`/api/seafarers/${seafarerId}`);
-      if (response.ok) {
-        const data = await response.json();
-        setSeafarer(data);
-      }
-    } catch (error) {
-      console.error('Error fetching seafarer:', error);
-    }
-  }, [seafarerId]);
+      setError(null);
+      setErrorCode(null);
+      const response = await fetch(`/api/crewing/seafarers/${seafarerId}`, { cache: 'no-store' });
+      const payload = await response.json().catch(() => null);
 
-  const fetchMedicalRecords = useCallback(async () => {
-    try {
-      const response = await fetch(`/api/seafarers/${seafarerId}/medical`);
-      if (response.ok) {
-        const data = await response.json();
-        setMedicalRecords(data);
+      if (!response.ok || !payload) {
+        const message =
+          payload?.error ||
+          (response.status === 404
+            ? 'Seafarer record was not found in the active crew database.'
+            : response.status === 403
+              ? 'You do not have permission to open this medical review.'
+              : response.status === 401
+                ? 'Your session expired. Please sign in again.'
+                : 'Medical review data could not be loaded.');
+        setSeafarer(null);
+        setMedicalRecords([]);
+        setError(message);
+        setErrorCode(payload?.code || String(response.status));
+        return;
       }
-    } catch (error) {
-      console.error('Error fetching medical records:', error);
+
+      setSeafarer(payload);
+      setMedicalRecords(
+        Array.isArray(payload.medicalChecks)
+          ? payload.medicalChecks.map((record: Seafarer['medicalChecks'][number]) => ({
+              id: record.id,
+              type: record.clinicName || 'Medical Check',
+              date: record.checkDate ?? null,
+              result: record.result ?? null,
+              remarks: record.remarks ?? null,
+              approvedBy: record.doctorName ?? null,
+            }))
+          : []
+      );
+    } catch (fetchError) {
+      console.error('Error fetching medical review data:', fetchError);
+      setSeafarer(null);
+      setMedicalRecords([]);
+      setError(fetchError instanceof Error ? fetchError.message : 'Medical review data could not be loaded.');
+      setErrorCode('FETCH_FAILED');
     } finally {
       setLoading(false);
     }
@@ -56,218 +95,117 @@ export default function SeafarerMedicalPage() {
   useEffect(() => {
     if (seafarerId) {
       fetchSeafarer();
-      fetchMedicalRecords();
     }
-  }, [seafarerId, fetchSeafarer, fetchMedicalRecords]);
-
-  const handleAddMedicalRecord = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setSaving(true);
-
-    const formData = new FormData(e.currentTarget);
-
-    try {
-      const response = await fetch('/api/medical', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          seafarerId: parseInt(seafarerId),
-          type: formData.get('type'),
-          date: formData.get('date') ? new Date(formData.get('date') as string).toISOString() : null,
-          result: formData.get('result'),
-          remarks: formData.get('remarks'),
-          approvedBy: formData.get('approvedBy'),
-        }),
-      });
-
-      if (response.ok) {
-        fetchMedicalRecords(); // Refresh the list
-        e.currentTarget.reset(); // Clear the form
-      } else {
-        alert('Failed to add medical record');
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      alert('Error adding medical record');
-    } finally {
-      setSaving(false);
-    }
-  };
+  }, [seafarerId, fetchSeafarer]);
 
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto p-6">
-        <div className="text-center">Loading...</div>
+      <div className="section-stack">
+        <div className="surface-card px-6 py-12 text-center text-sm text-slate-600">Loading medical review...</div>
       </div>
     );
   }
 
   if (!seafarer) {
     return (
-      <div className="max-w-4xl mx-auto p-6">
-        <div className="text-center">Seafarer not found</div>
+      <div className="section-stack">
+        <section className="surface-card space-y-4 px-6 py-8 text-center">
+          <h1 className="text-xl font-semibold text-slate-950">Unable To Open Medical Review</h1>
+          <p className="mx-auto max-w-2xl text-sm text-slate-600">{error || 'Seafarer record is unavailable.'}</p>
+          <p className="text-xs font-medium uppercase tracking-[0.18em] text-rose-600">
+            Crew ID {seafarerId}
+            {errorCode ? ` • ${errorCode}` : ''}
+          </p>
+          <div className="flex justify-center gap-3">
+            <Button type="button" variant="secondary" size="sm" onClick={() => router.push('/crewing/seafarers')}>
+              Back to Register
+            </Button>
+          </div>
+        </section>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="mb-6">
-        <button
-          onClick={() => router.back()}
-          className="text-blue-600 hover:text-blue-800 mb-4 inline-block"
-        >
-          ← Back to Seafarer
-        </button>
-        <h1 className="text-2xl font-extrabold">Medical Records for {seafarer.fullName}</h1>
-      </div>
-
-      {/* Add Medical Record Form */}
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-        <h2 className="text-xl font-semibold mb-4">Add New Medical Record</h2>
-        <form onSubmit={handleAddMedicalRecord} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="type" className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
-                Record Type *
-              </label>
-              <select
-                id="type"
-                name="type"
-                required
-                className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="">Select record type</option>
-                <option value="Medical Advice">Medical Advice</option>
-                <option value="Treatment Request">Treatment Request</option>
-                <option value="PEME (Pre-Employment Medical Examination)">PEME (Pre-Employment Medical Examination)</option>
-                <option value="Annual Medical Check">Annual Medical Check</option>
-                <option value="Sick Leave">Sick Leave</option>
-                <option value="Injury Report">Injury Report</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-
-            <div>
-              <label htmlFor="date" className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
-                Date
-              </label>
-              <input
-                type="date"
-                id="date"
-                name="date"
-                className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="result" className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
-                Result/Status
-              </label>
-              <select
-                id="result"
-                name="result"
-                className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="">Select result</option>
-                <option value="Fit for Duty">Fit for Duty</option>
-                <option value="Unfit for Duty">Unfit for Duty</option>
-                <option value="Pending">Pending</option>
-                <option value="Approved">Approved</option>
-                <option value="Rejected">Rejected</option>
-                <option value="Under Treatment">Under Treatment</option>
-                <option value="Recovered">Recovered</option>
-              </select>
-            </div>
-
-            <div>
-              <label htmlFor="approvedBy" className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
-                Approved By
-              </label>
-              <input
-                type="text"
-                id="approvedBy"
-                name="approvedBy"
-                className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Doctor's name"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label htmlFor="remarks" className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
-              Details/Remarks
-            </label>
-            <textarea
-              id="remarks"
-              name="remarks"
-              rows={4}
-              className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Describe the medical condition, treatment, or advice given..."
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={saving}
-            className="bg-blue-600 text-white font-semibold px-8 py-3 rounded-lg shadow-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {saving ? 'Saving...' : 'Add Medical Record'}
-          </button>
-        </form>
-      </div>
-
-      {/* Medical Records List */}
-      <div className="bg-white rounded-lg shadow-lg border border-gray-300 p-8">
-        <h2 className="text-xl font-semibold mb-4">Medical History</h2>
-        {medicalRecords.length === 0 ? (
-          <p className="text-gray-500">No medical records found.</p>
-        ) : (
-          <div className="space-y-6">
-            {medicalRecords.map((record) => (
-              <div key={record.id} className="border border-gray-300 rounded-lg p-4">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-medium text-gray-900">{record.type}</h3>
-                    <div className="flex gap-4 text-sm text-gray-500 mt-1">
-                      {record.date && (
-                        <span>Date: {new Date(record.date).toLocaleDateString()}</span>
-                      )}
-                      {record.result && (
-                        <span className={`font-medium ${
-                          record.result === 'Fit for Duty' || record.result === 'Approved' || record.result === 'Recovered'
-                            ? 'text-green-600' :
-                          record.result === 'Unfit for Duty' || record.result === 'Rejected'
-                            ? 'text-red-600' :
-                          'text-yellow-600'
-                        }`}>
-                          Status: {record.result}
-                        </span>
-                      )}
-                    </div>
-                    {record.approvedBy && (
-                      <p className="text-sm text-gray-800 mt-1">Approved by: {record.approvedBy}</p>
-                    )}
-                    {record.remarks && (
-                      <p className="text-sm text-gray-800 mt-2">{record.remarks}</p>
-                    )}
-                  </div>
-                  <div className="flex gap-2">
-                    <button className="text-blue-600 hover:text-blue-800 text-sm">
-                      Edit
-                    </button>
-                    <button className="text-red-600 hover:text-red-800 text-sm">
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+    <div className="section-stack">
+      <WorkspaceHero
+        eyebrow="Medical Review"
+        title={`Medical review: ${getCrewDisplayName(seafarer)}`}
+        subtitle="Review clinic outcomes, doctor references, and office remarks before clearance or reassignment decisions are made."
+        helperLinks={[
+          { href: `/crewing/seafarers/${seafarerId}/biodata`, label: 'Biodata' },
+          { href: `/crewing/seafarers/${seafarerId}/documents`, label: 'Documents' },
+          { href: '/crewing/prepare-joining', label: 'Prepare joining' },
+        ]}
+        highlights={[
+          { label: 'Medical Entries', value: medicalRecords.length, detail: 'Medical review entries loaded for this crew record.' },
+          { label: 'Use Mode', value: 'Review Only', detail: 'Use this page to assess fitness evidence, not to drive deployment status directly.' },
+        ]}
+        actions={(
+          <>
+            <Button type="button" variant="secondary" size="sm" onClick={() => router.push(`/crewing/seafarers/${seafarerId}/biodata`)}>
+              Open Biodata
+            </Button>
+            <Button type="button" variant="ghost" size="sm" onClick={() => router.back()}>
+              Back
+            </Button>
+          </>
         )}
-      </div>
+      />
+
+      <section className="surface-card space-y-6 p-6">
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+          <div className="rounded-2xl border border-cyan-100 bg-cyan-50/80 px-4 py-4 text-sm text-slate-700">
+            This page is review-only. Use it to confirm fitness status and supporting notes before deployment, sign-off clearance, or document routing.
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Records Loaded</p>
+            <p className="mt-2 text-3xl font-semibold text-slate-950">{medicalRecords.length}</p>
+            <p className="mt-1 text-sm text-slate-600">Medical review entries in the active crew profile.</p>
+          </div>
+        </div>
+
+        {error ? (
+          <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div>
+        ) : null}
+
+        <section className="rounded-2xl border border-slate-200 bg-white p-5">
+          <div className="mb-5">
+            <h2 className="text-lg font-semibold text-slate-950">Medical History</h2>
+            <p className="mt-1 text-sm text-slate-600">Each entry below reflects the latest office-facing clinic record stored for this crew member.</p>
+          </div>
+
+          {medicalRecords.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center text-sm text-slate-500">
+              No medical records are available in the current review dataset.
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {medicalRecords.map((record) => (
+                <article key={record.id} className="rounded-2xl border border-slate-200 bg-slate-50/70 p-5">
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div className="space-y-3">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <h3 className="text-base font-semibold text-slate-950">{record.type}</h3>
+                        <StatusBadge
+                          status={record.result || 'PENDING_REVIEW'}
+                          label={record.result || 'Pending Review'}
+                        />
+                      </div>
+                      <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-slate-600">
+                        <span>Date: {record.date ? new Date(record.date).toLocaleDateString() : '-'}</span>
+                        <span>Doctor: {record.approvedBy || '-'}</span>
+                      </div>
+                      {record.remarks ? <p className="text-sm leading-6 text-slate-700">{record.remarks}</p> : null}
+                    </div>
+                    <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Review Only</div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
+      </section>
     </div>
   );
 }

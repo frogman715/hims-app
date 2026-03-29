@@ -1,6 +1,9 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { InlineNotice } from '@/components/feedback/InlineNotice';
+import { WorkspaceEmptyState } from '@/components/feedback/WorkspaceEmptyState';
+import { StatusBadge } from '@/components/ui/StatusBadge';
 import { getRoleDisplayName } from '@/lib/role-display';
 
 interface AuditLogValues {
@@ -56,7 +59,7 @@ export default function AuditLogTable({ entityType = 'User', refreshTrigger }: A
 
       setLogs(data.logs);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : 'Audit log records could not be loaded.');
     } finally {
       setLoading(false);
     }
@@ -77,21 +80,20 @@ export default function AuditLogTable({ entityType = 'User', refreshTrigger }: A
     });
   };
 
-  const getActionBadgeColor = (action: string) => {
+  const getActionStatus = (action: string) => {
     switch (action) {
       case 'USER_CREATED':
-        return 'bg-green-100 text-green-800';
+      case 'USER_ACTIVATED':
+        return 'APPROVED';
       case 'USER_UPDATED':
       case 'ROLE_CHANGED':
-        return 'bg-blue-100 text-blue-800';
+        return 'IN_PROGRESS';
       case 'USER_DEACTIVATED':
-        return 'bg-red-100 text-red-800';
-      case 'USER_ACTIVATED':
-        return 'bg-green-100 text-green-800';
+        return 'REJECTED';
       case 'PASSWORD_RESET':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'PENDING_REVIEW';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'DRAFT';
     }
   };
 
@@ -104,64 +106,61 @@ export default function AuditLogTable({ entityType = 'User', refreshTrigger }: A
 
   if (loading) {
     return (
-      <div className="text-center py-8">
-        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-        <p className="mt-2 text-gray-600">Loading audit logs...</p>
+      <div className="py-10 text-center">
+        <div className="inline-block h-8 w-8 animate-spin rounded-full border-2 border-slate-200 border-t-cyan-700"></div>
+        <p className="mt-3 text-sm text-slate-600">Loading audit trail records...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
-        {error}
-      </div>
+      <InlineNotice tone="error" message={error} />
     );
   }
 
   if (logs.length === 0) {
     return (
-      <div className="text-center py-8 text-gray-500">
-        No audit logs found
-      </div>
+      <WorkspaceEmptyState
+        title="No audit events recorded"
+        message="Administrative user actions will appear here after controlled changes are performed."
+      />
     );
   }
 
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
+    <div className="overflow-x-auto rounded-2xl border border-slate-200">
+      <table className="min-w-full divide-y divide-slate-200">
+        <thead className="bg-slate-50">
           <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
               Timestamp
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
               Action
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
               Performed By
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
               Details
             </th>
           </tr>
         </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
+        <tbody className="bg-white divide-y divide-slate-200">
           {logs.map((log) => (
-            <tr key={log.id} className="hover:bg-gray-50">
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            <tr key={log.id} className="hover:bg-slate-50">
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
                 {formatDate(log.createdAt)}
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
-                <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getActionBadgeColor(log.action)}`}>
-                  {formatAction(log.action)}
-                </span>
+                <StatusBadge status={getActionStatus(log.action)} label={formatAction(log.action)} />
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm font-medium text-gray-900">{log.actor.name}</div>
-                <div className="text-sm text-gray-500">{log.actor.email}</div>
+                <div className="text-sm font-medium text-slate-900">{log.actor.name}</div>
+                <div className="text-sm text-slate-500">{log.actor.email}</div>
               </td>
-              <td className="px-6 py-4 text-sm text-gray-500">
+              <td className="px-6 py-4 text-sm leading-6 text-slate-600">
                 {log.action === 'USER_CREATED' && log.newValuesJson && (
                   <div>
                     Created user: <strong>{log.newValuesJson.name}</strong> ({log.newValuesJson.email})

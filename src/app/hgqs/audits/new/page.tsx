@@ -7,6 +7,7 @@ import { Metadata } from "next";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { checkPermission, PermissionLevel } from "@/lib/permission-middleware";
+import { WorkspaceHero } from "@/components/layout/WorkspaceHero";
 import AuditFormContent from "../AuditFormContent";
 
 export const metadata: Metadata = {
@@ -38,9 +39,17 @@ export default async function NewAuditPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-2xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Create New Audit</h1>
+    <div className="section-stack">
+      <WorkspaceHero
+        eyebrow="Quality Workspace"
+        title="Create New Audit"
+        subtitle="Create a new audit record with clear scope, schedule, and ownership so the quality workflow stays traceable from planning to closure."
+        helperLinks={[
+          { href: "/hgqs/audits", label: "Audit Management" },
+          { href: "/quality/qmr-dashboard", label: "QMR Dashboard" },
+        ]}
+      />
+      <div className="mx-auto w-full max-w-2xl">
         <AuditFormContent />
       </div>
     </div>

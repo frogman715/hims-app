@@ -8,6 +8,7 @@ import { hasSensitivityAccess, UserRole, DataSensitivity } from "@/lib/permissio
 import { ensureOfficeApiPathAccess } from "@/lib/office-api-access";
 import { maskDocumentNumber } from "@/lib/masking";
 import { handleApiError } from "@/lib/error-handler";
+import { isKnownDocumentType } from "@/lib/document-types";
 import {
   buildCrewDocumentFilePath,
   getRelativePath,
@@ -125,6 +126,23 @@ export const POST = withPermission(
         );
       }
 
+      const normalizedDocType = docType.toUpperCase();
+      const normalizedDocNumber = docNumber.trim();
+
+      if (!isKnownDocumentType(normalizedDocType)) {
+        return NextResponse.json(
+          { error: "Unknown document type. Please use the registered document type list." },
+          { status: 400 }
+        );
+      }
+
+      if (!issueDate) {
+        return NextResponse.json(
+          { error: "Issue date is required for document registration" },
+          { status: 400 }
+        );
+      }
+
       if (isCrewPortalOnly && crewId !== session.user.id) {
         return NextResponse.json({ error: "Crew portal users can only upload their own documents" }, { status: 403 });
       }
@@ -142,7 +160,8 @@ export const POST = withPermission(
       const parsedExpiryDate = expiryDate ? new Date(expiryDate) : null;
 
       if (
-        (parsedIssueDate && Number.isNaN(parsedIssueDate.getTime())) ||
+        !parsedIssueDate ||
+        Number.isNaN(parsedIssueDate.getTime()) ||
         (parsedExpiryDate && Number.isNaN(parsedExpiryDate.getTime()))
       ) {
         return NextResponse.json(
@@ -151,10 +170,26 @@ export const POST = withPermission(
         );
       }
 
-      if (parsedIssueDate && parsedExpiryDate && parsedExpiryDate <= parsedIssueDate) {
+      if (parsedExpiryDate && parsedExpiryDate <= parsedIssueDate) {
         return NextResponse.json(
           { error: "Expiry date must be after issue date" },
           { status: 400 }
+        );
+      }
+
+      const duplicateDocument = await prisma.crewDocument.findFirst({
+        where: {
+          crewId,
+          docType: normalizedDocType,
+          docNumber: normalizedDocNumber,
+        },
+        select: { id: true },
+      });
+
+      if (duplicateDocument) {
+        return NextResponse.json(
+          { error: "A document with the same crew, type, and document number already exists." },
+          { status: 409 }
         );
       }
 
@@ -246,14 +281,12 @@ export const POST = withPermission(
     const relativePath = getRelativePath(filePath);
     const publicUrl = `/api/files/${relativePath}`;
 
-      const normalizedDocType = docType.toUpperCase();
-
       // Save to database
       const document = await prisma.crewDocument.create({
         data: {
           crewId,
           docType: normalizedDocType,
-          docNumber,
+          docNumber: normalizedDocNumber,
           issueDate: parsedIssueDate,
           expiryDate: parsedExpiryDate,
           remarks: remarks ? String(remarks).trim() : null,

@@ -8,6 +8,9 @@ import {
   ensurePrepareJoiningPrincipalForms,
   getPrepareJoiningComplianceSnapshot,
 } from "@/lib/prepare-joining-enforcement";
+import { summarizeCrewCompleteness } from "@/lib/document-control";
+import { getPrepareJoiningContinuity } from "@/lib/prepare-joining-continuity";
+import { stringifyApplicationFlowState } from "@/lib/application-flow-state";
 
 // Use Prisma enum instead of local enum
 type PrepareJoiningStatus = "PENDING" | "DOCUMENTS" | "MEDICAL" | "TRAINING" | "TRAVEL" | "READY" | "DISPATCHED" | "CANCELLED";
@@ -99,7 +102,10 @@ export async function GET(req: NextRequest) {
           select: {
             id: true,
             fullName: true,
+            crewCode: true,
             rank: true,
+            status: true,
+            crewStatus: true,
             nationality: true,
             phone: true,
           },
@@ -136,7 +142,58 @@ export async function GET(req: NextRequest) {
     const prepareJoiningsWithCompliance = await Promise.all(
       prepareJoinings.map(async (prepareJoining) => {
         const compliance = await getPrepareJoiningComplianceSnapshot(prepareJoining.id);
-        return mapPrepareJoiningWithChecklistSummary(prepareJoining, compliance ?? undefined);
+        const documents = await prisma.crewDocument.findMany({
+          where: { crewId: prepareJoining.crew.id, isActive: true },
+          select: {
+            id: true,
+            docType: true,
+            expiryDate: true,
+          },
+        });
+
+        const documentCompleteness = summarizeCrewCompleteness(documents, {
+          crewId: prepareJoining.crew.id,
+          crewCode: prepareJoining.crew.crewCode,
+          fullName: prepareJoining.crew.fullName,
+          rank: prepareJoining.crew.rank,
+          status: prepareJoining.crew.status,
+          crewStatus: prepareJoining.crew.crewStatus,
+          assignments: [{ status: "ASSIGNED" }],
+        });
+
+        return {
+          ...mapPrepareJoiningWithChecklistSummary(prepareJoining, compliance ?? undefined),
+          documentCompleteness: {
+            status: documentCompleteness.status,
+            nextAction: documentCompleteness.nextAction,
+            missing: documentCompleteness.missing,
+            needsReview: documentCompleteness.needsReview,
+            expired: documentCompleteness.expired,
+          },
+          continuity: getPrepareJoiningContinuity({
+            status: prepareJoining.status as PrepareJoiningStatus,
+            documentCompleteness: {
+              status: documentCompleteness.status,
+              nextAction: documentCompleteness.nextAction,
+              missing: documentCompleteness.missing,
+              needsReview: documentCompleteness.needsReview,
+              expired: documentCompleteness.expired,
+            },
+            principalBlockers: compliance?.blockers ?? [],
+            medicalValid: prepareJoining.medicalValid,
+            mcuCompleted: prepareJoining.mcuCompleted,
+            vesselContractSigned: prepareJoining.vesselContractSigned,
+            orientationCompleted: prepareJoining.orientationCompleted,
+            vesselOrientationDone: prepareJoining.vesselOrientationDone,
+            vesselBriefingScheduled: prepareJoining.vesselBriefingScheduled,
+            ticketBooked: prepareJoining.ticketBooked,
+            transportArranged: prepareJoining.transportArranged,
+            departureDate: prepareJoining.departureDate?.toISOString() ?? null,
+            departurePort: prepareJoining.departurePort,
+            arrivalPort: prepareJoining.arrivalPort,
+            preDepartureFinalCheck: prepareJoining.preDepartureFinalCheck,
+          }),
+        };
       })
     );
 
@@ -212,6 +269,60 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Crew not found" }, { status: 404 });
     }
 
+    const existingActivePrepareJoining = await prisma.prepareJoining.findFirst({
+      where: {
+        crewId,
+        status: {
+          in: ["PENDING", "DOCUMENTS", "MEDICAL", "TRAINING", "TRAVEL", "READY"],
+        },
+      },
+      select: {
+        id: true,
+        status: true,
+        principal: {
+          select: {
+            name: true,
+          },
+        },
+      },
+    });
+
+    if (existingActivePrepareJoining) {
+      return NextResponse.json(
+        {
+          error: `Crew already has an active prepare joining record (${existingActivePrepareJoining.status})${existingActivePrepareJoining.principal?.name ? ` with ${existingActivePrepareJoining.principal.name}` : ""}. Update the existing record instead of creating a duplicate.`,
+          prepareJoiningId: existingActivePrepareJoining.id,
+        },
+        { status: 409 }
+      );
+    }
+
+    const acceptedApplication = await prisma.application.findFirst({
+      where: {
+        crewId,
+        status: "ACCEPTED",
+        ...(principalId ? { principalId } : {}),
+      },
+      orderBy: {
+        reviewedAt: "desc",
+      },
+      select: {
+        id: true,
+        principalId: true,
+        attachments: true,
+      },
+    });
+
+    if (!acceptedApplication) {
+      return NextResponse.json(
+        {
+          error:
+            "Prepare Joining can only start from an owner-approved application. Complete principal approval first.",
+        },
+        { status: 400 }
+      );
+    }
+
     if (status === "READY" || status === "DISPATCHED") {
       return NextResponse.json(
         {
@@ -223,69 +334,82 @@ export async function POST(req: NextRequest) {
     }
 
     // Create prepare joining record
-    const prepareJoining = await prisma.prepareJoining.create({
-      data: {
-        crewId,
-        vesselId,
-        principalId,
-        status,
-        passportValid,
-        seamanBookValid,
-        certificatesValid,
-        medicalValid,
-        visaValid,
-        orientationCompleted,
-        ticketBooked,
-        hotelBooked,
-        transportArranged,
-        medicalCheckDate: medicalCheckDate ? new Date(medicalCheckDate) : null,
-        medicalExpiry: medicalExpiry ? new Date(medicalExpiry) : null,
-        orientationDate: orientationDate ? new Date(orientationDate) : null,
-        departureDate: departureDate ? new Date(departureDate) : null,
-        departurePort,
-        arrivalPort,
-        flightNumber,
-        hotelName,
-        remarks,
-      },
-      include: {
-        crew: {
-          select: {
-            id: true,
-            fullName: true,
-            rank: true,
-            nationality: true,
-            phone: true,
-          },
+    const prepareJoining = await prisma.$transaction(async (tx) => {
+      const created = await tx.prepareJoining.create({
+        data: {
+          crewId,
+          vesselId,
+          principalId: principalId ?? acceptedApplication.principalId,
+          status,
+          passportValid,
+          seamanBookValid,
+          certificatesValid,
+          medicalValid,
+          visaValid,
+          orientationCompleted,
+          ticketBooked,
+          hotelBooked,
+          transportArranged,
+          medicalCheckDate: medicalCheckDate ? new Date(medicalCheckDate) : null,
+          medicalExpiry: medicalExpiry ? new Date(medicalExpiry) : null,
+          orientationDate: orientationDate ? new Date(orientationDate) : null,
+          departureDate: departureDate ? new Date(departureDate) : null,
+          departurePort,
+          arrivalPort,
+          flightNumber,
+          hotelName,
+          remarks,
         },
-        vessel: {
-          select: {
-            id: true,
-            name: true,
-            type: true,
+        include: {
+          crew: {
+            select: {
+              id: true,
+              fullName: true,
+              rank: true,
+              nationality: true,
+              phone: true,
+            },
           },
-        },
-        principal: {
-          select: {
-            id: true,
-            name: true,
-            formTemplates: {
-              where: { isRequired: true },
-              select: { id: true, isRequired: true },
+          vessel: {
+            select: {
+              id: true,
+              name: true,
+              type: true,
+            },
+          },
+          principal: {
+            select: {
+              id: true,
+              name: true,
+              formTemplates: {
+                where: { isRequired: true },
+                select: { id: true, isRequired: true },
+              },
+            },
+          },
+          forms: {
+            select: {
+              templateId: true,
+              status: true,
             },
           },
         },
-        forms: {
-          select: {
-            templateId: true,
-            status: true,
-          },
+      });
+
+      await tx.application.update({
+        where: { id: acceptedApplication.id },
+        data: {
+          attachments: stringifyApplicationFlowState(acceptedApplication.attachments, {
+            hgiStage: "PRE_JOINING",
+          }),
         },
-      },
+      });
+
+      return created;
     });
 
-    if (principalId) {
-      await ensurePrepareJoiningPrincipalForms(prepareJoining.id, principalId);
+    if (prepareJoining.principalId) {
+      await ensurePrepareJoiningPrincipalForms(prepareJoining.id, prepareJoining.principalId);
     }
 
     await prisma.auditLog.create({
@@ -296,7 +420,7 @@ export async function POST(req: NextRequest) {
         entityId: prepareJoining.id,
         metadataJson: {
           crewId,
-          principalId,
+          principalId: prepareJoining.principalId,
           vesselId,
           status: prepareJoining.status,
         },

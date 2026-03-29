@@ -10,6 +10,7 @@ import {
   getAdminMaintenanceScopes,
   type AdminMaintenanceScope,
 } from "@/lib/admin-maintenance-access";
+import { normalizeRoleTokens } from "@/lib/role-normalization";
 
 enum Role {
   DIRECTOR = "DIRECTOR",
@@ -29,6 +30,8 @@ declare module "next-auth" {
   interface User {
     role: string;
     roles: string[];
+    principalId?: string | null;
+    principalName?: string | null;
     permissionOverrides?: RolePermissionOverride[];
     isSystemAdmin?: boolean;
     forcePasswordChange?: boolean;
@@ -41,6 +44,8 @@ declare module "next-auth" {
       name: string;
       role: string;
       roles: string[];
+      principalId?: string | null;
+      principalName?: string | null;
       permissionOverrides?: RolePermissionOverride[];
       isSystemAdmin?: boolean;
       forcePasswordChange?: boolean;
@@ -53,6 +58,8 @@ declare module "next-auth/jwt" {
   interface JWT {
     role: string;
     roles: string[];
+    principalId?: string | null;
+    principalName?: string | null;
     permissionOverrides?: RolePermissionOverride[];
     isSystemAdmin?: boolean;
     forcePasswordChange?: boolean;
@@ -63,6 +70,8 @@ declare module "next-auth/jwt" {
       name?: string | null;
       role: string;
       roles: string[];
+      principalId?: string | null;
+      principalName?: string | null;
       permissionOverrides?: RolePermissionOverride[];
       isSystemAdmin?: boolean;
       forcePasswordChange?: boolean;
@@ -108,6 +117,63 @@ async function fetchUserAccessProfile(
     })
   ) as { role: string; email: string | null } | null;
   return result ? { role: result.role, email: result.email } : null;
+}
+
+async function fetchPrincipalScopeByEmail(
+  email: string | null | undefined,
+  context: string
+): Promise<{ principalId: string; principalName: string } | null> {
+  if (!email) {
+    return null;
+  }
+
+  assertDatabaseConfigured(context);
+  const normalizedEmail = email.trim().toLowerCase();
+  if (!normalizedEmail) {
+    return null;
+  }
+
+  const principal = await safePrismaCall(context, () =>
+    prisma.principal.findFirst({
+      where: {
+        email: {
+          equals: normalizedEmail,
+          mode: "insensitive",
+        },
+      },
+      select: {
+        id: true,
+        name: true,
+      },
+    })
+  ) as { id: string; name: string } | null;
+
+  if (!principal) {
+    return null;
+  }
+
+  return {
+    principalId: principal.id,
+    principalName: principal.name,
+  };
+}
+
+function applyPrincipalSessionRole(
+  roles: string[],
+  principalScope: { principalId: string; principalName: string } | null
+): string[] {
+  if (!principalScope) {
+    return roles.filter((role) => role !== "PRINCIPAL");
+  }
+
+  const withoutPrincipal = roles.filter((role) => role !== "PRINCIPAL");
+  const hasPrivilegedOfficeRole = withoutPrincipal.some((role) =>
+    ["DIRECTOR", "CDMO", "OPERATIONAL", "ACCOUNTING", "GA_DRIVER", "HR", "HR_ADMIN", "QMR"].includes(role)
+  );
+
+  return hasPrivilegedOfficeRole
+    ? [...withoutPrincipal, "PRINCIPAL"]
+    : ["PRINCIPAL", ...withoutPrincipal];
 }
 
 export const authOptions: NextAuthOptions = {
@@ -210,6 +276,10 @@ export const authOptions: NextAuthOptions = {
         const previousRoles = Array.isArray(token.roles) ? [...token.roles] : [];
         let resolvedRoles = uniqueRolesFrom(token.roles, token.role);
         let primaryRole = resolvedRoles[0];
+        let principalScope: { principalId: string; principalName: string } | null =
+          token.principalId && token.principalName
+            ? { principalId: token.principalId, principalName: token.principalName }
+            : null;
         let userIdFromSource: string | undefined;
 
         if (user) {
@@ -235,6 +305,19 @@ export const authOptions: NextAuthOptions = {
             dbProfile?.role,
             getSupplementalRoles({ userId, email: user.email ?? dbProfile?.email ?? null })
           );
+          try {
+            principalScope = await fetchPrincipalScopeByEmail(
+              user.email ?? dbProfile?.email ?? null,
+              "jwt:principal-scope:user"
+            );
+          } catch (error) {
+            console.error("[auth] jwt: failed to resolve principal scope from user", {
+              userId,
+              error: error instanceof Error ? error.message : String(error),
+            });
+            principalScope = null;
+          }
+          resolvedRoles = applyPrincipalSessionRole(resolvedRoles, principalScope);
           if (resolvedRoles.length === 0) {
             resolvedRoles = ["CREW_PORTAL"];
           }
@@ -251,8 +334,20 @@ export const authOptions: NextAuthOptions = {
               getSupplementalRoles({ userId: tokenSubject, email: dbProfile?.email ?? null })
             );
             if (dbRoles.length > 0) {
-              resolvedRoles = dbRoles;
-              primaryRole = dbRoles[0];
+              try {
+                principalScope = await fetchPrincipalScopeByEmail(
+                  dbProfile?.email ?? null,
+                  "jwt:principal-scope:subject"
+                );
+              } catch (error) {
+                console.error("[auth] jwt: failed to resolve principal scope for token subject", {
+                  tokenSubject,
+                  error: error instanceof Error ? error.message : String(error),
+                });
+                principalScope = null;
+              }
+              resolvedRoles = applyPrincipalSessionRole(dbRoles, principalScope);
+              primaryRole = resolvedRoles[0];
             }
           } catch (error) {
             console.error("[auth] jwt: failed to fetch role for token subject", {
@@ -260,6 +355,38 @@ export const authOptions: NextAuthOptions = {
               error: error instanceof Error ? error.message : String(error),
             });
             // Continue with default roles if DB fetch fails
+          }
+        }
+
+        if (tokenSubject) {
+          try {
+            const dbProfile = await fetchUserAccessProfile(tokenSubject, "jwt:role-refresh");
+            const refreshedRoles = uniqueRolesFrom(
+              dbProfile?.role,
+              getSupplementalRoles({ userId: tokenSubject, email: dbProfile?.email ?? token.email ?? null }),
+              resolvedRoles
+            );
+            try {
+              principalScope = await fetchPrincipalScopeByEmail(
+                dbProfile?.email ?? token.email ?? null,
+                "jwt:principal-scope:refresh"
+              );
+            } catch (error) {
+              console.error("[auth] jwt: failed to refresh principal scope", {
+                tokenSubject,
+                error: error instanceof Error ? error.message : String(error),
+              });
+              principalScope = null;
+            }
+            if (refreshedRoles.length > 0) {
+              resolvedRoles = applyPrincipalSessionRole(refreshedRoles, principalScope);
+              primaryRole = resolvedRoles[0];
+            }
+          } catch (error) {
+            console.error("[auth] jwt: failed to refresh roles", {
+              tokenSubject,
+              error: error instanceof Error ? error.message : String(error),
+            });
           }
         }
 
@@ -298,6 +425,8 @@ export const authOptions: NextAuthOptions = {
 
         token.role = primaryRole;
         token.roles = resolvedRoles;
+        token.principalId = principalScope?.principalId ?? null;
+        token.principalName = principalScope?.principalName ?? null;
         token.permissionOverrides = permissionOverrides;
 
         let isSystemAdmin = false;
@@ -360,6 +489,8 @@ export const authOptions: NextAuthOptions = {
           name: user?.name ?? token.name ?? null,
           role: primaryRole,
           roles: resolvedRoles,
+          principalId: principalScope?.principalId ?? null,
+          principalName: principalScope?.principalName ?? null,
           permissionOverrides,
           isSystemAdmin,
           forcePasswordChange,
@@ -418,14 +549,26 @@ export const authOptions: NextAuthOptions = {
             token.role,
             session.user.role
           );
+          let principalScope =
+            token.principalId && token.principalName
+              ? { principalId: token.principalId, principalName: token.principalName }
+              : null;
 
-          if (normalizedRoles.length === 0 && session.user.id) {
+          if (session.user.id) {
             try {
               const dbProfile = await fetchUserAccessProfile(session.user.id, "session:user-role");
-              normalizedRoles = uniqueRolesFrom(
+              const refreshedRoles = uniqueRolesFrom(
                 dbProfile?.role,
-                getSupplementalRoles({ userId: session.user.id, email: dbProfile?.email ?? session.user.email ?? null })
+                getSupplementalRoles({ userId: session.user.id, email: dbProfile?.email ?? session.user.email ?? null }),
+                normalizedRoles
               );
+              principalScope = await fetchPrincipalScopeByEmail(
+                dbProfile?.email ?? session.user.email ?? null,
+                "session:principal-scope"
+              );
+              if (refreshedRoles.length > 0) {
+                normalizedRoles = applyPrincipalSessionRole(refreshedRoles, principalScope);
+              }
             } catch (error) {
               console.error("[auth] session: failed to fetch user role", {
                 userId: session.user.id,
@@ -443,6 +586,8 @@ export const authOptions: NextAuthOptions = {
 
           session.user.role = primaryRole;
           session.user.roles = normalizedRoles;
+          session.user.principalId = principalScope?.principalId ?? token.principalId ?? null;
+          session.user.principalName = principalScope?.principalName ?? token.principalName ?? null;
           session.user.permissionOverrides = token.permissionOverrides ?? [];
           session.user.isSystemAdmin = token.isSystemAdmin ?? false;
           session.user.forcePasswordChange = token.forcePasswordChange ?? false;
@@ -491,29 +636,7 @@ export const authOptions: NextAuthOptions = {
 };
 
 function uniqueRolesFrom(...sources: (string | string[] | null | undefined)[]): string[] {
-  const collected: string[] = [];
-
-  for (const source of sources) {
-    if (!source) {
-      continue;
-    }
-
-    if (Array.isArray(source)) {
-      for (const value of source) {
-        if (typeof value === "string" && value.trim().length > 0) {
-          collected.push(value.trim().toUpperCase());
-        }
-      }
-      continue;
-    }
-
-    if (typeof source === "string" && source.trim().length > 0) {
-      collected.push(source.trim().toUpperCase());
-    }
-  }
-
-  const deduped = Array.from(new Set(collected));
-  return deduped;
+  return normalizeRoleTokens(...sources);
 }
 
 async function loadPermissionOverrides(roles: string[]): Promise<RolePermissionOverride[]> {

@@ -8,10 +8,7 @@ import { handleApiError } from '@/lib/error-handler';
 // NOTE: CorrectiveAction model doesn't have nonconformity relationship
 // This endpoint returns CAPA records instead
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET() {
   try {
     const session = await getServerSession(authOptions);
 
@@ -31,10 +28,7 @@ export async function GET(
   }
 }
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
@@ -42,7 +36,7 @@ export async function POST(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const body = await req.json();
+    await req.json();
 
     // CorrectiveAction model doesn't support this structure
     return NextResponse.json(

@@ -1,9 +1,14 @@
-'use client';
+"use client";
 
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { WorkspaceHero } from "@/components/layout/WorkspaceHero";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
+import { Textarea } from "@/components/ui/Textarea";
 
 interface OfficeExpense {
   id: string;
@@ -26,12 +31,12 @@ export default function OfficeExpensePage() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
-    date: new Date().toISOString().split('T')[0],
-    type: 'OFFICE',
-    description: '',
-    amount: '',
-    currency: 'IDR',
-    receiptUrl: '',
+    date: new Date().toISOString().split("T")[0],
+    type: "OFFICE",
+    description: "",
+    amount: "",
+    currency: "IDR",
+    receiptUrl: "",
   });
 
   useEffect(() => {
@@ -39,7 +44,7 @@ export default function OfficeExpensePage() {
     if (!session) {
       router.push("/auth/signin");
     } else {
-      fetchExpenses();
+      void fetchExpenses();
     }
   }, [session, status, router]);
 
@@ -78,14 +83,14 @@ export default function OfficeExpensePage() {
       if (response.ok) {
         setShowForm(false);
         setFormData({
-          date: new Date().toISOString().split('T')[0],
-          type: 'OFFICE',
-          description: '',
-          amount: '',
-          currency: 'IDR',
-          receiptUrl: '',
+          date: new Date().toISOString().split("T")[0],
+          type: "OFFICE",
+          description: "",
+          amount: "",
+          currency: "IDR",
+          receiptUrl: "",
         });
-        fetchExpenses();
+        void fetchExpenses();
       }
     } catch (error) {
       console.error("Error creating office expense:", error);
@@ -93,7 +98,16 @@ export default function OfficeExpensePage() {
   };
 
   if (status === "loading" || loading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="section-stack">
+        <section className="surface-card flex min-h-[320px] items-center justify-center p-8">
+          <div className="text-center">
+            <div className="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-slate-200 border-t-cyan-700" />
+            <p className="mt-4 text-sm text-slate-600">Loading office expense register...</p>
+          </div>
+        </section>
+      </div>
+    );
   }
 
   if (!session) {
@@ -101,228 +115,210 @@ export default function OfficeExpensePage() {
   }
 
   const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+  const withReceipt = expenses.filter((expense) => expense.receiptUrl).length;
+  const expenseTypes = new Set(expenses.map((expense) => expense.expenseType)).size;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      {/* Header */}
-      <header className="bg-white backdrop-blur-lg shadow-2xl border-b border-white/20">
-        <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
-                Office Expenses
-              </h1>
-              <p className="text-lg text-gray-700 mt-2 font-medium">Track and manage office operational expenses</p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Link
-                href="/accounting"
-                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
-              >
-                ← Back to Accounting
-              </Link>
-              <button
-                onClick={() => setShowForm(true)}
-                className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
-              >
-                + Add Expense
+    <div className="section-stack">
+      <WorkspaceHero
+        eyebrow="Accounting Workspace"
+        title="Office Expenses"
+        subtitle="Track office operational spending, receipt coverage, and ownership so internal finance review stays clean, auditable, and easy to understand."
+        highlights={[
+          {
+            label: "Expense Entries",
+            value: expenses.length,
+            detail: "Operational spending records currently stored in the register.",
+          },
+          {
+            label: "Register Total",
+            value: `IDR ${totalExpenses.toLocaleString("id-ID")}`,
+            detail: "Cumulative value from the current office expense log.",
+          },
+          {
+            label: "Receipt Coverage",
+            value: `${withReceipt}/${expenses.length || 0}`,
+            detail: "Entries already linked to a receipt or supporting reference.",
+          },
+          {
+            label: "Expense Types",
+            value: expenseTypes,
+            detail: "Distinct cost categories active in this workspace.",
+          },
+        ]}
+        helperLinks={[
+          { href: "/accounting", label: "Accounting Desk" },
+          { href: "/accounting/exchange", label: "Exchange Costs" },
+          { href: "/accounting/billing", label: "Billing Desk" },
+        ]}
+        actions={(
+          <div className="flex items-center gap-3">
+            <Link href="/accounting">
+              <Button variant="secondary" size="sm">Accounting Desk</Button>
+            </Link>
+            <Button size="sm" onClick={() => setShowForm(true)}>Add Expense</Button>
+          </div>
+        )}
+      />
+
+      <section className="surface-card space-y-6 p-6">
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Total Expenses</p>
+            <p className="mt-2 text-3xl font-bold text-slate-900">IDR {totalExpenses.toLocaleString("id-ID")}</p>
+            <p className="mt-2 text-sm text-slate-600">Current cumulative value from the office expense register.</p>
+          </div>
+          <div className="rounded-2xl border border-cyan-100 bg-cyan-50/80 p-5 text-sm leading-6 text-slate-700">
+            Record the date, type, description, and receipt reference carefully so internal finance review remains clean and traceable.
+          </div>
+        </div>
+
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="border-b border-slate-200 px-6 py-5">
+            <h2 className="text-xl font-semibold text-slate-900">Expense Records</h2>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-slate-200">
+              <thead className="bg-slate-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Date</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Type</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Description</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Amount</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Created By</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200 bg-white">
+                {expenses.map((expense) => (
+                  <tr key={expense.id} className="hover:bg-slate-50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">
+                      {new Date(expense.expenseDate).toLocaleDateString("id-ID")}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="inline-flex rounded-full bg-cyan-100 px-3 py-1 text-xs font-semibold text-cyan-700">
+                        {expense.expenseType}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-slate-700">{expense.description}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">
+                      {expense.currency} {expense.amount.toLocaleString("id-ID")}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700">{expense.user.name}</td>
+                  </tr>
+                ))}
+                {expenses.length === 0 ? (
+                  <tr>
+                    <td className="px-6 py-10 text-center text-sm text-slate-500" colSpan={5}>
+                      No expenses recorded yet. Add the first entry to start this register.
+                    </td>
+                  </tr>
+                ) : null}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      {showForm ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 px-4">
+          <div className="max-h-[90vh] w-full max-w-2xl overflow-auto rounded-3xl border border-slate-200 bg-white p-8 shadow-2xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h3 className="text-xl font-semibold text-slate-900">Add Office Expense</h3>
+                <p className="mt-1 text-sm text-slate-600">Create a finance register entry for office operational spending.</p>
+              </div>
+              <button type="button" className="text-sm font-medium text-slate-500 hover:text-slate-900" onClick={() => setShowForm(false)}>
+                Close
               </button>
             </div>
-          </div>
-        </div>
-      </header>
 
-      <main className="max-w-7xl mx-auto py-8 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          {/* Summary Card */}
-          <div className="bg-white backdrop-blur-md rounded-2xl shadow-lg border border-white p-6 mb-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-wide text-gray-500">Total Expenses</p>
-                <p className="text-3xl font-extrabold text-gray-900 mt-2">
-                  IDR {totalExpenses.toLocaleString('id-ID')}
-                </p>
-                <p className="text-sm text-gray-600 mt-1">All time</p>
-              </div>
-              <div className="text-5xl">💼</div>
-            </div>
-          </div>
-
-          {/* Expenses Table */}
-          <div className="bg-white backdrop-blur-md rounded-2xl shadow-lg border border-white overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-300">
-              <h2 className="text-xl font-semibold text-gray-900">Expense Records</h2>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-300">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Date
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Type
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Description
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Amount
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Created By
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {expenses.map((expense) => (
-                    <tr key={expense.id} className="hover:bg-gray-100">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {new Date(expense.expenseDate).toLocaleDateString('id-ID')}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="inline-flex px-4 py-2 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                          {expense.expenseType}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-700">
-                        {expense.description}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {expense.currency} {expense.amount.toLocaleString('id-ID')}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                        {expense.user.name}
-                      </td>
-                    </tr>
-                  ))}
-                  {expenses.length === 0 && (
-                    <tr>
-                      <td className="px-6 py-8 text-center text-gray-500" colSpan={5}>
-                        No expenses recorded yet. Click &quot;Add Expense&quot; to create your first entry.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </main>
-
-      {/* Add Expense Form Modal */}
-      {showForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4">
-            <h3 className="text-xl font-extrabold text-gray-900 mb-6">Add Office Expense</h3>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
-                  Date
-                </label>
-                <input
+            <form onSubmit={handleSubmit} className="mt-6 space-y-5">
+              <div className="grid gap-4 md:grid-cols-2">
+                <Input
+                  id="date"
+                  name="date"
                   type="date"
+                  label="Date"
                   required
                   value={formData.date}
                   onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
-                  Type
-                </label>
-                <select
+                <Select
+                  id="type"
+                  name="type"
+                  label="Type"
                   required
                   value={formData.type}
                   onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="OFFICE">Office</option>
-                  <option value="CREW_EXCHANGE">Crew Exchange</option>
-                  <option value="MEDICAL">Medical</option>
-                  <option value="HOTEL">Hotel</option>
-                  <option value="TRANSPORT">Transport</option>
-                  <option value="VISA">Visa</option>
-                  <option value="TICKET">Ticket</option>
-                  <option value="AGENT_FEE">Agent Fee</option>
-                </select>
+                  options={[
+                    { value: "OFFICE", label: "Office" },
+                    { value: "CREW_EXCHANGE", label: "Crew Exchange" },
+                    { value: "MEDICAL", label: "Medical" },
+                    { value: "HOTEL", label: "Hotel" },
+                    { value: "TRANSPORT", label: "Transport" },
+                    { value: "VISA", label: "Visa" },
+                    { value: "TICKET", label: "Ticket" },
+                    { value: "AGENT_FEE", label: "Agent Fee" },
+                  ]}
+                />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
-                  Description
-                </label>
-                <textarea
+
+              <Textarea
+                id="description"
+                name="description"
+                label="Description"
+                rows={3}
+                required
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                placeholder="Describe the expense"
+              />
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <Input
+                  id="amount"
+                  name="amount"
+                  type="number"
+                  step="0.01"
+                  label="Amount"
                   required
-                  rows={3}
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Describe the expense..."
+                  value={formData.amount}
+                  onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                />
+                <Select
+                  id="currency"
+                  name="currency"
+                  label="Currency"
+                  required
+                  value={formData.currency}
+                  onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
+                  options={[
+                    { value: "IDR", label: "IDR" },
+                    { value: "USD", label: "USD" },
+                    { value: "EUR", label: "EUR" },
+                    { value: "SGD", label: "SGD" },
+                  ]}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
-                    Amount
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    required
-                    value={formData.amount}
-                    onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
-                    Currency
-                  </label>
-                  <select
-                    required
-                    value={formData.currency}
-                    onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="IDR">IDR</option>
-                    <option value="USD">USD</option>
-                    <option value="EUR">EUR</option>
-                    <option value="SGD">SGD</option>
-                  </select>
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
-                  Receipt URL (Optional)
-                </label>
-                <input
-                  type="url"
-                  value={formData.receiptUrl}
-                  onChange={(e) => setFormData({ ...formData, receiptUrl: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="https://..."
-                />
-              </div>
-              <div className="flex space-x-3 pt-4">
-                <button
-                  type="submit"
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium transition-colors"
-                >
-                  Add Expense
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowForm(false)}
-                  className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-2 px-4 rounded-lg font-medium transition-colors"
-                >
-                  Cancel
-                </button>
+
+              <Input
+                id="receiptUrl"
+                name="receiptUrl"
+                type="url"
+                label="Receipt URL"
+                value={formData.receiptUrl}
+                onChange={(e) => setFormData({ ...formData, receiptUrl: e.target.value })}
+                placeholder="https://..."
+              />
+
+              <div className="flex flex-col gap-3 border-t border-slate-200 pt-6 sm:flex-row sm:justify-end">
+                <Button type="button" variant="secondary" onClick={() => setShowForm(false)}>Cancel</Button>
+                <Button type="submit">Add Expense</Button>
               </div>
             </form>
           </div>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

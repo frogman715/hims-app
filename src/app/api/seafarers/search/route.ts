@@ -152,6 +152,11 @@ export const GET = withPermission(
         pageSize,
       } as CrewSearchResponse);
     } catch (error) {
+      console.error("[api/seafarers/search][GET] failed", {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        timestamp: new Date().toISOString(),
+      });
       return handleApiError(error);
     }
   }

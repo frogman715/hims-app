@@ -1,6 +1,6 @@
 /**
  * Submission Dashboard Component
- * Crew dapat lihat semua submissions mereka dan status
+ * Crew can review all submissions and their statuses.
  */
 
 'use client';
@@ -16,6 +16,10 @@ import {
   Loader,
 } from 'lucide-react';
 import Link from 'next/link';
+import { InlineNotice } from '@/components/feedback/InlineNotice';
+import { WorkspaceEmptyState } from '@/components/feedback/WorkspaceEmptyState';
+import { StatusBadge } from '@/components/ui/StatusBadge';
+import { formatStatusLabel } from '@/lib/formatters';
 
 interface HGFSubmissionWithForm extends HGFSubmission {
   form: HGFForm | null;
@@ -25,42 +29,14 @@ interface SubmissionDashboardProps {
   crewId?: string;
 }
 
-const STATUS_COLORS: Record<string, { bg: string; text: string; icon: React.ReactNode }> = {
-  DRAFT: {
-    bg: 'bg-gray-100',
-    text: 'text-gray-700',
-    icon: <Clock className="w-5 h-5" />,
-  },
-  SUBMITTED: {
-    bg: 'bg-blue-100',
-    text: 'text-blue-700',
-    icon: <Clock className="w-5 h-5" />,
-  },
-  PENDING_REVIEW: {
-    bg: 'bg-yellow-100',
-    text: 'text-yellow-700',
-    icon: <Clock className="w-5 h-5" />,
-  },
-  UNDER_REVIEW: {
-    bg: 'bg-yellow-100',
-    text: 'text-yellow-700',
-    icon: <Clock className="w-5 h-5" />,
-  },
-  APPROVED: {
-    bg: 'bg-green-100',
-    text: 'text-green-700',
-    icon: <CheckCircle className="w-5 h-5" />,
-  },
-  REJECTED: {
-    bg: 'bg-red-100',
-    text: 'text-red-700',
-    icon: <XCircle className="w-5 h-5" />,
-  },
-  REVISIONS_NEEDED: {
-    bg: 'bg-orange-100',
-    text: 'text-orange-700',
-    icon: <Clock className="w-5 h-5" />,
-  },
+const STATUS_ICONS: Record<string, React.ReactNode> = {
+  DRAFT: <Clock className="w-5 h-5" />,
+  SUBMITTED: <Clock className="w-5 h-5" />,
+  PENDING_REVIEW: <Clock className="w-5 h-5" />,
+  UNDER_REVIEW: <Clock className="w-5 h-5" />,
+  APPROVED: <CheckCircle className="w-5 h-5" />,
+  REJECTED: <XCircle className="w-5 h-5" />,
+  REVISIONS_NEEDED: <Clock className="w-5 h-5" />,
 };
 
 export function SubmissionDashboard({ crewId }: SubmissionDashboardProps) {
@@ -90,13 +66,13 @@ export function SubmissionDashboard({ crewId }: SubmissionDashboardProps) {
 
         const response = await fetch(`/api/hgf/submissions?${params.toString()}`);
         if (!response.ok) {
-          throw new Error('Failed to fetch submissions');
+          throw new Error('Submission register could not be loaded.');
         }
 
         const data = (await response.json()) as { data: HGFSubmissionWithForm[] };
         setSubmissions(data.data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
+        setError(err instanceof Error ? err.message : 'Submission register could not be loaded.');
       } finally {
         setIsLoading(false);
       }
@@ -128,10 +104,7 @@ export function SubmissionDashboard({ crewId }: SubmissionDashboardProps) {
     setFilteredSubmissions(filtered);
   }, [submissions, searchQuery, statusFilter]);
 
-  const getStatusDisplay = (status: string) => {
-    const config = STATUS_COLORS[status] || STATUS_COLORS.DRAFT;
-    return config;
-  };
+  const getStatusIcon = (status: string) => STATUS_ICONS[status] ?? <Clock className="w-5 h-5" />;
 
   if (isLoading) {
     return (
@@ -143,9 +116,7 @@ export function SubmissionDashboard({ crewId }: SubmissionDashboardProps) {
 
   if (error) {
     return (
-      <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-        <p className="text-red-800">Error: {error}</p>
-      </div>
+      <InlineNotice tone="error" title="Submission Desk Unavailable" message={error} />
     );
   }
 
@@ -163,7 +134,7 @@ export function SubmissionDashboard({ crewId }: SubmissionDashboardProps) {
           href="/hgf/forms"
           className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors"
         >
-          New Submission
+          Register Submission
         </Link>
       </div>
 
@@ -190,7 +161,7 @@ export function SubmissionDashboard({ crewId }: SubmissionDashboardProps) {
           }}
           className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
-          <option value="ALL">All Status</option>
+          <option value="ALL">All submission statuses</option>
           <option value="DRAFT">Draft</option>
           <option value="SUBMITTED">Submitted</option>
           <option value="PENDING_REVIEW">Pending Review</option>
@@ -202,21 +173,21 @@ export function SubmissionDashboard({ crewId }: SubmissionDashboardProps) {
 
       {/* Submissions List */}
       {filteredSubmissions.length === 0 ? (
-        <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
-          <p className="text-gray-600 text-lg">No submissions found</p>
-          <p className="text-gray-500 text-sm mt-1">
-            {submissions.length === 0
-              ? 'Start by creating a new submission'
-              : 'Try adjusting your filters'}
-          </p>
-        </div>
+        <WorkspaceEmptyState
+          title={submissions.length === 0 ? 'No submissions recorded' : 'No submissions match this filter'}
+          message={
+            submissions.length === 0
+              ? 'Start a new HGF submission to open your workflow history.'
+              : 'Adjust the search or status filter to review other submissions.'
+          }
+        />
       ) : (
         <div className="space-y-3">
           {filteredSubmissions.map((submission) => (
             <SubmissionCard
               key={submission.id}
               submission={submission}
-              statusConfig={getStatusDisplay(submission.status)}
+              statusIcon={getStatusIcon(submission.status)}
             />
           ))}
         </div>
@@ -253,10 +224,10 @@ export function SubmissionDashboard({ crewId }: SubmissionDashboardProps) {
  */
 interface SubmissionCardProps {
   submission: HGFSubmissionWithForm;
-  statusConfig: { bg: string; text: string; icon: React.ReactNode };
+  statusIcon: React.ReactNode;
 }
 
-function SubmissionCard({ submission, statusConfig }: SubmissionCardProps) {
+function SubmissionCard({ submission, statusIcon }: SubmissionCardProps) {
   const formatDate = (date: Date | null | undefined) => {
     if (!date) return '—';
     return new Date(date).toLocaleDateString('id-ID', {
@@ -285,9 +256,9 @@ function SubmissionCard({ submission, statusConfig }: SubmissionCardProps) {
 
           {/* Status Badge */}
           <div className="flex items-center gap-2 mb-3">
-            <div className={`${statusConfig.bg} ${statusConfig.text} inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium`}>
-              {statusConfig.icon}
-              {submission.status.replace(/_/g, ' ')}
+            <div className="inline-flex items-center gap-1.5">
+              {statusIcon}
+              <StatusBadge status={submission.status} label={formatStatusLabel(submission.status)} />
             </div>
           </div>
 

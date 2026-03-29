@@ -88,6 +88,15 @@ export function getDocumentTypeLabel(value: string): string {
   return doc ? doc.label : value;
 }
 
+export function isKnownDocumentType(value: string | null | undefined): boolean {
+  if (typeof value !== "string") {
+    return false;
+  }
+
+  const normalized = value.trim().toUpperCase();
+  return DOCUMENT_TYPES.some((doc) => doc.value === normalized);
+}
+
 export function getDocumentTypesByCategory(category: DocumentType["category"]): DocumentType[] {
   return DOCUMENT_TYPES.filter((d) => d.category === category);
 }

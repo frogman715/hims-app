@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Download, Mail, Clock, AlertCircle } from 'lucide-react';
+import { Download, Mail, Clock } from 'lucide-react';
+import { InlineNotice } from '@/components/feedback/InlineNotice';
 
 interface ReportExportProps {
   reportId: string;
@@ -31,7 +32,7 @@ export default function ReportExport({ reportId, reportTitle, onExportComplete }
    */
   const handlePDFExport = async () => {
     setIsLoading(true);
-    setStatus({ type: 'exporting', message: 'Generating PDF...' });
+    setStatus({ type: 'exporting', message: 'Preparing PDF export...' });
 
     try {
       const response = await fetch(`/api/qms/reports/${reportId}/export?format=pdf`, {
@@ -39,7 +40,7 @@ export default function ReportExport({ reportId, reportTitle, onExportComplete }
       });
 
       if (!response.ok) {
-        throw new Error('PDF export failed');
+        throw new Error('PDF export could not be completed.');
       }
 
       const blob = await response.blob();
@@ -52,13 +53,13 @@ export default function ReportExport({ reportId, reportTitle, onExportComplete }
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
 
-      setStatus({ type: 'success', message: 'PDF exported successfully' });
+      setStatus({ type: 'success', message: 'PDF export completed successfully.' });
       setTimeout(() => setStatus({ type: 'idle' }), 3000);
       onExportComplete?.();
     } catch (error) {
       setStatus({
         type: 'error',
-        message: error instanceof Error ? error.message : 'Export failed',
+        message: error instanceof Error ? error.message : 'Export could not be completed.',
       });
     } finally {
       setIsLoading(false);
@@ -70,7 +71,7 @@ export default function ReportExport({ reportId, reportTitle, onExportComplete }
    */
   const handleExcelExport = async () => {
     setIsLoading(true);
-    setStatus({ type: 'exporting', message: 'Generating Excel...' });
+    setStatus({ type: 'exporting', message: 'Preparing Excel export...' });
 
     try {
       const response = await fetch(`/api/qms/reports/${reportId}/export?format=excel`, {
@@ -78,7 +79,7 @@ export default function ReportExport({ reportId, reportTitle, onExportComplete }
       });
 
       if (!response.ok) {
-        throw new Error('Excel export failed');
+        throw new Error('Excel export could not be completed.');
       }
 
       const blob = await response.blob();
@@ -91,13 +92,13 @@ export default function ReportExport({ reportId, reportTitle, onExportComplete }
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
 
-      setStatus({ type: 'success', message: 'Excel exported successfully' });
+      setStatus({ type: 'success', message: 'Excel export completed successfully.' });
       setTimeout(() => setStatus({ type: 'idle' }), 3000);
       onExportComplete?.();
     } catch (error) {
       setStatus({
         type: 'error',
-        message: error instanceof Error ? error.message : 'Export failed',
+        message: error instanceof Error ? error.message : 'Export could not be completed.',
       });
     } finally {
       setIsLoading(false);
@@ -109,7 +110,7 @@ export default function ReportExport({ reportId, reportTitle, onExportComplete }
    */
   const handleEmailDistribution = async () => {
     if (!emailRecipients.trim()) {
-      setStatus({ type: 'error', message: 'Please enter at least one email address' });
+      setStatus({ type: 'error', message: 'Enter at least one recipient email address before sending.' });
       return;
     }
 
@@ -119,12 +120,12 @@ export default function ReportExport({ reportId, reportTitle, onExportComplete }
       .filter((email) => email.length > 0);
 
     if (recipients.length === 0) {
-      setStatus({ type: 'error', message: 'No valid email addresses provided' });
+      setStatus({ type: 'error', message: 'Enter at least one valid recipient email address.' });
       return;
     }
 
     setIsLoading(true);
-    setStatus({ type: 'emailing', message: 'Sending emails...' });
+    setStatus({ type: 'emailing', message: 'Sending report distribution...' });
 
     try {
       const response = await fetch(`/api/qms/reports/${reportId}/export?format=pdf&email=${recipients.join('&email=')}`, {
@@ -132,12 +133,12 @@ export default function ReportExport({ reportId, reportTitle, onExportComplete }
       });
 
       if (!response.ok) {
-        throw new Error('Email distribution failed');
+        throw new Error('Email distribution could not be completed.');
       }
 
       setStatus({
         type: 'success',
-        message: `Report sent to ${recipients.length} recipient(s)`,
+        message: `Report sent to ${recipients.length} recipient(s).`,
       });
       setEmailRecipients('');
       setShowEmailForm(false);
@@ -146,7 +147,7 @@ export default function ReportExport({ reportId, reportTitle, onExportComplete }
     } catch (error) {
       setStatus({
         type: 'error',
-        message: error instanceof Error ? error.message : 'Distribution failed',
+        message: error instanceof Error ? error.message : 'Distribution could not be completed.',
       });
     } finally {
       setIsLoading(false);
@@ -158,7 +159,7 @@ export default function ReportExport({ reportId, reportTitle, onExportComplete }
    */
   const handleScheduleCreation = async () => {
     if (!emailRecipients.trim()) {
-      setStatus({ type: 'error', message: 'Please enter at least one email address' });
+      setStatus({ type: 'error', message: 'Enter at least one recipient email address before scheduling.' });
       return;
     }
 
@@ -168,12 +169,12 @@ export default function ReportExport({ reportId, reportTitle, onExportComplete }
       .filter((email) => email.length > 0);
 
     if (recipients.length === 0) {
-      setStatus({ type: 'error', message: 'No valid email addresses provided' });
+      setStatus({ type: 'error', message: 'Enter at least one valid recipient email address.' });
       return;
     }
 
     setIsLoading(true);
-    setStatus({ type: 'scheduling', message: `Scheduling ${schedule} distribution...` });
+    setStatus({ type: 'scheduling', message: `Scheduling ${schedule} report distribution...` });
 
     try {
       const response = await fetch(`/api/qms/reports/${reportId}/distributions`, {
@@ -188,14 +189,14 @@ export default function ReportExport({ reportId, reportTitle, onExportComplete }
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Schedule creation failed');
+        throw new Error(error.error || 'Distribution schedule could not be created.');
       }
 
       await response.json();
 
       setStatus({
         type: 'success',
-        message: `Report scheduled for ${schedule} distribution`,
+        message: `Report scheduled for ${schedule} distribution.`,
       });
       setEmailRecipients('');
       setShowScheduleForm(false);
@@ -204,7 +205,7 @@ export default function ReportExport({ reportId, reportTitle, onExportComplete }
     } catch (error) {
       setStatus({
         type: 'error',
-        message: error instanceof Error ? error.message : 'Scheduling failed',
+        message: error instanceof Error ? error.message : 'Distribution schedule could not be created.',
       });
     } finally {
       setIsLoading(false);
@@ -215,24 +216,23 @@ export default function ReportExport({ reportId, reportTitle, onExportComplete }
     <div className="space-y-4">
       {/* Status Messages */}
       {status.type !== 'idle' && (
-        <div
-          className={`p-4 rounded-lg flex items-start gap-3 ${
+        <InlineNotice
+          tone={
             status.type === 'success'
-              ? 'bg-green-50 text-green-900 border border-green-200'
+              ? 'success'
               : status.type === 'error'
-                ? 'bg-red-50 text-red-900 border border-red-200'
-                : 'bg-blue-50 text-blue-900 border border-blue-200'
-          }`}
-        >
-          {status.type === 'error' && <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />}
-          {status.type === 'success' && <div className="w-5 h-5 flex-shrink-0 mt-0.5 text-green-600">✓</div>}
-          {['exporting', 'emailing', 'scheduling'].includes(status.type) && (
-            <div className="w-5 h-5 flex-shrink-0 mt-0.5 animate-spin text-blue-600">⟳</div>
-          )}
-          <div>
-            <p className="font-medium">{status.message}</p>
-          </div>
-        </div>
+                ? 'error'
+                : 'info'
+          }
+          message={status.message ?? ''}
+          title={
+            status.type === 'success'
+              ? 'Export Ready'
+              : status.type === 'error'
+                ? 'Action Required'
+                : 'Processing'
+          }
+        />
       )}
 
       {/* Export Buttons */}

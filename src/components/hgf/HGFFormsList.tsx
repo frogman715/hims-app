@@ -1,14 +1,16 @@
 /**
  * HGF Forms List Component
- * Display all available HGF forms yang crew bisa submit
+ * Display all available HGF forms the crew can submit.
  */
 
 'use client';
 
 import React, { useEffect, useState } from 'react';
 import { HGFForm } from '@prisma/client';
-import { ArrowRight, Loader, AlertCircle } from 'lucide-react';
+import { ArrowRight, Loader } from 'lucide-react';
 import Link from 'next/link';
+import { InlineNotice } from '@/components/feedback/InlineNotice';
+import { WorkspaceEmptyState } from '@/components/feedback/WorkspaceEmptyState';
 
 interface HGFFormsListProps {
   onSelectForm?: (form: HGFForm) => void;
@@ -40,13 +42,13 @@ export function HGFFormsList({ onSelectForm }: HGFFormsListProps) {
 
         const response = await fetch(`/api/hgf/forms?${params.toString()}`);
         if (!response.ok) {
-          throw new Error('Failed to fetch forms');
+          throw new Error('Form register could not be loaded.');
         }
 
         const data = (await response.json()) as { data: HGFForm[] };
         setForms(data.data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
+        setError(err instanceof Error ? err.message : 'Form register could not be loaded.');
       } finally {
         setIsLoading(false);
       }
@@ -74,24 +76,16 @@ export function HGFFormsList({ onSelectForm }: HGFFormsListProps) {
 
   if (error) {
     return (
-      <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
-        <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-        <div>
-          <p className="font-medium text-red-900">Error loading forms</p>
-          <p className="text-red-800 text-sm mt-1">{error}</p>
-        </div>
-      </div>
+      <InlineNotice tone="error" title="Form Register Unavailable" message={error} />
     );
   }
 
   if (forms.length === 0) {
     return (
-      <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
-        <p className="text-gray-600 text-lg">No forms available</p>
-        <p className="text-gray-500 text-sm mt-1">
-          Please contact administrator for form setup
-        </p>
-      </div>
+      <WorkspaceEmptyState
+        title="No forms are published"
+        message="Contact the office administrator to publish the first HGF form in this workspace."
+      />
     );
   }
 
@@ -115,7 +109,7 @@ export function HGFFormsList({ onSelectForm }: HGFFormsListProps) {
               : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
           }`}
         >
-          All Forms
+          All form types
         </button>
         {formTypes.map((type) => (
           <button
@@ -140,9 +134,10 @@ export function HGFFormsList({ onSelectForm }: HGFFormsListProps) {
       </div>
 
       {filteredForms.length === 0 && (
-        <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
-          <p className="text-gray-600">No forms found for selected type</p>
-        </div>
+        <WorkspaceEmptyState
+          title="No forms match this filter"
+          message="Adjust the form type filter to review other available HGF forms."
+        />
       )}
     </div>
   );

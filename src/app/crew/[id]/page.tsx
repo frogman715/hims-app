@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import { WorkspaceHero } from '@/components/layout/WorkspaceHero';
+import { pushAppNotice } from '@/lib/app-notice';
 
 interface Crew {
   id: string;
@@ -91,6 +93,14 @@ export default function CrewDetailPage() {
     }
   }, [crewId, fetchContracts, fetchCrew]);
 
+  const notifyFormError = useCallback((message?: string) => {
+    pushAppNotice({
+      tone: 'error',
+      title: 'Form generation failed',
+      message: message || 'The selected form could not be generated.',
+    });
+  }, []);
+
   const getLatestSEAContract = () => {
     return contracts
       .filter(c => c.contractKind === 'SEA')
@@ -137,11 +147,11 @@ export default function CrewDetailPage() {
         document.body.removeChild(a);
       } else {
         const error = await response.json();
-        alert(`Error generating form: ${error.error}`);
+        notifyFormError(error.error);
       }
     } catch (error) {
       console.error('Error generating form:', error);
-      alert('Error generating form');
+      notifyFormError();
     }
   };
 
@@ -168,11 +178,11 @@ export default function CrewDetailPage() {
         document.body.removeChild(a);
       } else {
         const error = await response.json();
-        alert(`Error generating form: ${error.error}`);
+        notifyFormError(error.error);
       }
     } catch (error) {
       console.error('Error generating form:', error);
-      alert('Error generating form');
+      notifyFormError();
     }
   };
 
@@ -199,11 +209,11 @@ export default function CrewDetailPage() {
         document.body.removeChild(a);
       } else {
         const error = await response.json();
-        alert(`Error generating form: ${error.error}`);
+        notifyFormError(error.error);
       }
     } catch (error) {
       console.error('Error generating form:', error);
-      alert('Error generating form');
+      notifyFormError();
     }
   };
 
@@ -230,11 +240,11 @@ export default function CrewDetailPage() {
         document.body.removeChild(a);
       } else {
         const error = await response.json();
-        alert(`Error generating form: ${error.error}`);
+        notifyFormError(error.error);
       }
     } catch (error) {
       console.error('Error generating form:', error);
-      alert('Error generating form');
+      notifyFormError();
     }
   };
 
@@ -261,11 +271,11 @@ export default function CrewDetailPage() {
         document.body.removeChild(a);
       } else {
         const error = await response.json();
-        alert(`Error generating form: ${error.error}`);
+        notifyFormError(error.error);
       }
     } catch (error) {
       console.error('Error generating form:', error);
-      alert('Error generating form');
+      notifyFormError();
     }
   };
 
@@ -292,11 +302,11 @@ export default function CrewDetailPage() {
         document.body.removeChild(a);
       } else {
         const error = await response.json();
-        alert(`Error generating form: ${error.error}`);
+        notifyFormError(error.error);
       }
     } catch (error) {
       console.error('Error generating form:', error);
-      alert('Error generating form');
+      notifyFormError();
     }
   };
 
@@ -323,35 +333,33 @@ export default function CrewDetailPage() {
         document.body.removeChild(a);
       } else {
         const error = await response.json();
-        alert(`Error generating form: ${error.error}`);
+        notifyFormError(error.error);
       }
     } catch (error) {
       console.error('Error generating form:', error);
-      alert('Error generating form');
+      notifyFormError();
     }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 p-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mt-20"></div>
-        </div>
+      <div className="section-stack">
+        <section className="surface-card flex min-h-[320px] items-center justify-center p-8">
+          <div className="h-10 w-10 animate-spin rounded-full border-2 border-slate-200 border-t-cyan-700" />
+        </section>
       </div>
     );
   }
 
   if (!crew) {
     return (
-      <div className="min-h-screen bg-gray-100 p-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="bg-white rounded-lg shadow p-6 text-center">
-            <h1 className="text-2xl font-extrabold text-gray-900 mb-4">Crew Member Not Found</h1>
-            <Link href="/crewing/crew-list" className="text-blue-600 hover:text-blue-800">
-              Back to Crew List
-            </Link>
-          </div>
-        </div>
+      <div className="section-stack">
+        <section className="surface-card mx-auto max-w-3xl p-8 text-center">
+          <h1 className="mb-4 text-2xl font-extrabold text-gray-900">Crew Member Not Found</h1>
+          <Link href="/crewing/crew-list" className="text-blue-600 hover:text-blue-800">
+            Back to Crew List
+          </Link>
+        </section>
       </div>
     );
   }
@@ -361,32 +369,58 @@ export default function CrewDetailPage() {
   const expiryWarning = getContractExpiryWarning();
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">{crew.fullName}</h1>
-            <p className="text-gray-700 mt-1">{crew.rank} • {crew.status}</p>
-          </div>
-          <div className="flex space-x-3">
+    <div className="section-stack">
+      <WorkspaceHero
+        eyebrow="Crew Workspace"
+        title={crew.fullName}
+        subtitle={`${crew.rank} • ${crew.status}`}
+        highlights={[
+          {
+            label: 'Contracts',
+            value: contracts.length,
+            detail: 'Employment contracts linked to this crew profile.',
+          },
+          {
+            label: 'Latest SEA',
+            value: latestSEA?.status ?? 'None',
+            detail: latestSEA?.contractNumber ?? 'No active sea contract linked.',
+          },
+          {
+            label: 'Office PKL',
+            value: latestPKL?.status ?? 'None',
+            detail: latestPKL?.contractNumber ?? 'No office PKL contract linked.',
+          },
+          {
+            label: 'Contract Alert',
+            value: expiryWarning ? 'Expiring Soon' : 'Clear',
+            detail: expiryWarning ? expiryWarning.contractNumber : 'No active contract near expiry.',
+          },
+        ]}
+        helperLinks={[
+          { href: '/crewing/seafarers', label: 'Seafarer Register' },
+          { href: '/contracts', label: 'Contract Register' },
+          { href: '/crewing/documents', label: 'Documents Desk' },
+        ]}
+        actions={(
+          <>
             <Link
               href={`/crew/${crewId}/edit`}
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              className="rounded-full bg-cyan-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-800"
             >
               Edit Crew
             </Link>
             <Link
               href="/crewing/crew-list"
-              className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
+              className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-cyan-300 hover:text-cyan-700"
             >
-              Back to List
+              Crew List
             </Link>
-          </div>
-        </div>
+          </>
+        )}
+      />
 
         {/* Business Widgets */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           {/* Latest SEA Contract */}
           <div className="bg-white rounded-lg shadow p-5">
             <h3 className="text-lg font-semibold text-gray-900 mb-3">Latest SEA Contract</h3>
@@ -472,7 +506,7 @@ export default function CrewDetailPage() {
         </div>
 
         {/* Tabs */}
-        <div className="bg-white rounded-lg shadow mb-6">
+        <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
           <div className="border-b border-gray-300">
             <nav className="flex">
               <button
@@ -796,7 +830,6 @@ export default function CrewDetailPage() {
             )}
           </div>
         </div>
-      </div>
     </div>
   );
 }

@@ -1,8 +1,11 @@
 'use client';
 
+import Link from 'next/link';
 import { useState, useEffect, useCallback } from 'react';
+import { WorkspaceEmptyState } from '@/components/feedback/WorkspaceEmptyState';
+import { StatusBadge } from '@/components/ui/StatusBadge';
 
-const SYSTEM_TYPES = ['KOSMA_CERTIFICATE', 'DEPHUB_CERTIFICATE', 'SCHENGEN_VISA_NL'] as const;
+const SYSTEM_TYPES = ['DEPHUB_CERTIFICATE', 'SCHENGEN_VISA_NL'] as const;
 type ExternalComplianceSystem = typeof SYSTEM_TYPES[number];
 type ExternalComplianceStatus = 'PENDING' | 'VERIFIED' | 'EXPIRED' | 'REJECTED';
 
@@ -78,31 +81,23 @@ export default function ComplianceStatusWidget({ crewId }: ComplianceStatusWidge
 
   const getSystemTypeLabel = (type: ExternalComplianceSystem) => {
     switch (type) {
-      case 'KOSMA_CERTIFICATE':
-        return 'KOSMA';
       case 'DEPHUB_CERTIFICATE':
-        return 'Dephub';
+        return 'Dephub Verification';
       case 'SCHENGEN_VISA_NL':
-        return 'Schengen NL';
+        return 'Schengen Visa NL';
       default:
         return type;
     }
   };
 
-  const getComplianceRate = (systemStats: ComplianceStats) => {
-    if (systemStats.total === 0) return 0;
-    return Math.round((systemStats.verified / systemStats.total) * 100);
-  };
-
-  const getStatusColor = (rate: number) => {
-    if (rate >= 80) return 'text-green-600';
-    if (rate >= 60) return 'text-yellow-600';
-    return 'text-red-600';
-  };
+  const recordsNeedingAction = Object.values(stats).reduce(
+    (total, systemStats) => total + systemStats.pending + systemStats.failed + systemStats.expired,
+    0
+  );
 
   if (loading) {
     return (
-      <div className="bg-white p-6 rounded-lg shadow">
+      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="animate-pulse">
           <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
           <div className="space-y-3">
@@ -116,59 +111,64 @@ export default function ComplianceStatusWidget({ crewId }: ComplianceStatusWidge
   }
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow">
-      <h3 className="text-lg font-medium text-gray-900 mb-4">
-        External Compliance Status
-      </h3>
-
-      <div className="space-y-4">
-        {Object.entries(stats).map(([systemType, systemStats]) => {
-          const rate = getComplianceRate(systemStats);
-          return (
-            <div key={systemType} className="border rounded-lg p-4">
-              <div className="flex justify-between items-center mb-2">
-                <h4 className="text-sm font-medium text-gray-900">
-                  {getSystemTypeLabel(systemType as ExternalComplianceSystem)}
-                </h4>
-                <span className={`text-sm font-semibold ${getStatusColor(rate)}`}>
-                  {rate}%
-                </span>
-              </div>
-
-              <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
-                <div
-                  className="bg-blue-600 h-2 rounded-full"
-                  style={{ width: `${rate}%` }}
-                ></div>
-              </div>
-
-              <div className="grid grid-cols-4 gap-2 text-xs text-gray-600">
-                <div>Total: {systemStats.total}</div>
-                <div className="text-green-600">✓ {systemStats.verified}</div>
-                <div className="text-yellow-600">⏳ {systemStats.pending}</div>
-                <div className="text-red-600">✗ {systemStats.failed + systemStats.expired}</div>
-              </div>
-            </div>
-          );
-        })}
+    <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="mb-4">
+        <p className="text-sm font-semibold uppercase tracking-[0.22em] text-cyan-700">Verification Snapshot</p>
+        <h3 className="mt-2 text-lg font-semibold text-slate-900">
+          Records needing review
+        </h3>
+        <p className="mt-1 text-sm text-slate-600">
+          Simple action view for Dephub and visa records that still need follow-up.
+        </p>
       </div>
 
-      <div className="mt-4 pt-4 border-t">
-        <div className="text-sm text-gray-600">
-          <p className="mb-1">
-            <span className="inline-block w-3 h-3 bg-green-500 rounded mr-2"></span>
-            Verified certificates are valid and up-to-date
-          </p>
-          <p className="mb-1">
-            <span className="inline-block w-3 h-3 bg-yellow-500 rounded mr-2"></span>
-            Pending certificates require verification
-          </p>
-          <p>
-            <span className="inline-block w-3 h-3 bg-red-500 rounded mr-2"></span>
-            Failed/expired certificates need attention
-          </p>
+      {recordsNeedingAction === 0 ? (
+        <WorkspaceEmptyState
+          title="Verification queue is clear"
+          message="No external records currently require follow-up or revalidation."
+        />
+      ) : (
+        <div className="space-y-4">
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-5">
+            <p className="text-sm font-semibold text-amber-900">Records needing action</p>
+            <p className="mt-2 text-3xl font-semibold text-amber-900">{recordsNeedingAction}</p>
+            <p className="mt-2 text-sm text-amber-800">
+              Review pending, failed, or expired records and update the related document follow-up.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            {Object.entries(stats)
+              .filter(([, systemStats]) => systemStats.pending + systemStats.failed + systemStats.expired > 0)
+              .map(([systemType, systemStats]) => {
+                const actionCount = systemStats.pending + systemStats.failed + systemStats.expired;
+                return (
+                  <div key={systemType} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <h4 className="text-sm font-medium text-slate-900">
+                        {getSystemTypeLabel(systemType as ExternalComplianceSystem)}
+                      </h4>
+                      <StatusBadge
+                        status="PENDING_REVIEW"
+                        label={`${actionCount} record${actionCount === 1 ? '' : 's'}`}
+                      />
+                    </div>
+                    <p className="mt-2 text-xs text-slate-600">
+                      Pending review: {systemStats.pending} · Declined or expired: {systemStats.failed + systemStats.expired}
+                    </p>
+                  </div>
+                );
+              })}
+          </div>
+
+          <Link
+            href="/compliance/external"
+            className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800"
+          >
+            Open Verification Desk
+          </Link>
         </div>
-      </div>
+      )}
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { requireAuthorizedUser } from "@/lib/authz";
 import { PermissionLevel } from "@/lib/permissions";
 import { getFleetComplianceBoard } from "@/lib/compliance-fleet-board";
 import { getFleetRiskBadgeClasses } from "@/lib/fleet-ui";
+import { WorkspaceHero } from "@/components/layout/WorkspaceHero";
 import StatCard from "@/components/ui/StatCard";
 
 export const dynamic = "force-dynamic";
@@ -29,46 +30,72 @@ export default async function FleetBoardPage() {
   const data = await getFleetComplianceBoard();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-cyan-50 px-6 py-8">
-      <div className="mx-auto max-w-7xl space-y-6">
-        <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-cyan-700">Fleet Operations</p>
-              <h1 className="mt-2 text-3xl font-semibold text-slate-900">Fleet readiness board</h1>
-              <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-                Read one board for active fleet exposure: onboard crew, mobilization queue, document expiry, external compliance,
-                and open non-conformities.
-              </p>
-              <p className="mt-3 text-xs font-medium text-slate-500">Generated {formatTimestamp(data.generatedAt)}</p>
-            </div>
-            <div className="flex gap-3">
-              <Link href="/compliance/control-center" className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700">
-                Control Center
-              </Link>
-              <Link href="/crewing/principals" className="rounded-full bg-cyan-700 px-4 py-2 text-sm font-semibold text-white">
-                Fleet & Principals
-              </Link>
-            </div>
-          </div>
-        </section>
+    <div className="section-stack">
+      <WorkspaceHero
+        eyebrow="Compliance Workspace"
+        title="Fleet readiness board"
+        subtitle={(
+          <>
+            Read one board for active fleet exposure: onboard crew, mobilization queue, document expiry, external compliance,
+            and open non-conformities.
+            <span className="mt-2 block text-xs font-medium text-slate-500">Generated {formatTimestamp(data.generatedAt)}</span>
+          </>
+        )}
+        highlights={[
+          {
+            label: "Active Fleet",
+            value: data.totals.activeVessels,
+            detail: "Master vessels currently in active operating status.",
+          },
+          {
+            label: "Onboard Crew",
+            value: data.totals.activeCrew,
+            detail: "Live deployed crew across the active fleet.",
+          },
+          {
+            label: "Operational Queue",
+            value: data.totals.mobilizationQueue,
+            detail: "Prepare-joining workload tied to active vessels.",
+          },
+          {
+            label: "High-Risk Vessels",
+            value: data.totals.highRiskVessels,
+            detail: "Units needing immediate review for readiness blockers.",
+          },
+        ]}
+        helperLinks={[
+          { href: "/compliance/control-center", label: "Control Center" },
+          { href: "/crewing/principals", label: "Fleet & Principals" },
+          { href: "/compliance/rest-hours", label: "Rest-Hour Register" },
+        ]}
+        actions={(
+          <>
+            <Link href="/compliance/control-center" className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-cyan-300 hover:text-cyan-700">
+              Control Center
+            </Link>
+            <Link href="/crewing/principals" className="rounded-full bg-cyan-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-800">
+              Fleet & Principals
+            </Link>
+          </>
+        )}
+      />
 
-        <section className="grid gap-4 md:grid-cols-4">
+      <section className="grid gap-4 md:grid-cols-4">
           <StatCard label="Active fleet" value={data.totals.activeVessels} description="Master vessels with active operating status." tone="slate" />
           <StatCard label="Onboard crew" value={data.totals.activeCrew} description="Crew currently deployed across the onboard fleet." tone="emerald" />
           <StatCard label="Operational queue" value={data.totals.mobilizationQueue} description="Prepare joining workload and mobilization pipeline." tone="cyan" />
           <StatCard label="High-risk vessels" value={data.totals.highRiskVessels} description="Immediate review needed for readiness blockers." tone="amber" />
-        </section>
+      </section>
 
-        <section className="rounded-3xl border border-cyan-100 bg-cyan-50/60 p-4 shadow-sm">
+      <section className="rounded-3xl border border-cyan-100 bg-cyan-50/60 p-4 shadow-sm">
           <div className="flex flex-wrap gap-2 text-xs font-semibold">
             <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-slate-700">Active Fleet = master vessel status ACTIVE</span>
             <span className="rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-cyan-800">Operational Queue = prepare joining pipeline for the active fleet</span>
             <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-emerald-800">Onboard Crew = live deployed crew onboard</span>
           </div>
-        </section>
+      </section>
 
-        <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+      <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
           <div className="border-b border-slate-200 px-6 py-4">
             <h2 className="text-lg font-semibold text-slate-900">Fleet readiness register</h2>
           </div>
@@ -127,8 +154,7 @@ export default async function FleetBoardPage() {
               </tbody>
             </table>
           </div>
-        </section>
-      </div>
+      </section>
     </div>
   );
 }

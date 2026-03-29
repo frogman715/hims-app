@@ -1,7 +1,9 @@
 'use client';
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { WorkspaceHero } from "@/components/layout/WorkspaceHero";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 
 interface ComplianceItem {
   id: string;
@@ -142,14 +144,7 @@ const HGQS_REQUIREMENTS: ComplianceItem[] = [
   },
 ];
 
-const STATUS_COLORS = {
-  "Compliant": "bg-green-100 text-green-800 border-green-200",
-  "Non-Compliant": "bg-red-100 text-red-800 border-red-200",
-  "Pending Review": "bg-yellow-100 text-yellow-800 border-yellow-200",
-};
-
 export default function HGQSCompliancePage() {
-  const router = useRouter();
   const [items] = useState<ComplianceItem[]>(HGQS_REQUIREMENTS);
   const [filterCategory, setFilterCategory] = useState<string>("All");
   const [filterStatus, setFilterStatus] = useState<string>("All");
@@ -173,26 +168,33 @@ export default function HGQSCompliancePage() {
   const compliancePercentage = Math.round((complianceStats.compliant / complianceStats.total) * 100);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
-      {/* Header */}
-      <div className="sticky top-0 z-10 border-b border-white/10 bg-slate-900/95 backdrop-blur-lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-white">HGQS Compliance Tracking</h1>
-              <p className="text-blue-200 mt-1">ISO 9001:2015 & MLC 2006 Compliance Dashboard</p>
-            </div>
-            <button
-              onClick={() => router.back()}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-            >
-              ← Back
-            </button>
-          </div>
-        </div>
-      </div>
+    <div className="section-stack mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+      <WorkspaceHero
+        eyebrow="HGQS Compliance"
+        title="HGQS compliance tracking"
+        subtitle="Monitor ISO 9001:2015 and MLC 2006 requirement status in one structured reference board for management review and quality oversight."
+        helperLinks={[
+          { href: "/quality", label: "Quality workspace" },
+          { href: "/quality/risks", label: "Risks" },
+          { href: "/dashboard", label: "Dashboard" },
+        ]}
+        highlights={[
+          { label: "Compliance Score", value: `${compliancePercentage}%`, detail: `${complianceStats.compliant} of ${complianceStats.total} items currently marked compliant.` },
+          { label: "Non-Compliant", value: complianceStats.nonCompliant.toLocaleString("id-ID"), detail: "Requirements needing correction or escalation." },
+          { label: "Pending Review", value: complianceStats.pending.toLocaleString("id-ID"), detail: "Items still under evaluation." },
+          { label: "Categories", value: categories.length - 1, detail: "Distinct compliance areas in the current reference set." },
+        ]}
+        actions={(
+          <Link
+            href="/quality"
+            className="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-cyan-300 hover:text-cyan-700"
+          >
+            Back to quality
+          </Link>
+        )}
+      />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      <div className="space-y-8">
         {/* Compliance Overview Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {/* Total Compliance Score */}
@@ -285,9 +287,7 @@ export default function HGQSCompliancePage() {
                       <td className="px-6 py-4 text-sm text-gray-300">{item.standard}</td>
                       <td className="px-6 py-4 text-sm text-gray-300">{item.category}</td>
                       <td className="px-6 py-4">
-                        <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold border ${STATUS_COLORS[item.status]}`}>
-                          {item.status}
-                        </span>
+                        <StatusBadge status={item.status} />
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-300">{item.responsible}</td>
                       <td className="px-6 py-4 text-sm text-gray-400">{new Date(item.lastReview).toLocaleDateString()}</td>

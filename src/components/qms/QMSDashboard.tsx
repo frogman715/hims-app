@@ -11,6 +11,9 @@ import {
   Activity,
   Loader,
 } from 'lucide-react';
+import { InlineNotice } from '@/components/feedback/InlineNotice';
+import { StatusBadge } from '@/components/ui/StatusBadge';
+import { formatStatusLabel } from '@/lib/formatters';
 
 interface DashboardStats {
   documentCompliance: { rate: number; active: number; total: number };
@@ -48,7 +51,7 @@ export function QMSDashboard() {
         ]);
 
         if (!responses.every((r) => r.ok)) {
-          throw new Error('Failed to fetch dashboard data');
+          throw new Error('QMS dashboard metrics could not be loaded.');
         }
 
         const data = await Promise.all(responses.map((r) => r.json()));
@@ -67,7 +70,7 @@ export function QMSDashboard() {
           auditSummary: data[8].data,
         });
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Error loading dashboard');
+        setError(err instanceof Error ? err.message : 'QMS dashboard metrics could not be loaded.');
       } finally {
         setIsLoading(false);
       }
@@ -86,9 +89,7 @@ export function QMSDashboard() {
 
   if (error) {
     return (
-      <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-        <p className="text-red-900">{error}</p>
-      </div>
+      <InlineNotice tone="error" title="QMS Dashboard Unavailable" message={error} />
     );
   }
 
@@ -162,23 +163,11 @@ export function QMSDashboard() {
         <DistributionCard
           title="Risk Distribution"
           data={stats.riskDistribution}
-          colors={{
-            LOW: 'bg-green-100 text-green-800',
-            MEDIUM: 'bg-yellow-100 text-yellow-800',
-            HIGH: 'bg-orange-100 text-orange-800',
-            CRITICAL: 'bg-red-100 text-red-800',
-          }}
         />
 
         <DistributionCard
           title="Severity Distribution"
           data={stats.severityDistribution}
-          colors={{
-            LOW: 'bg-green-100 text-green-800',
-            MEDIUM: 'bg-yellow-100 text-yellow-800',
-            HIGH: 'bg-orange-100 text-orange-800',
-            CRITICAL: 'bg-red-100 text-red-800',
-          }}
         />
       </div>
 
@@ -354,11 +343,9 @@ function KPICard({
 function DistributionCard({
   title,
   data,
-  colors,
 }: {
   title: string;
   data: Record<string, number>;
-  colors: Record<string, string>;
 }) {
   const total = Object.values(data).reduce((a, b) => a + b, 0);
 
@@ -369,14 +356,12 @@ function DistributionCard({
         {Object.entries(data).map(([level, count]) => (
           <div key={level}>
             <div className="flex items-center justify-between mb-1">
-              <span className="text-sm font-medium text-gray-700">
-                {level}
-              </span>
+              <StatusBadge status={level} label={formatStatusLabel(level)} />
               <span className="text-sm text-gray-600">{count}</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div
-                className={`h-2 rounded-full ${colors[level]?.split(' ')[0]}`}
+                className={`h-2 rounded-full ${getDistributionBarClass(level)}`}
                 style={{
                   width: `${total === 0 ? 0 : (count / total) * 100}%`,
                 }}
@@ -387,6 +372,21 @@ function DistributionCard({
       </div>
     </div>
   );
+}
+
+function getDistributionBarClass(level: string) {
+  switch (level) {
+    case 'CRITICAL':
+      return 'bg-rose-500';
+    case 'HIGH':
+      return 'bg-amber-500';
+    case 'MEDIUM':
+      return 'bg-sky-500';
+    case 'LOW':
+      return 'bg-emerald-500';
+    default:
+      return 'bg-slate-400';
+  }
 }
 
 /**

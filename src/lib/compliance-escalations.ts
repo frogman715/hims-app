@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { buildCrewReadinessDashboard } from "@/lib/crewing-readiness";
 import { ComplianceStatus, PrepareJoiningStatus } from "@prisma/client";
+import { buildContractExpiryAlert } from "@/lib/contract-expiry";
 
 const ACTIVE_PREPARE_JOINING_STATUSES: PrepareJoiningStatus[] = [
   PrepareJoiningStatus.PENDING,
@@ -28,7 +29,10 @@ export async function getEscalationCenterData() {
   const thirtyDays = new Date(now);
   thirtyDays.setDate(thirtyDays.getDate() + 30);
 
-  const [expiringDocs, overdueCapa, blockedPrepareJoiningCrews] = await Promise.all([
+  const fortyFiveDays = new Date(now);
+  fortyFiveDays.setDate(fortyFiveDays.getDate() + 45);
+
+  const [expiringDocs, overdueCapa, blockedPrepareJoiningCrews, expiringContracts] = await Promise.all([
     prisma.crewDocument.findMany({
       where: {
         isActive: true,
@@ -107,6 +111,41 @@ export async function getEscalationCenterData() {
         },
       },
     }),
+    prisma.employmentContract.findMany({
+      where: {
+        contractEnd: {
+          lte: fortyFiveDays,
+        },
+        status: {
+          notIn: ["COMPLETED", "TERMINATED", "CANCELLED"],
+        },
+        crew: {
+          assignments: {
+            some: {
+              status: {
+                in: ["ONBOARD", "ACTIVE"],
+              },
+            },
+          },
+        },
+      },
+      orderBy: { contractEnd: "asc" },
+      take: 25,
+      include: {
+        crew: {
+          select: {
+            id: true,
+            fullName: true,
+            rank: true,
+          },
+        },
+        vessel: {
+          select: {
+            name: true,
+          },
+        },
+      },
+    }),
   ]);
 
   const readiness = buildCrewReadinessDashboard(blockedPrepareJoiningCrews);
@@ -135,6 +174,26 @@ export async function getEscalationCenterData() {
       title: `${capa.capaNumber} overdue`,
       detail: `${capa.department} corrective action target date has passed.`,
       href: "/quality/corrective-actions",
+    });
+  }
+
+  for (const contract of expiringContracts) {
+    const alert = buildContractExpiryAlert(contract, now);
+    let severity: EscalationItem["severity"] = "MEDIUM";
+    if (alert.daysRemaining <= 14) {
+      severity = "CRITICAL";
+    } else if (alert.daysRemaining <= 30) {
+      severity = "HIGH";
+    }
+
+    items.push({
+      id: `contract-${contract.id}`,
+      ruleCode: "CONTRACT-EXPIRY",
+      severity,
+      owner: "Operational / Director",
+      title: `${contract.crew.fullName} contract ends in ${alert.daysRemaining} day(s)`,
+      detail: `${contract.vessel?.name ?? "Unassigned vessel"} contract requires renewal decision or reliever planning before expiry.`,
+      href: "/crewing/crew-list",
     });
   }
 
@@ -195,6 +254,10 @@ export async function getEscalationCenterData() {
       {
         code: "CAPA-OVERDUE",
         description: "Escalate open corrective actions beyond target date to QMR.",
+      },
+      {
+        code: "CONTRACT-EXPIRY",
+        description: "Escalate onboard contracts inside 45 days. Raise to high inside 30 days and critical inside 14 days.",
       },
       {
         code: "DEPLOY-BLOCK",

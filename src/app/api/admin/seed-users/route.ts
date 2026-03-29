@@ -151,7 +151,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         message: "Users seeded successfully",
-        users: results.map(({ password, ...rest }) => rest),
+        users: results,
       },
       { status: 200 }
     );

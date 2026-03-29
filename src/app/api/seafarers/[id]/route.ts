@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { isCrewOperationalStatus } from "@/lib/crew-ops";
+import { checkPermission, PermissionLevel } from "@/lib/permission-middleware";
 
 interface UpdateSeafarerPayload {
   fullName: string;
@@ -11,6 +13,7 @@ interface UpdateSeafarerPayload {
   phone?: string | null;
   email?: string | null;
   rank?: string | null;
+  crewStatus?: string | null;
   emergencyContactName?: string | null;
   emergencyContactRelation?: string | null;
   emergencyContactPhone?: string | null;
@@ -77,6 +80,13 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    if (!checkPermission(session, "crew", PermissionLevel.VIEW_ACCESS)) {
+      return NextResponse.json(
+        { error: "Access to seafarer records is restricted for your role." },
+        { status: 403 }
+      );
+    }
+
     const { id } = await params;
     const crewId = id;
 
@@ -108,6 +118,13 @@ export async function PUT(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    if (!checkPermission(session, "crew", PermissionLevel.EDIT_ACCESS)) {
+      return NextResponse.json(
+        { error: "Access to update seafarer records is restricted for your role." },
+        { status: 403 }
+      );
+    }
+
     const { id } = await params;
     const crewId = id;
 
@@ -127,6 +144,7 @@ export async function PUT(
         phone: optionalString(payload.phone),
         email: optionalString(payload.email),
         rank: optionalString(payload.rank) ?? undefined,
+        crewStatus: isCrewOperationalStatus(payload.crewStatus) ? payload.crewStatus : undefined,
         emergencyContactName: optionalString(payload.emergencyContactName),
         emergencyContactRelation: optionalString(payload.emergencyContactRelation),
         emergencyContactPhone: optionalString(payload.emergencyContactPhone),
@@ -146,7 +164,7 @@ export async function PUT(
   } catch (error) {
     console.error("Error updating seafarer:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Seafarer data could not be updated. Please try again or contact admin." },
       { status: 500 }
     );
   }

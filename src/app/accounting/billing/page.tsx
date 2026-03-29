@@ -1,242 +1,229 @@
-'use client';
+"use client";
 
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { WorkspaceHero } from "@/components/layout/WorkspaceHero";
 
-interface Billing {
-  id: number;
-  principalId: number;
-  period: string;
+interface AgencyFeeRow {
+  id: string;
+  feeType: string;
   amount: number;
+  currency: string;
+  dueDate: string;
+  paidDate: string | null;
   status: string;
-  principal: {
-    id: number;
-    name: string;
-    company: string;
-  };
+  description: string | null;
+  principal?: {
+    name?: string | null;
+  } | null;
+  contract?: {
+    contractNumber?: string | null;
+  } | null;
 }
 
-export default function Billing() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
-  const [billings, setBillings] = useState<Billing[]>([]);
+function formatMoney(currency: string, amount: number) {
+  return `${currency} ${amount.toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+}
+
+function formatDate(value: string | null) {
+  if (!value) {
+    return "-";
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "-";
+  }
+
+  return date.toLocaleDateString("en-GB");
+}
+
+function getBillingState(fee: AgencyFeeRow) {
+  if (fee.status === "PAID") {
+    return { label: "Paid", className: "bg-emerald-50 text-emerald-700" };
+  }
+  if (fee.status === "CANCELLED") {
+    return { label: "Cancelled", className: "bg-slate-100 text-slate-600" };
+  }
+
+  const dueDate = new Date(fee.dueDate);
+  if (!Number.isNaN(dueDate.getTime()) && dueDate < new Date()) {
+    return { label: "Overdue", className: "bg-rose-50 text-rose-700" };
+  }
+
+  return { label: "Pending", className: "bg-amber-50 text-amber-700" };
+}
+
+export default function BillingPage() {
+  const [fees, setFees] = useState<AgencyFeeRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState({
-    principalId: '',
-    period: '',
-    amount: '',
-  });
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (status === "loading") return;
-    if (!session) {
-      router.push("/auth/signin");
-    } else {
-      fetchBillings();
-    }
-  }, [session, status, router]);
-
-  const fetchBillings = async () => {
-    try {
-      const response = await fetch("/api/accounting/billing");
-      if (response.ok) {
+    const loadFees = async () => {
+      try {
+        setError(null);
+        const response = await fetch("/api/agency-fees", { cache: "no-store" });
+        if (!response.ok) {
+          throw new Error("Failed to load billing records");
+        }
         const data = await response.json();
-        setBillings(data);
+        setFees(Array.isArray(data) ? data : []);
+      } catch (loadError) {
+        console.error("Error loading billing records:", loadError);
+        setError(loadError instanceof Error ? loadError.message : "Failed to load billing records");
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Error fetching billings:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const response = await fetch("/api/accounting/billing", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          principalId: parseInt(formData.principalId),
-          period: formData.period,
-          amount: parseFloat(formData.amount),
-        }),
-      });
+    loadFees();
+  }, []);
 
-      if (response.ok) {
-        setShowForm(false);
-        setFormData({ principalId: '', period: '', amount: '' });
-        fetchBillings();
-      }
-    } catch (error) {
-      console.error("Error creating billing:", error);
-    }
-  };
+  const summary = useMemo(() => {
+    return fees.reduce(
+      (accumulator, fee) => {
+        const state = getBillingState(fee);
+        if (state.label === "Pending") {
+          accumulator.pending += 1;
+        } else if (state.label === "Overdue") {
+          accumulator.overdue += 1;
+        } else if (state.label === "Paid") {
+          accumulator.paid += 1;
+        }
 
-  if (status === "loading" || loading) {
-    return <div>Loading...</div>;
-  }
+        if (state.label !== "Paid" && state.label !== "Cancelled") {
+          accumulator.outstanding += fee.amount;
+        }
 
-  if (!session) {
-    return null;
-  }
+        return accumulator;
+      },
+      { pending: 0, overdue: 0, paid: 0, outstanding: 0 }
+    );
+  }, [fees]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      {/* Header */}
-      <header className="bg-white backdrop-blur-lg shadow-2xl border-b border-white/20">
-        <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
+    <div className="section-stack page-shell px-6 py-10">
+      <WorkspaceHero
+        eyebrow="Finance Billing"
+        title="Billing follow-up"
+        subtitle="Review agency fee receivables, due dates, and payment status from one finance queue built for follow-up, not raw data browsing."
+        helperLinks={[
+          { href: "/accounting", label: "Finance workspace" },
+          { href: "/agency-fees", label: "Agency fee ledger" },
+          { href: "/dashboard", label: "Dashboard" },
+        ]}
+        highlights={[
+          { label: "Outstanding Value", value: formatMoney("USD", summary.outstanding), detail: "Pending and overdue receivables." },
+          { label: "Pending", value: summary.pending.toLocaleString("id-ID"), detail: "Open billing items not yet overdue." },
+          { label: "Overdue", value: summary.overdue.toLocaleString("id-ID"), detail: "Items requiring collection follow-up." },
+          { label: "Paid", value: summary.paid.toLocaleString("id-ID"), detail: "Closed finance items already settled." },
+        ]}
+        actions={(
+          <>
+            <Link href="/accounting" className="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-cyan-300 hover:text-cyan-700">
+              Back to finance
+            </Link>
+            <Link href="/agency-fees" className="inline-flex items-center rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800">
+              Open agency fee ledger
+            </Link>
+          </>
+        )}
+      />
+
+        <section className="rounded-2xl border border-blue-200 bg-blue-50 px-6 py-4">
+          <p className="text-sm font-semibold text-blue-900">How to use this page</p>
+          <p className="mt-1 text-sm text-blue-800">
+            This billing view tracks live agency fee records. Use the detailed agency fee ledger for creation and edits, then return here for payment follow-up.
+          </p>
+        </section>
+
+        <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="surface-card p-6">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Outstanding Value</p>
+            <p className="mt-2 text-2xl font-extrabold text-slate-900">{formatMoney("USD", summary.outstanding)}</p>
+            <p className="mt-1 text-sm text-slate-600">Pending and overdue receivables</p>
+          </div>
+          <div className="surface-card p-6">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Pending</p>
+            <p className="mt-2 text-2xl font-extrabold text-amber-700">{summary.pending}</p>
+            <p className="mt-1 text-sm text-slate-600">Not yet settled and not overdue</p>
+          </div>
+          <div className="surface-card p-6">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Overdue</p>
+            <p className="mt-2 text-2xl font-extrabold text-rose-700">{summary.overdue}</p>
+            <p className="mt-1 text-sm text-slate-600">Requires payment follow-up</p>
+          </div>
+          <div className="surface-card p-6">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Paid</p>
+            <p className="mt-2 text-2xl font-extrabold text-emerald-700">{summary.paid}</p>
+            <p className="mt-1 text-sm text-slate-600">Closed finance items</p>
+          </div>
+        </section>
+
+        <section className="surface-card">
+          <div className="surface-card__header px-6">
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-purple-700 bg-clip-text text-transparent">
-                Billing Management
-              </h1>
-              <p className="text-lg text-gray-700 mt-2 font-medium">Generate invoices and track payments from principals</p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Link
-                href="/accounting"
-                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
-              >
-                ← Back to Accounting
-              </Link>
-              <button
-                onClick={() => setShowForm(true)}
-                className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
-              >
-                + Create Invoice
-              </button>
+              <h2 className="text-lg font-semibold text-slate-900">Agency Fee Billing Queue</h2>
+              <p className="mt-1 text-sm text-slate-500">Finance-facing list of due, overdue, and paid agency fee records.</p>
             </div>
           </div>
-        </div>
-      </header>
 
-      <main className="max-w-7xl mx-auto py-8 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          {/* Billing Table */}
-          <div className="bg-white backdrop-blur-md rounded-2xl shadow-lg border border-white overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-300">
-              <h2 className="text-xl font-semibold text-gray-900">Billing Records</h2>
+          {loading ? (
+            <div className="px-6 py-10 text-sm text-slate-500">Loading billing records...</div>
+          ) : error ? (
+            <div className="px-6 py-10">
+              <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-4 text-sm text-rose-700">
+                {error}
+              </div>
             </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-300">
-                <thead className="bg-gray-50">
+          ) : (
+            <div className="overflow-x-auto px-2 pb-2">
+              <table className="min-w-full text-sm">
+                <thead className="bg-slate-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Principal
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Period
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Amount
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
+                    <th className="px-4 py-3 text-left">Principal</th>
+                    <th className="px-4 py-3 text-left">Contract</th>
+                    <th className="px-4 py-3 text-left">Fee Type</th>
+                    <th className="px-4 py-3 text-left">Amount</th>
+                    <th className="px-4 py-3 text-left">Due Date</th>
+                    <th className="px-4 py-3 text-left">Paid Date</th>
+                    <th className="px-4 py-3 text-left">Status</th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {billings.map((billing) => (
-                    <tr key={billing.id} className="hover:bg-gray-100">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{billing.principal.name}</div>
-                        <div className="text-sm text-gray-500">{billing.principal.company}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {billing.period}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        ${billing.amount.toLocaleString()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-4 py-2 text-xs font-semibold rounded-full ${
-                          billing.status === 'PAID'
-                            ? 'bg-green-100 text-green-800'
-                            : billing.status === 'PENDING'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-gray-100 text-gray-800'
-                        }`}>
-                          {billing.status}
-                        </span>
+                <tbody>
+                  {fees.map((fee) => {
+                    const state = getBillingState(fee);
+
+                    return (
+                      <tr key={fee.id} className="border-t border-slate-100">
+                        <td className="px-4 py-3 text-slate-800">{fee.principal?.name ?? "Unassigned principal"}</td>
+                        <td className="px-4 py-3 text-slate-600">{fee.contract?.contractNumber ?? "-"}</td>
+                        <td className="px-4 py-3 text-slate-700">{fee.feeType}</td>
+                        <td className="px-4 py-3 font-semibold text-slate-900">{formatMoney(fee.currency, fee.amount)}</td>
+                        <td className="px-4 py-3 text-slate-700">{formatDate(fee.dueDate)}</td>
+                        <td className="px-4 py-3 text-slate-700">{formatDate(fee.paidDate)}</td>
+                        <td className="px-4 py-3">
+                          <span className={`badge-soft ${state.className}`}>{state.label}</span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {fees.length === 0 ? (
+                    <tr>
+                      <td className="px-4 py-8 text-center text-slate-500" colSpan={7}>
+                        No agency fee billing records are available yet.
                       </td>
                     </tr>
-                  ))}
+                  ) : null}
                 </tbody>
               </table>
             </div>
-          </div>
-        </div>
-      </main>
-
-      {/* Create Invoice Form Modal */}
-      {showForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4">
-            <h3 className="text-xl font-extrabold text-gray-900 mb-6">Create Invoice</h3>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
-                  Principal ID
-                </label>
-                <input
-                  type="number"
-                  required
-                  value={formData.principalId}
-                  onChange={(e) => setFormData({ ...formData, principalId: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
-                  Period
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g., 2024-01"
-                  value={formData.period}
-                  onChange={(e) => setFormData({ ...formData, period: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
-                  Amount
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  required
-                  value={formData.amount}
-                  onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                />
-              </div>
-              <div className="flex space-x-3 pt-4">
-                <button
-                  type="submit"
-                  className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg font-medium transition-colors"
-                >
-                  Create Invoice
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowForm(false)}
-                  className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-2 px-4 rounded-lg font-medium transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+          )}
+        </section>
     </div>
   );
 }

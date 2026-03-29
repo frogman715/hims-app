@@ -2,13 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { checkPermission, PermissionLevel } from "@/lib/permission-middleware";
 import {
   FORM_APPROVAL_STATUSES,
   type FormApprovalStatusValue,
   isValidFormApprovalTransition,
 } from "@/lib/form-submission-workflow";
 import { handleApiError } from "@/lib/error-handler";
+import { ensureOfficeApiPathAccess } from "@/lib/office-api-access";
 
 interface UpdateFormSubmissionPayload {
   formData?: Record<string, unknown>;
@@ -39,12 +39,13 @@ export async function GET(
   const { id } = await context.params;
   try {
     const session = await getServerSession(authOptions);
-    if (!checkPermission(session, "crew", PermissionLevel.VIEW_ACCESS)) {
-      return NextResponse.json(
-        { error: "Insufficient permissions" },
-        { status: 403 }
-      );
-    }
+    const authError = ensureOfficeApiPathAccess(
+      session,
+      "/api/form-submissions",
+      "GET",
+      "Insufficient permissions to view form submissions"
+    );
+    if (authError) return authError;
 
     const form = await prisma.prepareJoiningForm.findUnique({
       where: { id },
@@ -176,12 +177,13 @@ export async function PUT(
   const { id } = await context.params;
   try {
     const session = await getServerSession(authOptions);
-    if (!checkPermission(session, "crew", PermissionLevel.EDIT_ACCESS)) {
-      return NextResponse.json(
-        { error: "Insufficient permissions" },
-        { status: 403 }
-      );
-    }
+    const authError = ensureOfficeApiPathAccess(
+      session,
+      "/api/form-submissions",
+      "PUT",
+      "Insufficient permissions to update form submissions"
+    );
+    if (authError) return authError;
 
     const parsedBody = (await req.json()) as unknown;
 
@@ -273,12 +275,13 @@ export async function DELETE(
   const { id } = await context.params;
   try {
     const session = await getServerSession(authOptions);
-    if (!checkPermission(session, "crew", PermissionLevel.FULL_ACCESS)) {
-      return NextResponse.json(
-        { error: "Insufficient permissions" },
-        { status: 403 }
-      );
-    }
+    const authError = ensureOfficeApiPathAccess(
+      session,
+      "/api/form-submissions",
+      "DELETE",
+      "Insufficient permissions to delete form submissions"
+    );
+    if (authError) return authError;
 
     await prisma.prepareJoiningForm.delete({
       where: { id },

@@ -1,14 +1,9 @@
 import { prisma } from "@/lib/prisma";
 import { requireCrew } from "@/lib/authz";
+import { getStatusPresentation } from "@/lib/ui-vocabulary";
 import MobileShell from "../MobileShell";
 
 const cardClass = "rounded-3xl border border-slate-800/50 bg-gradient-to-br from-slate-950/90 via-slate-900/75 to-slate-950/90 p-6 shadow-[0_20px_45px_-22px_rgba(16,185,129,0.55)] backdrop-blur";
-const badgeStyles: Record<CrewDocument["status"], string> = {
-  VALID: "bg-emerald-500/20 text-emerald-100 ring-1 ring-emerald-500/40",
-  EXPIRED: "bg-rose-500/20 text-rose-100 ring-1 ring-rose-500/40",
-  EXPIRING_SOON: "bg-amber-500/20 text-amber-100 ring-1 ring-amber-500/40",
-  PENDING: "bg-sky-500/20 text-sky-100 ring-1 ring-sky-500/40",
-};
 
 type CrewDocument = {
   id: string;
@@ -84,6 +79,25 @@ function getDaysUntilExpiry(expiryDate: Date | null | undefined): number | undef
   const diffTime = expiryDate.getTime() - now.getTime();
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   return diffDays;
+}
+
+function getMobileStatusBadgeClass(status: string) {
+  const tone = getStatusPresentation(status).tone;
+
+  switch (tone) {
+    case "success":
+      return "border border-emerald-500/40 bg-emerald-500/20 text-emerald-100";
+    case "warning":
+      return "border border-amber-500/40 bg-amber-500/20 text-amber-100";
+    case "danger":
+      return "border border-rose-500/40 bg-rose-500/20 text-rose-100";
+    case "progress":
+      return "border border-indigo-500/40 bg-indigo-500/20 text-indigo-100";
+    case "info":
+      return "border border-sky-500/40 bg-sky-500/20 text-sky-100";
+    default:
+      return "border border-slate-600/60 bg-slate-700/50 text-slate-100";
+  }
 }
 
 async function getCrewDocuments(userId: string | undefined): Promise<CrewDocument[]> {
@@ -199,12 +213,8 @@ export default async function CrewDocumentsPage() {
                 <h3 className="text-base font-semibold text-slate-100">{doc.type}</h3>
                 <p className="text-xs text-slate-300/90">Document No. {doc.number}</p>
               </div>
-              <span className={`whitespace-nowrap px-3 py-1 text-[11px] font-semibold uppercase tracking-wide ${badgeStyles[doc.status]}`}>
-                {doc.status === "EXPIRING_SOON"
-                  ? "Expiring Soon"
-                  : doc.status === "PENDING"
-                    ? "Pending Review"
-                    : doc.status}
+              <span className={`whitespace-nowrap rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wide ${getMobileStatusBadgeClass(doc.status)}`}>
+                {getStatusPresentation(doc.status).label}
               </span>
             </div>
             <div className="grid grid-cols-1 gap-3 text-xs text-slate-200 sm:grid-cols-2">

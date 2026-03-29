@@ -3,10 +3,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import { Breadcrumbs, type BreadcrumbItem } from '@/components/layout/Breadcrumbs';
+import { WorkspaceHero } from '@/components/layout/WorkspaceHero';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { StatusBadge } from '@/components/ui/StatusBadge';
 import type { AppRole } from '@/lib/roles';
 import { OFFICE_ROLES } from '@/lib/roles';
-import { Breadcrumbs, type BreadcrumbItem } from '@/components/layout/Breadcrumbs';
-import { PageHeader } from '@/components/layout/PageHeader';
 
 interface ReceiptListItem {
   id: string;
@@ -33,39 +36,6 @@ interface ReceiptListItem {
   } | null;
 }
 
-interface SeafarerOption {
-  id: string;
-  fullName: string;
-  rank: string | null;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}
-
-function mapSeafarerOptions(data: unknown): SeafarerOption[] {
-  if (!Array.isArray(data)) {
-    return [];
-  }
-
-  return data.reduce<SeafarerOption[]>((accumulator, item) => {
-    if (!isRecord(item)) {
-      return accumulator;
-    }
-
-    const { id, fullName, rank } = item;
-    if (typeof id === 'string' && typeof fullName === 'string') {
-      accumulator.push({
-        id,
-        fullName,
-        rank: typeof rank === 'string' ? rank : null,
-      });
-    }
-
-    return accumulator;
-  }, []);
-}
-
 export default function DocumentReceiptDashboardPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
@@ -80,14 +50,7 @@ export default function DocumentReceiptDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [receipts, setReceipts] = useState<ReceiptListItem[]>([]);
-  const [seafarers, setSeafarers] = useState<SeafarerOption[]>([]);
-  const [selectedCrewId, setSelectedCrewId] = useState<string>('');
   const [filter, setFilter] = useState('');
-  const [refreshing, setRefreshing] = useState(false);
-
-  const handleBackToDashboard = () => {
-    router.push('/dashboard');
-  };
 
   useEffect(() => {
     if (status === 'loading') {
@@ -118,27 +81,18 @@ export default function DocumentReceiptDashboardPage() {
       try {
         setLoading(true);
         setError(null);
-        const [seafarersRes, receiptsRes] = await Promise.all([
-          fetch('/api/seafarers'),
-          fetch('/api/document-receipts'),
-        ]);
-
-        if (seafarersRes.ok) {
-          const seafarersData = await seafarersRes.json();
-          setSeafarers(mapSeafarerOptions(seafarersData));
-        } else {
-          throw new Error('Failed to load daftar crew');
-        }
+        const receiptsRes = await fetch('/api/document-receipts');
 
         if (receiptsRes.ok) {
           const receiptsData = await receiptsRes.json();
           setReceipts(Array.isArray(receiptsData) ? receiptsData : []);
         } else {
-          throw new Error('Failed to load receipt');
+          const payload = await receiptsRes.json().catch(() => null);
+          throw new Error(payload?.error ?? 'Failed to load document receipts');
         }
       } catch (err) {
         console.error(err);
-        setError(err instanceof Error ? err.message : 'Terjadi kesalahan saat memuat data');
+        setError(err instanceof Error ? err.message : 'An error occurred while loading document receipt data.');
       } finally {
         setLoading(false);
       }
@@ -168,32 +122,6 @@ export default function DocumentReceiptDashboardPage() {
     ];
   }, [hasOfficeAccess]);
 
-  const handleCreate = () => {
-    if (!selectedCrewId) {
-      setError('Select crew first before creating receipt.');
-      return;
-    }
-    router.push(`/crewing/seafarers/${selectedCrewId}/document-receipts/new`);
-  };
-
-  const handleRefresh = async () => {
-    if (!isAuthorized) {
-      return;
-    }
-    try {
-      setRefreshing(true);
-      const response = await fetch('/api/document-receipts');
-      if (response.ok) {
-        const data = await response.json();
-        setReceipts(Array.isArray(data) ? data : []);
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setRefreshing(false);
-    }
-  };
-
   const formatDate = (value: string | null | undefined) => {
     if (!value) {
       return '-';
@@ -205,12 +133,34 @@ export default function DocumentReceiptDashboardPage() {
     return parsed.toLocaleDateString();
   };
 
+  const getReceiptDeskAction = (receipt: ReceiptListItem) => {
+    if (receipt.items.length === 0) {
+      return {
+        label: 'Check handover contents',
+        helper: 'Receipt exists without listed documents. Confirm whether the physical handover was recorded completely.',
+        status: 'REJECTED',
+      };
+    }
+
+    if (!receipt.deliveryDate || !receipt.deliveryLocation) {
+      return {
+        label: 'Complete receipt trace',
+        helper: 'Location or delivery date is still missing. Keep this receipt under office follow-up.',
+        status: 'PENDING_REVIEW',
+      };
+    }
+
+    return {
+      label: 'Archive reference only',
+      helper: 'Receipt is complete. Use it as audit support when document ownership or handover timing is questioned.',
+      status: 'APPROVED',
+    };
+  };
+
   if (status === 'loading' || (session && !isAuthorized)) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-6">
-        <div className="mx-auto max-w-4xl rounded-2xl border border-gray-200 bg-white p-10 text-center shadow-md">
-          Loading...
-        </div>
+      <div className="section-stack">
+        <div className="surface-card px-6 py-12 text-center text-sm text-slate-600">Loading document receipt workspace...</div>
       </div>
     );
   }
@@ -219,179 +169,171 @@ export default function DocumentReceiptDashboardPage() {
     return null;
   }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-6">
-      <div className="max-w-6xl mx-auto space-y-8">
-        {/* Reference layout: reuse Breadcrumbs + PageHeader combo across Crewing, Accounting, and HGQS. */}
-        <Breadcrumbs items={breadcrumbItems} />
-        <PageHeader
-        title="Crew Document Receipt"
-        subtitle="Create proof of physical document handover and digital archive"
-          actions={(
-            <div className="flex flex-wrap gap-3">
-              <button
-                type="button"
-                onClick={() => router.push('/crewing')}
-                className="inline-flex items-center gap-2 rounded-lg border border-gray-400 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
-              >
-                Back to Crewing
-              </button>
-              <button
-                type="button"
-                onClick={handleBackToDashboard}
-                className="inline-flex items-center gap-2 rounded-lg border border-gray-400 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
-              >
-                Back to Dashboard
-              </button>
-              <button
-                type="button"
-                onClick={handleRefresh}
-                disabled={refreshing}
-                className="inline-flex items-center gap-2 rounded-lg border border-gray-400 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50"
-              >
-                {refreshing ? 'Loading…' : 'Refresh Data'}
-              </button>
-            </div>
-          )}
-        />
+  const incompleteTraceCount = filteredReceipts.filter((receipt) => !receipt.deliveryDate || !receipt.deliveryLocation).length;
+  const emptyReceiptCount = filteredReceipts.filter((receipt) => receipt.items.length === 0).length;
 
-        <section className="bg-white shadow-xl rounded-2xl p-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Create New Document Receipt</h2>
-          <div className="grid grid-cols-1 md:grid-cols-[3fr_1fr] gap-4">
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2" htmlFor="crewSelector">
-                Select Crew
-              </label>
-              <select
-                id="crewSelector"
-                value={selectedCrewId}
-                onChange={(event) => setSelectedCrewId(event.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                disabled={loading}
-              >
-                <option value="">— Select crew submitting documents —</option>
-                {seafarers.map((crew) => (
-                  <option key={crew.id} value={crew.id}>
-                    {crew.fullName}
-                    {crew.rank ? ` • ${crew.rank}` : ''}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex items-end">
-              <button
-                type="button"
-                onClick={handleCreate}
-                className="w-full md:w-auto px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow hover:bg-blue-700"
-                disabled={loading}
-              >
-                Create Form
-              </button>
-            </div>
+  return (
+    <div className="section-stack">
+      <Breadcrumbs items={breadcrumbItems} />
+      <WorkspaceHero
+        eyebrow="Document Receipts"
+        title="Crew document receipts"
+        subtitle="Review archived proof of physical document handover between crew members, vessels, and office desks."
+        helperLinks={[
+          { href: '/crewing/documents', label: 'Document Desk' },
+          { href: '/dashboard', label: 'Dashboard' },
+        ]}
+        highlights={[
+          { label: 'Visible Receipts', value: filteredReceipts.length, detail: 'Receipt records matching the current search scope.' },
+          { label: 'Incomplete Trace', value: incompleteTraceCount, detail: 'Receipts still missing delivery date or location.' },
+          { label: 'Empty Contents', value: emptyReceiptCount, detail: 'Receipts without listed document contents that need verification.' },
+        ]}
+        actions={(
+          <>
+            <Button type="button" variant="secondary" size="sm" onClick={() => router.push('/crewing')}>
+              Back to Crewing
+            </Button>
+            <Button type="button" variant="ghost" size="sm" onClick={() => router.push('/dashboard')}>
+              Dashboard
+            </Button>
+          </>
+        )}
+      />
+
+      <section className="surface-card space-y-6 p-6">
+        <div className="grid gap-4 xl:grid-cols-3">
+          <div className="rounded-2xl border border-cyan-100 bg-cyan-50/80 px-4 py-4 text-sm text-slate-700 xl:col-span-2">
+            Use this register to trace where original certificates were handed over, what was included, and which entries still need document-office clarification.
           </div>
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Visible Receipts</p>
+            <p className="mt-2 text-3xl font-semibold text-slate-950">{filteredReceipts.length}</p>
+            <p className="mt-1 text-sm text-slate-600">Records matching the current search scope.</p>
+          </div>
+        </div>
+
+        <section className="rounded-2xl border border-slate-200 bg-white p-5">
+          <h2 className="text-lg font-semibold text-slate-950">Receipt Entry</h2>
+          <p className="mt-1 text-sm text-slate-600">
+            New receipt entry is temporarily hidden from the active office flow until the crewing receipt API is fully aligned.
+          </p>
         </section>
 
-        <section className="bg-white shadow-xl rounded-2xl p-8">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">Document Receipt History</h2>
-            <input
+        <section className="rounded-2xl border border-slate-200 bg-white p-5">
+          <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-slate-950">Receipt History</h2>
+              <p className="mt-1 text-sm text-slate-600">Search by crew name or vessel name to inspect archived handover records.</p>
+            </div>
+            <Input
+              id="receipt-filter"
               type="search"
-              placeholder="Cari crew atau kapal"
+              label="Search Register"
+              placeholder="Crew or vessel"
               value={filter}
               onChange={(event) => setFilter(event.target.value)}
-              className="w-full md:w-72 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              wrapperClassName="w-full lg:w-80"
             />
           </div>
 
-          {error && (
-            <div className="mb-4 rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
-              {error}
-            </div>
-          )}
+          {error ? (
+            <div className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div>
+          ) : null}
 
           {loading ? (
-            <div className="py-10 text-center text-gray-600">Loading data receipt...</div>
+            <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center text-sm text-slate-500">
+              Loading document receipt history...
+            </div>
           ) : filteredReceipts.length === 0 ? (
-            <div className="py-10 text-center text-gray-600">No receipt yang tercatat.</div>
+            <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center text-sm text-slate-500">
+              No document receipt records are available for the current filter.
+            </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+            <div className="overflow-x-auto rounded-2xl border border-slate-200">
+              <table className="min-w-full divide-y divide-slate-200">
+                <thead className="bg-slate-50">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
-                      Crew
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
-                      Vessel / Status
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
-                      Handover
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
-                      Dokumen
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
-                      Aksi
-                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Crew</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Vessel / Status</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Handover</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Documents</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Desk Action</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200 bg-white">
-                  {filteredReceipts.map((receipt) => (
-                    <tr key={receipt.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 text-sm text-gray-900">
-                        <div className="font-semibold">{receipt.crew?.fullName ?? '-'}</div>
-                        <div className="text-gray-600 text-xs">{receipt.crew?.rank ?? '—'}</div>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-900">
-                        <div>{receipt.vesselName ?? '-'}</div>
-                        <div className="text-xs text-gray-600">
-                          {receipt.crewStatus === 'NEW' ? 'Crew New' : 'Ex Crew'}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-900">
-                        <div>{receipt.deliveryLocation ?? '—'}</div>
-                        <div className="text-xs text-gray-600">{formatDate(receipt.deliveryDate)}</div>
-                        <div className="text-xs text-gray-500 mt-1">Dibuat {formatDate(receipt.createdAt)}</div>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-900">
-                        <ul className="space-y-1">
-                          {receipt.items.slice(0, 3).map((item) => (
-                            <li key={item.id} className="text-xs text-gray-700">
-                              {item.certificateName}
-                              {item.certificateNumber ? ` (${item.certificateNumber})` : ''}
-                            </li>
-                          ))}
-                        </ul>
-                        {receipt.items.length > 3 && (
-                          <span className="text-xs text-gray-500">+{receipt.items.length - 3} lainnya</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-900">
-                        <div className="flex flex-col gap-2">
-                          <button
-                            type="button"
-                            onClick={() => router.push(`/crewing/seafarers/${receipt.crewId}/documents`)}
-                            className="px-3 py-2 rounded-lg border border-gray-400 text-gray-700 hover:bg-gray-100 text-xs"
-                          >
-                            Lihat di Dokumen Crew
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => router.push(`/crewing/seafarers/${receipt.crewId}/document-receipts/new?copy=${receipt.id}`)}
-                            className="px-3 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 text-xs"
-                          >
-                            Duplikasi Form
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                <tbody className="divide-y divide-slate-200 bg-white">
+                  {filteredReceipts.map((receipt) => {
+                    const deskAction = getReceiptDeskAction(receipt);
+
+                    return (
+                      <tr key={receipt.id} className="align-top hover:bg-slate-50/70">
+                        <td className="px-4 py-4 text-sm text-slate-900">
+                          <div className="font-semibold">{receipt.crew?.fullName ?? '-'}</div>
+                          <div className="mt-1 text-xs text-slate-500">{receipt.crew?.rank ?? 'Rank not recorded'}</div>
+                        </td>
+                        <td className="px-4 py-4 text-sm text-slate-900">
+                          <div>{receipt.vesselName ?? '-'}</div>
+                          <div className="mt-1 text-xs text-slate-500">{receipt.crewStatus === 'NEW' ? 'New Crew' : 'Ex Crew'}</div>
+                        </td>
+                        <td className="px-4 py-4 text-sm text-slate-900">
+                          <div>{receipt.deliveryLocation ?? 'Location not recorded'}</div>
+                          <div className="mt-1 text-xs text-slate-500">Delivery: {formatDate(receipt.deliveryDate)}</div>
+                          <div className="mt-1 text-xs text-slate-400">Created: {formatDate(receipt.createdAt)}</div>
+                        </td>
+                        <td className="px-4 py-4 text-sm text-slate-900">
+                          {receipt.items.length === 0 ? (
+                            <span className="text-xs text-slate-500">No listed documents</span>
+                          ) : (
+                            <ul className="space-y-1">
+                              {receipt.items.slice(0, 3).map((item) => (
+                                <li key={item.id} className="text-xs leading-5 text-slate-700">
+                                  {item.certificateName}
+                                  {item.certificateNumber ? ` (${item.certificateNumber})` : ''}
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                          {receipt.items.length > 3 ? (
+                            <span className="mt-2 inline-block text-xs text-slate-500">+{receipt.items.length - 3} more documents</span>
+                          ) : null}
+                        </td>
+                        <td className="px-4 py-4 text-sm text-slate-900">
+                          <div className="space-y-2">
+                            <StatusBadge status={deskAction.status} label={deskAction.label} />
+                            <p className="max-w-xs text-xs leading-5 text-slate-600">{deskAction.helper}</p>
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 text-sm text-slate-900">
+                          <div className="flex flex-wrap gap-2">
+                            <Button
+                              type="button"
+                              variant="secondary"
+                              size="sm"
+                              className="!px-3 !py-2 !text-xs"
+                              onClick={() => router.push(`/crewing/seafarers/${receipt.crewId}/documents`)}
+                            >
+                              Crew Documents
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="!px-3 !py-2 !text-xs"
+                              onClick={() => router.push(`/crewing/seafarers/${receipt.crewId}/biodata`)}
+                            >
+                              Biodata
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
           )}
         </section>
-      </div>
+      </section>
     </div>
   );
 }

@@ -127,9 +127,13 @@ export async function POST(
       { status: 200 }
     );
   } catch (error) {
-    console.error("Photo upload error:", error);
+    console.error("[api/crewing/seafarers/photo][POST] upload failed", {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      timestamp: new Date().toISOString(),
+    });
     return NextResponse.json(
-      { error: "Failed to upload photo" },
+      { error: error instanceof Error ? error.message : "Failed to upload photo" },
       { status: 500 }
     );
   }

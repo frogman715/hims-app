@@ -1,6 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { InlineNotice } from '@/components/feedback/InlineNotice';
+import { WorkspaceEmptyState } from '@/components/feedback/WorkspaceEmptyState';
+import { StatusBadge } from '@/components/ui/StatusBadge';
 import {
   CheckCircle,
   XCircle,
@@ -54,6 +57,7 @@ export default function ApprovalDashboard({
   const [selectedApproval, setSelectedApproval] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState('');
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<{ tone: 'success' | 'error'; message: string } | null>(null);
 
   // Fetch approvals
   useEffect(() => {
@@ -109,6 +113,7 @@ export default function ApprovalDashboard({
     if (!approval.id) return;
 
     setProcessingId(approval.id);
+    setFeedback(null);
 
     try {
       const response = await fetch(
@@ -123,7 +128,7 @@ export default function ApprovalDashboard({
         }
       );
 
-      if (!response.ok) throw new Error('Failed to approve');
+      if (!response.ok) throw new Error('Approval could not be completed.');
 
       // Remove from pending
       setPendingApprovalsData((prev) =>
@@ -135,8 +140,9 @@ export default function ApprovalDashboard({
         approval.id,
         'approve'
       );
+      setFeedback({ tone: 'success', message: `Document ${approval.document.code} approved successfully.` });
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to approve');
+      setFeedback({ tone: 'error', message: err instanceof Error ? err.message : 'Approval could not be completed.' });
     } finally {
       setProcessingId(null);
     }
@@ -144,13 +150,14 @@ export default function ApprovalDashboard({
 
   const handleReject = async (approval: ApprovalRecord) => {
     if (!rejectReason.trim()) {
-      alert('Please provide a rejection reason');
+      setFeedback({ tone: 'error', message: 'Provide a rejection reason before rejecting the document.' });
       return;
     }
 
     if (!approval.id) return;
 
     setProcessingId(approval.id);
+    setFeedback(null);
 
     try {
       const response = await fetch(
@@ -165,7 +172,7 @@ export default function ApprovalDashboard({
         }
       );
 
-      if (!response.ok) throw new Error('Failed to reject');
+      if (!response.ok) throw new Error('Rejection could not be completed.');
 
       // Remove from pending
       setPendingApprovalsData((prev) =>
@@ -180,8 +187,9 @@ export default function ApprovalDashboard({
         approval.id,
         'reject'
       );
+      setFeedback({ tone: 'success', message: `Document ${approval.document.code} rejected and returned to the queue.` });
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to reject');
+      setFeedback({ tone: 'error', message: err instanceof Error ? err.message : 'Rejection could not be completed.' });
     } finally {
       setProcessingId(null);
     }
@@ -197,14 +205,14 @@ export default function ApprovalDashboard({
 
   if (error) {
     return (
-      <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-        {error}
-      </div>
+      <InlineNotice tone="error" message={error} />
     );
   }
 
   return (
     <div className="space-y-6">
+      {feedback ? <InlineNotice tone={feedback.tone} message={feedback.message} onDismiss={() => setFeedback(null)} /> : null}
+
       {/* Pending Approvals */}
       <div>
         <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
@@ -213,10 +221,10 @@ export default function ApprovalDashboard({
         </h2>
 
         {pendingApprovalsData.length === 0 ? (
-          <div className="text-center py-8 bg-green-50 rounded-lg">
-            <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-2" />
-            <p className="text-green-700 font-medium">No pending approvals</p>
-          </div>
+          <WorkspaceEmptyState
+            title="Approval queue is clear"
+            message="No controlled documents are currently waiting for your review."
+          />
         ) : (
           <div className="space-y-3">
             {pendingApprovalsData.map((approval) => (
@@ -242,9 +250,7 @@ export default function ApprovalDashboard({
                       </div>
                     </div>
                   </div>
-                  <span className="inline-block px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded-full">
-                    Awaiting Your Approval
-                  </span>
+                  <StatusBadge status="FOR_APPROVAL" label="Awaiting Your Approval" />
                 </div>
 
                 {/* Action Buttons */}
@@ -268,7 +274,7 @@ export default function ApprovalDashboard({
                         type="text"
                         value={rejectReason}
                         onChange={(e) => setRejectReason(e.target.value)}
-                        placeholder="Reason for rejection..."
+                        placeholder="Enter the return reason for this document"
                         className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
                         autoFocus
                       />
@@ -333,13 +339,9 @@ export default function ApprovalDashboard({
                 </div>
                 <div className="text-right">
                   <span
-                    className={`px-2 py-1 rounded text-xs font-semibold ${
-                      approval.status === 'APPROVED'
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}
+                    className="inline-flex"
                   >
-                    {approval.status}
+                    <StatusBadge status={approval.status} />
                   </span>
                   {approval.approvedBy && (
                     <p className="text-xs text-gray-600 mt-1">

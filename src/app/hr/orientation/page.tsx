@@ -3,6 +3,7 @@
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { WorkspaceHero } from "@/components/layout/WorkspaceHero";
 
 interface Orientation {
   id: number;
@@ -52,45 +53,69 @@ export default function OrientationPage() {
   };
 
   if (status === "loading" || loading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="section-stack">
+        <div className="surface-card px-6 py-12 text-center text-sm text-slate-600">Loading orientation register...</div>
+      </div>
+    );
   }
 
   if (!session) {
     return null;
   }
 
+  const completedCount = orientations.filter((item) => item.completed).length;
+  const pendingCount = orientations.filter((item) => !item.completed).length;
+
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                Employee Orientation (AD-14)
-              </h1>
-              <p className="text-sm text-gray-800">Karyawan baru harus menjalani orientation program</p>
+    <div className="section-stack">
+      <WorkspaceHero
+        eyebrow="Orientation Workspace"
+        title="Employee orientation"
+        subtitle="Schedule and monitor employee orientation records according to the active internal onboarding procedure."
+        helperLinks={[
+          { href: "/hr", label: "HR Workspace" },
+          { href: "/hr/employees", label: "Employee Register" },
+        ]}
+        highlights={[
+          { label: "Orientation Records", value: orientations.length, detail: "Current onboarding sessions loaded in the register." },
+          { label: "Completed", value: completedCount, detail: "Sessions already delivered and recorded as complete." },
+          { label: "Pending", value: pendingCount, detail: "Sessions still waiting to be delivered or confirmed." },
+        ]}
+        actions={(
+          <>
+            <button
+              onClick={() => router.push("/hr")}
+              className="inline-flex items-center rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-cyan-600 hover:text-cyan-800"
+            >
+              Back to HR
+            </button>
+            <button
+              onClick={() => router.push("/hr/orientation/new")}
+              className="inline-flex items-center rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+            >
+              Schedule Orientation
+            </button>
+          </>
+        )}
+      />
+
+      <section className="surface-card p-6">
+          <div className="mb-6 grid gap-3 md:grid-cols-3">
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <p className="text-sm font-semibold text-slate-900">1. Assign the correct employee</p>
+              <p className="mt-2 text-sm text-slate-600">Orientation history should always stay attached to the correct employee record.</p>
             </div>
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => router.push("/hr")}
-                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
-              >
-                ← Back to HR
-              </button>
-              <button
-                onClick={() => router.push("/hr/orientation/new")}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
-              >
-                Schedule Orientation
-              </button>
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <p className="text-sm font-semibold text-slate-900">2. Review onboarding scope</p>
+              <p className="mt-2 text-sm text-slate-600">Trainer, topics, and date should match the real onboarding session delivered by the office.</p>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <p className="text-sm font-semibold text-slate-900">3. Close with evidence</p>
+              <p className="mt-2 text-sm text-slate-600">Mark completed only after the induction session is delivered and the notes are sufficient.</p>
             </div>
           </div>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
             <ul className="divide-y divide-gray-200">
               {orientations.map((orientation) => (
                 <li key={orientation.id}>
@@ -98,23 +123,23 @@ export default function OrientationPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
                         <div className="flex items-center">
-                          <p className="text-sm font-medium text-indigo-600 truncate">
+                          <p className="truncate text-sm font-medium text-cyan-800">
                             {orientation.employee.fullName}
                           </p>
-                          <p className="ml-2 text-sm text-gray-500">
+                          <p className="ml-2 text-sm text-slate-500">
                             - {orientation.employee.position || 'N/A'} ({orientation.employee.department || 'N/A'})
                           </p>
                         </div>
                         <div className="mt-2 sm:flex sm:justify-between">
                           <div className="sm:flex">
-                            <p className="flex items-center text-sm text-gray-500">
+                            <p className="flex items-center text-sm text-slate-500">
                               Date: {new Date(orientation.orientationDate).toLocaleDateString()}
                             </p>
-                            <p className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0 sm:ml-6">
+                            <p className="mt-2 flex items-center text-sm text-slate-500 sm:ml-6 sm:mt-0">
                               Trainer: {orientation.trainer}
                             </p>
                           </div>
-                          <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
+                          <div className="mt-2 flex items-center text-sm text-slate-500 sm:mt-0">
                             <span className={`inline-flex items-center px-4.5 py-0.5 rounded-full text-xs font-medium ${
                               orientation.completed ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
                             }`}>
@@ -122,11 +147,11 @@ export default function OrientationPage() {
                             </span>
                           </div>
                         </div>
-                        <p className="mt-2 text-sm text-gray-700">
+                        <p className="mt-2 text-sm text-slate-700">
                           Topics: {orientation.topics}
                         </p>
                         {orientation.notes && (
-                          <p className="mt-1 text-sm text-gray-700">
+                          <p className="mt-1 text-sm text-slate-600">
                             Notes: {orientation.notes}
                           </p>
                         )}
@@ -134,7 +159,7 @@ export default function OrientationPage() {
                       <div className="flex-shrink-0">
                         <button
                           onClick={() => router.push(`/hr/orientation/${orientation.id}`)}
-                          className="text-indigo-600 hover:text-indigo-900 text-sm font-medium"
+                          className="text-sm font-medium text-cyan-700 hover:text-cyan-900"
                         >
                           Update
                         </button>
@@ -145,8 +170,7 @@ export default function OrientationPage() {
               ))}
             </ul>
           </div>
-        </div>
-      </main>
+      </section>
     </div>
   );
 }

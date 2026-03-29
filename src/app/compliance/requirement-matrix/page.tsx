@@ -1,6 +1,7 @@
 import { requireAuthorizedUser } from "@/lib/authz";
 import { PermissionLevel } from "@/lib/permissions";
 import { getRequirementMatrix } from "@/lib/compliance-requirement-matrix";
+import { WorkspaceHero } from "@/components/layout/WorkspaceHero";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -25,17 +26,24 @@ export default async function RequirementMatrixPage() {
   const data = await getRequirementMatrix();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 px-6 py-8">
-      <div className="mx-auto max-w-7xl space-y-6">
-        <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-blue-700">Principal and Flag Matrix</p>
-          <h1 className="mt-2 text-3xl font-semibold text-slate-900">Principal / flag-state requirement matrix</h1>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-            Baseline requirement matrix combining principal governance and flag-state expectations so deployment teams can review
-            what must be checked before mobilization.
-          </p>
-        </section>
+    <div className="section-stack mx-auto max-w-7xl px-6 py-8">
+      <WorkspaceHero
+        eyebrow="Principal And Flag Matrix"
+        title="Principal / flag-state requirement matrix"
+        subtitle="Baseline requirement matrix combining principal governance and flag-state expectations so deployment teams can review what must be checked before mobilization."
+        helperLinks={[
+          { href: "/compliance/fleet-board", label: "Fleet board" },
+          { href: "/crewing/prepare-joining", label: "Prepare joining" },
+          { href: "/dashboard", label: "Dashboard" },
+        ]}
+        highlights={[
+          { label: "Principals", value: data.principals.length.toLocaleString("id-ID"), detail: "Principal records currently shown in the matrix." },
+          { label: "Mapped Vessels", value: data.principals.reduce((sum, principal) => sum + principal.vessels.length, 0).toLocaleString("id-ID"), detail: "Active vessels linked to principals in this view." },
+          { label: "Use", value: "Pre-mobilization check", detail: "Review requirements before deployment or onboarding." },
+        ]}
+      />
 
+      <div className="space-y-6">
         <div className="space-y-6">
           {data.principals.map((principal) => (
             <section key={principal.principalId} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">

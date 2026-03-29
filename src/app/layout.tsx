@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { BreadcrumbWrapper } from "@/components/Breadcrumb";
 import { PwaRegister } from "./_components/PwaRegister";
 import { env } from "@/lib/env";
+import { AppShell } from "@/components/layout";
 
 // Use system fonts as fallback when Google Fonts are unavailable
 const fontVariables = {
@@ -72,8 +72,7 @@ export default function RootLayout({
         <PwaRegister />
         <ErrorBoundary>
           <Providers>
-            <BreadcrumbWrapper />
-            {children}
+            <AppShell>{children}</AppShell>
           </Providers>
         </ErrorBoundary>
       </body>

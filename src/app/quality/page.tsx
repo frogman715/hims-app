@@ -4,10 +4,20 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import Link from "next/link";
+import { canAccessOfficePath } from "@/lib/office-access";
+import { normalizeToUserRoles } from "@/lib/type-guards";
+import { WorkspaceHero } from "@/components/layout/WorkspaceHero";
 
 export default function Quality() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const userRoles = normalizeToUserRoles(session?.user?.roles ?? session?.user?.role);
+  const isSystemAdmin = session?.user?.isSystemAdmin === true;
+  const canManageDocuments = canAccessOfficePath("/api/quality/documents", userRoles, isSystemAdmin, "POST");
+  const canManageAudits = canAccessOfficePath("/api/quality/audits", userRoles, isSystemAdmin, "POST");
+  const canManageCapa = canAccessOfficePath("/api/quality/corrective-actions", userRoles, isSystemAdmin, "POST");
+  const canManageRisks = canAccessOfficePath("/api/quality/risks", userRoles, isSystemAdmin, "POST");
+  const canManageReviews = canAccessOfficePath("/api/quality/reviews", userRoles, isSystemAdmin, "POST");
 
   useEffect(() => {
     if (status === "loading") return;
@@ -25,47 +35,37 @@ export default function Quality() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      {/* Header with HGQS branding */}
-      <header className="bg-white backdrop-blur-lg shadow-2xl border-b border-white/20">
-        <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-700 to-slate-900 bg-clip-text text-transparent">
-                HGQS Quality Management System
-              </h1>
-              <p className="text-lg text-gray-700 mt-2 font-medium">ISO 9001:2015 & MLC 2006 Compliant Quality Assurance</p>
-              <div className="flex items-center space-x-4 mt-3">
-                <div className="bg-blue-100 text-blue-800 px-3 py-2 rounded-full text-sm font-medium">
-                  ISO 9001:2015 Certified
-                </div>
-                <div className="bg-green-100 text-green-800 px-3 py-2 rounded-full text-sm font-medium">
-                  MLC 2006 Compliant
-                </div>
-                <div className="bg-purple-100 text-purple-800 px-3 py-2 rounded-full text-sm font-medium">
-                  HGQS-MM Rev. 00
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Link
-                href="/dashboard"
-                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
-              >
-                ← Back to Dashboard
-              </Link>
-              <div className="bg-green-100 text-green-800 px-3 py-2 rounded-full text-sm font-medium">
-                System Online
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
+    <div className="section-stack mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+      <WorkspaceHero
+        eyebrow="HGQS Quality System"
+        title="HGQS quality management system"
+        subtitle="International-office quality workspace for ISO 9001:2015, MLC 2006, audit readiness, CAPA control, risk visibility, and controlled documentation."
+        helperLinks={[
+          { href: "/quality/qmr-dashboard", label: "QMR dashboard" },
+          { href: "/quality/documents", label: "Document control" },
+          { href: "/quality/forms/reference", label: "Forms library" },
+          { href: "/dashboard", label: "Dashboard" },
+        ]}
+        highlights={[
+          { label: "Standard", value: "ISO 9001:2015", detail: "Quality framework for office and controlled processes." },
+          { label: "Maritime Scope", value: "MLC 2006", detail: "Integrated into welfare, crewing, and management controls." },
+          { label: "Manual Revision", value: "HGQS-MM Rev. 00", detail: "Reference baseline currently shown in the workspace." },
+          { label: "Desk Status", value: "Review Desk Live", detail: "Open the relevant module for action, not just reference." },
+        ]}
+        actions={(
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-cyan-300 hover:text-cyan-700"
+          >
+            Back to dashboard
+          </Link>
+        )}
+      />
 
-      <main className="max-w-7xl mx-auto py-8 sm:px-6 lg:px-8">
+      <main className="space-y-8">
         {/* HGQS Overview */}
-        <div className="px-4 py-6 sm:px-0 mb-8">
-          <div className="bg-white backdrop-blur-md rounded-xl shadow-lg border border-gray-100 p-6">
+        <div>
+          <div className="surface-card p-6">
             <h2 className="text-2xl font-extrabold text-slate-800 mb-4">HGQS Quality Management System Overview</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <Link
@@ -103,7 +103,7 @@ export default function Quality() {
         </div>
 
         {/* Core HGQS Modules */}
-        <div className="px-4 py-6 sm:px-0">
+        <div>
           <h2 className="text-2xl font-extrabold text-slate-800 mb-6">Core Quality Management Modules</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Document Control */}
@@ -118,10 +118,10 @@ export default function Quality() {
                 <h3 className="text-xl font-extrabold text-blue-900">Document Control</h3>
               </div>
               <p className="text-sm text-blue-700 leading-relaxed mb-4">
-                HGQS Document Management System - Control quality documents, procedures, and maintain version control
+                HGQS document control desk for controlled copies, revisions, and approval records.
               </p>
               <div className="flex items-center text-blue-600 text-sm font-medium">
-                <span>Manage Documents</span>
+                <span>{canManageDocuments ? "Manage Documents" : "Review Documents"}</span>
                 <svg className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
@@ -140,10 +140,10 @@ export default function Quality() {
                 <h3 className="text-xl font-extrabold text-green-900">Internal Audits</h3>
               </div>
               <p className="text-sm text-green-700 leading-relaxed mb-4">
-                Conduct internal quality audits, track findings, and ensure ISO 9001:2015 compliance
+                Audit planning, live schedules, findings follow-up, and audit evidence review.
               </p>
               <div className="flex items-center text-green-600 text-sm font-medium">
-                <span>Manage Audits</span>
+                <span>{canManageAudits ? "Manage Audits" : "Review Audits"}</span>
                 <svg className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
@@ -162,10 +162,10 @@ export default function Quality() {
                 <h3 className="text-xl font-extrabold text-orange-900">Non-conformance & CAPA</h3>
               </div>
               <p className="text-sm text-orange-700 leading-relaxed mb-4">
-                Track non-conformities, implement corrective and preventive actions (CAPA)
+                Corrective action board for open CAPA, overdue items, and closure follow-up.
               </p>
               <div className="flex items-center text-orange-600 text-sm font-medium">
-                <span>View Actions</span>
+                <span>{canManageCapa ? "Manage CAPA" : "Review CAPA"}</span>
                 <svg className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
@@ -184,54 +184,54 @@ export default function Quality() {
                 <h3 className="text-xl font-extrabold text-red-900">Risk Management</h3>
               </div>
               <p className="text-sm text-red-700 leading-relaxed mb-4">
-                Identify, assess, and mitigate operational risks - HGQS Risk Evaluation & Treatment
+                Risk register and mitigation watch for operational, compliance, and office exposure.
               </p>
               <div className="flex items-center text-red-600 text-sm font-medium">
-                <span>View Risks</span>
+                <span>{canManageRisks ? "Manage Risks" : "Review Risks"}</span>
                 <svg className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </div>
             </Link>
 
-            {/* Training Management */}
+            {/* QMR Command */}
             <Link
-              href="/quality/training"
+              href="/quality/qmr-dashboard"
               className="group bg-gradient-to-br from-indigo-50 to-indigo-100 hover:from-indigo-100 hover:to-indigo-200 border border-indigo-200 rounded-xl p-6 transition-all duration-300 hover:shadow-lg hover:scale-105"
             >
               <div className="flex items-center mb-4">
                 <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-300">
-                  <span className="text-white text-xl font-extrabold">🎓</span>
+                  <span className="text-white text-xl font-extrabold">👔</span>
                 </div>
-                <h3 className="text-xl font-extrabold text-indigo-900">Training Management</h3>
+                <h3 className="text-xl font-extrabold text-indigo-900">QMR Command</h3>
               </div>
               <p className="text-sm text-indigo-700 leading-relaxed mb-4">
-                Employee training programs, competency assessment, and STCW compliance
+                Executive quality follow-up for tasks, audit exposure, open CAPA, and pending approvals.
               </p>
               <div className="flex items-center text-indigo-600 text-sm font-medium">
-                <span>Manage Training</span>
+                <span>Open QMR Dashboard</span>
                 <svg className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </div>
             </Link>
 
-            {/* Supplier Evaluation */}
+            {/* Forms Library */}
             <Link
-              href="/quality/suppliers"
+              href="/quality/forms/reference"
               className="group bg-gradient-to-br from-teal-50 to-teal-100 hover:from-teal-100 hover:to-teal-200 border border-teal-200 rounded-xl p-6 transition-all duration-300 hover:shadow-lg hover:scale-105"
             >
               <div className="flex items-center mb-4">
                 <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-teal-600 rounded-lg flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-300">
-                  <span className="text-white text-xl font-extrabold">🏢</span>
+                  <span className="text-white text-xl font-extrabold">📄</span>
                 </div>
-                <h3 className="text-xl font-extrabold text-teal-900">Supplier Evaluation</h3>
+                <h3 className="text-xl font-extrabold text-teal-900">Forms Library</h3>
               </div>
               <p className="text-sm text-teal-700 leading-relaxed mb-4">
-                Evaluate and monitor external providers, subcontractors, and service suppliers
+                Controlled reference library for HGQS forms, templates, and downloadable support documents.
               </p>
               <div className="flex items-center text-teal-600 text-sm font-medium">
-                <span>Manage Suppliers</span>
+                <span>Open Forms Library</span>
                 <svg className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
@@ -253,12 +253,12 @@ export default function Quality() {
                   <div>
                     <h3 className="text-xl font-extrabold text-purple-900">Management Review</h3>
                     <p className="text-sm text-purple-700 leading-relaxed mt-1">
-                      Conduct management review meetings, track decisions, and monitor continuous improvement initiatives - HGQS Management Review Process
+                      Management review desk for meeting records, decisions, and improvement follow-up.
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center text-purple-600 text-sm font-medium">
-                  <span>View Reviews</span>
+                  <span>{canManageReviews ? "Manage Reviews" : "Review Meetings"}</span>
                   <svg className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>

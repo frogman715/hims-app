@@ -5,6 +5,7 @@ import { PermissionLevel } from "@/lib/permissions";
 export default async function CrewingFormsLayout({ children }: { children: ReactNode }) {
   await requireAuthorizedUser({
     redirectIfCrew: "/m/crew",
+    allowedRoles: ["DIRECTOR", "OPERATIONAL"],
     module: "crewing",
     requiredLevel: PermissionLevel.VIEW_ACCESS,
     redirectOnDisallowed: "/dashboard",

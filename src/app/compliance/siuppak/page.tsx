@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { WorkspaceHero } from '@/components/layout/WorkspaceHero';
+import { pushAppNotice } from '@/lib/app-notice';
 
 export default function SiuppakReportsPage() {
   const [reportType, setReportType] = useState<'bulanan' | 'semester' | 'tahunan'>('semester');
@@ -33,34 +35,49 @@ export default function SiuppakReportsPage() {
         document.body.removeChild(a);
       } else {
         const error = await response.json();
-        alert(`Error: ${error.error || 'Failed to generate report'}`);
+        pushAppNotice({
+          tone: 'error',
+          title: 'Report generation failed',
+          message: error.error || 'The SIUPPAK report could not be generated.',
+        });
       }
     } catch (error) {
       console.error('Error generating report:', error);
-      alert('Error generating report');
+      pushAppNotice({
+        tone: 'error',
+        title: 'Report generation failed',
+        message: 'The SIUPPAK report could not be generated.',
+      });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
-      <div className="max-w-5xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <Link 
-              href="/crewing" 
-              className="text-gray-500 hover:text-gray-700"
-            >
-              ← Back to Crewing Department
-            </Link>
-          </div>
-          <h1 className="text-3xl font-bold text-gray-900">Report SIUPPAK</h1>
-          <p className="text-gray-700 mt-2">
-            Crew Recruitment and Placement Activity Report for Transportation Audit
-          </p>
-        </div>
+    <div className="section-stack mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
+      <WorkspaceHero
+        eyebrow="Compliance Reporting"
+        title="SIUPPAK report"
+        subtitle="Generate transportation-audit reporting from crew movement, placement, and principal-related data in the official reporting structure."
+        helperLinks={[
+          { href: "/crewing", label: "Crewing workspace" },
+          { href: "/compliance", label: "Compliance center" },
+          { href: "/dashboard", label: "Dashboard" },
+        ]}
+        highlights={[
+          { label: "Output", value: "Excel", detail: "Downloads in the official audit-ready spreadsheet format." },
+          { label: "Modes", value: "Monthly / Semester / Annual", detail: "Select the reporting period before generation." },
+          { label: "Data Basis", value: "Crew movement", detail: "Built from sign on/off, assignment, and principal data." },
+        ]}
+        actions={(
+          <Link
+            href="/crewing"
+            className="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-cyan-300 hover:text-cyan-700"
+          >
+            Back to crewing department
+          </Link>
+        )}
+      />
 
         {/* Info Banner */}
         <div className="bg-blue-100 border border-blue-200 rounded-lg p-4 mb-8">
@@ -265,7 +282,6 @@ export default function SiuppakReportsPage() {
             </div>
           </div>
         </div>
-      </div>
     </div>
   );
 }

@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { canAccessOfficePath } from "@/lib/office-access";
+import { Button } from "@/components/ui/Button";
+import { Select } from "@/components/ui/Select";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 
 interface ChecklistItem {
   id: string;
@@ -87,7 +90,11 @@ export default function MonthlyChecklistPage() {
   const years = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i);
 
   if (status === "loading" || loading) {
-    return <div>Loading monthly checklist...</div>;
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center">
+        <div className="text-sm font-medium text-slate-600">Loading monthly checklist...</div>
+      </div>
+    );
   }
 
   if (!session) {
@@ -99,83 +106,60 @@ export default function MonthlyChecklistPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Link
-                href="/crewing"
-                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
-              >
-                ← Back to Crewing
-              </Link>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">Monthly Crew Checklist</h1>
-                <p className="text-gray-800">Auto-generated ON/OFF signer review board linked to assignments and replacement planning</p>
-                <div className="flex items-center space-x-4 mt-2">
-                  <Link
-                    href="/crewing/crew-list"
-                    className="text-sm text-indigo-600 hover:text-indigo-800 font-medium"
-                  >
-                    ← View Crew List
-                  </Link>
-                  <span className="text-gray-700">|</span>
-                  <Link
-                    href="/crewing/readiness-board"
-                    className="text-sm text-indigo-600 hover:text-indigo-800 font-medium"
-                  >
-                    Open Readiness Board →
-                  </Link>
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              {/* Month/Year Selector */}
-              <div className="flex items-center space-x-2">
-                <select
-                  value={selectedMonth}
-                  onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-                  className="px-3 py-2 border border-gray-400 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                >
-                  {months.map((month, index) => (
-                    <option key={index + 1} value={index + 1}>{month}</option>
-                  ))}
-                </select>
-                <select
-                  value={selectedYear}
-                  onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                  className="px-3 py-2 border border-gray-400 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                >
-                  {years.map(year => (
-                    <option key={year} value={year}>{year}</option>
-                  ))}
-                </select>
-              </div>
-              <Link
-                href="/crewing/readiness-board"
-                className="inline-flex items-center px-6 py-3 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors shadow-lg"
-              >
-                Open Readiness Board
-              </Link>
+    <div className="section-stack">
+      <section className="surface-card p-7">
+        <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+          <div className="max-w-4xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-indigo-700">Movement Compliance</p>
+            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950">Monthly crew checklist</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              Auto-generated ON/OFF signer review board linked to assignments and replacement planning.
+            </p>
+            <div className="mt-3 flex flex-wrap items-center gap-4 text-sm font-medium text-indigo-700">
+              <Link href="/crewing/crew-list" className="hover:text-indigo-900">View crew list</Link>
+              <Link href="/crewing/readiness" className="hover:text-indigo-900">Open readiness hub</Link>
             </div>
           </div>
-        </div>
-
-        <div className="mb-8 rounded-xl border border-amber-200 bg-amber-50 px-6 py-4 text-sm text-amber-900 shadow-sm">
-          Reference board only. This checklist is derived from live assignment and replacement data. New manual entry is intentionally hidden so office staff do not create duplicate movement records.
-        </div>
-
-        {loadError ? (
-          <div className="mb-8 rounded-xl border border-rose-200 bg-rose-50 px-6 py-4 text-sm text-rose-700 shadow-sm">
-            {loadError}. Review the readiness board or assignment records, then retry this page.
+          <div className="flex flex-wrap gap-3">
+            <Button type="button" variant="secondary" onClick={() => router.push("/crewing")}>
+              Back to crewing
+            </Button>
+            <Button type="button" onClick={() => router.push("/crewing/readiness")}>
+              Open readiness hub
+            </Button>
           </div>
-        ) : null}
+        </div>
+      </section>
+
+      <section className="surface-card p-5">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-[220px,220px,1fr]">
+          <Select
+            value={String(selectedMonth)}
+            onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+            label="Month"
+            options={months.map((month, index) => ({ value: String(index + 1), label: month }))}
+          />
+          <Select
+            value={String(selectedYear)}
+            onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+            label="Year"
+            options={years.map((year) => ({ value: String(year), label: String(year) }))}
+          />
+          <div className="rounded-xl border border-amber-200 bg-amber-50 px-6 py-4 text-sm text-amber-900 shadow-sm">
+            Reference board only. This checklist is derived from live assignment and replacement data. New manual entry is intentionally hidden so office staff do not create duplicate movement records.
+          </div>
+        </div>
+      </section>
+
+      {loadError ? (
+        <section className="surface-card border-rose-200 bg-rose-50 px-6 py-4 text-sm text-rose-700 shadow-sm">
+          {loadError}. Review the readiness hub or assignment records, then retry this page.
+        </section>
+      ) : null}
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
-          <div className="bg-white rounded-xl shadow-lg p-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-5">
+          <div className="surface-card p-6">
             <div className="flex items-center">
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                 <span className="text-2xl">📈</span>
@@ -189,7 +173,7 @@ export default function MonthlyChecklistPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-lg p-6">
+          <div className="surface-card p-6">
             <div className="flex items-center">
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                 <span className="text-2xl">📉</span>
@@ -203,7 +187,7 @@ export default function MonthlyChecklistPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-lg p-6">
+          <div className="surface-card p-6">
             <div className="flex items-center">
               <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
                 <span className="text-2xl">⏰</span>
@@ -217,7 +201,7 @@ export default function MonthlyChecklistPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-lg p-6">
+          <div className="surface-card p-6">
             <div className="flex items-center">
               <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
                 <span className="text-2xl">⚠️</span>
@@ -231,7 +215,7 @@ export default function MonthlyChecklistPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-lg p-6">
+          <div className="surface-card p-6">
             <div className="flex items-center">
               <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
                 <span className="text-2xl">✅</span>
@@ -249,7 +233,7 @@ export default function MonthlyChecklistPage() {
         </div>
 
         {/* Checklist Table */}
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div className="surface-card overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-300">
             <h2 className="text-xl font-semibold text-gray-900">
               {months[selectedMonth - 1]} {selectedYear} - ON/OFF Signers
@@ -265,17 +249,17 @@ export default function MonthlyChecklistPage() {
               <p className="mt-1 text-sm text-gray-700">No ON/OFF signers recorded for this month.</p>
               <div className="mt-6">
                 <Link
-                  href="/crewing/readiness-board"
+                  href="/crewing/readiness"
                   className="inline-flex items-center px-4 py-2 border border-transparent shadow-md text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                 >
-                  Open Readiness Board
+                  Open Readiness Hub
                 </Link>
               </div>
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-300">
-                <thead className="bg-gray-50">
+              <table className="min-w-full divide-y divide-slate-300">
+                <thead className="bg-slate-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Seafarer
@@ -321,41 +305,36 @@ export default function MonthlyChecklistPage() {
                         {item.vessel}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-4 py-2 text-xs font-semibold rounded-full ${
-                          item.status === 'ON'
-                            ? 'bg-green-100 text-green-800'
-                            : item.status === 'OFF'
-                            ? 'bg-blue-100 text-blue-800'
-                            : 'bg-orange-100 text-orange-800'
-                        }`}>
-                          {item.status === 'ON' ? 'Sign-On' :
-                           item.status === 'OFF' ? 'Sign-Off' : 'Contract Expiring'}
-                        </span>
+                        <StatusBadge
+                          status={item.status === 'ON' ? 'ONBOARD' : item.status === 'OFF' ? 'OFF_SIGNED' : 'PENDING_REVIEW'}
+                          label={item.status === 'ON' ? 'Sign-On' : item.status === 'OFF' ? 'Sign-Off' : 'Contract Expiring'}
+                          className="px-4 py-2"
+                        />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {item.signOnDate ? new Date(item.signOnDate).toLocaleDateString() :
                          item.signOffDate ? new Date(item.signOffDate).toLocaleDateString() : '-'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-4 py-2 text-xs font-semibold rounded-full ${
-                          item.documentsComplete ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                        }`}>
-                          {item.documentsComplete ? 'Complete' : 'Pending'}
-                        </span>
+                        <StatusBadge
+                          status={item.documentsComplete ? 'APPROVED' : 'PENDING'}
+                          label={item.documentsComplete ? 'Complete' : 'Pending Review'}
+                          className="px-4 py-2"
+                        />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-4 py-2 text-xs font-semibold rounded-full ${
-                          item.medicalCheck ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                        }`}>
-                          {item.medicalCheck ? 'Pass' : 'Fail'}
-                        </span>
+                        <StatusBadge
+                          status={item.medicalCheck ? 'APPROVED' : 'REJECTED'}
+                          label={item.medicalCheck ? 'Passed' : 'Declined'}
+                          className="px-4 py-2"
+                        />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-4 py-2 text-xs font-semibold rounded-full ${
-                          item.trainingComplete ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                        }`}>
-                          {item.trainingComplete ? 'Complete' : 'Pending'}
-                        </span>
+                        <StatusBadge
+                          status={item.trainingComplete ? 'APPROVED' : 'PENDING'}
+                          label={item.trainingComplete ? 'Complete' : 'Pending Review'}
+                          className="px-4 py-2"
+                        />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <button
@@ -375,14 +354,14 @@ export default function MonthlyChecklistPage() {
         </div>
 
         {/* Information Section */}
-        <div className="mt-8 bg-blue-100 rounded-xl p-6 border border-blue-200">
+        <section className="surface-card border-sky-200 bg-sky-50 p-6">
           <div className="flex items-start space-x-4">
             <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
               <span className="text-2xl">ℹ️</span>
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-blue-900 mb-2">How This Checklist Works</h3>
-              <div className="text-blue-800 space-y-2">
+              <h3 className="mb-2 text-lg font-semibold text-sky-900">How this checklist works</h3>
+              <div className="space-y-2 text-sky-800">
                 <p>
                   <strong>Auto-Populated from Crew List:</strong> This checklist automatically shows all crew members
                   scheduled for sign-on or sign-off in the selected month based on their assignment records.
@@ -402,8 +381,7 @@ export default function MonthlyChecklistPage() {
               </div>
             </div>
           </div>
-        </div>
-      </div>
+        </section>
     </div>
   );
 }

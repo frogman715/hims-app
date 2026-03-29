@@ -12,8 +12,10 @@
 
 export enum UserRole {
   DIRECTOR = 'DIRECTOR',        // Top management - full access
-  CDMO = 'CDMO',                // Crew Documentation & Mobilization Officer
-  OPERATIONAL = 'OPERATIONAL',  // Operational staff - limited access
+  PRINCIPAL = 'PRINCIPAL',      // Principal-scoped external review
+  CDMO = 'CDMO',                // Crew documentation and document control
+  OPERATIONAL = 'OPERATIONAL',  // Contract, prepare joining, and mobilization
+  GA_DRIVER = 'GA_DRIVER',      // General affair / driver for assignment and transport
   ACCOUNTING = 'ACCOUNTING',    // Accounting department
   HR = 'HR',                    // HR department
   HR_ADMIN = 'HR_ADMIN',        // HR administrator
@@ -199,39 +201,64 @@ export const PERMISSION_MATRIX: Record<UserRole, Record<ModuleName, PermissionLe
     pkl: PermissionLevel.FULL_ACCESS
   },
 
+  [UserRole.PRINCIPAL]: {
+    dashboard: PermissionLevel.NO_ACCESS,
+    crew: PermissionLevel.NO_ACCESS,
+    principals: PermissionLevel.NO_ACCESS,
+    contracts: PermissionLevel.NO_ACCESS,
+    applications: PermissionLevel.NO_ACCESS,
+    assignments: PermissionLevel.NO_ACCESS,
+    vessels: PermissionLevel.NO_ACCESS,
+    documents: PermissionLevel.NO_ACCESS,
+    medical: PermissionLevel.NO_ACCESS,
+    visas: PermissionLevel.NO_ACCESS,
+    agencyFees: PermissionLevel.NO_ACCESS,
+    accounting: PermissionLevel.NO_ACCESS,
+    wageScales: PermissionLevel.NO_ACCESS,
+    agencyAgreements: PermissionLevel.NO_ACCESS,
+    disciplinary: PermissionLevel.NO_ACCESS,
+    quality: PermissionLevel.NO_ACCESS,
+    nationalHolidays: PermissionLevel.NO_ACCESS,
+    compliance: PermissionLevel.NO_ACCESS,
+    crewing: PermissionLevel.NO_ACCESS,
+    insurance: PermissionLevel.NO_ACCESS,
+    dispatches: PermissionLevel.NO_ACCESS,
+    pkl: PermissionLevel.NO_ACCESS
+  },
+
   [UserRole.CDMO]: {
-    // Full crew management, documents, contracts, agency agreements
+    // Document control and crew record ownership
     dashboard: PermissionLevel.FULL_ACCESS,
     crew: PermissionLevel.FULL_ACCESS,
-    principals: PermissionLevel.FULL_ACCESS,
-    contracts: PermissionLevel.FULL_ACCESS,
+    principals: PermissionLevel.VIEW_ACCESS,
+    contracts: PermissionLevel.NO_ACCESS,
     applications: PermissionLevel.FULL_ACCESS,
-    assignments: PermissionLevel.FULL_ACCESS,
+    assignments: PermissionLevel.NO_ACCESS,
     vessels: PermissionLevel.VIEW_ACCESS,
     documents: PermissionLevel.FULL_ACCESS,
     medical: PermissionLevel.EDIT_ACCESS,
     visas: PermissionLevel.FULL_ACCESS,
-    agencyFees: PermissionLevel.FULL_ACCESS,
+    agencyFees: PermissionLevel.NO_ACCESS,
     accounting: PermissionLevel.NO_ACCESS,
     wageScales: PermissionLevel.VIEW_ACCESS,
-    agencyAgreements: PermissionLevel.FULL_ACCESS,
-    disciplinary: PermissionLevel.EDIT_ACCESS,
+    agencyAgreements: PermissionLevel.VIEW_ACCESS,
+    disciplinary: PermissionLevel.VIEW_ACCESS,
     quality: PermissionLevel.VIEW_ACCESS,
     nationalHolidays: PermissionLevel.VIEW_ACCESS,
-    compliance: PermissionLevel.FULL_ACCESS,
+    compliance: PermissionLevel.EDIT_ACCESS,
     crewing: PermissionLevel.FULL_ACCESS,
-    insurance: PermissionLevel.EDIT_ACCESS,
-    dispatches: PermissionLevel.FULL_ACCESS,
-    pkl: PermissionLevel.FULL_ACCESS
+    insurance: PermissionLevel.VIEW_ACCESS,
+    dispatches: PermissionLevel.VIEW_ACCESS,
+    pkl: PermissionLevel.VIEW_ACCESS
   },
 
   [UserRole.QMR]: {
     dashboard: PermissionLevel.FULL_ACCESS,
     crew: PermissionLevel.VIEW_ACCESS,
     principals: PermissionLevel.VIEW_ACCESS,
-    contracts: PermissionLevel.VIEW_ACCESS,
+    contracts: PermissionLevel.NO_ACCESS,
     applications: PermissionLevel.VIEW_ACCESS,
-    assignments: PermissionLevel.VIEW_ACCESS,
+    assignments: PermissionLevel.NO_ACCESS,
     vessels: PermissionLevel.VIEW_ACCESS,
     documents: PermissionLevel.EDIT_ACCESS,
     medical: PermissionLevel.VIEW_ACCESS,
@@ -254,9 +281,9 @@ export const PERMISSION_MATRIX: Record<UserRole, Record<ModuleName, PermissionLe
     dashboard: PermissionLevel.FULL_ACCESS,
     crew: PermissionLevel.FULL_ACCESS,
     principals: PermissionLevel.VIEW_ACCESS,
-    contracts: PermissionLevel.EDIT_ACCESS,
+    contracts: PermissionLevel.NO_ACCESS,
     applications: PermissionLevel.FULL_ACCESS,
-    assignments: PermissionLevel.FULL_ACCESS,
+    assignments: PermissionLevel.NO_ACCESS,
     vessels: PermissionLevel.VIEW_ACCESS,
     documents: PermissionLevel.FULL_ACCESS,
     medical: PermissionLevel.FULL_ACCESS,
@@ -276,13 +303,13 @@ export const PERMISSION_MATRIX: Record<UserRole, Record<ModuleName, PermissionLe
   },
 
   [UserRole.OPERATIONAL]: {
-    // Fleet operations, dispatches, basic crew info
+    // Contract, prepare joining, and mobilization ownership
     dashboard: PermissionLevel.FULL_ACCESS,
     crew: PermissionLevel.VIEW_ACCESS,
     principals: PermissionLevel.VIEW_ACCESS,
-    contracts: PermissionLevel.VIEW_ACCESS,
+    contracts: PermissionLevel.FULL_ACCESS,
     applications: PermissionLevel.VIEW_ACCESS,
-    assignments: PermissionLevel.VIEW_ACCESS,
+    assignments: PermissionLevel.NO_ACCESS,
     vessels: PermissionLevel.FULL_ACCESS,
     documents: PermissionLevel.EDIT_ACCESS,
     medical: PermissionLevel.NO_ACCESS,
@@ -294,11 +321,36 @@ export const PERMISSION_MATRIX: Record<UserRole, Record<ModuleName, PermissionLe
     disciplinary: PermissionLevel.VIEW_ACCESS,
     quality: PermissionLevel.EDIT_ACCESS,
     nationalHolidays: PermissionLevel.VIEW_ACCESS,
-    compliance: PermissionLevel.VIEW_ACCESS,
-    crewing: PermissionLevel.EDIT_ACCESS,
+    compliance: PermissionLevel.EDIT_ACCESS,
+    crewing: PermissionLevel.FULL_ACCESS,
     insurance: PermissionLevel.VIEW_ACCESS,
     dispatches: PermissionLevel.FULL_ACCESS,
     pkl: PermissionLevel.EDIT_ACCESS
+  },
+
+  [UserRole.GA_DRIVER]: {
+    dashboard: PermissionLevel.VIEW_ACCESS,
+    crew: PermissionLevel.VIEW_ACCESS,
+    principals: PermissionLevel.VIEW_ACCESS,
+    contracts: PermissionLevel.NO_ACCESS,
+    applications: PermissionLevel.NO_ACCESS,
+    assignments: PermissionLevel.FULL_ACCESS,
+    vessels: PermissionLevel.FULL_ACCESS,
+    documents: PermissionLevel.NO_ACCESS,
+    medical: PermissionLevel.NO_ACCESS,
+    visas: PermissionLevel.NO_ACCESS,
+    agencyFees: PermissionLevel.NO_ACCESS,
+    accounting: PermissionLevel.NO_ACCESS,
+    wageScales: PermissionLevel.NO_ACCESS,
+    agencyAgreements: PermissionLevel.NO_ACCESS,
+    disciplinary: PermissionLevel.NO_ACCESS,
+    quality: PermissionLevel.NO_ACCESS,
+    nationalHolidays: PermissionLevel.VIEW_ACCESS,
+    compliance: PermissionLevel.NO_ACCESS,
+    crewing: PermissionLevel.VIEW_ACCESS,
+    insurance: PermissionLevel.NO_ACCESS,
+    dispatches: PermissionLevel.FULL_ACCESS,
+    pkl: PermissionLevel.NO_ACCESS
   },
 
   [UserRole.ACCOUNTING]: {
@@ -306,7 +358,7 @@ export const PERMISSION_MATRIX: Record<UserRole, Record<ModuleName, PermissionLe
     dashboard: PermissionLevel.FULL_ACCESS,
     crew: PermissionLevel.VIEW_ACCESS,
     principals: PermissionLevel.VIEW_ACCESS,
-    contracts: PermissionLevel.FULL_ACCESS,
+    contracts: PermissionLevel.VIEW_ACCESS,
     applications: PermissionLevel.NO_ACCESS,
     assignments: PermissionLevel.NO_ACCESS,
     vessels: PermissionLevel.VIEW_ACCESS,
@@ -333,7 +385,7 @@ export const PERMISSION_MATRIX: Record<UserRole, Record<ModuleName, PermissionLe
     principals: PermissionLevel.NO_ACCESS,
     contracts: PermissionLevel.NO_ACCESS,
     applications: PermissionLevel.NO_ACCESS,
-    assignments: PermissionLevel.VIEW_ACCESS,
+    assignments: PermissionLevel.NO_ACCESS,
     vessels: PermissionLevel.VIEW_ACCESS,
     documents: PermissionLevel.VIEW_ACCESS,
     medical: PermissionLevel.NO_ACCESS,
@@ -382,9 +434,9 @@ export const PERMISSION_MATRIX: Record<UserRole, Record<ModuleName, PermissionLe
     dashboard: PermissionLevel.FULL_ACCESS,
     crew: PermissionLevel.EDIT_ACCESS,
     principals: PermissionLevel.VIEW_ACCESS,
-    contracts: PermissionLevel.VIEW_ACCESS,
+    contracts: PermissionLevel.NO_ACCESS,
     applications: PermissionLevel.EDIT_ACCESS,
-    assignments: PermissionLevel.EDIT_ACCESS,
+    assignments: PermissionLevel.NO_ACCESS,
     vessels: PermissionLevel.VIEW_ACCESS,
     documents: PermissionLevel.EDIT_ACCESS,
     medical: PermissionLevel.FULL_ACCESS,
@@ -453,10 +505,22 @@ export const SENSITIVITY_ACCESS_MATRIX: Record<UserRole, Record<DataSensitivity,
     [DataSensitivity.GREEN]: true   // Can access GREEN data
   },
 
+  [UserRole.GA_DRIVER]: {
+    [DataSensitivity.RED]: false,
+    [DataSensitivity.AMBER]: false,
+    [DataSensitivity.GREEN]: true
+  },
+
   [UserRole.ACCOUNTING]: {
     [DataSensitivity.RED]: false,   // No access to RED data
     [DataSensitivity.AMBER]: true,  // Can access financial AMBER data
     [DataSensitivity.GREEN]: true   // Can access GREEN data
+  },
+
+  [UserRole.PRINCIPAL]: {
+    [DataSensitivity.RED]: false,
+    [DataSensitivity.AMBER]: false,
+    [DataSensitivity.GREEN]: false,
   },
 
   [UserRole.HR]: {

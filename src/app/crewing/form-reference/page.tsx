@@ -3,6 +3,10 @@
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
+import { pushAppNotice } from "@/lib/app-notice";
 
 interface Form {
   filename: string;
@@ -91,7 +95,11 @@ export default function FormReferencePage() {
 
   const handleDownloadWithCrewData = async (categoryCode: string, filename: string) => {
     if (!selectedCrewId) {
-      alert("Please select a crew member first");
+      pushAppNotice({
+        tone: "warning",
+        title: "Crew selection required",
+        message: "Select a crew member before downloading a pre-filled form.",
+      });
       return;
     }
 
@@ -120,7 +128,11 @@ export default function FormReferencePage() {
       document.body.removeChild(a);
     } catch (error) {
       console.error("Download error:", error);
-      alert("Failed to download form");
+      pushAppNotice({
+        tone: "error",
+        title: "Download failed",
+        message: "The form could not be downloaded.",
+      });
     }
   };
 
@@ -145,7 +157,11 @@ export default function FormReferencePage() {
       document.body.removeChild(a);
     } catch (error) {
       console.error("Download error:", error);
-      alert("Failed to download form");
+      pushAppNotice({
+        tone: "error",
+        title: "Download failed",
+        message: "The form could not be downloaded.",
+      });
     }
   };
 
@@ -156,75 +172,74 @@ export default function FormReferencePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="text-2xl font-semibold text-slate-700">Loading forms...</div>
+      <div className="flex min-h-[40vh] items-center justify-center">
+        <div className="text-sm font-semibold text-slate-600">Loading form library...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-4xl font-bold text-slate-900 mb-2">Form References</h1>
-            <p className="text-lg text-slate-600">Download official form templates - blank or pre-filled with crew data</p>
-          </div>
-          <a
-            href="/crewing"
-            className="px-4 py-2.5 bg-slate-600 hover:bg-slate-700 text-white rounded-lg font-bold transition-colors duration-200 flex items-center gap-2"
-          >
-            <span>←</span>
-            Back
-          </a>
-        </div>
-
-        {/* Crew Selector */}
-        <div className="bg-green-50 border-l-4 border-green-500 rounded-lg p-4 mb-6">
-          <label className="block text-sm font-bold text-slate-700 mb-2">
-            📋 Select Crew Member (Optional - for pre-filled forms):
-          </label>
-          <select
-            value={selectedCrewId}
-            onChange={(e) => setSelectedCrewId(e.target.value)}
-            className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none font-medium bg-white"
-          >
-            <option value="">-- Download Blank Form (No Crew Data) --</option>
-            {crews.map((crew) => (
-              <option key={crew.id} value={crew.id}>
-                {crew.fullName} ({crew.rank}) {crew.passportNumber ? `- ${crew.passportNumber}` : ""}
-              </option>
-            ))}
-          </select>
-          {selectedCrewId && (
-            <p className="text-green-700 text-sm mt-2">
-              ✅ Selected crew will auto-fill: Name, Rank, Passport, Email, Phone, Contact Info
+    <div className="section-stack">
+      <section className="surface-card p-7">
+        <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+          <div className="max-w-4xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-sky-700">Reference Library</p>
+            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950">Form references</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              Download official office templates either as blank forms or pre-filled with crew data.
             </p>
-          )}
+          </div>
+          <Button type="button" variant="secondary" onClick={() => router.push("/crewing")}>
+            Back to crewing
+          </Button>
         </div>
+      </section>
 
-        {/* Important Notice */}
-        <div className="bg-amber-50 border-l-4 border-amber-500 rounded-lg p-4 mb-6">
+      <section className="surface-card p-5">
+        <Select
+          value={selectedCrewId}
+          onChange={(e) => setSelectedCrewId(e.target.value)}
+          label="Select crew member for pre-filled forms"
+          options={[
+            { value: "", label: "Download blank form only" },
+            ...crews.map((crew) => ({
+              value: crew.id,
+              label: `${crew.fullName} (${crew.rank})${crew.passportNumber ? ` - ${crew.passportNumber}` : ""}`,
+            })),
+          ]}
+          helperText={
+            selectedCrewId
+              ? "Selected crew will auto-fill name, rank, passport, email, phone, and contact details."
+              : "Leave blank to download empty templates without crew data."
+          }
+        />
+      </section>
+
+      <section className="surface-card border-amber-200 bg-amber-50 p-4">
           <p className="text-amber-900 font-bold mb-1">⚠️ Download Options:</p>
           <p className="text-amber-800 text-sm">
             <strong>Without Crew Selection:</strong> Download blank form template<br />
             <strong>With Crew Selection:</strong> Form is pre-filled with selected crew&apos;s data (Name, Rank, Passport, Email, Phone, etc)
           </p>
-        </div>
+      </section>
 
-        {/* Info Box */}
-        <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 rounded-lg">
+      <section className="surface-card p-4">
+          <p className="text-slate-900 font-bold mb-1">Reference only</p>
+          <p className="text-slate-700 text-sm">
+            This page is a document library. It does not replace Prepare Joining, contract approval, or live checklist completion.
+          </p>
+      </section>
+
+      <section className="surface-card border-sky-200 bg-sky-50 p-4">
           <p className="text-blue-900 font-semibold">
             📋 Total Forms: {categories.reduce((sum, cat) => sum + cat.forms.length, 0)}
           </p>
           <p className="text-blue-800 text-sm mt-1">
             Select a category and download the forms you need
           </p>
-        </div>
+      </section>
 
-        {/* Breadcrumb */}
-        <div className="mb-6 text-sm text-slate-600">
+      <div className="text-sm text-slate-600">
           <span>Form References</span>
           {activeCategory && (
             <>
@@ -234,8 +249,7 @@ export default function FormReferencePage() {
           )}
         </div>
 
-        {/* Category Selection */}
-        <div className="mb-6">
+      <section className="surface-card p-5">
           <div className="text-sm font-bold text-slate-600 mb-3 uppercase tracking-wider">Select Category:</div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
             {categories.map((cat) => (
@@ -269,31 +283,28 @@ export default function FormReferencePage() {
               </button>
             ))}
           </div>
-        </div>
+      </section>
 
-        {/* Search */}
-        <div className="mb-6">
-          <label className="block text-sm font-bold text-slate-700 mb-2">Search in {activeCategory?.category}:</label>
-          <input
+      <section className="surface-card p-5">
+          <Input
             type="text"
+            label={`Search in ${activeCategory?.category ?? "selected category"}`}
             placeholder="Type form name to search..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-medium"
+            helperText="Search by file name within the active category."
           />
-        </div>
+      </section>
 
-        {/* Category Description */}
-        {activeCategory && (
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 rounded-lg p-4 mb-6">
+      {activeCategory && (
+          <section className="surface-card border-sky-200 bg-sky-50 p-4">
             <h3 className="font-bold text-slate-900 text-lg mb-2">About {activeCategory.category}</h3>
             <p className="text-slate-700 leading-relaxed text-sm">{activeCategory.description}</p>
-          </div>
-        )}
+          </section>
+      )}
 
-        {/* Forms Table */}
-        {filteredForms.length > 0 ? (
-          <div className="bg-white rounded-lg shadow-md overflow-hidden">
+      {filteredForms.length > 0 ? (
+          <section className="surface-card overflow-hidden">
             <div className="bg-slate-100 px-6 py-3 border-b border-slate-200">
               <p className="font-bold text-slate-900">Showing {filteredForms.length} of {activeCategory?.forms.length} forms</p>
             </div>
@@ -319,16 +330,16 @@ export default function FormReferencePage() {
                         {selectedCrewId && (
                           <button
                             onClick={() => handleDownloadWithCrewData(activeTab, form.filename)}
-                            className="inline-flex items-center gap-1 px-3 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-bold text-xs transition-colors duration-200"
+                            className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white transition-colors duration-200 hover:bg-emerald-700"
                             title="Download with crew data pre-filled"
                           >
-                            <span>��</span>
+                            <span>✓</span>
                             Pre-Fill
                           </button>
                         )}
                         <button
                           onClick={() => handleDownloadBlank(activeTab, form.filename)}
-                          className="inline-flex items-center gap-1 px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-bold text-xs transition-colors duration-200"
+                          className="inline-flex items-center gap-1 rounded-lg bg-sky-600 px-3 py-2 text-xs font-bold text-white transition-colors duration-200 hover:bg-sky-700"
                           title="Download blank template"
                         >
                           <span>⬇️</span>
@@ -340,22 +351,20 @@ export default function FormReferencePage() {
                 ))}
               </tbody>
             </table>
-          </div>
-        ) : (
-          <div className="bg-white rounded-lg shadow-md p-8 text-center">
+          </section>
+      ) : (
+          <section className="surface-card p-8 text-center">
             <p className="text-slate-600 text-lg">
               {searchTerm ? "No forms matching your search" : "No forms available"}
             </p>
-          </div>
-        )}
+          </section>
+      )}
 
-        {/* Instructions */}
-        <div className="mt-8 p-4 bg-slate-50 rounded-lg border border-slate-200">
+      <section className="surface-card p-4">
           <p className="text-sm text-slate-700 text-center">
             💡 <strong>How to use:</strong> Select crew member → Select form category → Choose &quot;Pre-Fill&quot; (with data) or &quot;Blank&quot; (empty template) → Download
           </p>
-        </div>
-      </div>
+      </section>
     </div>
   );
 }

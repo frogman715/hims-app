@@ -4,8 +4,7 @@
  * Securely serves uploaded files from the centralized upload directory.
  * Handles authentication and permission checks before serving files.
  * 
- * URL Pattern: /api/files/{crewId}_{slug}/{filename}
- * Example: /api/files/cm123abc_JOHN_DOE_MASTER/20251230_cm123abc_photo.jpg
+ * URL Pattern: /api/files/{relative-upload-path}
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -17,6 +16,32 @@ import { prisma } from '@/lib/prisma';
 import { recordAuditLog } from '@/lib/audit-log';
 import { hasPermission, PermissionLevel, UserRole } from '@/lib/permissions';
 import { isSystemAdmin, normalizeToUserRoles } from '@/lib/type-guards';
+
+const IMAGE_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.svg', '.heic', '.heif']);
+
+function isImageRequest(req: NextRequest, fullPath: string) {
+  const accept = req.headers.get('accept') ?? '';
+  const destination = req.headers.get('sec-fetch-dest') ?? '';
+  const ext = path.extname(fullPath).toLowerCase();
+  return IMAGE_EXTENSIONS.has(ext) || accept.includes('image/') || destination === 'image';
+}
+
+function serveFallbackImage() {
+  const fallbackPath = path.join(process.cwd(), 'public', 'logo.png');
+  const fallbackBuffer = fs.readFileSync(fallbackPath);
+  const fallbackBody = new Uint8Array(fallbackBuffer);
+
+  return new NextResponse(fallbackBody, {
+    status: 200,
+    headers: {
+      'Content-Type': 'image/png',
+      'Content-Length': fallbackBuffer.length.toString(),
+      'Cache-Control': 'private, max-age=300',
+      'X-HIMS-File-Fallback': 'logo',
+      'X-Content-Type-Options': 'nosniff',
+    },
+  });
+}
 
 /**
  * GET handler for serving files
@@ -39,8 +64,7 @@ export async function GET(
     }
     const requestedPath = resolvedParams.path.join('/');
     const crewSegment = resolvedParams.path[0] ?? '';
-    const crewId = crewSegment.split('_')[0];
-    if (!crewId) {
+    if (!crewSegment) {
       return new NextResponse('Bad request', { status: 400 });
     }
 
@@ -48,7 +72,7 @@ export async function GET(
     const fullPath = getAbsolutePath(requestedPath);
 
     const session = auth.session;
-    const roles = normalizeToUserRoles(session.user.roles);
+    const roles = normalizeToUserRoles(session.user.roles ?? session.user.role);
     const isAdmin = isSystemAdmin(session);
     const hasCrewAccess = hasPermission(roles, 'crew', PermissionLevel.VIEW_ACCESS);
 
@@ -58,17 +82,20 @@ export async function GET(
         const sessionEmail = session.user.email ?? null;
         let crew = await prisma.crew.findUnique({
           where: { id: session.user.id },
-          select: { id: true },
+          select: { id: true, crewCode: true },
         });
 
         if (!crew && sessionEmail) {
           crew = await prisma.crew.findFirst({
             where: { email: sessionEmail },
-            select: { id: true },
+            select: { id: true, crewCode: true },
           });
         }
 
-        if (!crew || crew.id !== crewId) {
+        const matchesCrewFolder =
+          crew != null && (crew.id === crewSegment || crew.crewCode === crewSegment);
+
+        if (!matchesCrewFolder) {
           return new NextResponse('Forbidden', { status: 403 });
         }
       } else {
@@ -93,11 +120,14 @@ export async function GET(
         fullPath,
         user: session.user.email,
       });
-      return new NextResponse('Not found', { status: 404 });
+      if (isImageRequest(req, fullPath)) {
+        return serveFallbackImage();
+      }
+      return NextResponse.json(
+        { error: 'File not found', path: requestedPath },
+        { status: 404 }
+      );
     }
-
-    // Read file
-    const fileBuffer = fs.readFileSync(fullPath);
 
     // Determine MIME type from extension
     const ext = path.extname(fullPath).toLowerCase();
@@ -113,6 +143,34 @@ export async function GET(
     };
 
     const mimeType = mimeTypes[ext] || 'application/octet-stream';
+    if (isImageRequest(req, fullPath) && !mimeType.startsWith('image/')) {
+      console.warn('[FILE_SERVER] Invalid image mime for requested image path:', {
+        requestedPath,
+        fullPath,
+        mimeType,
+        user: session.user.email,
+      });
+      return serveFallbackImage();
+    }
+
+    let fileBuffer: Buffer;
+    try {
+      fileBuffer = fs.readFileSync(fullPath);
+    } catch (readError) {
+      console.error('[FILE_SERVER] Failed to read file:', {
+        requestedPath,
+        fullPath,
+        user: session.user.email,
+        error: readError instanceof Error ? readError.message : String(readError),
+      });
+      if (isImageRequest(req, fullPath)) {
+        return serveFallbackImage();
+      }
+      return NextResponse.json(
+        { error: 'Failed to read file', path: requestedPath },
+        { status: 500 }
+      );
+    }
 
     // Log access for audit purposes
     console.info('[FILE_SERVER] File accessed:', {
@@ -143,7 +201,7 @@ export async function GET(
     }
 
     // Return file with appropriate headers
-    return new NextResponse(fileBuffer, {
+    return new NextResponse(new Uint8Array(fileBuffer), {
       status: 200,
       headers: {
         'Content-Type': mimeType,

@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { WorkspaceHero } from '@/components/layout/WorkspaceHero';
+import { Button } from '@/components/ui/Button';
 
 interface DisciplinaryRecord {
   id: string;
@@ -32,6 +34,8 @@ export default function DisciplinaryPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingRecord, setEditingRecord] = useState<DisciplinaryRecord | null>(null);
+  const [feedback, setFeedback] = useState<{ tone: 'success' | 'danger'; message: string } | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     contractId: '',
     crewId: '',
@@ -106,13 +110,17 @@ export default function DisciplinaryPage() {
         });
         setShowForm(false);
         setEditingRecord(null);
+        setFeedback({
+          tone: 'success',
+          message: editingRecord ? 'Disciplinary record updated successfully.' : 'Disciplinary record registered successfully.',
+        });
         fetchRecords();
       } else {
-        alert(`Error ${editingRecord ? 'updating' : 'creating'} disciplinary record`);
+        setFeedback({ tone: 'danger', message: editingRecord ? 'Disciplinary record update failed.' : 'Disciplinary record registration failed.' });
       }
     } catch (error) {
       console.error('Error:', error);
-      alert(`Error ${editingRecord ? 'updating' : 'creating'} disciplinary record`);
+      setFeedback({ tone: 'danger', message: editingRecord ? 'Disciplinary record update failed.' : 'Disciplinary record registration failed.' });
     }
   };
 
@@ -138,21 +146,21 @@ export default function DisciplinaryPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this disciplinary record?')) return;
-
     try {
       const response = await fetch(`/api/disciplinary/${id}`, {
         method: 'DELETE',
       });
 
       if (response.ok) {
+        setPendingDeleteId(null);
+        setFeedback({ tone: 'success', message: 'Disciplinary record removed from the register.' });
         fetchRecords();
       } else {
-        alert('Error deleting disciplinary record');
+        setFeedback({ tone: 'danger', message: 'Disciplinary record could not be removed.' });
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('Error deleting disciplinary record');
+      setFeedback({ tone: 'danger', message: 'Disciplinary record could not be removed.' });
     }
   };
 
@@ -184,37 +192,49 @@ export default function DisciplinaryPage() {
     });
   };
 
+  const activeCases = records.filter((record) => record.status === 'ACTIVE').length;
+  const appealedCases = records.filter((record) => record.appealStatus && record.appealStatus !== 'NONE' && record.appealStatus !== 'PENDING').length;
+  const fineExposure = records.reduce((sum, record) => sum + (record.fineAmount ?? 0), 0);
+  const DISCIPLINARY_STATUS_LABELS: Record<string, string> = {
+    ACTIVE: 'Open Case',
+    APPEALED: 'Under Appeal',
+    CLOSED: 'Closed',
+  };
+
   return (
-    <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => router.push('/dashboard')}
-              className="flex items-center gap-2 bg-gray-500 hover:bg-gray-600 text-white font-semibold px-4 py-2 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              Back
-            </button>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Disciplinary Management</h1>
-              <p className="mt-2 text-gray-700">Track and manage crew disciplinary actions and violations</p>
-            </div>
-          </div>
-          <button
-            onClick={() => setShowForm(!showForm)}
-            className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105"
-          >
-            {showForm ? 'Cancel' : '+ Add Disciplinary Record'}
-          </button>
+    <div className="section-stack">
+      <WorkspaceHero
+        eyebrow="Crew Governance"
+        title="Disciplinary Management"
+        subtitle="Track crew violations, actions, appeals, and penalties in one register so operational governance stays auditable and easy to review."
+        highlights={[
+          { label: 'Case Records', value: records.length, detail: 'Disciplinary records currently available in the register.' },
+          { label: 'Active Cases', value: activeCases, detail: 'Open cases still under active disciplinary monitoring.' },
+          { label: 'Appealed Cases', value: appealedCases, detail: 'Cases that already moved into a formal appeal outcome.' },
+          { label: 'Fine Exposure', value: `USD ${fineExposure.toLocaleString('en-US', { minimumFractionDigits: 2 })}`, detail: 'Total fine amount recorded across the register.' },
+        ]}
+        helperLinks={[
+          { href: '/crewing/seafarers', label: 'Seafarers' },
+          { href: '/contracts', label: 'Contract Register' },
+          { href: '/hr', label: 'HR Workspace' },
+        ]}
+        actions={(
+          <>
+            <Button variant="secondary" size="sm" onClick={() => router.push('/dashboard')}>Dashboard</Button>
+            <Button size="sm" onClick={() => setShowForm(!showForm)}>{showForm ? 'Close Form' : 'Add Record'}</Button>
+          </>
+        )}
+      />
+
+      {feedback ? (
+        <div className={`rounded-2xl border px-4 py-3 text-sm ${feedback.tone === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-rose-200 bg-rose-50 text-rose-800'}`}>
+          {feedback.message}
         </div>
-      </div>
+      ) : null}
 
       {/* Add/Edit Form */}
       {showForm && (
-        <div className="bg-gradient-to-r from-white to-red-50 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-300 p-8 mb-8">
+        <div className="surface-card space-y-8 p-8">
           <div className="mb-8">
             <h2 className="text-2xl font-extrabold text-gray-900 mb-2">{editingRecord ? 'Edit Disciplinary Record' : 'Add New Disciplinary Record'}</h2>
             <p className="text-gray-700">Document crew violations and disciplinary actions</p>
@@ -426,10 +446,25 @@ export default function DisciplinaryPage() {
       )}
 
       {/* Disciplinary Records List */}
-      <div className="bg-gradient-to-r from-white to-gray-50 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-300 overflow-hidden">
+      <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
         <div className="px-8 py-6 border-b border-gray-300">
           <h2 className="text-xl font-extrabold text-gray-900">Disciplinary Records</h2>
         </div>
+
+        {pendingDeleteId ? (
+          <div className="border-b border-rose-200 bg-rose-50 px-8 py-4">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="text-sm font-semibold text-rose-900">Remove this disciplinary record?</p>
+                <p className="mt-1 text-sm text-rose-800">Use removal only when the case was entered incorrectly and should not remain in the disciplinary history.</p>
+              </div>
+              <div className="flex gap-3">
+                <Button type="button" variant="secondary" size="sm" onClick={() => setPendingDeleteId(null)}>Keep Record</Button>
+                <Button type="button" variant="danger" size="sm" onClick={() => handleDelete(pendingDeleteId)}>Confirm Removal</Button>
+              </div>
+            </div>
+          </div>
+        ) : null}
 
         {isLoading ? (
           <div className="p-8 text-center">
@@ -495,7 +530,7 @@ export default function DisciplinaryPage() {
                         record.status === 'APPEALED' ? 'bg-yellow-100 text-yellow-800' :
                         'bg-green-100 text-green-800'
                       }`}>
-                        {record.status}
+                        {DISCIPLINARY_STATUS_LABELS[record.status] ?? record.status}
                       </span>
                       {record.appealStatus && record.appealStatus !== 'NONE' && (
                         <div className="text-sm text-gray-700 mt-1">
@@ -511,7 +546,7 @@ export default function DisciplinaryPage() {
                         Edit
                       </button>
                       <button
-                        onClick={() => handleDelete(record.id)}
+                        onClick={() => setPendingDeleteId(record.id)}
                         className="text-red-600 hover:text-red-900 font-semibold"
                       >
                         Delete

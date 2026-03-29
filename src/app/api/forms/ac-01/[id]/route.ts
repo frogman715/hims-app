@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { ensureOfficeApiPathAccess } from '@/lib/office-api-access';
 
 type PrincipalAgreementPayload = {
   id: string;
@@ -341,8 +342,14 @@ export async function GET(
   const { id } = await context.params;
   try {
     const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const authError = ensureOfficeApiPathAccess(
+      session,
+      '/api/forms/ac-01',
+      'GET',
+      'Insufficient permissions to view principal agreement forms'
+    );
+    if (authError) {
+      return authError;
     }
 
     const principal = await prisma.principal.findUnique({

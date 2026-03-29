@@ -3,6 +3,10 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import type { DashboardMetrics, Alert } from '@/lib/qms/advanced-analytics';
+import { InlineNotice } from '@/components/feedback/InlineNotice';
+import { WorkspaceEmptyState } from '@/components/feedback/WorkspaceEmptyState';
+import { StatusBadge } from '@/components/ui/StatusBadge';
+import { formatStatusLabel } from '@/lib/formatters';
 
 export function AdvancedQMSDashboard() {
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
@@ -18,11 +22,11 @@ export function AdvancedQMSDashboard() {
       setLoading(true);
       setError(null);
       const response = await fetch('/api/qms/analytics/dashboard');
-      if (!response.ok) throw new Error('Failed to fetch metrics');
+      if (!response.ok) throw new Error('Advanced QMS analytics could not be loaded.');
       const result = await response.json();
       setMetrics(result.data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      setError(err instanceof Error ? err.message : 'Advanced QMS analytics could not be loaded.');
       console.error('Error fetching metrics:', err);
     } finally {
       setLoading(false);
@@ -34,7 +38,7 @@ export function AdvancedQMSDashboard() {
       <div className="flex items-center justify-center h-96">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading dashboard metrics...</p>
+          <p className="text-gray-600">Loading advanced QMS analytics...</p>
         </div>
       </div>
     );
@@ -42,14 +46,13 @@ export function AdvancedQMSDashboard() {
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-red-900 mb-2">Error Loading Dashboard</h3>
-        <p className="text-red-700">{error}</p>
+      <div className="space-y-4">
+        <InlineNotice tone="error" title="Advanced QMS Dashboard Unavailable" message={error} />
         <button
           onClick={fetchMetrics}
-          className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
+          className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
         >
-          Retry
+          Retry Load
         </button>
       </div>
     );
@@ -68,7 +71,7 @@ export function AdvancedQMSDashboard() {
             title="Back to Dashboard"
           >
             <span className="text-2xl">←</span>
-            <span>Back</span>
+            <span>Back to dashboard</span>
           </Link>
           <h2 className="text-3xl font-bold text-gray-900">QMS Advanced Dashboard</h2>
         </div>
@@ -185,20 +188,22 @@ export function AdvancedQMSDashboard() {
           <div className="space-y-2 max-h-96 overflow-y-auto">
             {metrics.alerts.length > 0 ? (
               metrics.alerts.map((alert) => (
-                <div key={alert.id} className="flex items-start gap-3 p-3 hover:bg-gray-50 rounded border-l-4" style={{ borderColor: getSeverityColorHex(alert.severity) }}>
+                <div key={alert.id} className={`flex items-start gap-3 rounded border-l-4 p-3 hover:bg-gray-50 ${getAlertAccentClass(alert.severity)}`}>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-900">{alert.title}</p>
                     <p className="text-xs text-gray-500 mt-1">{alert.description}</p>
                   </div>
+                  <StatusBadge status={alert.severity} />
                   {alert.actionRequired && (
-                    <span className="ml-2 px-2 py-1 text-xs font-semibold bg-red-100 text-red-700 rounded whitespace-nowrap">
-                      ACTION
-                    </span>
+                    <StatusBadge status="TODO" label="Action Required" className="ml-2 whitespace-nowrap" />
                   )}
                 </div>
               ))
             ) : (
-              <p className="text-gray-500 text-center py-8">No alerts</p>
+              <WorkspaceEmptyState
+                title="No alerts in queue"
+                message="Critical and operational QMS alerts will appear here when thresholds are triggered."
+              />
             )}
           </div>
         </div>
@@ -220,7 +225,7 @@ export function AdvancedQMSDashboard() {
               {metrics.recentActivity.length > 0 ? (
                 metrics.recentActivity.map((activity) => (
                   <tr key={activity.id} className="border-b hover:bg-gray-50">
-                    <td className="py-3 px-4 text-gray-600">{activity.type}</td>
+                    <td className="py-3 px-4 text-gray-600">{formatStatusLabel(activity.type)}</td>
                     <td className="py-3 px-4 text-gray-900 font-medium">{activity.title}</td>
                     <td className="py-3 px-4 text-gray-500">
                       {new Date(activity.timestamp).toLocaleString()}
@@ -312,16 +317,15 @@ function DocStatusItem({ label, value, color, bg }: { label: string; value: numb
 
 function AlertItem({ alert }: { alert: Alert }) {
   return (
-    <div className={`p-3 rounded border-l-4 bg-gray-50`} style={{ borderColor: getSeverityColorHex(alert.severity) }}>
+    <div className={`rounded border-l-4 bg-gray-50 p-3 ${getAlertAccentClass(alert.severity)}`}>
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <p className="font-semibold text-gray-900">{alert.title}</p>
           <p className="text-sm text-gray-600 mt-1">{alert.description}</p>
         </div>
+        <StatusBadge status={alert.severity} className="ml-3" />
         {alert.actionRequired && (
-          <span className="ml-2 px-2 py-1 text-xs font-semibold bg-red-100 text-red-700 rounded whitespace-nowrap">
-            ACTION
-          </span>
+          <StatusBadge status="TODO" label="Action Required" className="ml-2 whitespace-nowrap" />
         )}
       </div>
     </div>
@@ -335,10 +339,9 @@ function getScoreColor(score: number): string {
   return 'text-red-600';
 }
 
-function getSeverityColorHex(severity: string): string {
-  if (severity === 'CRITICAL') return '#dc2626';
-  if (severity === 'HIGH') return '#f97316';
-  if (severity === 'MEDIUM') return '#eab308';
-  return '#22c55e';
+function getAlertAccentClass(severity: string): string {
+  if (severity === 'CRITICAL') return 'border-l-rose-600';
+  if (severity === 'HIGH') return 'border-l-amber-500';
+  if (severity === 'MEDIUM') return 'border-l-sky-500';
+  return 'border-l-emerald-500';
 }
-

@@ -4,6 +4,10 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { WorkspaceHero } from "@/components/layout/WorkspaceHero";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Textarea } from "@/components/ui/Textarea";
 
 interface DisciplinaryAction {
   id: number;
@@ -84,49 +88,81 @@ export default function Disciplinary() {
   };
 
   if (status === "loading" || loading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="section-stack">
+        <div className="surface-card px-6 py-12 text-center text-sm text-slate-600">Loading disciplinary register...</div>
+      </div>
+    );
   }
 
   if (!session) {
     return null;
   }
 
+  const openCases = disciplinaryActions.length;
+  const uniqueEmployees = new Set(
+    disciplinaryActions.map((action) => action.employeeId)
+  ).size;
+  const latestAction = disciplinaryActions[0]?.date
+    ? new Date(disciplinaryActions[0].date).toLocaleDateString()
+    : "No cases logged";
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      {/* Header */}
-      <header className="bg-white backdrop-blur-lg shadow-2xl border-b border-white/20">
-        <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent">
-                Disciplinary Actions
-              </h1>
-              <p className="text-lg text-gray-700 mt-2 font-medium">Record and track employee disciplinary measures</p>
+    <div className="section-stack">
+      <WorkspaceHero
+        eyebrow="HR Discipline"
+        title="Disciplinary Actions"
+        subtitle="Record disciplinary cases, preserve corrective-action traceability, and keep HR review aligned with the active employee conduct procedure."
+        helperLinks={[{ href: "/hr", label: "HR Workspace" }]}
+        highlights={[
+          {
+            label: "Open Records",
+            value: openCases,
+            detail: "Active disciplinary entries currently stored in the register.",
+          },
+          {
+            label: "Employees Impacted",
+            value: uniqueEmployees,
+            detail: "Distinct employees referenced across disciplinary cases.",
+          },
+          {
+            label: "Latest Entry",
+            value: latestAction,
+            detail: "Most recent disciplinary action date recorded by HR.",
+          },
+        ]}
+        actions={(
+          <>
+            <Link href="/hr" className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-cyan-600 hover:text-cyan-800">
+              Back to HR
+            </Link>
+            <Button type="button" size="sm" onClick={() => setShowForm(true)}>
+              Add Disciplinary Action
+            </Button>
+          </>
+        )}
+      />
+
+      <section className="surface-card p-6">
+          <div className="mb-6 grid gap-4 lg:grid-cols-[minmax(0,1.7fr)_minmax(280px,0.9fr)]">
+            <div className="rounded-2xl border border-cyan-100 bg-cyan-50/80 p-5">
+              <h2 className="text-base font-semibold text-slate-900">Case handling note</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-700">
+                Record only confirmed disciplinary cases here. Use the corrective-action field to capture the office response that should be reviewed during follow-up.
+              </p>
             </div>
-            <div className="flex items-center space-x-4">
-              <Link
-                href="/hr"
-                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
-              >
-                ← Back to HR
-              </Link>
-              <button
-                onClick={() => setShowForm(true)}
-                className="bg-gradient-to-r from-red-500 to-pink-600 hover:from-pink-600 hover:to-red-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
-              >
-                + Add Disciplinary Action
-              </button>
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+              <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Desk Scope</h2>
+              <ul className="mt-3 space-y-2 text-sm leading-6 text-slate-700">
+                <li>Log formal disciplinary actions.</li>
+                <li>Track corrective follow-up commitments.</li>
+                <li>Keep HR conduct records audit-ready.</li>
+              </ul>
             </div>
           </div>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto py-8 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          {/* Disciplinary Actions Table */}
-          <div className="bg-white backdrop-blur-md rounded-2xl shadow-lg border border-white overflow-hidden">
+          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
             <div className="px-6 py-4 border-b border-gray-300">
-              <h2 className="text-xl font-semibold text-gray-900">Disciplinary Records</h2>
+              <h2 className="text-xl font-semibold text-slate-900">Disciplinary Records</h2>
             </div>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-300">
@@ -151,10 +187,10 @@ export default function Disciplinary() {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {disciplinaryActions.map((action) => (
-                    <tr key={action.id} className="hover:bg-gray-100">
+                    <tr key={action.id} className="hover:bg-slate-50">
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{action.employee.fullName}</div>
-                        <div className="text-sm text-gray-500">{action.employee.position}</div>
+                        <div className="text-sm font-medium text-slate-900">{action.employee.fullName}</div>
+                        <div className="text-sm text-slate-500">{action.employee.position}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className="inline-flex px-4 py-2 text-xs font-semibold rounded-full bg-red-100 text-red-800">
@@ -162,16 +198,16 @@ export default function Disciplinary() {
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-sm text-gray-900 max-w-xs truncate">
+                        <div className="max-w-xs truncate text-sm text-slate-900">
                           {action.description}
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-sm text-gray-900 max-w-xs truncate">
+                        <div className="max-w-xs truncate text-sm text-slate-900">
                           {action.correctiveAction}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">
                         {new Date(action.date).toLocaleDateString()}
                       </td>
                     </tr>
@@ -180,92 +216,63 @@ export default function Disciplinary() {
               </table>
             </div>
           </div>
-        </div>
-      </main>
+      </section>
 
       {/* Add Disciplinary Action Form Modal */}
       {showForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <h3 className="text-xl font-extrabold text-gray-900 mb-6">Add Disciplinary Action</h3>
+          <div className="mx-4 max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-slate-200 bg-white p-8 shadow-xl">
+            <h3 className="mb-6 text-xl font-semibold text-slate-900">Add Disciplinary Action</h3>
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
-                  Employee ID *
-                </label>
-                <input
-                  type="number"
-                  required
-                  value={formData.employeeId}
-                  onChange={(e) => setFormData({ ...formData, employeeId: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                  placeholder="Enter employee ID"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
-                  Disciplinary Code *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.code}
-                  onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                  placeholder="e.g., AD-01, AD-02"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
-                  Description *
-                </label>
-                <textarea
-                  rows={3}
-                  required
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                  placeholder="Describe the disciplinary incident..."
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
-                  Corrective Action *
-                </label>
-                <textarea
-                  rows={3}
-                  required
-                  value={formData.correctiveAction}
-                  onChange={(e) => setFormData({ ...formData, correctiveAction: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                  placeholder="Specify the corrective measures to be taken..."
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
-                  Date
-                </label>
-                <input
-                  type="date"
-                  value={formData.date}
-                  onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                />
-              </div>
+              <Input
+                id="disciplinary-employee-id"
+                label="Employee ID"
+                type="number"
+                required
+                value={formData.employeeId}
+                onChange={(e) => setFormData({ ...formData, employeeId: e.target.value })}
+                placeholder="Enter employee ID"
+              />
+              <Input
+                id="disciplinary-code"
+                label="Disciplinary Code"
+                required
+                value={formData.code}
+                onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                placeholder="e.g., AD-01, AD-02"
+              />
+              <Textarea
+                id="disciplinary-description"
+                label="Description"
+                rows={3}
+                required
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                placeholder="Describe the disciplinary incident..."
+              />
+              <Textarea
+                id="disciplinary-corrective-action"
+                label="Corrective Action"
+                rows={3}
+                required
+                value={formData.correctiveAction}
+                onChange={(e) => setFormData({ ...formData, correctiveAction: e.target.value })}
+                placeholder="Specify the corrective measures to be taken..."
+              />
+              <Input
+                id="disciplinary-date"
+                label="Date"
+                type="date"
+                value={formData.date}
+                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+              />
               <div className="flex space-x-3 pt-4">
-                <button
-                  type="submit"
-                  className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg font-medium transition-colors"
-                >
+                <Button type="submit" className="flex-1">
                   Record Action
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowForm(false)}
-                  className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-2 px-4 rounded-lg font-medium transition-colors"
-                >
+                </Button>
+                <Button type="button" variant="secondary" className="flex-1" onClick={() => setShowForm(false)}>
                   Cancel
-                </button>
+                </Button>
               </div>
             </form>
           </div>

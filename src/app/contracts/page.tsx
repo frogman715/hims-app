@@ -1,7 +1,12 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useSession } from 'next-auth/react';
+import { canAccessOfficePath } from '@/lib/office-access';
+import { normalizeToUserRoles } from '@/lib/type-guards';
+import { WorkspaceHero } from '@/components/layout/WorkspaceHero';
+import { pushAppNotice } from '@/lib/app-notice';
 
 interface EmploymentContract {
   id: string;
@@ -40,13 +45,29 @@ interface EmploymentContract {
   };
 }
 
-export default function ContractsPage() {
-  const [contracts, setContracts] = useState<EmploymentContract[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
-  const [editingContract, setEditingContract] = useState<EmploymentContract | null>(null);
-  const [filter, setFilter] = useState<'ALL' | 'SEA' | 'OFFICE_PKL'>('ALL');
-  const [formData, setFormData] = useState({
+interface CrewSearchOption {
+  id: string;
+  fullName: string;
+  rank: string;
+}
+
+interface VesselOption {
+  id: string;
+  name: string;
+  principalId?: string | null;
+}
+
+interface PrincipalOption {
+  id: string;
+  name: string;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function createInitialFormData(crewId = '') {
+  return {
     contractNumber: '',
     contractKind: 'SEA' as 'SEA' | 'OFFICE_PKL',
     seaType: '' as '' | 'KOREA' | 'BAHAMAS_PANAMA' | 'TANKER_LUNDQVIST' | 'OTHER',
@@ -59,17 +80,88 @@ export default function ContractsPage() {
     homeAllotment: '',
     specialAllowance: '',
     templateVersion: '',
-    crewId: '',
+    crewId,
     vesselId: '',
     principalId: '',
     rank: '',
     contractStart: '',
     contractEnd: '',
-    status: 'ACTIVE',
+    status: 'DRAFT',
     basicWage: '',
     currency: 'USD'
-  });
+  };
+}
+
+const CONTRACT_STATUS_LABELS: Record<string, string> = {
+  DRAFT: 'Draft',
+  ACTIVE: 'Active',
+  COMPLETED: 'Completed',
+  TERMINATED: 'Terminated',
+  CANCELLED: 'Cancelled',
+};
+
+export default function ContractsPage() {
+  const { data: session } = useSession();
+  const [contracts, setContracts] = useState<EmploymentContract[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [editingContract, setEditingContract] = useState<EmploymentContract | null>(null);
+  const [filter, setFilter] = useState<'ALL' | 'SEA' | 'OFFICE_PKL'>('ALL');
+  const [crewSearch, setCrewSearch] = useState('');
+  const [crewOptions, setCrewOptions] = useState<CrewSearchOption[]>([]);
+  const [vesselOptions, setVesselOptions] = useState<VesselOption[]>([]);
+  const [principalOptions, setPrincipalOptions] = useState<PrincipalOption[]>([]);
+  const [lookupLoading, setLookupLoading] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<{ tone: 'success' | 'danger'; message: string } | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [formData, setFormData] = useState(createInitialFormData);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const userRoles = normalizeToUserRoles(session?.user?.roles ?? session?.user?.role);
+  const isSystemAdmin = session?.user?.isSystemAdmin === true;
+  const canManageContracts = canAccessOfficePath('/api/contracts', userRoles, isSystemAdmin, 'POST');
+
+  const selectedCrew = useMemo(
+    () =>
+      crewOptions.find((crew) => crew.id === formData.crewId)
+      ?? (editingContract?.crew && editingContract.crewId === formData.crewId
+        ? { id: editingContract.crewId, fullName: editingContract.crew.fullName, rank: editingContract.rank }
+        : null),
+    [crewOptions, editingContract, formData.crewId]
+  );
+  const selectedVessel = vesselOptions.find((vessel) => vessel.id === formData.vesselId) ?? null;
+  const selectedPrincipal = principalOptions.find((principal) => principal.id === formData.principalId) ?? null;
+  const activeContracts = contracts.filter((contract) => contract.status === 'ACTIVE').length;
+  const expiringSoonContracts = contracts.filter((contract) => {
+    if (contract.status !== 'ACTIVE') {
+      return false;
+    }
+
+    const endDate = new Date(contract.contractEnd);
+    const diffDays = Math.ceil((endDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+    return diffDays <= 30 && diffDays >= 0;
+  }).length;
+  const totalContractValue = contracts
+    .filter((contract) => contract.status === 'ACTIVE')
+    .reduce((sum, contract) => sum + contract.basicWage, 0);
+  const contractFormSteps = [
+    {
+      label: 'Step 1',
+      title: 'Select Crew Case',
+      detail: 'Start from the correct seafarer record before connecting vessel, principal, or wage terms.',
+    },
+    {
+      label: 'Step 2',
+      title: 'Set Contract Framework',
+      detail: 'Define contract type, legal references, dates, and operating status using one controlled structure.',
+    },
+    {
+      label: 'Step 3',
+      title: 'Complete Commercial Terms',
+      detail: 'Capture wage and allowance values clearly so payroll, allotment, and deployment review stay aligned.',
+    },
+  ];
 
   const fetchContracts = useCallback(async () => {
     setIsLoading(true);
@@ -90,8 +182,131 @@ export default function ContractsPage() {
     fetchContracts();
   }, [fetchContracts]);
 
+  useEffect(() => {
+    const fetchLookups = async () => {
+      try {
+        setLookupLoading(true);
+        const [vesselsResponse, principalsResponse] = await Promise.all([
+          fetch('/api/vessels'),
+          fetch('/api/principals'),
+        ]);
+
+        if (vesselsResponse.ok) {
+          const vesselsData = await vesselsResponse.json();
+          if (Array.isArray(vesselsData)) {
+            setVesselOptions(
+              vesselsData.reduce<VesselOption[]>((accumulator, item) => {
+                if (!isRecord(item) || typeof item.id !== 'string' || typeof item.name !== 'string') {
+                  return accumulator;
+                }
+                accumulator.push({
+                  id: item.id,
+                  name: item.name,
+                  principalId: typeof item.principalId === 'string' ? item.principalId : null,
+                });
+                return accumulator;
+              }, [])
+            );
+          }
+        }
+
+        if (principalsResponse.ok) {
+          const principalsData = await principalsResponse.json();
+          if (Array.isArray(principalsData)) {
+            setPrincipalOptions(
+              principalsData.reduce<PrincipalOption[]>((accumulator, item) => {
+                if (!isRecord(item) || typeof item.id !== 'string' || typeof item.name !== 'string') {
+                  return accumulator;
+                }
+                accumulator.push({ id: item.id, name: item.name });
+                return accumulator;
+              }, [])
+            );
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching contract lookup data:', error);
+      } finally {
+        setLookupLoading(false);
+      }
+    };
+
+    fetchLookups();
+  }, []);
+
+  useEffect(() => {
+    if (!showForm) {
+      return;
+    }
+
+    const trimmedQuery = crewSearch.trim();
+    if (trimmedQuery.length < 2) {
+      setCrewOptions((current) => {
+        if (selectedCrew && !current.some((crew) => crew.id === selectedCrew.id)) {
+          return [selectedCrew, ...current];
+        }
+        return current;
+      });
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      try {
+        const response = await fetch(`/api/seafarers/search?q=${encodeURIComponent(trimmedQuery)}&pageSize=12`);
+        if (!response.ok) {
+          return;
+        }
+
+        const data = (await response.json()) as { results?: unknown };
+        const results = Array.isArray(data.results) ? data.results : [];
+        const normalized = results.reduce<CrewSearchOption[]>((accumulator, item) => {
+          if (!isRecord(item) || typeof item.id !== 'string' || typeof item.fullName !== 'string') {
+            return accumulator;
+          }
+          accumulator.push({
+            id: item.id,
+            fullName: item.fullName,
+            rank: typeof item.rank === 'string' ? item.rank : '',
+          });
+          return accumulator;
+        }, []);
+        setCrewOptions(normalized);
+      } catch (error) {
+        console.error('Error searching crew:', error);
+      }
+    }, 250);
+
+    return () => clearTimeout(timer);
+  }, [crewSearch, selectedCrew, showForm]);
+
+  useEffect(() => {
+    if (!formData.vesselId || formData.principalId) {
+      return;
+    }
+
+    const vessel = vesselOptions.find((item) => item.id === formData.vesselId);
+    if (vessel?.principalId) {
+      setFormData((current) => ({
+        ...current,
+        principalId: vessel.principalId ?? '',
+      }));
+    }
+  }, [formData.principalId, formData.vesselId, vesselOptions]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError(null);
+
+    if (!canManageContracts) {
+      setFormError('This role can review contracts but cannot create or update them.');
+      return;
+    }
+
+    if (!formData.crewId) {
+      setFormError('Select a crew member before saving the contract.');
+      return;
+    }
+
     try {
       const url = editingContract ? `/api/contracts/${editingContract.id}` : '/api/contracts';
       const method = editingContract ? 'PUT' : 'POST';
@@ -127,42 +342,31 @@ export default function ContractsPage() {
       });
 
       if (response.ok) {
-        setFormData({
-          contractNumber: '',
-          contractKind: 'SEA',
-          seaType: '',
-          maritimeLaw: '',
-          cbaReference: '',
-          wageScaleHeaderId: '',
-          guaranteedOTHours: '',
-          overtimeRate: '',
-          onboardAllowance: '',
-          homeAllotment: '',
-          specialAllowance: '',
-          templateVersion: '',
-          crewId: '',
-          vesselId: '',
-          principalId: '',
-          rank: '',
-          contractStart: '',
-          contractEnd: '',
-          status: 'ACTIVE',
-          basicWage: '',
-          currency: 'USD'
-        });
+        setFormData(createInitialFormData());
+        setCrewSearch('');
+        setFormError(null);
         setShowForm(false);
         setEditingContract(null);
+        setFeedback({
+          tone: 'success',
+          message: editingContract ? 'Contract updated successfully.' : 'Contract registered successfully.',
+        });
+        router.replace('/contracts');
         fetchContracts();
       } else {
-        alert(`Error ${editingContract ? 'updating' : 'creating'} contract`);
+        const payload = await response.json().catch(() => null);
+        setFormError(payload?.error || `Contract ${editingContract ? 'update' : 'creation'} failed.`);
       }
     } catch (error) {
       console.error('Error:', error);
-      alert(`Error ${editingContract ? 'updating' : 'creating'} contract`);
+      setFormError(`Contract ${editingContract ? 'update' : 'creation'} failed.`);
     }
   };
 
-  const handleEdit = (contract: EmploymentContract) => {
+  const handleEdit = useCallback((contract: EmploymentContract) => {
+    if (!canManageContracts) {
+      return;
+    }
     setEditingContract(contract);
     setFormData({
       contractNumber: contract.contractNumber,
@@ -187,36 +391,67 @@ export default function ContractsPage() {
       basicWage: contract.basicWage.toString(),
       currency: contract.currency
     });
+    setCrewSearch(contract.crew?.fullName || '');
+    setCrewOptions((current) => {
+      const existing = current.some((crew) => crew.id === contract.crewId);
+      if (existing || !contract.crew?.fullName) {
+        return current;
+      }
+      return [
+        {
+          id: contract.crewId,
+          fullName: contract.crew.fullName,
+          rank: contract.rank,
+        },
+        ...current,
+      ];
+    });
+    setFormError(null);
     setShowForm(true);
-  };
+  }, [canManageContracts]);
 
   const handleCancel = () => {
     setShowForm(false);
     setEditingContract(null);
-    setFormData({
-      contractNumber: '',
-      contractKind: 'SEA',
-      seaType: '',
-      maritimeLaw: '',
-      cbaReference: '',
-      wageScaleHeaderId: '',
-      guaranteedOTHours: '',
-      overtimeRate: '',
-      onboardAllowance: '',
-      homeAllotment: '',
-      specialAllowance: '',
-      templateVersion: '',
-      crewId: '',
-      vesselId: '',
-      principalId: '',
-      rank: '',
-      contractStart: '',
-      contractEnd: '',
-      status: 'ACTIVE',
-      basicWage: '',
-      currency: 'USD'
-    });
+    setFormData(createInitialFormData());
+    setCrewSearch('');
+    setFormError(null);
+    router.replace('/contracts');
   };
+
+  useEffect(() => {
+    const editId = searchParams.get('edit');
+    const mode = searchParams.get('mode');
+    const crewId = searchParams.get('crewId') ?? '';
+
+    if (editId) {
+      if (contracts.length === 0) {
+        return;
+      }
+
+      const targetContract = contracts.find((contract) => contract.id === editId);
+      if (!targetContract) {
+        return;
+      }
+
+      if (editingContract?.id === targetContract.id && showForm) {
+        return;
+      }
+
+      handleEdit(targetContract);
+      return;
+    }
+
+    if (mode === 'new') {
+      if (!showForm || editingContract || formData.crewId !== crewId) {
+        setEditingContract(null);
+        setFormData(createInitialFormData(crewId));
+        setCrewSearch('');
+        setFormError(null);
+        setShowForm(true);
+      }
+    }
+  }, [contracts, editingContract, formData.crewId, handleEdit, searchParams, showForm]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
@@ -225,8 +460,21 @@ export default function ContractsPage() {
     });
   };
 
+  const handleCrewSelection = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedId = e.target.value;
+    const selected = crewOptions.find((crew) => crew.id === selectedId) ?? null;
+    setFormData((current) => ({
+      ...current,
+      crewId: selectedId,
+      rank: current.rank || selected?.rank || '',
+    }));
+    if (selected) {
+      setCrewSearch(selected.fullName);
+    }
+  };
+
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this contract?')) return;
+    if (!canManageContracts) return;
 
     try {
       const response = await fetch(`/api/contracts/${id}`, {
@@ -234,13 +482,15 @@ export default function ContractsPage() {
       });
 
       if (response.ok) {
+        setPendingDeleteId(null);
+        setFeedback({ tone: 'success', message: 'Contract removed from the register.' });
         fetchContracts();
       } else {
-        alert('Error deleting contract');
+        setFeedback({ tone: 'danger', message: 'Contract could not be removed.' });
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('Error deleting contract');
+      setFeedback({ tone: 'danger', message: 'Contract could not be removed.' });
     }
   };
 
@@ -267,48 +517,127 @@ export default function ContractsPage() {
         document.body.removeChild(a);
       } else {
         const error = await response.json();
-        alert(`Error generating document: ${error.error}`);
+        pushAppNotice({
+          tone: 'error',
+          title: 'Document generation failed',
+          message: error.error || 'The contract document could not be generated.',
+        });
       }
     } catch (error) {
       console.error('Error generating document:', error);
-      alert('Error generating document');
+      pushAppNotice({
+        tone: 'error',
+        title: 'Document generation failed',
+        message: 'The contract document could not be generated.',
+      });
     }
   };
 
   return (
-    <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
+    <div className="section-stack mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+      <WorkspaceHero
+        eyebrow="Contract Control"
+        title="Employment contracts"
+        subtitle="Manage sea contracts and office PKL agreements in one controlled workspace with clear ownership, expiry exposure, and print readiness."
+        helperLinks={[
+          { href: '/crewing/crew-list', label: 'Crew onboard' },
+          { href: '/crewing/prepare-joining', label: 'Prepare joining' },
+          { href: '/crewing/applications', label: 'Applications' },
+        ]}
+        highlights={[
+          { label: 'Total Contracts', value: contracts.length.toLocaleString('id-ID'), detail: 'All registered contract records.' },
+          { label: 'Active Contracts', value: activeContracts.toLocaleString('id-ID'), detail: 'Live agreements currently in force.' },
+          { label: 'Expiring ≤ 30 Days', value: expiringSoonContracts.toLocaleString('id-ID'), detail: 'Renewal and reliever planning pressure.' },
+          { label: 'Active Contract Value', value: `$${totalContractValue.toLocaleString('en-US')}`, detail: 'Current basic wage exposure for active contracts.' },
+        ]}
+        actions={(
+          <>
             <button
+              type="button"
               onClick={() => router.push('/crewing')}
-              className="flex items-center gap-2 bg-gray-500 hover:bg-gray-600 text-white font-semibold px-4 py-2 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300"
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-cyan-300 hover:text-cyan-700"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              Back
+              Back to crewing
             </button>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Employment Contracts</h1>
-              <p className="mt-2 text-gray-700">Manage seafarer employment contracts</p>
-            </div>
-          </div>
-          <button
-            onClick={() => setShowForm(!showForm)}
-            className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105"
-          >
-            {showForm ? 'Cancel' : '+ New Contract'}
-          </button>
-        </div>
+            <button
+              type="button"
+              onClick={() => {
+                if (!canManageContracts) {
+                  return;
+                }
+                if (showForm) {
+                  handleCancel();
+                  return;
+                }
+                setEditingContract(null);
+                setFormData(createInitialFormData());
+                setCrewSearch('');
+                setFormError(null);
+                setShowForm(true);
+                router.replace('/contracts?mode=new');
+              }}
+              disabled={!canManageContracts}
+              className="inline-flex items-center rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {canManageContracts ? (showForm ? 'Close Intake Form' : 'Register Contract') : 'View only'}
+            </button>
+          </>
+        )}
+      />
+
+      <div className="mb-8 rounded-2xl border border-sky-200 bg-sky-50 px-6 py-5">
+        <p className="text-sm font-semibold text-sky-900">How to use this page</p>
+        <p className="mt-1 text-sm text-sky-800">
+          {canManageContracts
+            ? 'Use Contracts for operational contract preparation and review. Select the crew member first, then connect vessel and principal. Vessel Assignment and transport remain in GA / Driver, while Prepare Joining remains in Operational.'
+            : 'This role can review contract records and print contract documents. Contract creation, update, and deletion remain with the assigned contract owner.'}
+        </p>
       </div>
+
+      {feedback ? (
+        <div className={`mb-8 rounded-2xl border px-4 py-3 text-sm ${feedback.tone === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-rose-200 bg-rose-50 text-rose-800'}`}>
+          {feedback.message}
+        </div>
+      ) : null}
 
       {/* Add/Edit Form */}
       {showForm && (
         <div className="bg-gradient-to-r from-white to-blue-50 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-300 p-8 mb-8">
           <div className="mb-8">
-            <h2 className="text-2xl font-extrabold text-gray-900 mb-2">{editingContract ? 'Edit Employment Contract' : 'Add New Employment Contract'}</h2>
-            <p className="text-gray-700">Create and manage seafarer employment agreements</p>
+            <h2 className="text-2xl font-extrabold text-gray-900 mb-2">{editingContract ? 'Update Employment Contract' : 'Register Employment Contract'}</h2>
+            <p className="text-gray-700">
+              {editingContract
+                ? 'Revise this agreement only when the approved contract terms, linked desk data, or commercial basis has changed.'
+                : 'Create one controlled employment agreement for a confirmed crew, contract type, and deployment context.'}
+            </p>
+          </div>
+          <div className="mb-6 grid gap-4 md:grid-cols-3">
+            {contractFormSteps.map((item) => (
+              <div key={item.label} className="rounded-2xl border border-slate-200 bg-white/80 px-4 py-4">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">{item.label}</p>
+                <p className="mt-2 text-base font-semibold text-slate-950">{item.title}</p>
+                <p className="mt-1 text-sm leading-6 text-slate-600">{item.detail}</p>
+              </div>
+            ))}
+          </div>
+          {formError ? (
+            <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {formError}
+            </div>
+          ) : null}
+          <div className="mb-6 grid gap-4 rounded-2xl border border-slate-200 bg-white/70 p-5 md:grid-cols-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Crew</p>
+              <p className="mt-2 text-sm font-semibold text-slate-900">{selectedCrew?.fullName || 'Select crew from search results'}</p>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Vessel</p>
+              <p className="mt-2 text-sm font-semibold text-slate-900">{selectedVessel?.name || 'Optional until vessel confirmed'}</p>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Principal</p>
+              <p className="mt-2 text-sm font-semibold text-slate-900">{selectedPrincipal?.name || 'Optional until principal confirmed'}</p>
+            </div>
           </div>
           <form onSubmit={handleSubmit} className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -337,8 +666,8 @@ export default function ContractsPage() {
                   required
                   className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                 >
-                  <option value="SEA">SEA Contract (MLC Compliant)</option>
-                  <option value="OFFICE_PKL">Office PKL Contract</option>
+                    <option value="SEA">Sea Employment Agreement</option>
+                    <option value="OFFICE_PKL">Office PKL Agreement</option>
                 </select>
               </div>
               {formData.contractKind === 'SEA' && (
@@ -482,45 +811,75 @@ export default function ContractsPage() {
                   </div>
                 </>
               )}
-              <div>
+              <div className="md:col-span-2">
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Crew ID *
+                  Crew Search *
                 </label>
                 <input
                   type="text"
+                  value={crewSearch}
+                  onChange={(e) => setCrewSearch(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+                  placeholder="Search by crew name, rank, passport, nationality, or phone"
+                />
+                <p className="mt-2 text-xs text-gray-500">
+                  Type at least 2 characters, then select the correct crew record below.
+                </p>
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Crew Record *
+                </label>
+                <select
                   name="crewId"
                   value={formData.crewId}
-                  onChange={handleInputChange}
+                  onChange={handleCrewSelection}
                   required
                   className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
-                  placeholder="Crew member ID"
-                />
+                >
+                  <option value="">{crewSearch.trim().length >= 2 ? 'Select matched crew' : 'Search crew first'}</option>
+                  {crewOptions.map((crew) => (
+                    <option key={crew.id} value={crew.id}>
+                      {crew.fullName}{crew.rank ? ` • ${crew.rank}` : ''}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Vessel ID (Optional)
+                  Vessel (Optional)
                 </label>
-                <input
-                  type="text"
+                <select
                   name="vesselId"
                   value={formData.vesselId}
                   onChange={handleInputChange}
                   className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
-                  placeholder="Vessel ID"
-                />
+                >
+                  <option value="">{lookupLoading ? 'Loading vessels...' : 'Select vessel if assigned'}</option>
+                  {vesselOptions.map((vessel) => (
+                    <option key={vessel.id} value={vessel.id}>
+                      {vessel.name}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Principal ID (Optional)
+                  Principal (Optional)
                 </label>
-                <input
-                  type="text"
+                <select
                   name="principalId"
                   value={formData.principalId}
                   onChange={handleInputChange}
                   className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
-                  placeholder="Principal company ID"
-                />
+                >
+                  <option value="">{lookupLoading ? 'Loading principals...' : 'Select principal if confirmed'}</option>
+                  {principalOptions.map((principal) => (
+                    <option key={principal.id} value={principal.id}>
+                      {principal.name}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -592,10 +951,11 @@ export default function ContractsPage() {
                   required
                   className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
                 >
+                  <option value="DRAFT">Draft</option>
                   <option value="ACTIVE">Active</option>
                   <option value="COMPLETED">Completed</option>
                   <option value="TERMINATED">Terminated</option>
-                  <option value="PENDING">Pending</option>
+                  <option value="CANCELLED">Cancelled</option>
                 </select>
               </div>
               <div>
@@ -682,14 +1042,14 @@ export default function ContractsPage() {
                 type="submit"
                 className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold px-8 py-3 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105"
               >
-                {editingContract ? 'Update Contract' : 'Save Employment Contract'}
+                {editingContract ? 'Save Contract Update' : 'Register Contract'}
               </button>
               <button
                 type="button"
                 onClick={handleCancel}
                 className="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-semibold px-8 py-3 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105"
               >
-                Cancel
+                Close Without Saving
               </button>
             </div>
           </form>
@@ -723,7 +1083,7 @@ export default function ContractsPage() {
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-700">Active Contracts</p>
-                  <p className="text-2xl font-extrabold text-gray-900">{contracts.filter(c => c.status === 'ACTIVE').length}</p>
+                  <p className="text-2xl font-extrabold text-gray-900">{activeContracts}</p>
                 </div>
               </div>
             </div>
@@ -737,13 +1097,7 @@ export default function ContractsPage() {
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-700">Expiring Soon</p>
                   <p className="text-2xl font-extrabold text-gray-900">
-                    {contracts.filter(c => {
-                      const endDate = new Date(c.contractEnd);
-                      const now = new Date();
-                      const diffTime = endDate.getTime() - now.getTime();
-                      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                      return diffDays <= 30 && diffDays >= 0 && c.status === 'ACTIVE';
-                    }).length}
+                    {expiringSoonContracts}
                   </p>
                 </div>
               </div>
@@ -758,7 +1112,7 @@ export default function ContractsPage() {
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-700">Total Value</p>
                   <p className="text-2xl font-extrabold text-gray-900">
-                    ${contracts.filter(c => c.status === 'ACTIVE').reduce((sum, c) => sum + c.basicWage, 0).toLocaleString()}
+                    ${totalContractValue.toLocaleString('en-US')}
                   </p>
                 </div>
               </div>
@@ -804,6 +1158,25 @@ export default function ContractsPage() {
           </div>
         </div>
 
+        {pendingDeleteId ? (
+          <div className="border-b border-rose-200 bg-rose-50 px-8 py-4">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="text-sm font-semibold text-rose-900">Remove this contract record?</p>
+                <p className="mt-1 text-sm text-rose-800">Use removal only when the contract was created by mistake and should not remain in the controlled register.</p>
+              </div>
+              <div className="flex gap-3">
+                <button type="button" onClick={() => setPendingDeleteId(null)} className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+                  Keep Record
+                </button>
+                <button type="button" onClick={() => handleDelete(pendingDeleteId)} className="rounded-lg border border-red-200 bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700">
+                  Confirm Removal
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
+
         {isLoading ? (
           <div className="p-8 text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
@@ -811,7 +1184,8 @@ export default function ContractsPage() {
           </div>
         ) : contracts.length === 0 ? (
           <div className="p-8 text-center">
-            <p className="text-gray-700">No contracts found. Create your first contract above.</p>
+            <p className="text-gray-700 font-semibold">No contracts found.</p>
+            <p className="mt-2 text-sm text-gray-500">Register the first controlled contract when crew, vessel, and principal are confirmed for contract preparation.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -905,7 +1279,7 @@ export default function ContractsPage() {
                             contract.status === 'TERMINATED' ? 'bg-red-100 text-red-800' :
                             'bg-yellow-100 text-yellow-800'
                           }`}>
-                            {contract.status}
+                            {CONTRACT_STATUS_LABELS[contract.status] ?? contract.status}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -917,42 +1291,42 @@ export default function ContractsPage() {
                           <div className="flex space-x-2">
                             <button
                               onClick={() => router.push(`/contracts/${contract.id}`)}
-                              className="text-blue-600 hover:text-blue-900 font-semibold px-4 py-2 rounded hover:bg-blue-100"
-                              title="View Details"
+                              className="rounded-lg border border-blue-200 px-3 py-2 text-blue-700 hover:bg-blue-50"
+                              title="Open Contract"
                             >
-                              👁️
+                              Open
                             </button>
                             <button
                               onClick={() => handleEdit(contract)}
-                              className="text-green-600 hover:text-green-900 font-semibold px-4 py-2 rounded hover:bg-green-50"
+                              className="rounded-lg border border-emerald-200 px-3 py-2 text-emerald-700 hover:bg-emerald-50"
                               title="Edit Contract"
                             >
-                              ✏️
+                              Edit
                             </button>
                             {contract.contractKind === 'SEA' && (
                               <button
                                 onClick={() => handleGenerateDocument(contract.id, 'sea_agreement')}
-                                className="text-purple-600 hover:text-purple-900 font-semibold px-4 py-2 rounded hover:bg-purple-50"
-                                title="Generate SEA"
+                                className="rounded-lg border border-purple-200 px-3 py-2 text-purple-700 hover:bg-purple-50"
+                                title="Generate SEA PDF"
                               >
-                                📄
+                                PDF
                               </button>
                             )}
                             {contract.contractKind === 'OFFICE_PKL' && (
                               <button
                                 onClick={() => handleGenerateDocument(contract.id, 'pkl_contract')}
-                                className="text-purple-600 hover:text-purple-900 font-semibold px-4 py-2 rounded hover:bg-purple-50"
-                                title="Generate PKL"
+                                className="rounded-lg border border-purple-200 px-3 py-2 text-purple-700 hover:bg-purple-50"
+                                title="Generate PKL PDF"
                               >
-                                📄
+                                PDF
                               </button>
                             )}
                             <button
-                              onClick={() => handleDelete(contract.id)}
-                              className="text-red-600 hover:text-red-900 font-semibold px-4 py-2 rounded hover:bg-red-50"
+                              onClick={() => setPendingDeleteId(contract.id)}
+                              className="rounded-lg border border-red-200 px-3 py-2 text-red-700 hover:bg-red-50"
                               title="Delete Contract"
                             >
-                              🗑️
+                              Delete
                             </button>
                           </div>
                         </td>

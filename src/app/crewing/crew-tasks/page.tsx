@@ -3,7 +3,14 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { canAccessOfficePath } from '@/lib/office-access';
+import { InlineConfirmStrip } from '@/components/feedback/InlineConfirmStrip';
+import { InlineNotice } from '@/components/feedback/InlineNotice';
+import { WorkspaceEmptyState } from '@/components/feedback/WorkspaceEmptyState';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
+import { StatusBadge } from '@/components/ui/StatusBadge';
 
 interface CrewTask {
   id: string;
@@ -28,13 +35,6 @@ interface CrewTask {
   };
 }
 
-const statusColors = {
-  TODO: 'bg-red-100 text-red-800',
-  IN_PROGRESS: 'bg-blue-100 text-blue-800',
-  COMPLETED: 'bg-green-100 text-green-800',
-  BLOCKED: 'bg-yellow-100 text-yellow-800'
-};
-
 const taskTypeColors = {
   MCU: 'bg-purple-100 text-purple-800',
   TRAINING: 'bg-indigo-100 text-indigo-800',
@@ -44,10 +44,14 @@ const taskTypeColors = {
 };
 
 export default function CrewTasksPage() {
-  const { status } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
   const [tasks, setTasks] = useState<CrewTask[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<{ tone: 'success' | 'error'; message: string } | null>(null);
+  const [pendingDeleteTaskId, setPendingDeleteTaskId] = useState<string | null>(null);
   const [filters, setFilters] = useState({
     crewName: '',
     status: 'ALL',
@@ -59,12 +63,16 @@ export default function CrewTasksPage() {
   const fetchTasks = useCallback(async () => {
     try {
       setLoading(true);
+      setLoadError(null);
       const params = new URLSearchParams();
       if (filters.status !== 'ALL') params.append('status', filters.status);
       if (filters.taskType !== 'ALL') params.append('taskType', filters.taskType);
 
       const response = await fetch(`/api/crew-tasks?${params.toString()}`);
-      if (!response.ok) throw new Error('Failed to fetch tasks');
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null);
+        throw new Error(payload?.error || 'Failed to fetch tasks');
+      }
 
       const data = await response.json();
       let filtered = data;
@@ -82,6 +90,8 @@ export default function CrewTasksPage() {
       setTasks(filtered);
     } catch (error) {
       console.error('Error fetching tasks:', error);
+      setTasks([]);
+      setLoadError(error instanceof Error ? error.message : 'Failed to fetch tasks');
     } finally {
       setLoading(false);
     }
@@ -94,9 +104,22 @@ export default function CrewTasksPage() {
     }
 
     if (status === 'authenticated') {
+      const allowed = canAccessOfficePath(
+        '/api/crew-tasks',
+        [...(session?.user?.roles ?? []), session?.user?.role ?? ''].filter(Boolean),
+        session?.user?.isSystemAdmin === true,
+        'GET'
+      );
+
+      if (!allowed) {
+        setIsAuthorized(false);
+        return;
+      }
+
+      setIsAuthorized(true);
       fetchTasks();
     }
-  }, [status, router, fetchTasks]);
+  }, [status, session, router, fetchTasks]);
 
   const handleStatusUpdate = async (taskId: string, newStatus: string) => {
     try {
@@ -123,8 +146,6 @@ export default function CrewTasksPage() {
   };
 
   const handleDeleteTask = async (taskId: string) => {
-    if (!window.confirm('Are you sure you want to delete this task?')) return;
-
     try {
       const response = await fetch(`/api/crew-tasks/${taskId}`, {
         method: 'DELETE'
@@ -133,82 +154,122 @@ export default function CrewTasksPage() {
       if (!response.ok) throw new Error('Failed to delete task');
 
       setTasks(tasks.filter(t => t.id !== taskId));
+      setPendingDeleteTaskId(null);
+      setFeedback({ tone: 'success', message: 'Task removed from the support queue.' });
     } catch (error) {
       console.error('Error deleting task:', error);
+      setFeedback({ tone: 'error', message: error instanceof Error ? error.message : 'Task could not be removed.' });
     }
   };
 
   if (status === 'loading' || loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-gray-500">Loading tasks...</div>
+      <div className="flex min-h-[40vh] items-center justify-center">
+        <div className="text-slate-600">Loading tasks...</div>
       </div>
     );
   }
 
-  return (
-    <div className="container mx-auto p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold">Crew Task Management</h1>
-        <div className="flex gap-2">
-          <Link
-            href="/crewing/prepare-joining"
-            className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
-          >
-            ← Back to Prepare Joining
-          </Link>
-        </div>
-      </div>
+  if (!isAuthorized) {
+    return (
+      <section className="surface-card border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-900">
+          Access to crew task management is restricted for your role.
+      </section>
+    );
+  }
 
-      {/* Filters */}
-      <div className="bg-white p-4 rounded-lg shadow mb-6">
+  return (
+    <div className="section-stack">
+      <section className="surface-card p-7">
+        <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+          <div className="max-w-4xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-amber-700">Support Queue</p>
+            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950">Crew task management</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              Support queue for operational follow-up items connected to crew preparation and desk actions.
+            </p>
+          </div>
+          <Button type="button" variant="secondary" onClick={() => router.push('/crewing/prepare-joining')}>
+            Back to prepare joining
+          </Button>
+        </div>
+      </section>
+
+      <section className="surface-card border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-900">
+        Support queue only. Update task status here when office follow-up changes, but only delete a task if it was created by mistake and is no longer needed in the live queue.
+      </section>
+
+      {feedback ? <InlineNotice tone={feedback.tone} message={feedback.message} onDismiss={() => setFeedback(null)} /> : null}
+
+      {pendingDeleteTaskId ? (
+        <InlineConfirmStrip
+          tone="error"
+          title="Delete this task?"
+          message="Remove the task only when it was created by mistake and should not remain in the live support queue."
+          confirmLabel="Confirm Delete"
+          cancelLabel="Keep Task"
+          onCancel={() => setPendingDeleteTaskId(null)}
+          onConfirm={() => handleDeleteTask(pendingDeleteTaskId)}
+        />
+      ) : null}
+
+      {loadError ? (
+        <section className="surface-card border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-800">
+          {loadError}
+        </section>
+      ) : null}
+
+      <section className="surface-card p-5">
         <h2 className="text-lg font-semibold mb-4">Filters</h2>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <input
+          <Input
             type="text"
+            label="Crew name"
             placeholder="Search by crew name..."
             value={filters.crewName}
             onChange={e => setFilters({ ...filters, crewName: e.target.value })}
-            className="px-4 py-2 border rounded-lg"
-            onKeyUp={() => {}}
           />
-          <select
+          <Select
+            label="Status"
             value={filters.status}
             onChange={e => setFilters({ ...filters, status: e.target.value })}
-            className="px-4 py-2 border rounded-lg"
-          >
-            <option value="ALL">All Status</option>
-            <option value="TODO">TODO</option>
-            <option value="IN_PROGRESS">In Progress</option>
-            <option value="COMPLETED">Completed</option>
-            <option value="BLOCKED">Blocked</option>
-          </select>
-          <select
+            options={[
+              { value: 'ALL', label: 'All task statuses' },
+              { value: 'TODO', label: 'TODO' },
+              { value: 'IN_PROGRESS', label: 'In Progress' },
+              { value: 'COMPLETED', label: 'Completed' },
+              { value: 'BLOCKED', label: 'Blocked' },
+            ]}
+          />
+          <Select
+            label="Task type"
             value={filters.taskType}
             onChange={e => setFilters({ ...filters, taskType: e.target.value })}
-            className="px-4 py-2 border rounded-lg"
-          >
-            <option value="ALL">All Task Types</option>
-            <option value="MCU">MCU</option>
-            <option value="TRAINING">Training</option>
-            <option value="VISA">Visa</option>
-            <option value="CONTRACT">Contract</option>
-            <option value="BRIEFING">Briefing</option>
-          </select>
-          <button
-            onClick={() => {
-              setFilters({ crewName: '', status: 'ALL', taskType: 'ALL', assignedTo: 'ALL' });
-              fetchTasks();
-            }}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-          >
-            Reset Filters
-          </button>
+            options={[
+              { value: 'ALL', label: 'All task categories' },
+              { value: 'MCU', label: 'MCU' },
+              { value: 'TRAINING', label: 'Training' },
+              { value: 'VISA', label: 'Visa' },
+              { value: 'CONTRACT', label: 'Contract' },
+              { value: 'BRIEFING', label: 'Briefing' },
+            ]}
+          />
+          <div className="flex items-end">
+            <Button
+              type="button"
+              className="w-full"
+              onClick={() => {
+                setFilters({ crewName: '', status: 'ALL', taskType: 'ALL', assignedTo: 'ALL' });
+                fetchTasks();
+              }}
+            >
+              Reset Filters
+            </Button>
+          </div>
         </div>
-      </div>
+      </section>
 
-      {/* Tasks Table */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <section className="surface-card overflow-hidden">
         <table className="w-full">
           <thead className="bg-gray-100 border-b">
             <tr>
@@ -224,17 +285,20 @@ export default function CrewTasksPage() {
           <tbody>
             {tasks.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
-                  No tasks found
+                <td colSpan={7} className="px-6 py-8">
+                  <WorkspaceEmptyState
+                    title="No support tasks in this view"
+                    message="Adjust the current filters or add a new operational task when work needs follow-up."
+                  />
                 </td>
               </tr>
             ) : (
               tasks.map(task => (
-                <tr key={task.id} className="border-b hover:bg-gray-50">
+                <tr key={task.id} className="border-b hover:bg-slate-50">
                   <td className="px-6 py-3">
                     <div>
-                      <div className="font-medium text-gray-900">{task.crew.fullName}</div>
-                      <div className="text-sm text-gray-500">{task.crew.rank}</div>
+                      <div className="font-medium text-slate-900">{task.crew.fullName}</div>
+                      <div className="text-sm text-slate-500">{task.crew.rank}</div>
                     </div>
                   </td>
                   <td className="px-6 py-3">
@@ -245,23 +309,24 @@ export default function CrewTasksPage() {
                   <td className="px-6 py-3">
                     <div className="text-sm">{task.title}</div>
                     {task.description && (
-                      <div className="text-xs text-gray-500">{task.description}</div>
+                      <div className="text-xs text-slate-500">{task.description}</div>
                     )}
                   </td>
                   <td className="px-6 py-3">
-                    <select
-                      value={task.status}
-                      onChange={e => handleStatusUpdate(task.id, e.target.value)}
-                      disabled={updatingStatus[task.id] ? true : false}
-                      className={`px-3 py-1 rounded text-sm font-medium border-0 cursor-pointer ${
-                        statusColors[task.status as keyof typeof statusColors] || 'bg-gray-100'
-                      } ${updatingStatus[task.id] ? 'opacity-50' : ''}`}
-                    >
-                      <option value="TODO">TODO</option>
-                      <option value="IN_PROGRESS">In Progress</option>
-                      <option value="COMPLETED">Completed</option>
-                      <option value="BLOCKED">Blocked</option>
-                    </select>
+                    <div className="flex flex-col gap-2">
+                      <StatusBadge status={task.status} />
+                      <select
+                        value={task.status}
+                        onChange={e => handleStatusUpdate(task.id, e.target.value)}
+                        disabled={updatingStatus[task.id] ? true : false}
+                        className={`rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 ${updatingStatus[task.id] ? 'opacity-50' : ''}`}
+                      >
+                        <option value="TODO">Open Task</option>
+                        <option value="IN_PROGRESS">In Progress</option>
+                        <option value="COMPLETED">Completed</option>
+                        <option value="BLOCKED">Blocked</option>
+                      </select>
+                    </div>
                   </td>
                   <td className="px-6 py-3 text-sm">
                     {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : '-'}
@@ -269,19 +334,19 @@ export default function CrewTasksPage() {
                   <td className="px-6 py-3 text-sm">
                     {task.assignedToUser ? (
                       <div>
-                        <div className="text-gray-900">{task.assignedToUser.name}</div>
-                        <div className="text-xs text-gray-500">{task.assignedToUser.email}</div>
+                        <div className="text-slate-900">{task.assignedToUser.name}</div>
+                        <div className="text-xs text-slate-500">{task.assignedToUser.email}</div>
                       </div>
                     ) : (
-                      <span className="text-gray-400">-</span>
+                      <span className="text-slate-400">-</span>
                     )}
                   </td>
                   <td className="px-6 py-3">
                     <button
-                      onClick={() => handleDeleteTask(task.id)}
+                      onClick={() => setPendingDeleteTaskId(task.id)}
                       className="text-red-600 hover:text-red-800 text-sm font-medium"
                     >
-                      Delete
+                      Delete Task
                     </button>
                   </td>
                 </tr>
@@ -289,16 +354,15 @@ export default function CrewTasksPage() {
             )}
           </tbody>
         </table>
-      </div>
+      </section>
 
-      {/* Summary */}
-      <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
         {['TODO', 'IN_PROGRESS', 'COMPLETED', 'BLOCKED'].map(status => {
           const count = tasks.filter(t => t.status === status).length;
           return (
-            <div key={status} className="bg-white p-4 rounded-lg shadow">
-              <h3 className="text-sm font-medium text-gray-500">{status.replace('_', ' ')}</h3>
-              <p className="text-3xl font-bold mt-2">{count}</p>
+            <div key={status} className="surface-card p-4">
+              <h3 className="text-sm font-medium text-slate-500">{status.replace('_', ' ')}</h3>
+              <p className="mt-2 text-3xl font-bold text-slate-900">{count}</p>
             </div>
           );
         })}

@@ -5,6 +5,7 @@ import { env } from "@/lib/env";
 import { canAccessOfficePath, getPrimaryOfficeRole } from "@/lib/office-access";
 import { getAdminMaintenanceScopes } from "@/lib/admin-maintenance-access";
 import { getAdminScopeForPath } from "@/lib/admin-access";
+import { UserRole } from "@/lib/permissions";
 
 const PUBLIC_PREFIXES = ["/auth", "/_next", "/favicon.ico", "/icons", "/manifest.json", "/sw.js"];
 const PUBLIC_API_PREFIXES = ["/api/auth", "/api/health"];
@@ -97,7 +98,8 @@ export async function middleware(request: NextRequest) {
       );
     }
 
-    const deniedUrl = new URL("/dashboard", request.url);
+    const deniedTarget = primaryOfficeRoles.includes(UserRole.PRINCIPAL) ? "/principal" : "/dashboard";
+    const deniedUrl = new URL(deniedTarget, request.url);
     deniedUrl.searchParams.set("accessDenied", "1");
     deniedUrl.searchParams.set("from", pathname);
     return NextResponse.redirect(deniedUrl);

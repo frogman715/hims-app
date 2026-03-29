@@ -2,6 +2,25 @@ import puppeteer from 'puppeteer';
 import { promises as fs } from 'fs';
 import path from 'path';
 
+function getPdfRuntimeErrorMessage(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+  const normalized = message.toLowerCase();
+
+  if (
+    normalized.includes('failed to launch the browser process') ||
+    normalized.includes('libatk-1.0.so.0') ||
+    normalized.includes('error while loading shared libraries')
+  ) {
+    return 'PDF generation is temporarily unavailable on this server. Required Chromium system libraries are missing.';
+  }
+
+  return message;
+}
+
+export function getOfficeSafePdfError(error: unknown) {
+  return getPdfRuntimeErrorMessage(error);
+}
+
 /**
  * Generate PDF from HTML content
  * Used for form approvals, certifications, and official documents
@@ -49,10 +68,14 @@ export async function generatePDF(
 
     return { success: true, path: `/uploads/pdfs/${filename}` };
   } catch (error) {
-    console.error('PDF generation error:', error);
+    console.error('PDF generation error:', {
+      error: error instanceof Error ? error.message : String(error),
+      officeSafeError: getPdfRuntimeErrorMessage(error),
+      timestamp: new Date().toISOString(),
+    });
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: getPdfRuntimeErrorMessage(error),
     };
   } finally {
     if (browser) {

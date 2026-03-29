@@ -12,10 +12,10 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
       <div
         ref={ref}
         className={cn(
-          'rounded-lg bg-white p-6',
-          variant === 'default' && 'border border-gray-200',
-          variant === 'bordered' && 'border-2 border-gray-300',
-          variant === 'elevated' && 'shadow-lg border border-gray-100',
+          'rounded-2xl bg-white p-6 text-slate-900',
+          variant === 'default' && 'border border-slate-200 shadow-sm',
+          variant === 'bordered' && 'border-2 border-slate-300 shadow-sm',
+          variant === 'elevated' && 'border border-slate-200 shadow-[0_24px_48px_-28px_rgba(15,23,42,0.35)]',
           className
         )}
         {...props}
@@ -37,7 +37,7 @@ export const CardHeader = React.forwardRef<HTMLDivElement, CardHeaderProps>(
     return (
       <div
         ref={ref}
-        className={cn('mb-4 pb-4 border-b border-gray-200', className)}
+        className={cn('mb-5 border-b border-slate-200 pb-4', className)}
         {...props}
       >
         {children}
@@ -57,7 +57,7 @@ export const CardTitle = React.forwardRef<HTMLHeadingElement, CardTitleProps>(
     return (
       <h3
         ref={ref}
-        className={cn('text-xl font-bold text-gray-900', className)}
+        className={cn('text-lg font-semibold tracking-tight text-slate-950', className)}
         {...props}
       >
         {children}
@@ -77,7 +77,7 @@ export const CardDescription = React.forwardRef<HTMLParagraphElement, CardDescri
     return (
       <p
         ref={ref}
-        className={cn('text-sm text-gray-600 mt-2', className)}
+        className={cn('mt-2 text-sm leading-6 text-slate-600', className)}
         {...props}
       >
         {children}
@@ -113,7 +113,7 @@ export const CardFooter = React.forwardRef<HTMLDivElement, CardFooterProps>(
     return (
       <div
         ref={ref}
-        className={cn('mt-4 pt-4 border-t border-gray-200 flex items-center gap-2', className)}
+        className={cn('mt-5 flex items-center gap-2 border-t border-slate-200 pt-4', className)}
         {...props}
       >
         {children}

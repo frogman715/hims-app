@@ -27,13 +27,6 @@ enum InterviewStatus {
   CANCELLED = "CANCELLED",
 }
 
-interface CreateInterviewPayload {
-  applicationId: string;
-  scheduledDate?: string | null;
-  interviewerName?: string | null;
-  notes?: string | null;
-}
-
 const validInterviewStatuses = new Set<InterviewStatus>([...Object.values(InterviewStatus)]);
 
 function parseIsoDate(value?: string | null): Date | null {

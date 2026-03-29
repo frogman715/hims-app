@@ -3,7 +3,6 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ensureOfficeApiPathAccess } from "@/lib/office-api-access";
-import { checkPermission, PermissionLevel } from "@/lib/permission-middleware";
 import { prepareJoiningUpdateSchema } from "@/lib/prepare-joining-schemas";
 import {
   assertPrepareJoiningStatusTransition,
@@ -291,6 +290,16 @@ export async function PUT(
         id: true,
         principalId: true,
         status: true,
+        passportValid: true,
+        seamanBookValid: true,
+        certificatesValid: true,
+        medicalValid: true,
+        visaValid: true,
+        orientationCompleted: true,
+        mcuCompleted: true,
+        vesselContractSigned: true,
+        ticketBooked: true,
+        transportArranged: true,
         departureDate: true,
         departurePort: true,
         arrivalPort: true,
@@ -709,6 +718,34 @@ export async function PUT(
 
     if (nextStatus === "READY" || nextStatus === "DISPATCHED") {
       await assertPrepareJoiningStatusTransition(id, nextStatus as PrepareJoiningStatus);
+    }
+
+    if (nextStatus === "READY") {
+      const readyBlockers = [
+        nextPrincipalId ? null : "principal assignment",
+        existingPrepareJoining.passportValid || updateData.passportValid === true ? null : "passport validation",
+        existingPrepareJoining.seamanBookValid || updateData.seamanBookValid === true ? null : "seaman book validation",
+        existingPrepareJoining.certificatesValid || updateData.certificatesValid === true ? null : "certificate validation",
+        existingPrepareJoining.medicalValid || updateData.medicalValid === true ? null : "medical validation",
+        existingPrepareJoining.visaValid || updateData.visaValid === true ? null : "visa validation",
+        existingPrepareJoining.mcuCompleted || updateData.mcuCompleted === true ? null : "MCU completion",
+        existingPrepareJoining.orientationCompleted || updateData.orientationCompleted === true ? null : "briefing/orientation completion",
+        existingPrepareJoining.vesselContractSigned || updateData.vesselContractSigned === true ? null : "PKL / contract signing",
+        existingPrepareJoining.ticketBooked || updateData.ticketBooked === true ? null : "ticket booking",
+        existingPrepareJoining.transportArranged || updateData.transportArranged === true ? null : "transport arrangement",
+        nextDepartureDate ? null : "departure date",
+        nextDeparturePort ? null : "departure port",
+        nextArrivalPort ? null : "arrival port",
+      ].filter(Boolean) as string[];
+
+      if (readyBlockers.length > 0) {
+        return NextResponse.json(
+          {
+            error: `Prepare joining is not ready yet. Complete: ${readyBlockers.join(", ")}.`,
+          },
+          { status: 400 }
+        );
+      }
     }
 
     if (nextStatus === "DISPATCHED") {

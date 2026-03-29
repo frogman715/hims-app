@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { writeFile } from "fs/promises";
 import { extname } from "path";
 import {
-  buildCrewFilePath,
+  buildCrewDocumentFilePath,
   getRelativePath,
   getMaxFileSize,
 } from "@/lib/upload-path";
@@ -38,15 +38,15 @@ export async function POST(req: NextRequest) {
     const sessionEmail = auth.session.user.email ?? null;
     let crew = await prisma.crew.findUnique({
       where: { id: auth.user.id },
-      select: { id: true },
+      select: { id: true, crewCode: true },
     });
 
-    if (!crew && sessionEmail) {
-      crew = await prisma.crew.findFirst({
-        where: { email: sessionEmail },
-        select: { id: true },
-      });
-    }
+        if (!crew && sessionEmail) {
+          crew = await prisma.crew.findFirst({
+            where: { email: sessionEmail },
+            select: { id: true, crewCode: true },
+          });
+        }
 
     if (!crew) {
       console.warn("Mobile upload: crew record not found", {
@@ -83,18 +83,12 @@ export async function POST(req: NextRequest) {
     // Get crew info for directory structure
     const crewData = await prisma.crew.findUnique({
       where: { id: crew.id },
-      select: { fullName: true },
+      select: { fullName: true, crewCode: true },
     });
 
     if (!crewData) {
       return NextResponse.json({ error: "Crew data not found" }, { status: 404 });
     }
-
-    // Generate crew slug from full name
-    const crewSlug = crewData.fullName
-      .toUpperCase()
-      .replace(/[^A-Z0-9\s]/g, "")
-      .replace(/\s+/g, "_");
 
     // Generate professional filename: {date}_{crewid}_{uploadtype}_{hash}.{ext}
     // Format: 20251230_cm123abc_medical_a7f2e.jpg
@@ -103,8 +97,7 @@ export async function POST(req: NextRequest) {
     const uploadTypeSafe = uploadType.toLowerCase().replace(/\s+/g, '_');
     const fileName = `${timestamp}_${crew.id}_${uploadTypeSafe}_${randomHash}${allowedExtension}`;
     
-    // Build full file path using centralized utility
-    const filePath = buildCrewFilePath(crew.id, crewSlug, fileName);
+    const filePath = buildCrewDocumentFilePath(crewData.crewCode ?? crew.id, fileName, uploadType);
 
     // Save file with error handling and logging
     const bytes = await file.arrayBuffer();

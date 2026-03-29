@@ -147,6 +147,7 @@ DATABASE_URL=postgresql://...
 NEXTAUTH_URL=https://app.hanmarine.co
 NEXTAUTH_SECRET=...
 HIMS_CRYPTO_KEY=...
+COMPLIANCE_JOB_TOKEN=...
 ```
 
 If missing, update:
@@ -161,7 +162,43 @@ pm2 restart hims-app
 
 ---
 
-## 🧪 STEP 7: Full System Test
+## 🤖 STEP 7: Enable Production Automation Jobs
+
+HIMS now depends on two scheduled background jobs in production:
+- `hims-office-automation-job` for workflow integrity, duplicate detection, and SLA follow-up
+- `hims-escalation-job` for compliance escalation delivery
+
+Start PM2 with the ecosystem file so both jobs are registered:
+
+```bash
+cd /var/www/hims-app
+pm2 startOrReload ecosystem.config.js --env production
+pm2 save
+pm2 status
+```
+
+Expected PM2 entries:
+- `hims-app`
+- `hims-office-automation-job`
+- `hims-escalation-job`
+
+Run the office automation job once manually after deploy:
+
+```bash
+cd /var/www/hims-app
+npm run automation:office
+```
+
+Then verify the job logs:
+
+```bash
+pm2 logs hims-office-automation-job --lines 20
+pm2 logs hims-escalation-job --lines 20
+```
+
+---
+
+## 🧪 STEP 8: Full System Test & Burn-In
 
 Run this verification checklist:
 
@@ -179,14 +216,31 @@ curl -s https://app.hanmarine.co/api/health 2>/dev/null | head -20
 pm2 logs hims-app --err --lines 20
 # Should show minimal/no errors
 
-# 4. Check Nginx logs
+# 4. Run office automation once and confirm success
+npm run automation:office
+# Should log an office automation snapshot without errors
+
+# 5. Check Nginx logs
 sudo tail -20 /var/log/nginx/error.log
 # Should be empty or show 200 responses
 ```
 
+### Burn-In Checklist
+
+After the deploy is live, verify the business-critical path from the app UI:
+
+1. Create a recruitment intake and confirm it appears in HR workflow.
+2. Open or create a seafarer record from recruitment.
+3. Register a nomination and confirm duplicate nomination guard works.
+4. Advance one case into `Prepare Joining` and verify readiness blockers show clearly.
+5. Create an assignment and confirm the assignment desk updates.
+6. Complete a sign-off and verify crew status changes to `Off Signed`.
+7. Open `Admin -> System Health` and confirm workflow integrity and data-quality watch cards load.
+8. Confirm director dashboard shows pending tasks and SLA follow-up items.
+
 ---
 
-## 🌐 STEP 8: Access Application
+## 🌐 STEP 9: Access Application
 
 From your local machine:
 ```bash
@@ -213,7 +267,7 @@ Other test users:
 
 ---
 
-## 🔄 STEP 9: Setup Auto-Renewal for SSL
+## 🔄 STEP 10: Setup Auto-Renewal for SSL
 
 ```bash
 # Create renewal cron job (runs daily)
@@ -266,6 +320,8 @@ sudo nano /etc/nginx/sites-available/app.hanmarine.co
 ```bash
 # Check PM2 logs
 pm2 logs hims-app --lines 50
+pm2 logs hims-office-automation-job --lines 50
+pm2 logs hims-escalation-job --lines 50
 
 # Check database
 cd /var/www/hims-app
@@ -289,6 +345,8 @@ pm2 start hims-app
 # View logs
 pm2 logs hims-app
 pm2 logs hims-app --err
+pm2 logs hims-office-automation-job
+pm2 logs hims-escalation-job
 
 # Check status
 pm2 status
@@ -301,13 +359,15 @@ npx prisma db execute --stdin < /dev/null
 # Rebuild
 npm run build
 pm2 restart hims-app
+npm run automation:office
 
 # Update code from GitHub
 cd /var/www/hims-app
 git pull origin main
 npm ci --omit=dev
 npm run build
-pm2 restart hims-app
+pm2 startOrReload ecosystem.config.js --env production
+pm2 save
 ```
 
 ---
@@ -322,6 +382,9 @@ You'll know setup is complete when:
 4. ✅ Dashboard loads without errors
 5. ✅ No errors in `pm2 logs hims-app`
 6. ✅ SSL certificate is valid (green lock in browser)
+7. ✅ `npm run automation:office` completes successfully
+8. ✅ `Admin -> System Health` shows workflow integrity watch cards
+9. ✅ `pm2 status` shows both automation jobs registered
 
 ---
 
@@ -335,7 +398,9 @@ cd /var/www/hims-app
 git pull origin main
 npm ci --omit=dev
 npm run build
-pm2 restart hims-app
+pm2 startOrReload ecosystem.config.js --env production
+pm2 save
+npm run automation:office
 ```
 
 ---

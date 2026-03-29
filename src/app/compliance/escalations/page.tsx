@@ -3,15 +3,11 @@ import { requireAuthorizedUser } from "@/lib/authz";
 import { PermissionLevel } from "@/lib/permissions";
 import { getEscalationCenterData } from "@/lib/compliance-escalations";
 import { getEscalationNotificationOverview } from "@/lib/compliance-escalation-notifications";
+import { WorkspaceHero } from "@/components/layout/WorkspaceHero";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
-
-function getSeverityClasses(severity: string) {
-  if (severity === "CRITICAL") return "bg-rose-100 text-rose-700";
-  if (severity === "HIGH") return "bg-amber-100 text-amber-800";
-  return "bg-cyan-100 text-cyan-800";
-}
 
 function formatTimestamp(value: string) {
   return new Date(value).toLocaleString("en-GB", {
@@ -31,41 +27,70 @@ export default async function EscalationsPage() {
     redirectOnDisallowed: "/dashboard",
   });
 
-  const [data, notificationLogs] = await Promise.all([
-    getEscalationCenterData(),
-    getEscalationNotificationOverview(),
-  ]);
+  const data = await getEscalationCenterData();
+  const notificationLogs = await getEscalationNotificationOverview().catch((error) => {
+    console.error("Failed to load escalation notification audit trail:", error);
+    return [];
+  });
+  const criticalItems = data.items.filter((item) => item.severity === "CRITICAL").length;
+  const failedNotifications = notificationLogs.filter((log) => log.status === "FAILED").length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-rose-50 px-6 py-8">
-      <div className="mx-auto max-w-7xl space-y-6">
-        <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-rose-700">Rules Engine</p>
-              <h1 className="mt-2 text-3xl font-semibold text-slate-900">Auto escalation center</h1>
-              <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-                Advisory escalation queue generated from expiry, overdue CAPA, external compliance blockers, and deployment readiness gaps.
-                Notification workflow is available through <span className="font-semibold text-slate-900">POST /api/compliance/escalations/notify</span>.
-              </p>
-              <p className="mt-3 text-xs font-medium text-slate-500">Generated {formatTimestamp(data.generatedAt)}</p>
-            </div>
-            <Link href="/compliance/control-center" className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700">
-              Back to Control Center
-            </Link>
-          </div>
-        </section>
+    <div className="section-stack">
+      <WorkspaceHero
+        eyebrow="Compliance Workspace"
+        title="Auto escalation center"
+        subtitle={(
+          <>
+            Advisory escalation queue generated from expiry, overdue CAPA, external compliance blockers, and deployment readiness gaps.
+            Notification workflow is available through <span className="font-semibold text-slate-900">POST /api/compliance/escalations/notify</span>.
+            <span className="mt-2 block text-xs font-medium text-slate-500">Generated {formatTimestamp(data.generatedAt)}</span>
+          </>
+        )}
+        highlights={[
+          {
+            label: "Open Escalations",
+            value: data.items.length,
+            detail: "Active items currently matching the rules engine.",
+          },
+          {
+            label: "Critical Priority",
+            value: criticalItems,
+            detail: "Cases requiring immediate management attention.",
+          },
+          {
+            label: "Rule Catalog",
+            value: data.ruleCatalog.length,
+            detail: "Configured escalation rules exposed to this workspace.",
+          },
+          {
+            label: "Failed Notifications",
+            value: failedNotifications,
+            detail: "Notification logs that require delivery follow-up.",
+          },
+        ]}
+        helperLinks={[
+          { href: "/compliance/control-center", label: "Control Center" },
+          { href: "/quality/qmr-dashboard", label: "QMR Dashboard" },
+          { href: "/quality/risks", label: "Risk Register" },
+        ]}
+        actions={(
+          <Link href="/compliance/control-center" className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-rose-300 hover:text-rose-700">
+            Control Center
+          </Link>
+        )}
+      />
 
-        <section className="grid gap-4 xl:grid-cols-4">
+      <section className="grid gap-4 xl:grid-cols-4">
           {data.ruleCatalog.map((rule) => (
             <div key={rule.code} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
               <p className="text-xs font-semibold uppercase tracking-wide text-rose-700">{rule.code}</p>
               <p className="mt-2 font-semibold text-slate-900">{rule.description}</p>
             </div>
           ))}
-        </section>
+      </section>
 
-        <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <h2 className="text-xl font-semibold text-slate-900">Live escalation queue</h2>
           <div className="mt-5 space-y-3">
             {data.items.length === 0 ? (
@@ -81,17 +106,15 @@ export default async function EscalationsPage() {
                         {item.ruleCode} • owner {item.owner}
                       </p>
                     </div>
-                    <span className={`rounded-full px-3 py-1 text-xs font-semibold ${getSeverityClasses(item.severity)}`}>
-                      {item.severity}
-                    </span>
+                    <StatusBadge status={item.severity} />
                   </div>
                 </Link>
               ))
             )}
           </div>
-        </section>
+      </section>
 
-        <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <h2 className="text-xl font-semibold text-slate-900">Notification audit trail</h2>
           <div className="mt-5 space-y-3">
             {notificationLogs.length === 0 ? (
@@ -109,16 +132,13 @@ export default async function EscalationsPage() {
                         {log.ruleCode} • created {formatTimestamp(log.createdAt)}
                       </p>
                     </div>
-                    <span className={`rounded-full px-3 py-1 text-xs font-semibold ${log.status === "SENT" ? "bg-emerald-100 text-emerald-700" : log.status === "FAILED" ? "bg-rose-100 text-rose-700" : "bg-slate-100 text-slate-700"}`}>
-                      {log.status}
-                    </span>
+                    <StatusBadge status={log.status} />
                   </div>
                 </div>
               ))
             )}
           </div>
-        </section>
-      </div>
+      </section>
     </div>
   );
 }

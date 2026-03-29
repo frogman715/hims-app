@@ -1,5 +1,6 @@
 import { ComplianceStatus, PrepareJoiningStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { getFleetRiskLevel, summarizeFleetRows } from "@/lib/fleet-metrics";
 
 const ACTIVE_ASSIGNMENT_STATUSES = ["PLANNED", "ASSIGNED", "ACTIVE", "ONBOARD"];
 const ACTIVE_PREPARE_JOINING_STATUSES: PrepareJoiningStatus[] = [
@@ -36,24 +37,6 @@ export type FleetBoardData = {
   };
   vessels: FleetBoardRow[];
 };
-
-function getRiskLevel(input: {
-  expiringDocuments: number;
-  externalIssues: number;
-  openNonconformities: number;
-  mobilizationQueue: number;
-}) {
-  const score =
-    input.expiringDocuments * 2 +
-    input.externalIssues * 2 +
-    input.openNonconformities * 3 +
-    (input.mobilizationQueue > 3 ? 1 : 0);
-
-  if (score >= 8) return "CRITICAL" as const;
-  if (score >= 5) return "HIGH" as const;
-  if (score >= 2) return "MEDIUM" as const;
-  return "LOW" as const;
-}
 
 export async function getFleetComplianceBoard(): Promise<FleetBoardData> {
   const now = new Date();
@@ -188,7 +171,7 @@ export async function getFleetComplianceBoard(): Promise<FleetBoardData> {
 
     const mobilizationQueue = vessel.prepareJoinings.length;
     const activeCrew = vessel.assignments.length;
-    const riskLevel = getRiskLevel({
+    const riskLevel = getFleetRiskLevel({
       expiringDocuments,
       externalIssues,
       openNonconformities,
@@ -213,12 +196,7 @@ export async function getFleetComplianceBoard(): Promise<FleetBoardData> {
 
   return {
     generatedAt: new Date().toISOString(),
-    totals: {
-      activeVessels: rows.length,
-      activeCrew: rows.reduce((sum, row) => sum + row.activeCrew, 0),
-      mobilizationQueue: rows.reduce((sum, row) => sum + row.mobilizationQueue, 0),
-      highRiskVessels: rows.filter((row) => row.riskLevel === "HIGH" || row.riskLevel === "CRITICAL").length,
-    },
+    totals: summarizeFleetRows(rows),
     vessels: rows,
   };
 }

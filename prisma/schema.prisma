@@ -21,6 +21,7 @@ enum Role {
   DIRECTOR
   CDMO
   OPERATIONAL
+  GA_DRIVER
   ACCOUNTING
   HR
   CREW_PORTAL
@@ -67,6 +68,12 @@ enum ContractStatus {
 enum ContractKind {
   SEA // Seafarer Employment Agreement (carried onboard, MLC compliant)
   OFFICE_PKL // PKL used for Hubla / office documentation
+}
+
+enum SeaServiceStatus {
+  COMPLETED
+  ONGOING
+  TERMINATED
 }
 
 enum SeaType {
@@ -495,6 +502,7 @@ model User {
   documentsUploaded         DocumentUpload[]   @relation("DocumentUploadUploadedBy")
   documentsVerified         DocumentUpload[]   @relation("DocumentUploadVerifiedBy")
   reviewedCrewDocumentWorkspaces CrewDocumentWorkspace[] @relation("CrewDocumentWorkspaceReviewedBy")
+  verifiedSeaServiceHistories SeaServiceHistory[] @relation("SeaServiceHistoryVerifiedBy")
   formTemplatesCreated      FormTemplate[]    @relation("FormTemplateCreatedBy")
   hgfSubmissionAuditLogs    HGFSubmissionAuditLog[]
 
@@ -595,6 +603,7 @@ model Crew {
   disciplinaryCases   DisciplinaryRecord[]
   insuranceRecords    InsuranceRecord[]
   contracts           EmploymentContract[]
+  seaServiceHistories SeaServiceHistory[]
   prepareJoinings     PrepareJoining[]
   crewTasks           CrewTask[]
   exchangeExpenses    ExchangeExpense[]
@@ -627,6 +636,43 @@ model Crew {
   @@index([passportNumber])
   @@index([seamanBookNumber])
   @@index([nationality])
+}
+
+model SeaServiceHistory {
+  id                 String                     @id @default(cuid())
+  crewId             String
+  vesselName         String
+  imoNumber          String?
+  companyName        String?
+  flag               String?
+  vesselType         String?
+  grt                Int?
+  engineOutput       String?
+  rank               String
+  department         String?
+  signOnDate         DateTime
+  signOffDate        DateTime?
+  portOfSignOn       String?
+  portOfSignOff      String?
+  contractType       ContractKind?
+  status             SeaServiceStatus          @default(COMPLETED)
+  reasonForSignOff   String?
+  sourceDocumentType String?
+  verificationStatus DocumentVerificationStatus @default(PENDING)
+  verifiedBy         String?
+  verifiedAt         DateTime?
+  remarks            String?
+
+  crew               Crew                      @relation(fields: [crewId], references: [id], onDelete: Cascade)
+  verifier           User?                     @relation("SeaServiceHistoryVerifiedBy", fields: [verifiedBy], references: [id], onDelete: SetNull)
+
+  createdAt          DateTime                  @default(now())
+  updatedAt          DateTime                  @updatedAt
+
+  @@index([crewId, signOnDate])
+  @@index([crewId, status])
+  @@index([crewId, verificationStatus])
+  @@index([signOffDate])
 }
 
 model DocumentType {

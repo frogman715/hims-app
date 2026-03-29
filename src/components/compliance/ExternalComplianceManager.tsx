@@ -1,449 +1,108 @@
 'use client';
 
-import React, { useState } from 'react';
-
-type ExternalComplianceSystem = 'KOSMA_CERTIFICATE' | 'DEPHUB_CERTIFICATE' | 'SCHENGEN_VISA_NL';
-type ExternalComplianceStatus = 'PENDING' | 'VERIFIED' | 'EXPIRED' | 'REJECTED';
-
-interface ExternalComplianceRecord {
-  id: string;
-  crewId: string;
-  systemType: ExternalComplianceSystem;
-  certificateId?: string | null;
-  issueDate?: string | Date | null;
-  expiryDate?: string | Date | null;
-  status: ExternalComplianceStatus;
-  verificationUrl?: string | null;
-  notes?: string | null;
-  createdAt: string | Date;
-  updatedAt: string | Date;
-}
-
-interface Crew {
-  id: string;
-  fullName: string;
-  rank: string;
-  status: string;
-}
-
-interface ExternalComplianceWithCrew extends ExternalComplianceRecord {
-  crew: Crew;
-}
+import Link from "next/link";
 
 interface ExternalComplianceManagerProps {
-  crewId?: string;
+  compact?: boolean;
 }
 
-export default function ExternalComplianceManager({ crewId }: ExternalComplianceManagerProps) {
-  const [compliances, setCompliances] = useState<ExternalComplianceWithCrew[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
-  const [editingCompliance, setEditingCompliance] = useState<ExternalComplianceWithCrew | null>(null);
-  const [formData, setFormData] = useState({
-    crewId: crewId || '',
-    systemType: 'KOSMA_CERTIFICATE' as ExternalComplianceSystem,
-    certificateId: '',
-    issueDate: '',
-    expiryDate: '',
-    verificationUrl: '',
-    status: 'PENDING' as ExternalComplianceStatus,
-    notes: '',
-  });
+const shortcutCards = [
+  {
+    title: "KOSMA Training",
+    detail:
+      "Use this shortcut when office staff need to review Korean training references or open the training portal.",
+    badge: "Training Reference",
+    tone: "border-blue-200 bg-blue-50",
+    actions: [
+      { href: "/crewing/documents?type=KOSMA", label: "Open KOSMA Records", external: false },
+      { href: "https://www.marinerights.or.kr/fro_end_kor/html/main/", label: "Open Training Portal", external: true },
+    ],
+  },
+  {
+    title: "Dephub Certificate Check",
+    detail:
+      "Use this shortcut to verify Indonesian seafarer certificates directly in the Dephub portal.",
+    badge: "Certificate Portal",
+    tone: "border-emerald-200 bg-emerald-50",
+    actions: [
+      { href: "https://pelaut.dephub.go.id/login-perusahaan", label: "Open Verification Portal", external: true },
+      { href: "https://pelaut.dephub.go.id", label: "Open Public Portal", external: true },
+    ],
+  },
+  {
+    title: "Netherlands Schengen Visa",
+    detail:
+      "Use this shortcut to open the visa portal for joining crew that require a Netherlands Schengen visa.",
+    badge: "Visa Portal",
+    tone: "border-purple-200 bg-purple-50",
+    actions: [
+      { href: "https://consular.mfaservices.nl/", label: "Open Visa Portal", external: true },
+      { href: "https://consular.mfaservices.nl", label: "Open Public Portal", external: true },
+    ],
+  },
+];
 
-  const fetchCompliances = React.useCallback(async () => {
-    try {
-      const params = new URLSearchParams();
-      if (crewId) params.append('crewId', crewId.toString());
-
-      const response = await fetch(`/api/external-compliance?${params}`);
-      if (response.ok) {
-        const result: { data: ExternalComplianceWithCrew[] } = await response.json();
-        setCompliances(result.data ?? []);
-      }
-    } catch (error) {
-      console.error('Error fetching compliances:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [crewId]);
-
-  React.useEffect(() => {
-    fetchCompliances();
-  }, [fetchCompliances]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    try {
-      const url = editingCompliance
-        ? `/api/external-compliance/${editingCompliance.id}`
-        : '/api/external-compliance';
-
-      const method = editingCompliance ? 'PUT' : 'POST';
-      const payload = editingCompliance
-        ? {
-          certificateId: formData.certificateId || null,
-          issueDate: formData.issueDate || null,
-          expiryDate: formData.expiryDate || null,
-          verificationUrl: formData.verificationUrl || null,
-          status: formData.status,
-          notes: formData.notes || null,
-        }
-        : {
-          crewId: formData.crewId,
-          systemType: formData.systemType,
-          certificateId: formData.certificateId || null,
-          issueDate: formData.issueDate || null,
-          expiryDate: formData.expiryDate || null,
-          verificationUrl: formData.verificationUrl || null,
-          notes: formData.notes || null,
-        };
-
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      if (response.ok) {
-        await fetchCompliances();
-        setShowForm(false);
-        setEditingCompliance(null);
-        resetForm();
-      }
-    } catch (error) {
-      console.error('Error saving compliance:', error);
-    }
-  };
-
-  const formatDateInput = (value?: string | Date | null) => {
-    if (!value) {
-      return '';
-    }
-
-    const dateValue = typeof value === 'string' ? new Date(value) : value;
-    if (Number.isNaN(dateValue.getTime())) {
-      return '';
-    }
-
-    return dateValue.toISOString().split('T')[0];
-  };
-
-  const handleEdit = (compliance: ExternalComplianceWithCrew) => {
-    setEditingCompliance(compliance);
-    setFormData({
-      crewId: compliance.crewId,
-      systemType: compliance.systemType,
-      certificateId: compliance.certificateId || '',
-      issueDate: formatDateInput(compliance.issueDate),
-      expiryDate: formatDateInput(compliance.expiryDate),
-      verificationUrl: compliance.verificationUrl || '',
-      status: compliance.status,
-      notes: compliance.notes || '',
-    });
-    setShowForm(true);
-  };
-
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this compliance record?')) return;
-
-    try {
-      const response = await fetch(`/api/external-compliance/${id}`, {
-        method: 'DELETE',
-      });
-
-      if (response.ok) {
-        await fetchCompliances();
-      }
-    } catch (error) {
-      console.error('Error deleting compliance:', error);
-    }
-  };
-
-  const handleVerify = async (id: string) => {
-    try {
-      const response = await fetch(`/api/external-compliance/${id}/verify`, {
-        method: 'POST',
-      });
-
-      if (response.ok) {
-        await fetchCompliances();
-      }
-    } catch (error) {
-      console.error('Error verifying compliance:', error);
-    }
-  };
-
-  const resetForm = () => {
-    setFormData({
-      crewId: crewId || '',
-      systemType: 'KOSMA_CERTIFICATE',
-      certificateId: '',
-      issueDate: '',
-      expiryDate: '',
-      verificationUrl: '',
-      status: 'PENDING',
-      notes: '',
-    });
-  };
-
-  const getSystemTypeLabel = (type: ExternalComplianceSystem) => {
-    switch (type) {
-      case 'KOSMA_CERTIFICATE':
-        return 'KOSMA Certificate';
-      case 'DEPHUB_CERTIFICATE':
-        return 'Dephub Certificate';
-      case 'SCHENGEN_VISA_NL':
-        return 'Schengen Visa (NL)';
-      default:
-        return type;
-    }
-  };
-
-  const getStatusColor = (status: ExternalComplianceStatus) => {
-    switch (status) {
-      case 'VERIFIED':
-        return 'text-green-600 bg-green-100';
-      case 'PENDING':
-        return 'text-yellow-600 bg-yellow-100';
-      case 'REJECTED':
-        return 'text-red-600 bg-red-100';
-      case 'EXPIRED':
-        return 'text-gray-600 bg-gray-100';
-      default:
-        return 'text-gray-600 bg-gray-100';
-    }
-  };
-
-  if (loading) {
-    return <div className="text-center py-4">Loading compliance records...</div>;
+function ShortcutAction({
+  href,
+  label,
+  external,
+}: {
+  href: string;
+  label: string;
+  external: boolean;
+}) {
+  if (external) {
+    return (
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-cyan-400 hover:text-cyan-700"
+      >
+        {label}
+      </a>
+    );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium text-gray-900">
-          External Compliance Records
-        </h3>
-        <button
-          onClick={() => {
-            setShowForm(true);
-            setEditingCompliance(null);
-            resetForm();
-          }}
-          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-        >
-          Add Compliance Record
-        </button>
+    <Link
+      href={href}
+      className="inline-flex items-center rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-cyan-400 hover:text-cyan-700"
+    >
+      {label}
+    </Link>
+  );
+}
+
+export default function ExternalComplianceManager({ compact = false }: ExternalComplianceManagerProps) {
+  return (
+    <div className="space-y-5">
+      <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-sm leading-6 text-slate-600">
+        This area is a shortcut panel only. It does not create or manage compliance records. Use the main MLC / IMO flow for operational compliance follow-up.
       </div>
 
-      {showForm && (
-        <div className="bg-white p-6 rounded-lg shadow border">
-          <h4 className="text-md font-medium mb-4">
-            {editingCompliance ? 'Edit' : 'Add'} Compliance Record
-          </h4>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {!crewId && (
+      <div className={`grid gap-4 ${compact ? "xl:grid-cols-3" : "lg:grid-cols-3"}`}>
+        {shortcutCards.map((card) => (
+          <article key={card.title} className={`rounded-3xl border p-5 shadow-sm ${card.tone}`}>
+            <div className="flex items-start justify-between gap-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Crew Member
-                </label>
-                <input
-                  type="text"
-                  value={formData.crewId}
-                  onChange={(e) => setFormData({ ...formData, crewId: e.target.value })}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  required
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">{card.badge}</p>
+                <h3 className="mt-2 text-xl font-semibold text-slate-900">{card.title}</h3>
+              </div>
+            </div>
+            <p className="mt-3 text-sm leading-6 text-slate-700">{card.detail}</p>
+            <div className="mt-5 flex flex-wrap gap-3">
+              {card.actions.map((action) => (
+                <ShortcutAction
+                  key={action.label}
+                  href={action.href}
+                  label={action.label}
+                  external={action.external}
                 />
-              </div>
-            )}
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                System Type
-              </label>
-              <select
-                value={formData.systemType}
-                onChange={(e) => setFormData({ ...formData, systemType: e.target.value as ExternalComplianceSystem })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                required
-              >
-                <option value="KOSMA_CERTIFICATE">KOSMA Certificate</option>
-                <option value="DEPHUB_CERTIFICATE">Dephub Certificate</option>
-                <option value="SCHENGEN_VISA_NL">Schengen Visa (NL)</option>
-              </select>
+              ))}
             </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Certificate / Reference ID
-              </label>
-              <input
-                type="text"
-                value={formData.certificateId}
-                onChange={(e) => setFormData({ ...formData, certificateId: e.target.value })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Issue Date
-                </label>
-                <input
-                  type="date"
-                  value={formData.issueDate}
-                  onChange={(e) => setFormData({ ...formData, issueDate: e.target.value })}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Expiry Date
-                </label>
-                <input
-                  type="date"
-                  value={formData.expiryDate}
-                  onChange={(e) => setFormData({ ...formData, expiryDate: e.target.value })}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Verification URL
-              </label>
-              <input
-                type="url"
-                value={formData.verificationUrl}
-                onChange={(e) => setFormData({ ...formData, verificationUrl: e.target.value })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                placeholder="https://..."
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Status
-              </label>
-              <select
-                value={formData.status}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value as ExternalComplianceStatus })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              >
-                <option value="PENDING">Pending</option>
-                <option value="VERIFIED">Verified</option>
-                <option value="REJECTED">Rejected</option>
-                <option value="EXPIRED">Expired</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Notes
-              </label>
-              <textarea
-                value={formData.notes}
-                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                rows={3}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              />
-            </div>
-
-            <div className="flex justify-end space-x-3">
-              <button
-                type="button"
-                onClick={() => {
-                  setShowForm(false);
-                  setEditingCompliance(null);
-                }}
-                className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-              >
-                {editingCompliance ? 'Update' : 'Create'}
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      <div className="bg-white shadow overflow-hidden sm:rounded-md">
-        <ul className="divide-y divide-gray-200">
-          {compliances.map((compliance) => (
-            <li key={compliance.id} className="px-6 py-4">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center">
-                    <p className="text-sm font-medium text-gray-900">
-                      {getSystemTypeLabel(compliance.systemType)}
-                    </p>
-                    <span className={`ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(compliance.status)}`}>
-                      {compliance.status}
-                    </span>
-                  </div>
-                  {!crewId && (
-                    <p className="text-sm text-gray-500">
-                      {compliance.crew.fullName} – {compliance.crew.rank} ({compliance.crew.status})
-                    </p>
-                  )}
-                  {compliance.certificateId && (
-                    <p className="text-sm text-gray-500">
-                      Certificate: {compliance.certificateId}
-                    </p>
-                  )}
-                  {compliance.expiryDate && (
-                    <p className="text-sm text-gray-500">
-                      Expires: {new Date(compliance.expiryDate).toLocaleDateString()}
-                    </p>
-                  )}
-                  {compliance.verificationUrl && (
-                    <a
-                      href={compliance.verificationUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-blue-600 hover:text-blue-800"
-                    >
-                      View Verification
-                    </a>
-                  )}
-                </div>
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => handleVerify(compliance.id)}
-                    className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700"
-                  >
-                    Verify
-                  </button>
-                  <button
-                    onClick={() => handleEdit(compliance)}
-                    className="bg-yellow-600 text-white px-3 py-1 rounded text-sm hover:bg-yellow-700"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(compliance.id)}
-                    className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            </li>
-          ))}
-        </ul>
-        {compliances.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
-            No compliance records found.
-          </div>
-        )}
+          </article>
+        ))}
       </div>
     </div>
   );

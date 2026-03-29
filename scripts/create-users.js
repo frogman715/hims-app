@@ -40,9 +40,9 @@ async function createUsers() {
       {
         id: 'clxuser002arief',
         email: 'arief@hanmarine.co',
-        name: 'Arief (Director)',
-        role: 'DIRECTOR',
-        password: 'admin2025'
+        name: 'Arief (Operational)',
+        role: 'OPERATIONAL',
+        password: 'operational2025'
       },
       {
         id: 'clxuser003dino',
@@ -52,35 +52,49 @@ async function createUsers() {
         password: 'accounting2025'
       },
       {
-        id: 'clxuser004cdmo',
+        id: 'clxuser004rizkie',
+        email: 'rizkie@hanmarine.co',
+        name: 'Rizkie (Document Control)',
+        role: 'CDMO',
+        password: 'document2025'
+      },
+      {
+        id: 'clxuser005imron',
+        email: 'imron@hanmarine.co',
+        name: 'Imron (GA Driver)',
+        role: 'GA_DRIVER',
+        password: 'driver2025'
+      },
+      {
+        id: 'clxuser006cdmo',
         email: 'cdmo@hanmarine.co',
         name: 'CDMO (Crew Document Management)',
         role: 'CDMO',
         password: 'cdmo123'
       },
       {
-        id: 'clxuser005operational',
+        id: 'clxuser007operational',
         email: 'operational@hanmarine.co',
         name: 'Operational Manager',
         role: 'OPERATIONAL',
         password: 'operational123'
       },
       {
-        id: 'clxuser006hr',
+        id: 'clxuser008hr',
         email: 'hr@hanmarine.co',
         name: 'HR Officer',
         role: 'HR',
         password: 'hr123'
       },
       {
-        id: 'clxuser007crew',
+        id: 'clxuser009crew',
         email: 'crew@hanmarine.co',
         name: 'Crew Portal',
         role: 'CREW_PORTAL',
         password: 'crew2025'
       },
       {
-        id: 'clxuser008auditor',
+        id: 'clxuser010auditor',
         email: 'auditor@hanmarine.co',
         name: 'External Auditor',
         role: 'OPERATIONAL',

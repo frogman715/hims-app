@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { env } from "@/lib/env";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +22,29 @@ export async function GET() {
   const start = Date.now();
 
   try {
+    if (!env.hasDatabaseUrl || !env.hasNextAuthSecret || !env.hasCryptoKey) {
+      console.error("[health] configuration-check-failed", {
+        issues: env.issues,
+        timestamp: new Date().toISOString(),
+      });
+
+      return NextResponse.json(
+        {
+          status: "error",
+          error: "CONFIG_UNAVAILABLE",
+          timestamp: new Date().toISOString(),
+        },
+        {
+          status: 503,
+          headers: {
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "X-Content-Type-Options": "nosniff",
+            "X-Frame-Options": "DENY",
+          },
+        }
+      );
+    }
+
     // Database connectivity check
     // Uses a simple query that requires database access but minimal computation
     await prisma.$queryRaw`SELECT 1`;

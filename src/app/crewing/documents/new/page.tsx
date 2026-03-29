@@ -4,6 +4,9 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { DOCUMENT_TYPES } from '@/lib/document-types';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
 
 interface DocumentFormData {
   seafarerId: string;
@@ -15,12 +18,59 @@ interface DocumentFormData {
 }
 
 interface Seafarer {
-  id: number;
-  fullName: string;
+  id: string;
+  fullName: string | null;
+}
+
+function getCrewDisplayName(seafarer: Seafarer) {
+  const normalized = seafarer.fullName?.trim();
+  return normalized && normalized.length > 0 ? normalized : `Crew ${seafarer.id}`;
+}
+
+function mapSeafarersResponse(payload: unknown): Seafarer[] {
+  const rawList =
+    Array.isArray(payload)
+      ? payload
+      : Array.isArray((payload as { data?: unknown } | null)?.data)
+        ? (payload as { data: unknown[] }).data
+        : [];
+
+  return rawList.reduce<Seafarer[]>((items, item) => {
+    if (typeof item !== "object" || item === null) {
+      return items;
+    }
+
+    const candidate = item as { id?: unknown; fullName?: unknown };
+    if (typeof candidate.id === "string") {
+      items.push({
+        id: candidate.id,
+        fullName: typeof candidate.fullName === "string" ? candidate.fullName : null,
+      });
+    }
+
+    return items;
+  }, []);
 }
 
 export default function NewDocumentPage() {
   const router = useRouter();
+  const formSteps = [
+    {
+      step: "Step 1",
+      title: "Select Seafarer",
+      detail: "Attach the upload to the correct active crew record before anything else.",
+    },
+    {
+      step: "Step 2",
+      title: "Enter Document Details",
+      detail: "Use the exact type, number, issue date, and expiry date from the source document.",
+    },
+    {
+      step: "Step 3",
+      title: "Upload Evidence",
+      detail: "Attach one clean file so document review and renewal follow-up stay traceable.",
+    },
+  ];
 
   const [formData, setFormData] = useState<DocumentFormData>({
     seafarerId: '',
@@ -43,10 +93,14 @@ export default function NewDocumentPage() {
         const response = await fetch('/api/seafarers');
         if (response.ok) {
           const data = await response.json();
-          setSeafarers(data);
+          setSeafarers(mapSeafarersResponse(data));
+        } else {
+          const payload = await response.json().catch(() => null);
+          setUploadError(payload?.error || 'Failed to load seafarers');
         }
       } catch (error) {
         console.error('Error fetching seafarers:', error);
+        setUploadError('Failed to load seafarers');
       } finally {
         setFetchLoading(false);
       }
@@ -172,140 +226,115 @@ export default function NewDocumentPage() {
 
   if (fetchLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-        <div className="max-w-4xl mx-auto p-6">
-          <div className="bg-white backdrop-blur-md rounded-2xl shadow-lg border border-white p-6">
-            <div className="text-center">Loading...</div>
-          </div>
+      <div className="flex min-h-[40vh] items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto h-10 w-10 animate-spin rounded-full border-b-2 border-slate-900" />
+          <p className="mt-4 text-sm font-medium text-slate-600">Loading document form...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      {/* Header */}
-      <header className="bg-white backdrop-blur-lg shadow-2xl border-b border-white/20">
-        <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">
-                Add New Document
-              </h1>
-              <p className="text-lg text-gray-700 mt-2 font-medium">
-                Upload and register a new seafarer document
-              </p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Link
-                href="/crewing/documents"
-                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
-              >
-                ← Back to Documents
-              </Link>
-            </div>
+    <div className="section-stack">
+      <section className="surface-card p-7">
+        <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+          <div className="max-w-4xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-blue-700">Document Upload</p>
+            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950">Register new crew document</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              Upload and register a controlled document under the active seafarer master record.
+            </p>
           </div>
+          <Link href="/crewing/documents" className="action-pill text-sm">
+            Back to documents
+          </Link>
         </div>
-      </header>
+        <div className="mt-6 grid gap-4 md:grid-cols-3">
+          {formSteps.map((item) => (
+            <div key={item.step} className="rounded-2xl border border-slate-200 bg-white/90 px-4 py-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">{item.step}</p>
+              <p className="mt-2 text-base font-semibold text-slate-950">{item.title}</p>
+              <p className="mt-1 text-sm leading-6 text-slate-600">{item.detail}</p>
+            </div>
+          ))}
+        </div>
+      </section>
 
-      <main className="max-w-4xl mx-auto py-8 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <div className="bg-white backdrop-blur-md rounded-2xl shadow-lg border border-white p-8">
+      <section className="surface-card p-8">
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Seafarer Selection */}
-              <div>
-                <label htmlFor="seafarerId" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Seafarer *
-                </label>
-                <select
+              <div className="rounded-xl border border-blue-200 bg-blue-50 px-5 py-4 text-sm text-blue-900">
+                Use this form to keep the controlled document register complete. Uploads here support document review and renewal follow-up, not automatic readiness approval.
+              </div>
+
+              <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-5">
+                <div className="mb-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Step 1</p>
+                  <h3 className="mt-2 text-lg font-semibold text-slate-900">Record Scope</h3>
+                  <p className="mt-1 text-sm text-slate-600">Start by attaching the upload to the correct seafarer and document class.</p>
+                </div>
+                <div className="grid gap-6 md:grid-cols-2">
+                  <Select
                   id="seafarerId"
                   name="seafarerId"
-                  required
+                  label="Seafarer"
                   value={formData.seafarerId}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200"
-                >
-                  <option value="">Select Seafarer</option>
-                  {seafarers.map((seafarer) => (
-                    <option key={seafarer.id} value={seafarer.id}>
-                      {seafarer.fullName}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                  required
+                  placeholder="Select seafarer"
+                  options={seafarers.map((seafarer) => ({
+                    value: seafarer.id,
+                    label: getCrewDisplayName(seafarer),
+                  }))}
+                  />
 
-              {/* Document Type */}
-              <div>
-                <label htmlFor="docType" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Document Type *
-                </label>
-                <select
+                  <Select
                   id="docType"
                   name="docType"
-                  required
+                  label="Document Type"
                   value={formData.docType}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200"
-                >
-                  <option value="">Select Document Type</option>
-                  {DOCUMENT_TYPES.map((docType) => (
-                    <option key={docType.value} value={docType.value}>
-                      {docType.label}
-                    </option>
-                  ))}
-                </select>
+                  required
+                  placeholder="Select document type"
+                  options={DOCUMENT_TYPES.map((docType) => ({
+                    value: docType.value,
+                    label: docType.label,
+                  }))}
+                  />
+                </div>
               </div>
 
-              {/* Document Number */}
-              <div>
-                <label htmlFor="docNumber" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Document Number *
-                </label>
-                <input
-                  type="text"
+              <Input
                   id="docNumber"
                   name="docNumber"
-                  required
+                  label="Document Number"
                   value={formData.docNumber}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200"
+                  required
                   placeholder="Enter document number"
-                />
-              </div>
+              />
 
-              {/* Issue Date */}
-              <div>
-                <label htmlFor="issueDate" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Issue Date *
-                </label>
-                <input
-                  type="date"
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <Input
                   id="issueDate"
                   name="issueDate"
-                  required
+                  label="Issue Date"
+                  type="date"
                   value={formData.issueDate}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200"
+                  required
                 />
-              </div>
-
-              {/* Expiry Date */}
-              <div>
-                <label htmlFor="expiryDate" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Expiry Date *
-                </label>
-                <input
-                  type="date"
+                <Input
                   id="expiryDate"
                   name="expiryDate"
-                  required
+                  label="Expiry Date"
+                  type="date"
                   value={formData.expiryDate}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent transition-all duration-200"
+                  required
                 />
               </div>
 
-              {/* File Upload */}
               <div>
                 <label htmlFor="file" className="block text-sm font-semibold text-gray-700 mb-2">
                   Upload Scanned Document *
@@ -325,7 +354,6 @@ export default function NewDocumentPage() {
                 )}
               </div>
 
-              {/* Remarks */}
               <div>
                 <label htmlFor="remarks" className="block text-sm font-semibold text-gray-700 mb-2">
                   Remarks
@@ -341,7 +369,6 @@ export default function NewDocumentPage() {
                 />
               </div>
 
-              {/* Error Alert */}
               {uploadError && (
                 <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
                   <p className="text-sm font-medium text-red-800">
@@ -350,7 +377,6 @@ export default function NewDocumentPage() {
                 </div>
               )}
 
-              {/* Upload Progress */}
               {loading && uploadProgress > 0 && (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
@@ -368,35 +394,16 @@ export default function NewDocumentPage() {
                 </div>
               )}
 
-              {/* Action Buttons */}
-              <div className="flex gap-4 pt-6 border-t border-gray-300">
-                <button
-                  type="submit"
-                  disabled={loading || !selectedFile}
-                  className="flex-1 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 disabled:from-gray-400 disabled:to-gray-400 text-white px-8 py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-2xl disabled:opacity-70 disabled:cursor-not-allowed"
-                >
-                  {loading ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                      {uploadProgress < 90 ? 'UPLOADING...' : 'PROCESSING...'}
-                    </span>
-                  ) : (
-                    '✓ Create Document'
-                  )}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => router.back()}
-                  disabled={loading}
-                  className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 disabled:from-gray-400 disabled:to-gray-400 text-white px-8 py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-2xl disabled:opacity-70 disabled:cursor-not-allowed"
-                >
+              <div className="flex flex-wrap gap-4 border-t border-slate-200 pt-6">
+                <Button type="submit" isLoading={loading} disabled={!selectedFile}>
+                  {loading ? (uploadProgress < 90 ? 'Uploading document' : 'Processing document') : 'Create document'}
+                </Button>
+                <Button type="button" variant="secondary" onClick={() => router.back()} disabled={loading}>
                   Cancel
-                </button>
+                </Button>
               </div>
             </form>
-          </div>
-        </div>
-      </main>
+      </section>
     </div>
   );
 }

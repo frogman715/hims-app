@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Plus, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { WorkspaceHero } from '@/components/layout/WorkspaceHero';
+import { Select } from '@/components/ui/Select';
 import CreateAuditForm from '@/components/audit/CreateAuditForm';
 import AuditTable from '@/components/audit/AuditTable';
 import { canAccessOfficePath } from '@/lib/office-access';
@@ -112,42 +114,75 @@ export default function AuditManagementPage() {
   };
 
   if (status === 'loading') {
-    return <div className="flex justify-center items-center h-screen">Loading...</div>;
+    return (
+      <div className="section-stack">
+        <div className="surface-card px-6 py-12 text-center text-sm text-slate-600">Loading audit workspace...</div>
+      </div>
+    );
   }
 
   if (status === 'unauthenticated') {
     return null;
   }
 
+  const plannedCount = audits.filter((a) => a.status === 'PLANNED').length;
+  const inProgressCount = audits.filter((a) => a.status === 'IN_PROGRESS').length;
+  const completedCount = audits.filter((a) => a.status === 'COMPLETED' || a.status === 'CLOSED').length;
+
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header with Back Button */}
-        <div className="flex items-center gap-4 mb-8">
-          <Link href="/dashboard">
-            <button className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-100 transition-colors">
-              <ArrowLeft size={20} />
+    <div className="section-stack">
+      <WorkspaceHero
+        eyebrow="Audit Workspace"
+        title="Audit management"
+        subtitle="Manage active audits, schedules, and follow-up actions in one controlled workspace."
+        helperLinks={[
+          { href: '/dashboard', label: 'Dashboard' },
+          { href: '/quality/qmr-dashboard', label: 'QMR Dashboard' },
+        ]}
+        highlights={[
+          { label: 'Audit Register', value: audits.length, detail: 'All audit records currently visible in the live register.' },
+          { label: 'Planned', value: plannedCount, detail: 'Audits waiting to start or still in scheduling control.' },
+          { label: 'In Progress', value: inProgressCount, detail: 'Audits currently under execution or active review.' },
+          { label: 'Completed / Closed', value: completedCount, detail: 'Audits already finished and retained for traceability.' },
+        ]}
+        actions={(
+          <>
+            <Link href="/dashboard" className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-cyan-600 hover:text-cyan-800">
+              <ArrowLeft size={16} />
               <span>Back to Dashboard</span>
-            </button>
-          </Link>
-          <div className="flex-1">
-            <h1 className="text-3xl font-bold text-gray-900">Audit Management</h1>
-            <p className="text-gray-600 mt-2">Manage active audits, schedules, and audit follow-up actions</p>
+            </Link>
+            <Button
+              onClick={() => {
+                if (!canManageAudits) {
+                  return;
+                }
+                setSelectedAudit(null);
+                setShowCreateForm(true);
+              }}
+              disabled={!canManageAudits}
+              size="sm"
+              leftIcon={canManageAudits ? <Plus size={16} /> : undefined}
+            >
+              {canManageAudits ? 'New Audit' : 'View Only'}
+            </Button>
+          </>
+        )}
+      />
+
+      <section className="surface-card space-y-6 p-6">
+        <div className="grid gap-3 md:grid-cols-3">
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <p className="text-sm font-semibold text-slate-900">1. Review the live queue</p>
+            <p className="mt-2 text-sm text-slate-600">Start with active audits that still need scheduling, execution, or follow-up attention.</p>
           </div>
-          <Button
-            onClick={() => {
-              if (!canManageAudits) {
-                return;
-              }
-              setSelectedAudit(null);
-              setShowCreateForm(true);
-            }}
-            disabled={!canManageAudits}
-            className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2 disabled:bg-slate-400"
-          >
-            {canManageAudits ? <Plus size={20} /> : null}
-            {canManageAudits ? 'New Audit' : 'View Only'}
-          </Button>
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <p className="text-sm font-semibold text-slate-900">2. Filter with purpose</p>
+            <p className="mt-2 text-sm text-slate-600">Use status and audit type to isolate the exact audit population you need to manage.</p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <p className="text-sm font-semibold text-slate-900">3. Create only controlled records</p>
+            <p className="mt-2 text-sm text-slate-600">New audits should be created only when the audit scope, dates, and ownership are ready to be tracked.</p>
+          </div>
         </div>
 
         <div className="mb-6 rounded-xl border border-blue-100 bg-blue-50 px-5 py-4 text-sm text-blue-900">
@@ -156,9 +191,9 @@ export default function AuditManagementPage() {
 
         {/* Create/Edit Form Modal */}
         {showCreateForm && canManageAudits && (
-          <div className="mb-8 bg-white rounded-lg shadow-lg p-6">
+          <div className="mb-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold">
+              <h2 className="text-2xl font-semibold text-slate-900">
                 {selectedAudit ? 'Edit Audit' : 'Create New Audit'}
               </h2>
               <button
@@ -179,50 +214,45 @@ export default function AuditManagementPage() {
         )}
 
         {/* Filters */}
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Status
-              </label>
-              <select
+            <Select
+                id="audit-status"
+                label="Status"
                 value={filters.status}
                 onChange={(e) =>
                   setFilters((prev) => ({ ...prev, status: e.target.value }))
                 }
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">All Statuses</option>
-                <option value="PLANNED">Planned</option>
-                <option value="IN_PROGRESS">In Progress</option>
-                <option value="COMPLETED">Completed</option>
-                <option value="CLOSED">Closed</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Audit Type
-              </label>
-              <select
+                options={[
+                  { value: '', label: 'All audit statuses' },
+                  { value: 'PLANNED', label: 'Planned' },
+                  { value: 'IN_PROGRESS', label: 'In Progress' },
+                  { value: 'COMPLETED', label: 'Completed' },
+                  { value: 'CLOSED', label: 'Closed' },
+                ]}
+              />
+            <Select
+                id="audit-type"
+                label="Audit Type"
                 value={filters.auditType}
                 onChange={(e) =>
                   setFilters((prev) => ({ ...prev, auditType: e.target.value }))
                 }
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">All Types</option>
-                <option value="INTERNAL">Internal</option>
-                <option value="EXTERNAL">External</option>
-                <option value="COMPLIANCE">Compliance</option>
-                <option value="MANAGEMENT_REVIEW">Management Review</option>
-              </select>
-            </div>
+                options={[
+                  { value: '', label: 'All Types' },
+                  { value: 'INTERNAL', label: 'Internal' },
+                  { value: 'EXTERNAL', label: 'External' },
+                  { value: 'COMPLIANCE', label: 'Compliance' },
+                  { value: 'MANAGEMENT_REVIEW', label: 'Management Review' },
+                ]}
+              />
             <div className="flex items-end">
               <Button
                 onClick={() => {
                   setFilters({ status: '', auditType: '' });
                 }}
-                className="w-full bg-gray-300 hover:bg-gray-400 text-gray-900"
+                variant="secondary"
+                className="w-full"
               >
                 Clear Filters
               </Button>
@@ -232,17 +262,17 @@ export default function AuditManagementPage() {
 
         {/* Error Message */}
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+          <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4">
             <p className="text-red-800">Error: {error}</p>
           </div>
         )}
 
         {/* Audits Table */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
           {loading ? (
-            <div className="p-8 text-center text-gray-500">Loading audits...</div>
+            <div className="p-8 text-center text-slate-500">Loading audits...</div>
           ) : audits.length === 0 ? (
-            <div className="p-8 text-center text-gray-500">
+            <div className="p-8 text-center text-slate-500">
               <p>No audits found. Create one to get started!</p>
             </div>
           ) : (
@@ -257,33 +287,33 @@ export default function AuditManagementPage() {
         {/* Stats Summary */}
         {audits.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-8">
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
               <div className="text-3xl font-bold text-blue-600">
                 {audits.length}
               </div>
-              <p className="text-gray-600">Total Audits</p>
+              <p className="text-slate-600">Total Audits</p>
             </div>
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
               <div className="text-3xl font-bold text-yellow-600">
                 {audits.filter((a) => a.status === 'PLANNED').length}
               </div>
-              <p className="text-gray-600">Planned</p>
+              <p className="text-slate-600">Planned</p>
             </div>
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
               <div className="text-3xl font-bold text-purple-600">
                 {audits.filter((a) => a.status === 'IN_PROGRESS').length}
               </div>
-              <p className="text-gray-600">In Progress</p>
+              <p className="text-slate-600">In Progress</p>
             </div>
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
               <div className="text-3xl font-bold text-green-600">
                 {audits.filter((a) => a.status === 'COMPLETED').length}
               </div>
-              <p className="text-gray-600">Completed</p>
+              <p className="text-slate-600">Completed</p>
             </div>
           </div>
         )}
-      </div>
+      </section>
     </div>
   );
 }

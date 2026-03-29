@@ -1,15 +1,17 @@
 import type { NextConfig } from "next";
 
+const strictBuild = process.env.STRICT_BUILD === "1";
+
 const nextConfig: NextConfig = {
   output: 'standalone',
   
   eslint: {
-    // Ignore ESLint errors during production build (warnings only)
-    ignoreDuringBuilds: false,
+    // Keep default deploys resilient, but allow strict CI/manual builds to enforce lint.
+    ignoreDuringBuilds: !strictBuild,
   },
   typescript: {
-    // Ignore TypeScript errors during production build (for deployment)
-    ignoreBuildErrors: false,
+    // Keep default deploys resilient, but allow strict CI/manual builds to enforce type safety.
+    ignoreBuildErrors: !strictBuild,
   },
   async headers() {
     return [

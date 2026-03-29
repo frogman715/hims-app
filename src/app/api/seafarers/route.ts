@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { checkPermission, PermissionLevel } from "@/lib/permission-middleware";
 import { handleApiError, ApiError } from "@/lib/error-handler";
+import { createCrewWithGeneratedCode, normalizeCrewOperationalStatus } from "@/lib/crew-ops";
 
 interface CreateSeafarerPayload {
   fullName: string;
@@ -83,6 +84,15 @@ export async function GET() {
     }
 
     const seafarers = await prisma.crew.findMany({
+      where: {
+        recruitments: {
+          none: {
+            status: {
+              in: ['APPLICANT', 'SCREENING', 'INTERVIEW', 'SELECTED', 'APPROVED', 'ON_HOLD', 'WITHDRAWN', 'REJECTED'],
+            },
+          },
+        },
+      },
       include: {
         assignments: {
           where: {
@@ -149,26 +159,26 @@ export async function POST(request: NextRequest) {
       return contactName ?? contactPhone ?? null;
     })();
 
-    const seafarer = await prisma.crew.create({
-      data: {
-        fullName: payload.fullName.trim(),
-        rank: payload.rank.trim(),
-        nationality: optionalString(payload.nationality),
-        placeOfBirth: optionalString(payload.placeOfBirth),
-        dateOfBirth: parseOptionalDate(payload.dateOfBirth) ?? undefined,
-        phone: optionalString(payload.phone),
-        email: optionalString(payload.email),
-        address: combinedAddress.length > 0 ? combinedAddress : null,
-        emergencyContact: formattedEmergencyContact,
-        emergencyContactName: optionalString(payload.emergencyContact),
-        emergencyContactPhone: optionalString(payload.emergencyPhone),
-        emergencyContactRelation: optionalString(payload.emergencyRelation),
-        heightCm: parseOptionalInteger(payload.heightCm),
-        weightKg: parseOptionalInteger(payload.weightKg),
-        coverallSize: optionalString(payload.coverallSize),
-        shoeSize: optionalString(payload.shoeSize),
-        waistSize: optionalString(payload.waistSize),
-      },
+    const seafarer = await createCrewWithGeneratedCode(prisma.crew, {
+      fullName: payload.fullName.trim(),
+      rank: payload.rank.trim(),
+      nationality: optionalString(payload.nationality),
+      placeOfBirth: optionalString(payload.placeOfBirth),
+      dateOfBirth: parseOptionalDate(payload.dateOfBirth) ?? undefined,
+      phone: optionalString(payload.phone),
+      email: optionalString(payload.email),
+      address: combinedAddress.length > 0 ? combinedAddress : null,
+      emergencyContact: formattedEmergencyContact,
+      emergencyContactName: optionalString(payload.emergencyContact),
+      emergencyContactPhone: optionalString(payload.emergencyPhone),
+      emergencyContactRelation: optionalString(payload.emergencyRelation),
+      heightCm: parseOptionalInteger(payload.heightCm),
+      weightKg: parseOptionalInteger(payload.weightKg),
+      coverallSize: optionalString(payload.coverallSize),
+      shoeSize: optionalString(payload.shoeSize),
+      waistSize: optionalString(payload.waistSize),
+      crewStatus: normalizeCrewOperationalStatus(undefined),
+      status: "STANDBY",
     });
 
     return NextResponse.json(seafarer, { status: 201 });

@@ -6,6 +6,7 @@ import type { AppRole } from "@/lib/roles";
 import { ALL_APP_ROLES, APP_ROLES, CREW_ROLE_SET } from "@/lib/roles";
 import { hasExplicitRoleAccess, hasModuleAccess } from "@/lib/authorization";
 import { PermissionLevel } from "@/lib/permissions";
+import { normalizeRoleToken } from "@/lib/role-normalization";
 
 export { APP_ROLES, OFFICE_ROLES, CREW_ROLES } from "@/lib/roles";
 export type { AppRole } from "@/lib/roles";
@@ -34,6 +35,7 @@ const ROLE_HOME_MAP: Record<AppRole, string> = {
   [APP_ROLES.CREW]: "/m/crew",
   [APP_ROLES.CREW_PORTAL]: "/m/crew",
   [APP_ROLES.DIRECTOR]: "/dashboard",
+  [APP_ROLES.PRINCIPAL]: "/principal",
   [APP_ROLES.CDMO]: "/dashboard",
   [APP_ROLES.OPERATIONAL]: "/dashboard",
   [APP_ROLES.GA_DRIVER]: "/dashboard",
@@ -58,15 +60,31 @@ function logAuthEvent(event: string, details: Record<string, unknown>) {
   }
 }
 
+function isExpectedDynamicRenderError(error: unknown): boolean {
+  if (!error || typeof error !== "object") {
+    return false;
+  }
+
+  const errorObj = error as { message?: string; digest?: string };
+  return (
+    typeof errorObj.message === "string" &&
+    errorObj.message.includes("Dynamic server usage:")
+  ) || (
+    typeof errorObj.digest === "string" &&
+    errorObj.digest.includes("DYNAMIC_SERVER_USAGE")
+  );
+}
+
 function dedupe<T>(values: T[]): T[] {
   return Array.from(new Set(values));
 }
 
 function coerceRole(value?: string | null): AppRole | null {
-  if (!value) {
+  const normalized = normalizeRoleToken(value);
+  if (!normalized) {
     return null;
   }
-  const upper = value.toUpperCase() as AppRole;
+  const upper = normalized as AppRole;
   if ((ALL_VALID_ROLES as readonly AppRole[]).includes(upper)) {
     return upper;
   }
@@ -193,6 +211,10 @@ export async function requireUser(options: RequireUserOptions = {}) {
         throw error;
       }
 
+      if (isExpectedDynamicRenderError(errorObj)) {
+        redirect("/auth/signin?error=SessionError");
+      }
+
       // Log authentication errors for debugging
       console.error("[authz] requireUser failed", {
         error: String(errorObj.message || error),
@@ -273,6 +295,10 @@ export async function requireCrew() {
       if (errorObj.digest?.startsWith("NEXT_REDIRECT") || 
           (errorObj.message && errorObj.message.includes("NEXT_REDIRECT"))) {
         throw error;
+      }
+
+      if (isExpectedDynamicRenderError(errorObj)) {
+        redirect("/auth/signin?error=SessionError");
       }
 
       // Log authentication errors for debugging

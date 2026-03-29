@@ -5,17 +5,16 @@ import { PermissionLevel } from "@/lib/permission-middleware";
 import { ApiError, validateRequired } from "@/lib/error-handler";
 
 enum ComplianceSystemType {
-  ISO_9001 = "ISO_9001",
-  ISO_14001 = "ISO_14001",
-  ISO_45001 = "ISO_45001",
-  OTHER = "OTHER",
+  KOSMA_CERTIFICATE = "KOSMA_CERTIFICATE",
+  DEPHUB_CERTIFICATE = "DEPHUB_CERTIFICATE",
+  SCHENGEN_VISA_NL = "SCHENGEN_VISA_NL",
 }
 
 enum ComplianceStatus {
-  COMPLIANT = "COMPLIANT",
-  NON_COMPLIANT = "NON_COMPLIANT",
   PENDING = "PENDING",
   EXPIRED = "EXPIRED",
+  VERIFIED = "VERIFIED",
+  REJECTED = "REJECTED",
 }
 
 /**

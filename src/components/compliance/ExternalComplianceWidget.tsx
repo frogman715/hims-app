@@ -56,7 +56,7 @@ export default function ExternalComplianceWidget({ className = "" }: Props) {
 
         setStats(FALLBACK_STATS);
         setErrorMessage(
-          "Tidak can memuat status compliance eksternal saat ini. Data ditampilkan dalam mode offline."
+          "Unable to load external verification status right now. Offline fallback is shown."
         );
         console.warn("external-compliance stats fallback", error);
       } finally {
@@ -74,7 +74,7 @@ export default function ExternalComplianceWidget({ className = "" }: Props) {
   if (loading) {
     return (
       <div className={`surface-card p-6 ${className}`}>
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">External Compliance Systems</h3>
+        <h3 className="mb-4 text-lg font-semibold text-slate-900">Verification Shortcuts</h3>
         <div className="animate-pulse space-y-3">
           <div className="h-4 bg-slate-200/60 rounded w-3/4" />
           <div className="h-4 bg-slate-200/60 rounded w-1/2" />
@@ -91,8 +91,10 @@ export default function ExternalComplianceWidget({ className = "" }: Props) {
   return (
     <div className={`surface-card ${className}`}>
       <div className="surface-card__header px-6">
-        <h3 className="text-lg font-semibold text-slate-900">External Compliance Systems</h3>
-        <p className="text-sm text-slate-600 mt-1">Real-time integration status</p>
+        <h3 className="text-lg font-semibold text-slate-900">Verification Shortcuts</h3>
+        <p className="mt-1 text-sm text-slate-600">
+          Quick access for Dephub checks, visa processing, and KOSMA reference without opening a separate workflow.
+        </p>
       </div>
 
       <div className="px-6 pb-6 space-y-6">
@@ -109,16 +111,16 @@ export default function ExternalComplianceWidget({ className = "" }: Props) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <div className="flex-1">
-              <h4 className="font-semibold text-slate-900 text-sm mb-1">KOSMA Certificate</h4>
+              <h4 className="mb-1 text-sm font-semibold text-slate-900">KOSMA Training Reference</h4>
               <p className="text-xs text-slate-700 mb-2">
-                KOSMA is a Korean training certificate (not compliance tracking). KOSMA certificate data is managed in <strong>Documents Management</strong>.
+                KOSMA is handled as a crew training and document record. It is not counted in the verification shortcut status blocks.
               </p>
               <div className="flex gap-2">
                 <Link
                   href="/crewing/documents?type=KOSMA"
                   className="inline-flex items-center gap-1 rounded border border-blue-200 bg-white/90 px-3 py-1 text-xs font-semibold text-slate-900 shadow-sm transition hover:border-blue-300 hover:bg-blue-50"
                 >
-                  View KOSMA Documents →
+                  Open KOSMA Records
                 </Link>
                 <a
                   href="https://www.marinerights.or.kr/fro_end_kor/html/main/"
@@ -126,7 +128,7 @@ export default function ExternalComplianceWidget({ className = "" }: Props) {
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 rounded border border-blue-200 bg-white/90 px-3 py-1 text-xs font-semibold text-slate-900 shadow-sm transition hover:border-blue-300 hover:bg-blue-50"
                 >
-                  Apply Training
+                  Training Portal
                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                   </svg>
@@ -143,7 +145,7 @@ export default function ExternalComplianceWidget({ className = "" }: Props) {
               <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-              <h4 className="font-semibold text-slate-900">Dephub Indonesia</h4>
+              <h4 className="font-semibold text-slate-900">Dephub Certificate Check</h4>
             </div>
             <div className="flex gap-2">
               <a
@@ -152,7 +154,7 @@ export default function ExternalComplianceWidget({ className = "" }: Props) {
                 rel="noopener noreferrer"
                 className="rounded border border-green-200 bg-white/90 px-3 py-1 text-xs font-semibold text-slate-900 shadow-sm transition hover:border-green-300 hover:bg-green-50"
               >
-                Verify Certificate →
+                Open Verification Portal
               </a>
               <a
                 href="https://pelaut.dephub.go.id"
@@ -183,7 +185,7 @@ export default function ExternalComplianceWidget({ className = "" }: Props) {
             </div>
           </div>
           <p className="text-xs text-slate-600 mt-2">
-            Validate Indonesian sailor certificates
+            Indonesian seafarer certificate validation shortcut
           </p>
         </div>
 
@@ -194,7 +196,7 @@ export default function ExternalComplianceWidget({ className = "" }: Props) {
               <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <h4 className="font-semibold text-slate-900">Schengen Visa NL</h4>
+              <h4 className="font-semibold text-slate-900">Netherlands Schengen Visa</h4>
             </div>
             <div className="flex gap-2">
               <a
@@ -203,7 +205,7 @@ export default function ExternalComplianceWidget({ className = "" }: Props) {
                 rel="noopener noreferrer"
                 className="rounded border border-purple-200 bg-white/90 px-3 py-1 text-xs font-semibold text-slate-900 shadow-sm transition hover:border-purple-300 hover:bg-purple-50"
               >
-                Apply Visa →
+                Open Visa Portal
               </a>
               <a
                 href="https://consular.mfaservices.nl"
@@ -234,7 +236,7 @@ export default function ExternalComplianceWidget({ className = "" }: Props) {
             </div>
           </div>
           <p className="text-xs text-slate-600 mt-2">
-            Dutch Schengen Visa for tanker crew
+            Visa shortcut for joining crew processing
           </p>
         </div>
       </div>
@@ -244,7 +246,7 @@ export default function ExternalComplianceWidget({ className = "" }: Props) {
           href="/compliance/external"
           className="action-pill text-sm"
         >
-          View All Compliance Records →
+          Open Verification Shortcuts
         </Link>
       </div>
     </div>

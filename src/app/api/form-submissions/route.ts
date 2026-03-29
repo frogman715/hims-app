@@ -2,33 +2,34 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { checkPermission, PermissionLevel } from "@/lib/permission-middleware";
+import { FORM_APPROVAL_STATUSES, type FormApprovalStatusValue } from "@/lib/form-submission-workflow";
+import { handleApiError } from "@/lib/error-handler";
+import { ensureOfficeApiPathAccess } from "@/lib/office-api-access";
 
-enum FormApprovalStatus {
-  PENDING = "PENDING",
-  APPROVED = "APPROVED",
-  REJECTED = "REJECTED",
-  CHANGES_REQUESTED = "CHANGES_REQUESTED",
-}
+const formApprovalStatuses = new Set<FormApprovalStatusValue>(FORM_APPROVAL_STATUSES);
 
 // GET /api/form-submissions - Get all form submissions
 export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!checkPermission(session, "crew", PermissionLevel.VIEW_ACCESS)) {
-      return NextResponse.json(
-        { error: "Insufficient permissions" },
-        { status: 403 }
-      );
-    }
+    const authError = ensureOfficeApiPathAccess(
+      session,
+      "/api/form-submissions",
+      "GET",
+      "Insufficient permissions to view form submissions"
+    );
+    if (authError) return authError;
 
     const { searchParams } = new URL(req.url);
     const status = searchParams.get("status");
     const prepareJoiningId = searchParams.get("prepareJoiningId");
 
     const where: Record<string, unknown> = {};
-    if (status && status !== "ALL" && Object.values(FormApprovalStatus).includes(status as FormApprovalStatus)) {
-      where.status = status as FormApprovalStatus;
+    if (status && status !== "ALL") {
+      if (!formApprovalStatuses.has(status as FormApprovalStatusValue)) {
+        return NextResponse.json({ error: "Invalid form submission status filter" }, { status: 400 });
+      }
+      where.status = status as FormApprovalStatusValue;
     }
     if (prepareJoiningId) {
       where.prepareJoiningId = prepareJoiningId;
@@ -68,10 +69,6 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ data: forms, total: forms.length });
   } catch (error) {
-    console.error("Error fetching form submissions:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch form submissions" },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }

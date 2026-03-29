@@ -8,6 +8,7 @@ import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { checkPermission, PermissionLevel } from "@/lib/permission-middleware";
+import { WorkspaceHero } from "@/components/layout/WorkspaceHero";
 import AuditListContent from "./AuditListContent";
 
 export const metadata: Metadata = {
@@ -41,24 +42,26 @@ export default async function AuditsPage() {
   const canEdit = checkPermission(session, "quality", PermissionLevel.EDIT_ACCESS);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Audit Management</h1>
-            <p className="text-gray-600 mt-2">ISO 9001:2015 Internal Audits & Compliance</p>
-          </div>
-          {canEdit && (
-            <Link
-              href="/hgqs/audits/new"
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              + New Audit
-            </Link>
-          )}
-        </div>
+    <div className="section-stack">
+      <WorkspaceHero
+        eyebrow="Quality Workspace"
+        title="Audit Management"
+        subtitle="ISO 9001:2015 internal audits and compliance activities managed from one operational desk."
+        helperLinks={[
+          { href: "/quality/qmr-dashboard", label: "QMR Dashboard" },
+          { href: "/nonconformity", label: "Non-Conformities" },
+          { href: "/hgqs/risks", label: "Risk Management" },
+        ]}
+        actions={canEdit ? (
+          <Link
+            href="/hgqs/audits/new"
+            className="rounded-full bg-cyan-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-800"
+          >
+            New Audit
+          </Link>
+        ) : null}
+      />
         <AuditListContent />
-      </div>
     </div>
   );
 }

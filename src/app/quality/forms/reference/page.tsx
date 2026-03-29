@@ -1,7 +1,28 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import { WorkspaceHero } from "@/components/layout/WorkspaceHero";
+
+const CATEGORY_TONES: Record<string, { active: string; subtle: string; badge: string; text: string }> = {
+  AD: {
+    active: "bg-sky-600 text-white border-sky-600",
+    subtle: "bg-white border-slate-300 hover:border-sky-300",
+    badge: "bg-sky-100 text-sky-800",
+    text: "text-sky-100",
+  },
+  CR: {
+    active: "bg-cyan-600 text-white border-cyan-600",
+    subtle: "bg-white border-slate-300 hover:border-cyan-300",
+    badge: "bg-cyan-100 text-cyan-800",
+    text: "text-cyan-100",
+  },
+  AC: {
+    active: "bg-emerald-600 text-white border-emerald-600",
+    subtle: "bg-white border-slate-300 hover:border-emerald-300",
+    badge: "bg-emerald-100 text-emerald-800",
+    text: "text-emerald-100",
+  },
+};
 
 export default function FormsReferencePage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -78,24 +99,25 @@ export default function FormsReferencePage() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-100 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <nav className="flex mb-4" aria-label="Breadcrumb">
-          <ol className="inline-flex items-center space-x-1">
-            <li><Link href="/dashboard" className="text-gray-700 hover:text-blue-700">Dashboard</Link></li>
-            <li><Link href="/quality" className="text-gray-700 hover:text-blue-700 ml-1">Quality</Link></li>
-            <li><span className="ml-1 text-gray-500">Forms Reference</span></li>
-          </ol>
-        </nav>
-
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">HGQS Forms Library</h1>
-          <p className="text-gray-700 mt-1">ISO 9001:2015 Quality Management System Forms</p>
-        </div>
+    <div className="section-stack mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+      <WorkspaceHero
+        eyebrow="Quality Reference"
+        title="HGQS forms library"
+        subtitle="Controlled reference library for approved forms and downloadable templates. Use this page for references only, while live workflows stay in their operational desks."
+        helperLinks={[
+          { href: "/quality", label: "Quality workspace" },
+          { href: "/quality/documents", label: "Documents" },
+          { href: "/dashboard", label: "Dashboard" },
+        ]}
+        highlights={[
+          { label: "All Forms", value: forms.length.toLocaleString("id-ID"), detail: "Reference templates currently listed in the library." },
+          { label: "Filtered", value: filteredForms.length.toLocaleString("id-ID"), detail: "Forms currently shown after search and filter." },
+          { label: "Categories", value: formCategories.length.toLocaleString("id-ID"), detail: "Administration, crewing, and accounting references." },
+        ]}
+      />
 
         {/* Search & Filter */}
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
+        <div className="surface-card p-6">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1">
               <input
@@ -103,7 +125,7 @@ export default function FormsReferencePage() {
                 placeholder="🔍 Search forms by code or title..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-blue-500"
+                className="w-full px-4 py-3 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
             <div className="flex gap-2">
@@ -122,22 +144,21 @@ export default function FormsReferencePage() {
         </div>
 
         {/* Category Cards */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
+        <div className="grid md:grid-cols-3 gap-6">
           {formCategories.map((cat) => {
             const count = forms.filter(f => f.category === cat.code).length;
+            const tone = CATEGORY_TONES[cat.code];
             return (
               <button
                 key={cat.code}
                 onClick={() => setCategoryFilter(cat.code)}
-                className={`p-6 rounded-xl text-left transition-all ${
-                  categoryFilter === cat.code
-                    ? `bg-${cat.color}-600 text-white shadow-lg`
-                    : "bg-white border-2 border-gray-300 hover:border-gray-400"
+                className={`rounded-xl border-2 p-6 text-left transition-all ${
+                  categoryFilter === cat.code ? `${tone.active} shadow-lg` : tone.subtle
                 }`}
               >
                 <div className="text-4xl mb-3">{cat.icon}</div>
                 <h3 className="text-xl font-extrabold mb-2">{cat.name}</h3>
-                <p className={`text-sm ${categoryFilter === cat.code ? `text-${cat.color}-100` : "text-gray-700"}`}>
+                <p className={`text-sm ${categoryFilter === cat.code ? tone.text : "text-gray-700"}`}>
                   {count} forms available
                 </p>
               </button>
@@ -146,11 +167,14 @@ export default function FormsReferencePage() {
         </div>
 
         {/* Forms Grid */}
-        <div className="bg-white rounded-xl shadow-lg p-6">
+        <div className="surface-card p-6">
           <h2 className="text-2xl font-extrabold text-gray-900 mb-6">
             {categoryFilter === "ALL" ? "All Forms" : `${formCategories.find(c => c.code === categoryFilter)?.name} Forms`}
             <span className="text-gray-500 text-lg ml-2">({filteredForms.length})</span>
           </h2>
+          <p className="mb-6 text-sm text-gray-600">
+            This page is a reference library only. Live approvals, submissions, and operational workflows continue in their respective desks.
+          </p>
 
           {filteredForms.length === 0 ? (
             <div className="text-center py-12">
@@ -169,7 +193,7 @@ export default function FormsReferencePage() {
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div className="text-3xl">{category?.icon}</div>
-                      <span className={`px-4 py-2 text-xs font-semibold rounded bg-${category?.color}-100 text-${category?.color}-800`}>
+                      <span className={`px-4 py-2 text-xs font-semibold rounded ${CATEGORY_TONES[form.category]?.badge ?? "bg-slate-100 text-slate-800"}`}>
                         {form.category}
                       </span>
                     </div>
@@ -193,7 +217,7 @@ export default function FormsReferencePage() {
         </div>
 
         {/* Footer Info */}
-        <div className="mt-12 bg-gradient-to-r from-blue-900 to-cyan-900 rounded-xl shadow-2xl p-8 text-white">
+        <div className="rounded-[2rem] border border-slate-200 bg-gradient-to-r from-blue-900 to-cyan-900 p-8 text-white shadow-2xl">
           <h2 className="text-2xl font-extrabold mb-4">Form Usage Guidelines</h2>
           <div className="grid md:grid-cols-2 gap-6 text-sm">
             <div>
@@ -226,7 +250,6 @@ export default function FormsReferencePage() {
         <div className="mt-8 text-center text-gray-500 text-sm">
           <p>HGQS Procedures Manual | ISO 9001:2015 Quality Management System Forms Library</p>
         </div>
-      </div>
     </div>
   );
 }

@@ -19,6 +19,7 @@
 
 import path from 'path';
 import fs from 'fs';
+import { classifyCrewDocumentFolder, type CrewFileBucket } from '@/lib/crew-ops';
 
 // Default base directory for production VPS
 const DEFAULT_BASE = '/home/hanmarine/seafarers_files';
@@ -69,6 +70,21 @@ export function ensureCrewUploadDir(crewId: string | number, slug: string): stri
   return fullPath;
 }
 
+export function ensureCrewDigitalFolderDir(
+  crewKey: string | number,
+  bucket: CrewFileBucket
+): string {
+  const base = getUploadBaseDir();
+  const sanitizedKey = String(crewKey).replace(/[^a-zA-Z0-9_-]/g, '');
+  const folderPath = path.join(base, 'crew-files', sanitizedKey, bucket);
+
+  if (!fs.existsSync(folderPath)) {
+    fs.mkdirSync(folderPath, { recursive: true });
+  }
+
+  return folderPath;
+}
+
 /**
  * Build full file path for a crew member's file
  * 
@@ -91,6 +107,17 @@ export function buildCrewFilePath(
   // Sanitize filename to prevent path traversal
   const sanitizedFilename = filename.replace(/[^a-zA-Z0-9_.\-]/g, '_');
   
+  return path.join(dir, sanitizedFilename);
+}
+
+export function buildCrewDocumentFilePath(
+  crewKey: string | number,
+  filename: string,
+  docType: string
+): string {
+  const bucket = classifyCrewDocumentFolder(docType);
+  const dir = ensureCrewDigitalFolderDir(crewKey, bucket);
+  const sanitizedFilename = filename.replace(/[^a-zA-Z0-9_.\-]/g, '_');
   return path.join(dir, sanitizedFilename);
 }
 
@@ -122,6 +149,21 @@ export function getRelativePath(absolutePath: string): string {
 export function getAbsolutePath(relativePath: string): string {
   const base = getUploadBaseDir();
   return path.join(base, relativePath);
+}
+
+export function resolveStoredFileUrl(fileUrl: string | null): string | null {
+  if (!fileUrl) {
+    return null;
+  }
+
+  const normalized = fileUrl.startsWith('/') ? fileUrl : `/${fileUrl}`;
+  if (!normalized.startsWith('/api/files/')) {
+    return normalized;
+  }
+
+  const relativePath = normalized.replace('/api/files/', '');
+  const absolutePath = getAbsolutePath(relativePath);
+  return fs.existsSync(absolutePath) ? normalized : null;
 }
 
 /**

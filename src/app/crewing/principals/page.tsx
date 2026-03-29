@@ -3,7 +3,13 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import Link from "next/link";
+import { canAccessOfficePath } from "@/lib/office-access";
+import { normalizeToUserRoles } from "@/lib/type-guards";
+import { createRequiredFieldMessage, createSelectionRequiredMessage } from "@/lib/ui-vocabulary";
+import { InlineConfirmStrip } from "@/components/feedback/InlineConfirmStrip";
+import { InlineNotice } from "@/components/feedback/InlineNotice";
+import { WorkspaceHero } from "@/components/layout/WorkspaceHero";
+import { Button } from "@/components/ui/Button";
 
 interface Vessel {
   id: string;
@@ -46,6 +52,12 @@ export default function PrincipalsPage() {
   const [selectedPrincipal, setSelectedPrincipal] = useState<Principal | null>(null);
   const [editingPrincipal, setEditingPrincipal] = useState<Principal | null>(null);
   const [editingVessel, setEditingVessel] = useState<Vessel | null>(null);
+  const [feedback, setFeedback] = useState<{ tone: 'success' | 'error'; message: string } | null>(null);
+  const [pendingDeletePrincipalId, setPendingDeletePrincipalId] = useState<string | null>(null);
+  const [pendingDeleteVessel, setPendingDeleteVessel] = useState<{ id: string; name: string } | null>(null);
+  const userRoles = normalizeToUserRoles(session?.user?.roles ?? session?.user?.role);
+  const isSystemAdmin = session?.user?.isSystemAdmin === true;
+  const canManagePrincipals = canAccessOfficePath("/api/principals", userRoles, isSystemAdmin, "POST");
 
   const [formData, setFormData] = useState({
     name: "",
@@ -71,6 +83,11 @@ export default function PrincipalsPage() {
     status: "ACTIVE",
     principalId: "",
   });
+  const principalFormSteps = [
+    { label: 'Step 1', title: 'Create Principal Identity', detail: 'Register the ship owner or principal company with clean legal and commercial references.' },
+    { label: 'Step 2', title: 'Add Agreement Coverage', detail: 'Capture agreement dates, registration references, and active operating status.' },
+    { label: 'Step 3', title: 'Attach Vessel References', detail: 'Link vessels only after the principal record is clean and ready for operational use.' },
+  ];
 
   useEffect(() => {
     if (status === "loading") return;
@@ -97,6 +114,7 @@ export default function PrincipalsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canManagePrincipals) return;
     try {
       const url = editingPrincipal
         ? `/api/principals/${editingPrincipal.id}`
@@ -113,43 +131,47 @@ export default function PrincipalsPage() {
 
       if (response.ok) {
         resetForm();
-        alert(`Principal ${editingPrincipal ? "updated" : "created"} successfully!`);
+        setFeedback({
+          tone: "success",
+          message: `Principal ${editingPrincipal ? "updated" : "registered"} successfully.`,
+        });
         // Refresh data after successful update
         setTimeout(() => {
           fetchPrincipals();
         }, 500);
       } else {
         const error = await response.json();
-        alert(`Error: ${error.error || "Failed to save principal"}`);
+        setFeedback({ tone: "error", message: error.error || "Principal record could not be saved." });
       }
     } catch (error) {
       console.error("Error:", error);
-      alert("Error saving principal");
+      setFeedback({ tone: "error", message: "Principal record could not be saved." });
     }
   };
 
   const handleVesselSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canManagePrincipals) return;
     console.log("🚀 handleVesselSubmit called with data:", vesselFormData);
     
     // Validate required fields
     if (!vesselFormData.name.trim()) {
-      alert("⚠️ Vessel name is required");
+      setFeedback({ tone: "error", message: createRequiredFieldMessage("Vessel name") });
       return;
     }
 
     if (!vesselFormData.flag) {
-      alert("⚠️ Flag is required");
+      setFeedback({ tone: "error", message: createRequiredFieldMessage("Flag") });
       return;
     }
 
     if (!vesselFormData.type) {
-      alert("⚠️ Vessel type is required");
+      setFeedback({ tone: "error", message: createRequiredFieldMessage("Vessel type") });
       return;
     }
 
     if (!selectedPrincipal?.id) {
-      alert("⚠️ Principal ID is missing. Please select a principal first.");
+      setFeedback({ tone: "error", message: createSelectionRequiredMessage("a principal") });
       return;
     }
 
@@ -184,7 +206,10 @@ export default function PrincipalsPage() {
         const result = await response.json();
         console.log("✅ Success response:", result);
         resetVesselForm();
-        alert(`✅ Vessel ${editingVessel ? "updated" : "created"} successfully!`);
+        setFeedback({
+          tone: "success",
+          message: `Vessel ${editingVessel ? "updated" : "registered"} successfully.`,
+        });
         // Refresh data after successful update
         setTimeout(() => {
           fetchPrincipals();
@@ -199,15 +224,16 @@ export default function PrincipalsPage() {
           error = { error: errorText };
         }
         console.error("❌ Error response:", error);
-        alert(`❌ Error: ${error.error || "Failed to save vessel"}`);
+        setFeedback({ tone: "error", message: error.error || "Vessel record could not be saved." });
       }
     } catch (error) {
       console.error("❌ Exception:", error);
-      alert(`❌ Error saving vessel: ${error instanceof Error ? error.message : "Unknown error"}`);
+      setFeedback({ tone: "error", message: error instanceof Error ? error.message : "Vessel record could not be saved." });
     }
   };
 
   const handleEdit = (principal: Principal) => {
+    if (!canManagePrincipals) return;
     setEditingPrincipal(principal);
     setFormData({
       name: principal.name,
@@ -230,6 +256,7 @@ export default function PrincipalsPage() {
   };
 
   const handleEditVessel = (vessel: Vessel, principal: Principal) => {
+    if (!canManagePrincipals) return;
     setEditingVessel(vessel);
     setSelectedPrincipal(principal);
     setVesselFormData({
@@ -246,7 +273,7 @@ export default function PrincipalsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this principal?")) return;
+    if (!canManagePrincipals) return;
 
     try {
       const response = await fetch(`/api/principals/${id}`, {
@@ -254,20 +281,21 @@ export default function PrincipalsPage() {
       });
 
       if (response.ok) {
+        setPendingDeletePrincipalId(null);
+        setFeedback({ tone: "success", message: "Principal removed from the register." });
         fetchPrincipals();
-        alert("Principal deleted successfully!");
       } else {
         const error = await response.json();
-        alert(`Error: ${error.error || "Failed to delete principal"}`);
+        setFeedback({ tone: "error", message: error.error || "Principal could not be removed." });
       }
     } catch (error) {
       console.error("Error:", error);
-      alert("Error deleting principal");
+      setFeedback({ tone: "error", message: "Principal could not be removed." });
     }
   };
 
   const handleDeleteVessel = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this vessel?")) return;
+    if (!canManagePrincipals) return;
 
     try {
       const response = await fetch(`/api/vessels/${id}`, {
@@ -275,23 +303,25 @@ export default function PrincipalsPage() {
       });
 
       if (response.ok) {
+        setPendingDeleteVessel(null);
+        setFeedback({ tone: "success", message: "Vessel removed from the register." });
         fetchPrincipals();
-        alert("Vessel deleted successfully!");
       } else {
         const error = await response.json();
-        alert(`Error: ${error.error || "Failed to delete vessel"}`);
+        setFeedback({ tone: "error", message: error.error || "Vessel could not be removed." });
       }
     } catch (error) {
       console.error("Error:", error);
-      alert("Error deleting vessel");
+      setFeedback({ tone: "error", message: "Vessel could not be removed." });
     }
   };
 
   const handleAddVessel = (principal: Principal) => {
+    if (!canManagePrincipals) return;
     console.log("🎯 handleAddVessel called with principal:", principal.id, principal.name);
     if (!principal.id) {
       console.error("❌ Principal has no ID!");
-      alert("Error: Principal ID is missing");
+      setFeedback({ tone: "error", message: "Principal ID is missing. Reopen the principal record before adding a vessel." });
       return;
     }
     setSelectedPrincipal(principal);
@@ -346,8 +376,8 @@ export default function PrincipalsPage() {
 
   if (status === "loading" || isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="section-stack">
+        <div className="surface-card px-6 py-12 text-center text-sm text-slate-600">Loading principal registry...</div>
       </div>
     );
   }
@@ -356,43 +386,86 @@ export default function PrincipalsPage() {
     return null;
   }
 
+  const activePrincipals = principals.filter((principal) => principal.status === 'ACTIVE').length;
+  const activeVessels = principals.reduce((sum, principal) => sum + principal.vessels.filter((vessel) => vessel.status === 'ACTIVE').length, 0);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-4xl font-bold text-gray-900 mb-2">
-                Principals Management
-              </h1>
-              <p className="text-gray-700">
-                Manage ship owners and their vessels
-              </p>
-            </div>
-            <div className="flex gap-3">
-              <Link
-                href="/crewing"
-                className="px-6 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-700 font-semibold hover:border-blue-500 hover:text-blue-700 transition-all duration-200 shadow-md hover:shadow-md"
-              >
-                ← Back to Crewing
-              </Link>
-              <button
-                onClick={() => setShowForm(!showForm)}
-                className="px-6 py-3 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-200"
-              >
-                {showForm ? "Cancel" : "+ Add Principal"}
-              </button>
-            </div>
-          </div>
-        </div>
+    <div className="section-stack">
+      <WorkspaceHero
+        eyebrow="Crewing Commercial Desk"
+        title="Principals Management"
+        subtitle={canManagePrincipals ? "Manage ship owners, commercial agreements, and vessel references used by crewing operations." : "Review ship owners, agreement status, and vessel references used by crewing operations."}
+        highlights={[
+          { label: 'Principal Records', value: principals.length, detail: 'Principal companies currently tracked in the office register.' },
+          { label: 'Active Principals', value: activePrincipals, detail: 'Principal records currently open for active operations.' },
+          { label: 'Linked Vessels', value: activeVessels, detail: 'Active vessel references linked to principal records.' },
+          { label: 'Access Mode', value: canManagePrincipals ? 'Manage' : 'Review', detail: canManagePrincipals ? 'This role can maintain principal and vessel records.' : 'This role can review records without editing them.' },
+        ]}
+        helperLinks={[
+          { href: '/crewing', label: 'Crewing Workspace' },
+          { href: '/contracts', label: 'Contract Register' },
+          { href: '/compliance/fleet-board', label: 'Fleet Readiness' },
+        ]}
+        actions={(
+          <>
+            <Button type="button" variant="secondary" size="sm" onClick={() => router.push('/crewing')}>Crewing Workspace</Button>
+            {canManagePrincipals ? (
+              <Button type="button" size="sm" onClick={() => setShowForm(!showForm)}>
+                {showForm ? "Close Intake" : "Register Principal"}
+              </Button>
+            ) : (
+              <span className="inline-flex items-center rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-600">
+                View Only
+              </span>
+            )}
+          </>
+        )}
+      />
+
+      <section className="surface-card p-6">
+        {feedback ? <InlineNotice tone={feedback.tone} message={feedback.message} onDismiss={() => setFeedback(null)} className="mb-6" /> : null}
+
+        {pendingDeletePrincipalId ? (
+          <InlineConfirmStrip
+            tone="error"
+            title="Remove this principal?"
+            message="Use removal only when the principal was created by mistake and should not remain in commercial records."
+            confirmLabel="Confirm Removal"
+            cancelLabel="Keep Record"
+            onCancel={() => setPendingDeletePrincipalId(null)}
+            onConfirm={() => handleDelete(pendingDeletePrincipalId)}
+            className="mb-6"
+          />
+        ) : null}
+
+        {pendingDeleteVessel ? (
+          <InlineConfirmStrip
+            tone="error"
+            title={`Remove vessel ${pendingDeleteVessel.name}?`}
+            message="Use removal only when the vessel record was entered incorrectly and should not remain linked to the principal."
+            confirmLabel="Confirm Removal"
+            cancelLabel="Keep Record"
+            onCancel={() => setPendingDeleteVessel(null)}
+            onConfirm={() => handleDeleteVessel(pendingDeleteVessel.id)}
+            className="mb-6"
+          />
+        ) : null}
 
         {/* Add/Edit Principal Form */}
-        {showForm && (
-          <div className="bg-white rounded-2xl shadow-2xl p-8 mb-8 border-2 border-gray-100">
+        {showForm && canManagePrincipals && (
+          <div className="mb-8 rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
             <h2 className="text-2xl font-extrabold text-gray-900 mb-6">
-              {editingPrincipal ? "Edit Principal" : "Add New Principal"}
+              {editingPrincipal ? "Update Principal Record" : "Register Principal"}
             </h2>
+            <div className="mb-6 grid gap-4 md:grid-cols-3">
+              {principalFormSteps.map((item) => (
+                <div key={item.label} className="rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-4">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">{item.label}</p>
+                  <p className="mt-2 text-base font-semibold text-slate-950">{item.title}</p>
+                  <p className="mt-1 text-sm leading-6 text-slate-600">{item.detail}</p>
+                </div>
+              ))}
+            </div>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -596,7 +669,7 @@ export default function PrincipalsPage() {
                   type="submit"
                   className="px-6 py-3 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-200"
                 >
-                  {editingPrincipal ? "Update Principal" : "Create Principal"}
+                  {editingPrincipal ? "Update Principal Record" : "Register Principal"}
                 </button>
               </div>
             </form>
@@ -607,7 +680,7 @@ export default function PrincipalsPage() {
         {showVesselForm && (
           <div className="bg-white rounded-2xl shadow-2xl p-8 mb-8 border-2 border-green-100">
             <h2 className="text-2xl font-extrabold text-gray-900 mb-2">
-              {editingVessel ? "Edit Vessel" : "Add New Vessel"}
+              {editingVessel ? "Update Vessel Record" : "Register Vessel"}
             </h2>
             <p className="text-gray-700 mb-6">
               Principal: <span className="font-semibold">{selectedPrincipal?.name}</span>
@@ -774,7 +847,7 @@ export default function PrincipalsPage() {
                   type="submit"
                   className="px-6 py-3 bg-gradient-to-br from-green-500 to-green-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-200"
                 >
-                  {editingVessel ? "Update Vessel" : "Create Vessel"}
+                  {editingVessel ? "Update Vessel Record" : "Register Vessel"}
                 </button>
               </div>
             </form>
@@ -795,7 +868,7 @@ export default function PrincipalsPage() {
               onClick={() => setShowForm(true)}
               className="inline-block px-6 py-3 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-200"
             >
-              + Add Principal
+              + Register Principal
             </button>
           </div>
         ) : (
@@ -881,7 +954,7 @@ export default function PrincipalsPage() {
                         onClick={() => handleAddVessel(principal)}
                         className="px-4 py-2 bg-green-500 text-white rounded-lg text-sm font-semibold hover:bg-green-600 transition-all duration-200"
                       >
-                        + Add Vessel
+                        + Register Vessel
                       </button>
                       <a
                         href={`/api/forms/ac-01/${principal.id}`}
@@ -892,7 +965,7 @@ export default function PrincipalsPage() {
                         📄 AC-01 Form
                       </a>
                       <button
-                        onClick={() => handleDelete(principal.id)}
+                        onClick={() => setPendingDeletePrincipalId(principal.id)}
                         className="px-4 py-2 bg-red-500 text-white rounded-lg text-sm font-semibold hover:bg-red-600 transition-all duration-200"
                       >
                         🗑️ Delete
@@ -975,7 +1048,7 @@ export default function PrincipalsPage() {
                               ✏️ Edit
                             </button>
                             <button
-                              onClick={() => handleDeleteVessel(vessel.id)}
+                              onClick={() => setPendingDeleteVessel({ id: vessel.id, name: vessel.name })}
                               className="px-3 py-2 bg-red-500 text-white rounded-lg text-xs font-semibold hover:bg-red-600 transition-all duration-200"
                             >
                               🗑️
@@ -994,7 +1067,7 @@ export default function PrincipalsPage() {
                         onClick={() => handleAddVessel(principal)}
                         className="px-4 py-2 bg-green-500 text-white rounded-lg text-sm font-semibold hover:bg-green-600 transition-all duration-200"
                       >
-                        + Add First Vessel
+                        + Register First Vessel
                       </button>
                     </div>
                   )}
@@ -1003,7 +1076,7 @@ export default function PrincipalsPage() {
             ))}
           </div>
         )}
-      </div>
+      </section>
     </div>
   );
 }

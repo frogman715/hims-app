@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { prisma } from '@/lib/prisma';
 import { authOptions } from '@/lib/auth';
+import { hasExplicitRoleAccess } from '@/lib/authorization';
 
 export async function GET(request: NextRequest) {
   try {
@@ -64,7 +65,16 @@ export async function POST(request: NextRequest) {
     }
 
     // Only QMR and higher can create forms
-    if (!['QMR', 'CDMO', 'DIRECTOR'].includes(session.user.role || '')) {
+    if (
+      !hasExplicitRoleAccess(
+        {
+          roles: session.user.roles,
+          role: session.user.role,
+          isSystemAdmin: session.user.isSystemAdmin === true,
+        },
+        ['QMR', 'CDMO', 'DIRECTOR']
+      )
+    ) {
       return NextResponse.json(
         { error: 'Only QMR and above can create forms' },
         { status: 403 }

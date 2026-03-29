@@ -49,5 +49,28 @@ module.exports = {
       error_file: '/home/hanmarine/hims-app/logs/escalation-job.err.log',
       out_file: '/home/hanmarine/hims-app/logs/escalation-job.out.log',
     },
+    {
+      name: 'hims-office-automation-job',
+      cwd: '/home/hanmarine/hims-app',
+      script: 'scripts/run-office-automation.cjs',
+      instances: 1,
+      exec_mode: 'fork',
+      autorestart: false,
+      cron_restart: '30 6 * * *',
+      env: {
+        NODE_ENV: 'production',
+        PORT: 3000,
+        TZ: 'Asia/Jakarta',
+      },
+      env_production: {
+        NODE_ENV: 'production',
+        PORT: 3000,
+        TZ: 'Asia/Jakarta',
+      },
+      watch: false,
+      max_memory_restart: '256M',
+      error_file: '/home/hanmarine/hims-app/logs/office-automation-job.err.log',
+      out_file: '/home/hanmarine/hims-app/logs/office-automation-job.out.log',
+    },
   ],
 };

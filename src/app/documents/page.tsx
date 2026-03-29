@@ -3,6 +3,8 @@
 import React, { useState } from 'react';
 import { Plus, Settings } from 'lucide-react';
 import Modal from '@/components/Modal';
+import { WorkspaceHero } from '@/components/layout/WorkspaceHero';
+import { Button } from '@/components/ui/Button';
 import {
   DocumentUploadForm,
   DocumentList,
@@ -47,40 +49,42 @@ export default function DocumentManagementPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                Document Control
-              </h1>
-              <p className="text-gray-600 mt-2">
-                Manage, approve, and acknowledge documents
-              </p>
-            </div>
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-            >
-              <Plus className="w-5 h-5" />
-              New Document
-            </button>
-          </div>
-        </div>
-      </div>
+    <div className="section-stack">
+      <WorkspaceHero
+        eyebrow="Document Control"
+        title="Controlled document workspace"
+        subtitle="Manage, review, approve, and acknowledge controlled documents across the office workflow."
+        helperLinks={[
+          { href: '/dashboard', label: 'Dashboard' },
+          { href: '/quality/forms/reference', label: 'Forms Library' },
+        ]}
+        highlights={[
+          { label: 'Control Areas', value: 'Register + Approval', detail: 'Switch between live document records and approval queue from one desk.' },
+          { label: 'Workflow Rule', value: 'One Controlled Source', detail: 'Use this workspace for official upload, review, distribution, and acknowledgement.' },
+        ]}
+        actions={(
+          <Button type="button" size="sm" onClick={() => setShowCreateModal(true)} leftIcon={<Plus className="h-4 w-4" />}>
+            New Document
+          </Button>
+        )}
+      />
 
-      {/* Tabs */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="surface-card border-sky-200 bg-sky-50/70 p-5">
+        <p className="text-sm font-semibold text-sky-900">How to use this workspace</p>
+        <p className="mt-1 text-sm text-sky-800">
+          Start in the document register to review controlled files, then move to approvals when a document is ready for release or acknowledgement handling.
+        </p>
+      </section>
+
+      <section className="surface-card overflow-hidden p-0">
+        <div className="border-b border-slate-200 bg-white">
           <div className="flex gap-8">
             <button
               onClick={() => setActiveTab('documents')}
-              className={`py-4 font-medium border-b-2 transition-colors ${
+              className={`px-6 py-4 text-sm font-semibold border-b-2 transition-colors ${
                 activeTab === 'documents'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-600 hover:text-gray-900'
+                  ? 'border-cyan-700 text-cyan-800'
+                  : 'border-transparent text-slate-600 hover:text-slate-900'
               }`}
             >
               <div className="flex items-center gap-2">
@@ -90,10 +94,10 @@ export default function DocumentManagementPage() {
             </button>
             <button
               onClick={() => setActiveTab('approvals')}
-              className={`py-4 font-medium border-b-2 transition-colors ${
+              className={`px-6 py-4 text-sm font-semibold border-b-2 transition-colors ${
                 activeTab === 'approvals'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-600 hover:text-gray-900'
+                  ? 'border-cyan-700 text-cyan-800'
+                  : 'border-transparent text-slate-600 hover:text-slate-900'
               }`}
             >
               <div className="flex items-center gap-2">
@@ -103,10 +107,8 @@ export default function DocumentManagementPage() {
             </button>
           </div>
         </div>
-      </div>
 
-      {/* Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="p-6">
         {activeTab === 'documents' && (
           <DocumentList
             key={refreshKey}
@@ -123,12 +125,13 @@ export default function DocumentManagementPage() {
           />
         )}
       </div>
+      </section>
 
       {/* Create Document Modal */}
       <Modal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
-        title="Create New Document"
+        title="Register Controlled Document"
         size="lg"
       >
         <DocumentUploadForm

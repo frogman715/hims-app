@@ -116,6 +116,15 @@ export async function GET(
 
     const { id } = await params;
 
+    const crew = await prisma.crew.findUnique({
+      where: { id },
+      select: { id: true },
+    });
+
+    if (!crew) {
+      return NextResponse.json({ error: "Seafarer not found" }, { status: 404 });
+    }
+
     const receipts = await prisma.documentReceipt.findMany({
       where: { crewId: id },
       include: {
@@ -139,8 +148,15 @@ export async function GET(
 
     return NextResponse.json(receipts);
   } catch (error) {
-    console.error("Error fetching document receipts:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    console.error("[api/seafarers/document-receipts][GET] failed", {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      timestamp: new Date().toISOString(),
+    });
+    return NextResponse.json(
+      { error: "Document receipt history could not be loaded. Please try again or contact admin." },
+      { status: 500 }
+    );
   }
 }
 
@@ -159,6 +175,15 @@ export async function POST(
     }
 
     const { id: crewId } = await params;
+    const crew = await prisma.crew.findUnique({
+      where: { id: crewId },
+      select: { id: true },
+    });
+
+    if (!crew) {
+      return NextResponse.json({ error: "Seafarer not found" }, { status: 404 });
+    }
+
     const payload = (await request.json()) as Partial<CreateDocumentReceiptPayload>;
 
     if (!payload || typeof payload !== "object") {
@@ -220,7 +245,14 @@ export async function POST(
 
     return NextResponse.json(receipt, { status: 201 });
   } catch (error) {
-    console.error("Error creating document receipt:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    console.error("[api/seafarers/document-receipts][POST] failed", {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      timestamp: new Date().toISOString(),
+    });
+    return NextResponse.json(
+      { error: "Document receipt could not be saved. Please try again or contact admin." },
+      { status: 500 }
+    );
   }
 }

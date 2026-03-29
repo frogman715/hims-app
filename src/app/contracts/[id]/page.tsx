@@ -1,26 +1,28 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import { useCallback, useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
+import { WorkspaceLoadingState, WorkspaceState } from '@/components/layout/WorkspaceState';
+import { StatusBadge } from '@/components/ui/StatusBadge';
 
 interface EmploymentContract {
   id: string;
   contractNumber: string;
   contractKind: 'SEA' | 'OFFICE_PKL';
-  seaType?: 'KOREA' | 'BAHAMAS_PANAMA' | 'TANKER_LUNDQVIST' | 'OTHER';
-  maritimeLaw?: string;
-  cbaReference?: string;
-  wageScaleHeaderId?: string;
-  guaranteedOTHours?: number;
-  overtimeRate?: string;
-  onboardAllowance?: number;
-  homeAllotment?: number;
-  specialAllowance?: number;
-  templateVersion?: string;
+  seaType?: 'KOREA' | 'BAHAMAS_PANAMA' | 'TANKER_LUNDQVIST' | 'OTHER' | null;
+  maritimeLaw?: string | null;
+  cbaReference?: string | null;
+  wageScaleHeaderId?: string | null;
+  guaranteedOTHours?: number | null;
+  overtimeRate?: string | null;
+  onboardAllowance?: number | null;
+  homeAllotment?: number | null;
+  specialAllowance?: number | null;
+  templateVersion?: string | null;
   crewId: string;
-  vesselId?: string;
-  principalId?: string;
+  vesselId?: string | null;
+  principalId?: string | null;
   rank: string;
   contractStart: string;
   contractEnd: string;
@@ -29,28 +31,61 @@ interface EmploymentContract {
   currency: string;
   crew: {
     id: string;
-    firstName: string;
-    lastName: string;
-    nationality: string;
-    dateOfBirth: string;
-    passportNumber: string;
-    address: string;
+    fullName: string;
+    nationality: string | null;
+    dateOfBirth: string | null;
+    passportNumber?: string | null;
+    address?: string | null;
   };
   vessel?: {
     id: string;
     name: string;
-    flag: string;
-    imoNumber: string;
-  };
+    flag?: string | null;
+    imoNumber?: string | null;
+  } | null;
   principal?: {
     id: string;
     name: string;
-    address: string;
-  };
+    address?: string | null;
+  } | null;
   wageScaleHeader?: {
     name: string;
     principalId: string;
-  };
+  } | null;
+}
+
+function formatDate(value?: string | null) {
+  if (!value) return 'Not recorded';
+  return new Date(value).toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
+}
+
+function formatMoney(value?: number | null, currency = 'USD') {
+  if (value === null || value === undefined || Number.isNaN(value)) {
+    return 'Not recorded';
+  }
+
+  return new Intl.NumberFormat('en-GB', {
+    style: 'currency',
+    currency,
+    maximumFractionDigits: 2,
+  }).format(value);
+}
+
+function getContractKindLabel(contract: EmploymentContract) {
+  return contract.contractKind === 'SEA' ? 'SEA Contract' : 'Office PKL Contract';
+}
+
+function Field({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{label}</p>
+      <p className="mt-2 text-sm font-medium text-slate-900">{value}</p>
+    </div>
+  );
 }
 
 export default function ContractDetailPage() {
@@ -61,19 +96,22 @@ export default function ContractDetailPage() {
 
   const fetchContract = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const response = await fetch(`/api/contracts/${params.id}`);
-      if (response.ok) {
-        const data = await response.json();
-        setContract(data);
-      } else if (response.status === 404) {
-        setError('Contract not found');
-      } else {
-        setError('Failed to load contract');
+      const payload = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        setError(payload?.error ?? (response.status === 404 ? 'Contract not found' : 'Failed to load contract'));
+        setContract(null);
+        return;
       }
-    } catch (error) {
-      console.error('Failed to load contract:', error);
+
+      setContract(payload as EmploymentContract);
+    } catch (fetchError) {
+      console.error('Failed to load contract:', fetchError);
       setError('Failed to load contract');
+      setContract(null);
     } finally {
       setLoading(false);
     }
@@ -88,344 +126,152 @@ export default function ContractDetailPage() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-100 p-6">
-        <div className="max-w-4xl mx-auto">
-          <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
-            <div className="bg-white rounded-lg shadow p-6">
-              <div className="h-4 bg-gray-200 rounded w-full mb-4"></div>
-              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+    return <WorkspaceLoadingState label="Loading contract detail..." />;
   }
 
   if (error || !contract) {
     return (
-      <div className="min-h-screen bg-gray-100 p-6">
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="text-center">
-              <h1 className="text-2xl font-extrabold text-gray-900 mb-4">Error</h1>
-              <p className="text-gray-700 mb-6">{error || 'Contract not found'}</p>
+      <WorkspaceState
+        eyebrow="Contracts Desk"
+        title="Contract record not available"
+        description={error ?? 'The requested contract record is no longer available in the controlled contract register.'}
+        tone="danger"
+        action={(
+          <Link href="/contracts" className="inline-flex items-center rounded-xl bg-cyan-700 px-4 py-3 text-sm font-semibold text-white transition hover:bg-cyan-800">
+            Return to Contract Register
+          </Link>
+        )}
+      />
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-100 p-6">
+      <div className="mx-auto max-w-5xl space-y-6">
+        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-indigo-700">Contracts Desk</p>
+              <h1 className="mt-2 text-3xl font-semibold text-slate-900">Contract Detail</h1>
+              <p className="mt-2 text-sm text-slate-600">
+                Review the final contract record, linked crew, vessel, principal, and compensation references from the live API record.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={handlePrint}
+                className="rounded-full border border-emerald-300 px-4 py-2 text-sm font-semibold text-emerald-700 hover:border-emerald-500 hover:text-emerald-800"
+              >
+                Print Contract
+              </button>
               <Link
                 href="/contracts"
-                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:border-slate-400"
               >
                 Back to Contracts
               </Link>
             </div>
           </div>
-        </div>
-      </div>
-    );
-  }
 
-  return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Contract Details</h1>
-            <p className="text-gray-700 mt-1">Contract #{contract.contractNumber}</p>
-          </div>
-          <div className="flex space-x-3">
-            <button
-              onClick={handlePrint}
-              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center"
-            >
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-              </svg>
-              Print Contract
-            </button>
-            <Link
-              href={`/contracts/${contract.id}/edit`}
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-            >
-              Edit Contract
-            </Link>
-            <Link
-              href="/contracts"
-              className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
-            >
-              Back to List
-            </Link>
-          </div>
-        </div>
-
-        {/* Contract Information */}
-        <div className="bg-white rounded-lg shadow mb-6">
-          <div className="px-6 py-4 border-b border-gray-300">
-            <h2 className="text-xl font-semibold text-gray-900">Contract Information</h2>
-          </div>
-          <div className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-semibold text-gray-900">Contract Number</label>
-                <p className="mt-1 text-sm text-gray-900">{contract.contractNumber}</p>
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-900">Contract Type</label>
-                <p className="mt-1 text-sm text-gray-900">
-                  <span className={`inline-flex items-center px-4.5 py-0.5 rounded-full text-xs font-medium ${
-                    contract.contractKind === 'SEA'
-                      ? 'bg-blue-100 text-blue-800'
-                      : 'bg-green-100 text-green-800'
-                  }`}>
-                    {contract.contractKind === 'SEA' ? 'SEA Contract (MLC Compliant)' : 'Office PKL Contract'}
-                  </span>
-                </p>
-              </div>
-              {contract.contractKind === 'SEA' && (
-                <div>
-                  <label className="block text-sm font-semibold text-gray-900">SEA Type</label>
-                  <p className="mt-1 text-sm text-gray-900">
-                    <span className={`inline-flex items-center px-4.5 py-0.5 rounded-full text-xs font-medium ${
-                      contract.seaType === 'KOREA' ? 'bg-red-100 text-red-800' :
-                      contract.seaType === 'BAHAMAS_PANAMA' ? 'bg-yellow-100 text-yellow-800' :
-                      contract.seaType === 'TANKER_LUNDQVIST' ? 'bg-purple-100 text-purple-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
-                      {contract.seaType === 'KOREA' ? 'Korea' :
-                       contract.seaType === 'BAHAMAS_PANAMA' ? 'Bahamas / Panama' :
-                       contract.seaType === 'TANKER_LUNDQVIST' ? 'Tanker (Lundqvist)' :
-                       contract.seaType || 'Not specified'}
-                    </span>
-                  </p>
-                </div>
-              )}
-              <div>
-                <label className="block text-sm font-semibold text-gray-900">Rank</label>
-                <p className="mt-1 text-sm text-gray-900">{contract.rank}</p>
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-900">Status</label>
-                <p className="mt-1 text-sm text-gray-900">
-                  <span className={`inline-flex items-center px-4.5 py-0.5 rounded-full text-xs font-medium ${
-                    contract.status === 'ACTIVE' ? 'bg-green-100 text-green-800' :
-                    contract.status === 'COMPLETED' ? 'bg-blue-100 text-blue-800' :
-                    contract.status === 'TERMINATED' ? 'bg-red-100 text-red-800' :
-                    'bg-yellow-100 text-yellow-800'
-                  }`}>
-                    {contract.status}
-                  </span>
-                </p>
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-900">Start Date</label>
-                <p className="mt-1 text-sm text-gray-900">{new Date(contract.contractStart).toLocaleDateString()}</p>
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-900">End Date</label>
-                <p className="mt-1 text-sm text-gray-900">{new Date(contract.contractEnd).toLocaleDateString()}</p>
-              </div>
+          <div className="mt-6 grid gap-4 md:grid-cols-4">
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Contract Number</p>
+              <p className="mt-2 text-sm font-semibold text-slate-900">{contract.contractNumber}</p>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Contract Type</p>
+              <p className="mt-2 text-sm font-semibold text-slate-900">{getContractKindLabel(contract)}</p>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Rank</p>
+              <p className="mt-2 text-sm font-semibold text-slate-900">{contract.rank}</p>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Status</p>
+              <p className="mt-2">
+                <StatusBadge status={contract.status} />
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Crew Information */}
-        <div className="bg-white rounded-lg shadow mb-6">
-          <div className="px-6 py-4 border-b border-gray-300">
-            <h2 className="text-xl font-semibold text-gray-900">Crew Member Information</h2>
-          </div>
-          <div className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-semibold text-gray-900">Full Name</label>
-                <p className="mt-1 text-sm text-gray-900">{contract.crew.firstName} {contract.crew.lastName}</p>
+        <div className="grid gap-6 xl:grid-cols-[1.1fr,0.9fr]">
+          <div className="space-y-6">
+            <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+              <h2 className="text-lg font-semibold text-slate-900">Contract Terms</h2>
+              <div className="mt-5 grid gap-5 md:grid-cols-2">
+                <Field label="Start Date" value={formatDate(contract.contractStart)} />
+                <Field label="End Date" value={formatDate(contract.contractEnd)} />
+                <Field label="Basic Wage" value={formatMoney(contract.basicWage, contract.currency)} />
+                <Field label="Currency" value={contract.currency || 'Not recorded'} />
+                <Field label="SEA Type" value={contract.seaType || 'Not recorded'} />
+                <Field label="Template Version" value={contract.templateVersion || 'Not recorded'} />
+                <Field label="Maritime Law" value={contract.maritimeLaw || 'Not recorded'} />
+                <Field label="CBA Reference" value={contract.cbaReference || 'Not recorded'} />
+                <Field label="Wage Scale Header" value={contract.wageScaleHeader?.name || 'Not linked'} />
+                <Field label="Guaranteed OT Hours" value={contract.guaranteedOTHours?.toString() || 'Not recorded'} />
+                <Field label="Overtime Rate" value={contract.overtimeRate || 'Not recorded'} />
+                <Field label="Onboard Allowance" value={formatMoney(contract.onboardAllowance, contract.currency)} />
+                <Field label="Home Allotment" value={formatMoney(contract.homeAllotment, contract.currency)} />
+                <Field label="Special Allowance" value={formatMoney(contract.specialAllowance, contract.currency)} />
               </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-900">Nationality</label>
-                <p className="mt-1 text-sm text-gray-900">{contract.crew.nationality}</p>
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-900">Date of Birth</label>
-                <p className="mt-1 text-sm text-gray-900">{new Date(contract.crew.dateOfBirth).toLocaleDateString()}</p>
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-900">Passport Number</label>
-                <p className="mt-1 text-sm text-gray-900">{contract.crew.passportNumber}</p>
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-sm font-semibold text-gray-900">Address</label>
-                <p className="mt-1 text-sm text-gray-900">{contract.crew.address}</p>
-              </div>
-            </div>
-          </div>
-        </div>
+            </section>
 
-        {/* Vessel Information */}
-        {contract.vessel && (
-          <div className="bg-white rounded-lg shadow mb-6">
-            <div className="px-6 py-4 border-b border-gray-300">
-              <h2 className="text-xl font-semibold text-gray-900">Vessel Information</h2>
-            </div>
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-900">Vessel Name</label>
-                  <p className="mt-1 text-sm text-gray-900">{contract.vessel.name}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-900">Flag</label>
-                  <p className="mt-1 text-sm text-gray-900">{contract.vessel.flag}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-900">IMO Number</label>
-                  <p className="mt-1 text-sm text-gray-900">{contract.vessel.imoNumber}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Principal Information */}
-        {contract.principal && (
-          <div className="bg-white rounded-lg shadow mb-6">
-            <div className="px-6 py-4 border-b border-gray-300">
-              <h2 className="text-xl font-semibold text-gray-900">Principal Information</h2>
-            </div>
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-900">Company Name</label>
-                  <p className="mt-1 text-sm text-gray-900">{contract.principal.name}</p>
-                </div>
+            <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+              <h2 className="text-lg font-semibold text-slate-900">Crew Information</h2>
+              <div className="mt-5 grid gap-5 md:grid-cols-2">
+                <Field label="Full Name" value={contract.crew.fullName || 'Not recorded'} />
+                <Field label="Nationality" value={contract.crew.nationality || 'Not recorded'} />
+                <Field label="Date of Birth" value={formatDate(contract.crew.dateOfBirth)} />
+                <Field label="Passport Number" value={contract.crew.passportNumber || 'Restricted or not recorded'} />
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-gray-900">Address</label>
-                  <p className="mt-1 text-sm text-gray-900">{contract.principal.address}</p>
+                  <Field label="Address" value={contract.crew.address || 'Restricted or not recorded'} />
                 </div>
               </div>
-            </div>
+            </section>
           </div>
-        )}
 
-        {/* CBA Information - SEA Contracts Only */}
-        {contract.contractKind === 'SEA' && (
-          <div className="bg-white rounded-lg shadow mb-6">
-            <div className="px-6 py-4 border-b border-gray-300">
-              <h2 className="text-xl font-semibold text-gray-900">Contract & CBA</h2>
-            </div>
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {contract.maritimeLaw && (
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-900">Maritime Law</label>
-                    <p className="mt-1 text-sm text-gray-900">{contract.maritimeLaw}</p>
-                  </div>
-                )}
-                {contract.cbaReference && (
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-900">CBA Reference</label>
-                    <p className="mt-1 text-sm text-gray-900">{contract.cbaReference}</p>
-                  </div>
-                )}
-                {contract.guaranteedOTHours && (
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-900">Guaranteed OT Hours</label>
-                    <p className="mt-1 text-sm text-gray-900">{contract.guaranteedOTHours}</p>
-                  </div>
-                )}
-                {contract.overtimeRate && (
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-900">Overtime Rate</label>
-                    <p className="mt-1 text-sm text-gray-900">{contract.overtimeRate}</p>
-                  </div>
-                )}
-                {contract.templateVersion && (
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-900">Template Version</label>
-                    <p className="mt-1 text-sm text-gray-900">{contract.templateVersion}</p>
-                  </div>
-                )}
-                {contract.wageScaleHeader && (
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-900">Wage Scale</label>
-                    <p className="mt-1 text-sm text-gray-900">{contract.wageScaleHeader.name}</p>
-                  </div>
-                )}
+          <div className="space-y-6">
+            <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+              <h2 className="text-lg font-semibold text-slate-900">Vessel Link</h2>
+              <div className="mt-5 grid gap-5">
+                <Field label="Vessel" value={contract.vessel?.name || 'Not linked'} />
+                <Field label="Flag" value={contract.vessel?.flag || 'Not recorded'} />
+                <Field label="IMO Number" value={contract.vessel?.imoNumber || 'Not recorded'} />
               </div>
-            </div>
-          </div>
-        )}
+            </section>
 
-        {/* Wage & Allowances */}
-        <div className="bg-white rounded-lg shadow mb-6">
-          <div className="px-6 py-4 border-b border-gray-300">
-            <h2 className="text-xl font-semibold text-gray-900">Wage & Allowances</h2>
-          </div>
-          <div className="p-6">
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Monthly Wage Breakdown</h3>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-300">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Component</th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount ({contract.currency})</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    <tr>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Basic Wage</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{contract.basicWage.toLocaleString()}</td>
-                    </tr>
-                    {/* Wage scale items would be displayed here when API includes them */}
-                    <tr className="border-t-2 border-gray-400">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">Total Monthly Wage</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 text-right">
-                        {contract.basicWage.toLocaleString()}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+            <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+              <h2 className="text-lg font-semibold text-slate-900">Principal Link</h2>
+              <div className="mt-5 grid gap-5">
+                <Field label="Principal" value={contract.principal?.name || 'Not linked'} />
+                <Field label="Principal Address" value={contract.principal?.address || 'Not recorded'} />
               </div>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Additional Allowances</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {contract.onboardAllowance && (
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-900">Onboard Allowance</label>
-                    <p className="mt-1 text-sm text-gray-900">{contract.currency} {contract.onboardAllowance.toLocaleString()}</p>
-                  </div>
-                )}
-                {contract.homeAllotment && (
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-900">Home Allotment</label>
-                    <p className="mt-1 text-sm text-gray-900">{contract.currency} {contract.homeAllotment.toLocaleString()}</p>
-                  </div>
-                )}
-                {contract.specialAllowance && (
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-900">Special Allowance</label>
-                    <p className="mt-1 text-sm text-gray-900">{contract.currency} {contract.specialAllowance.toLocaleString()}</p>
-                  </div>
-                )}
+            </section>
+
+            <section className="rounded-3xl border border-amber-200 bg-amber-50 p-6 shadow-sm">
+              <h2 className="text-lg font-semibold text-amber-900">Edit Workflow</h2>
+              <p className="mt-3 text-sm text-amber-900">
+                Contract editing stays in the main contracts desk to avoid duplicate edit flows. Return to the contracts list if this record needs to be updated or regenerated.
+              </p>
+              <div className="mt-4 flex flex-wrap gap-3">
+                <Link
+                  href={`/contracts?edit=${contract.id}`}
+                  className="rounded-full border border-amber-300 bg-white px-4 py-2 text-sm font-semibold text-amber-800 hover:border-amber-500"
+                >
+                  Edit in Contracts Desk
+                </Link>
+                <Link
+                  href="/contracts"
+                  className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:border-slate-400"
+                >
+                  Open Contracts Desk
+                </Link>
               </div>
-            </div>
+            </section>
           </div>
         </div>
-
-        {/* Wage Scale Information */}
-        {contract.wageScaleHeader && (
-          <div className="bg-white rounded-lg shadow mb-6">
-            <div className="px-6 py-4 border-b border-gray-300">
-              <h2 className="text-xl font-semibold text-gray-900">Wage Scale</h2>
-            </div>
-            <div className="p-6">
-              <div>
-                <label className="block text-sm font-semibold text-gray-900">Wage Scale Name</label>
-                <p className="mt-1 text-sm text-gray-900">{contract.wageScaleHeader.name}</p>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

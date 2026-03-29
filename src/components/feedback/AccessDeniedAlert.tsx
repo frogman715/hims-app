@@ -4,8 +4,8 @@ interface AccessDeniedAlertProps {
 }
 
 export function AccessDeniedAlert({
-  title = 'Tidak memiliki akses',
-  message = 'Peran Anda tidak mengizinkan akses ke modul ini. Silakan hubungi administrator bila required.',
+  title = 'Access denied',
+  message = 'Your role does not allow access to this module. Contact the system administrator if additional access is required.',
 }: AccessDeniedAlertProps) {
   return (
     <div className="rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">

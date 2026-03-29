@@ -6,6 +6,7 @@ import { writeFile, unlink } from "fs/promises";
 import { extname, join } from "path";
 import { ensureOfficeApiPathAccess } from "@/lib/office-api-access";
 import { handleApiError, ApiError } from "@/lib/error-handler";
+import { isKnownDocumentType } from "@/lib/document-types";
 import {
   buildCrewDocumentFilePath,
   getRelativePath,
@@ -100,6 +101,16 @@ export async function PUT(
       );
     }
 
+    const normalizedDocType = docType.trim().toUpperCase();
+    const normalizedDocNumber = docNumber.trim();
+
+    if (!isKnownDocumentType(normalizedDocType)) {
+      return NextResponse.json(
+        { error: "Unknown document type. Please use the registered document type list." },
+        { status: 400 }
+      );
+    }
+
     // Check if document exists
     const existingDocument = await prisma.crewDocument.findUnique({
       where: { id: documentId },
@@ -107,6 +118,40 @@ export async function PUT(
 
     if (!existingDocument) {
       return NextResponse.json({ error: "Document not found" }, { status: 404 });
+    }
+
+    const parsedIssueDate = new Date(issueDate);
+    const parsedExpiryDate = new Date(expiryDate);
+
+    if (Number.isNaN(parsedIssueDate.getTime()) || Number.isNaN(parsedExpiryDate.getTime())) {
+      return NextResponse.json(
+        { error: "Invalid issue date or expiry date format" },
+        { status: 400 }
+      );
+    }
+
+    if (parsedExpiryDate <= parsedIssueDate) {
+      return NextResponse.json(
+        { error: "Expiry date must be after issue date" },
+        { status: 400 }
+      );
+    }
+
+    const duplicateDocument = await prisma.crewDocument.findFirst({
+      where: {
+        crewId: existingDocument.crewId,
+        docType: normalizedDocType,
+        docNumber: normalizedDocNumber,
+        NOT: { id: documentId },
+      },
+      select: { id: true },
+    });
+
+    if (duplicateDocument) {
+      return NextResponse.json(
+        { error: "A document with the same crew, type, and document number already exists." },
+        { status: 409 }
+      );
     }
 
     const updateData: {
@@ -117,10 +162,10 @@ export async function PUT(
       remarks: string | null;
       fileUrl?: string | null;
     } = {
-      docType,
-      docNumber,
-      issueDate: new Date(issueDate),
-      expiryDate: new Date(expiryDate),
+      docType: normalizedDocType,
+      docNumber: normalizedDocNumber,
+      issueDate: parsedIssueDate,
+      expiryDate: parsedExpiryDate,
       remarks: remarks || null,
     };
 

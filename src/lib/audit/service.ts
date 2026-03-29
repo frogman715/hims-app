@@ -2,11 +2,9 @@ import { prisma } from '@/lib/prisma';
 import type { 
   ComplianceAudit, 
   ComplianceAuditFinding, 
-  NonConformity,
   ComplianceAuditStatus,
   NCFindingSeverity
 } from '@prisma/client';
-import type { Prisma } from '@prisma/client';
 
 // ============================================================================
 // AUDIT MANAGEMENT SERVICE

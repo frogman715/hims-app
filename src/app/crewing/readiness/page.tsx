@@ -5,7 +5,10 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { buildCrewReadinessDashboard, type CrewReadinessRecord } from "@/lib/crewing-readiness";
+import { buildMaritimeRegulatoryReadiness } from "@/lib/maritime-regulatory-readiness";
 import { canAccessOfficePath, getPrimaryOfficeRole } from "@/lib/office-access";
+import { WorkspaceHero } from "@/components/layout/WorkspaceHero";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 
 function formatGeneratedAt(value: string) {
   return new Date(value).toLocaleString("en-GB", {
@@ -15,13 +18,6 @@ function formatGeneratedAt(value: string) {
     hour: "2-digit",
     minute: "2-digit",
   });
-}
-
-function getCheckBadge(status: CrewReadinessRecord["checks"]["passport"]["status"]) {
-  if (status === "READY") return "bg-emerald-100 text-emerald-700";
-  if (status === "EXPIRING_SOON") return "bg-amber-100 text-amber-800";
-  if (status === "NOT_REQUIRED") return "bg-slate-100 text-slate-600";
-  return "bg-rose-100 text-rose-700";
 }
 
 function getCheckLabel(status: CrewReadinessRecord["checks"]["passport"]["status"]) {
@@ -36,12 +32,12 @@ function getCheckLabel(status: CrewReadinessRecord["checks"]["passport"]["status
 
 function getPriorityAction(crew: CrewReadinessRecord) {
   if (crew.isReadyToDeploy) {
-    return "Ready for deployment review. Proceed to application or joining preparation.";
+    return "Ready for nomination review. Proceed to principal nomination or operational follow-up as needed.";
   }
 
   const firstGap = crew.gaps[0];
   if (!firstGap) {
-    return "Review biodata, documents, and joining preparation before deployment.";
+    return "Review biodata, documents, and operational readiness before nomination.";
   }
 
   return `${firstGap.label}: ${firstGap.detail}`;
@@ -158,53 +154,76 @@ export default async function ReadinessPage() {
   });
 
   const dashboard = buildCrewReadinessDashboard(crews);
+  const regulatoryByCrewId = new Map(
+    crews.map((crew) => [
+      crew.id,
+      buildMaritimeRegulatoryReadiness({
+        documents: crew.documents,
+        passportExpiry: crew.passportExpiry,
+        seamanBookExpiry: crew.seamanBookExpiry,
+        medicalChecks: crew.medicalChecks,
+      }),
+    ])
+  );
   const queuedForJoining = dashboard.crew.filter((crew) => crew.deploymentContext?.toLowerCase().includes("prepare joining")).length;
   const readyForApplication = dashboard.readyToDeploy.length;
   const urgentGapCount = dashboard.notReady.length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-cyan-50 px-6 py-8">
-      <div className="mx-auto max-w-7xl space-y-6">
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-cyan-700">Crew Readiness</p>
-              <h1 className="mt-2 text-3xl font-semibold text-slate-900">Deployment Readiness Dashboard</h1>
-              <p className="mt-2 max-w-4xl text-sm text-slate-600">
-                Active standby crew only. Readiness is computed from live passport, seaman book, medical, and recorded
-                training or Prepare Joining data already in the system. This dashboard supports office review and does
-                not auto-approve deployment.
-              </p>
-              <p className="mt-3 text-xs font-medium text-slate-500">
-                Last generated: {formatGeneratedAt(dashboard.generatedAt)} • Expiring soon threshold: {dashboard.expiryWarningDays} days
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              {canCreateApplication ? (
-                <Link href="/crewing/applications/new" className="rounded-full bg-cyan-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-800">
-                  Create Application
-                </Link>
-              ) : (
-                <span className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-600">
-                  View Only
-                </span>
-              )}
-              {canOpenPrepareJoining ? (
-                <Link href="/crewing/prepare-joining" className="rounded-full bg-cyan-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-800">
-                  Prepare Joining
-                </Link>
-              ) : null}
-            </div>
-          </div>
-        </div>
+    <div className="section-stack">
+      <WorkspaceHero
+        eyebrow="Readiness Control"
+        title="Crew readiness review"
+        subtitle="Review standby crew against live document, medical, and training requirements before a nomination can move into application or prepare joining."
+        helperLinks={[
+          { href: "/crewing/applications", label: "Applications" },
+          { href: "/crewing/prepare-joining", label: "Prepare joining" },
+          { href: "/dashboard", label: "Dashboard" },
+        ]}
+        highlights={[
+          { label: "Standby Pool", value: dashboard.totals.crewPool.toLocaleString("id-ID"), detail: "Active standby crew in the live readiness pool." },
+          { label: "Ready for Nomination", value: dashboard.totals.readyToDeploy.toLocaleString("id-ID"), detail: "Crew that meet readiness rules for office nomination review." },
+          { label: "Readiness Gaps", value: dashboard.totals.notReady.toLocaleString("id-ID"), detail: "Crew blocked by missing, expired, or pending readiness items." },
+          { label: "Expiring Soon", value: dashboard.totals.expiringSoon.toLocaleString("id-ID"), detail: `Items due within ${dashboard.expiryWarningDays} days.` },
+        ]}
+        actions={(
+          <>
+            {canCreateApplication ? (
+              <Link href="/crewing/applications/new" className="inline-flex items-center rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800">
+                Open nomination
+              </Link>
+            ) : (
+              <span className="inline-flex items-center rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-600">
+                Review Only
+              </span>
+            )}
+            {canOpenPrepareJoining ? (
+              <Link href="/crewing/prepare-joining" className="inline-flex items-center rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-cyan-600 hover:text-cyan-800">
+                Prepare joining
+              </Link>
+            ) : null}
+          </>
+        )}
+      />
 
+      <section className="surface-card border-sky-200 bg-sky-50/70 p-5">
+        <p className="text-sm font-semibold text-sky-900">Readiness logic</p>
+        <p className="mt-1 text-sm text-sky-800">
+          Active standby crew only. Readiness is computed from live passport, seaman book, medical, and recorded training or Prepare Joining data already in the system.
+        </p>
+        <p className="mt-2 text-xs font-medium uppercase tracking-[0.16em] text-slate-500">
+          Last generated: {formatGeneratedAt(dashboard.generatedAt)} • Expiring soon threshold: {dashboard.expiryWarningDays} days
+        </p>
+      </section>
+
+      <section className="surface-card space-y-6 p-6">
         <div className="grid gap-4 md:grid-cols-4">
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <p className="text-sm text-slate-500">Standby crew pool</p>
             <p className="mt-2 text-3xl font-semibold text-slate-900">{dashboard.totals.crewPool}</p>
           </div>
           <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 shadow-sm">
-            <p className="text-sm text-emerald-700">Ready to Deploy</p>
+            <p className="text-sm text-emerald-700">Ready for Nomination</p>
             <p className="mt-2 text-3xl font-semibold text-emerald-900">{dashboard.totals.readyToDeploy}</p>
           </div>
           <div className="rounded-2xl border border-rose-200 bg-rose-50 p-5 shadow-sm">
@@ -218,40 +237,40 @@ export default async function ReadinessPage() {
         </div>
 
         <div className="grid gap-4 xl:grid-cols-3">
-          <div className="rounded-3xl border border-cyan-200 bg-cyan-50 p-5 shadow-sm">
+          <div className="rounded-2xl border border-cyan-200 bg-cyan-50 p-5 shadow-sm">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-700">Office Action Queue</p>
             <p className="mt-3 text-2xl font-semibold text-cyan-950">{urgentGapCount}</p>
-            <p className="mt-1 text-sm text-cyan-900">Standby crew need immediate readiness follow-up before deployment planning can continue.</p>
+            <p className="mt-1 text-sm text-cyan-900">Standby crew need immediate readiness follow-up before nomination planning can continue.</p>
             {canOpenPrepareJoining ? (
-              <Link href="/crewing/prepare-joining" className="mt-4 inline-flex rounded-full border border-cyan-300 bg-white px-4 py-2 text-sm font-semibold text-cyan-800 transition hover:border-cyan-500 hover:text-cyan-900">
+              <Link href="/crewing/prepare-joining" className="mt-4 inline-flex rounded-lg border border-cyan-300 bg-white px-4 py-2 text-sm font-semibold text-cyan-800 transition hover:border-cyan-500 hover:text-cyan-900">
                 Open Prepare Joining
               </Link>
             ) : null}
           </div>
-          <div className="rounded-3xl border border-emerald-200 bg-emerald-50 p-5 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">Ready For Deployment Review</p>
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">Ready For Nomination Review</p>
             <p className="mt-3 text-2xl font-semibold text-emerald-950">{readyForApplication}</p>
             <p className="mt-1 text-sm text-emerald-900">
               {canCreateApplication
-                ? "Crew records currently meet the readiness rules and can move to office review for deployment."
-                : "Crew records currently meet the readiness rules. This role can review readiness but cannot open a new application."}
+                ? "Crew records currently meet the readiness rules and can move to office nomination review."
+                : "Crew records currently meet the readiness rules. This role can review readiness but cannot open a nomination."}
             </p>
             {canCreateApplication ? (
-              <Link href="/crewing/applications/new" className="mt-4 inline-flex rounded-full border border-emerald-300 bg-white px-4 py-2 text-sm font-semibold text-emerald-800 transition hover:border-emerald-500 hover:text-emerald-900">
-                Create Application
+              <Link href="/crewing/applications/new" className="mt-4 inline-flex rounded-lg border border-emerald-300 bg-white px-4 py-2 text-sm font-semibold text-emerald-800 transition hover:border-emerald-500 hover:text-emerald-900">
+                Open Nomination
               </Link>
             ) : (
-              <span className="mt-4 inline-flex rounded-full border border-emerald-200 bg-white px-4 py-2 text-sm font-semibold text-emerald-700">
+              <span className="mt-4 inline-flex rounded-lg border border-emerald-200 bg-white px-4 py-2 text-sm font-semibold text-emerald-700">
                 Review Only
               </span>
             )}
           </div>
-          <div className="rounded-3xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">Joining Follow-Up</p>
             <p className="mt-3 text-2xl font-semibold text-amber-950">{queuedForJoining}</p>
             <p className="mt-1 text-sm text-amber-900">Crew records already linked to live Prepare Joining activity and still need office follow-up.</p>
             {canOpenDocuments ? (
-              <Link href="/crewing/documents?filter=expiring" className="mt-4 inline-flex rounded-full border border-amber-300 bg-white px-4 py-2 text-sm font-semibold text-amber-800 transition hover:border-amber-500 hover:text-amber-900">
+              <Link href="/crewing/documents?filter=expiring" className="mt-4 inline-flex rounded-lg border border-amber-300 bg-white px-4 py-2 text-sm font-semibold text-amber-800 transition hover:border-amber-500 hover:text-amber-900">
                 Review Documents
               </Link>
             ) : null}
@@ -259,14 +278,14 @@ export default async function ReadinessPage() {
         </div>
 
         <div className="grid gap-6 xl:grid-cols-[1.2fr,0.8fr]">
-          <div className="rounded-3xl border border-slate-200 bg-white shadow-sm">
+          <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
             <div className="border-b border-slate-200 px-6 py-4">
-              <h2 className="text-lg font-semibold text-slate-900">Ready to Deploy</h2>
+              <h2 className="text-lg font-semibold text-slate-900">Ready for Nomination</h2>
               <p className="mt-1 text-sm text-slate-500">Crew with current essential documents and medical clearance, and no explicit training hold in the live dataset.</p>
             </div>
             <div className="divide-y divide-slate-100">
               {dashboard.readyToDeploy.length === 0 ? (
-                <div className="px-6 py-10 text-center text-sm text-slate-500">No standby crew currently meet the ready-to-deploy rules.</div>
+                <div className="px-6 py-10 text-center text-sm text-slate-500">No standby crew currently meet the ready-for-nomination rules.</div>
               ) : (
                 dashboard.readyToDeploy.map((crew) => (
                   <div key={crew.id} className="px-6 py-5">
@@ -281,16 +300,16 @@ export default async function ReadinessPage() {
                       </div>
                       <div className="flex flex-wrap gap-2">
                         {canOpenBiodata ? (
-                          <Link href={`/crewing/seafarers/${crew.id}/biodata`} className="rounded-full border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 transition hover:border-cyan-600 hover:text-cyan-700">
+                          <Link href={`/crewing/seafarers/${crew.id}/biodata`} className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 transition hover:border-cyan-600 hover:text-cyan-700">
                             Biodata
                           </Link>
                         ) : null}
                         {canCreateApplication ? (
-                          <Link href="/crewing/applications/new" className="rounded-full border border-cyan-300 px-3 py-1.5 text-sm font-semibold text-cyan-700 transition hover:border-cyan-600 hover:text-cyan-800">
-                            Create Application
+                          <Link href="/crewing/applications/new" className="rounded-lg border border-cyan-300 px-3 py-1.5 text-sm font-semibold text-cyan-700 transition hover:border-cyan-600 hover:text-cyan-800">
+                            Open Nomination
                           </Link>
                         ) : (
-                          <span className="rounded-full border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-600">
+                          <span className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-600">
                             Review Only
                           </span>
                         )}
@@ -303,7 +322,7 @@ export default async function ReadinessPage() {
           </div>
 
           <div className="space-y-6">
-            <div className="rounded-3xl border border-slate-200 bg-white shadow-sm">
+            <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
               <div className="border-b border-slate-200 px-6 py-4">
                 <h2 className="text-lg font-semibold text-slate-900">Missing Items Summary</h2>
               </div>
@@ -313,7 +332,7 @@ export default async function ReadinessPage() {
                 ) : (
                   <div className="space-y-3">
                     {dashboard.missingItemsSummary.map((item) => (
-                      <div key={item.type} className="flex items-center justify-between rounded-2xl border border-slate-200 px-4 py-3">
+                      <div key={item.type} className="flex items-center justify-between rounded-xl border border-slate-200 px-4 py-3">
                         <div>
                           <p className="font-semibold text-slate-900">{item.label}</p>
                           <p className="text-sm text-slate-500">Crew blocked by this requirement</p>
@@ -326,7 +345,7 @@ export default async function ReadinessPage() {
               </div>
             </div>
 
-            <div className="rounded-3xl border border-slate-200 bg-white shadow-sm">
+            <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
               <div className="border-b border-slate-200 px-6 py-4">
                 <h2 className="text-lg font-semibold text-slate-900">Expiring Soon</h2>
                 <p className="mt-1 text-sm text-slate-500">Early warning items that will need follow-up within the next {dashboard.expiryWarningDays} days.</p>
@@ -347,7 +366,7 @@ export default async function ReadinessPage() {
                           <p className="text-sm text-amber-800">{item.detail}</p>
                         </div>
                       {canOpenBiodata ? (
-                        <Link href={`/crewing/seafarers/${item.crewId}/biodata`} className="rounded-full border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 transition hover:border-cyan-600 hover:text-cyan-700">
+                        <Link href={`/crewing/seafarers/${item.crewId}/biodata`} className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 transition hover:border-cyan-600 hover:text-cyan-700">
                           Review Crew
                           </Link>
                         ) : null}
@@ -360,7 +379,7 @@ export default async function ReadinessPage() {
           </div>
         </div>
 
-        <div className="rounded-3xl border border-slate-200 bg-white shadow-sm">
+        <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
           <div className="border-b border-slate-200 px-6 py-4">
             <h2 className="text-lg font-semibold text-slate-900">Not Ready</h2>
             <p className="mt-1 text-sm text-slate-500">Standby crew blocked by missing, expired, unverified, or explicitly pending readiness items.</p>
@@ -369,7 +388,9 @@ export default async function ReadinessPage() {
             {dashboard.notReady.length === 0 ? (
               <div className="px-6 py-10 text-center text-sm text-slate-500">No standby crew are currently blocked by readiness gaps.</div>
             ) : (
-              dashboard.notReady.map((crew) => (
+              dashboard.notReady.map((crew) => {
+                const regulatoryReadiness = regulatoryByCrewId.get(crew.id);
+                return (
                 <div key={crew.id} className="px-6 py-5">
                   <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                     <div>
@@ -382,12 +403,12 @@ export default async function ReadinessPage() {
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {canOpenBiodata ? (
-                        <Link href={`/crewing/seafarers/${crew.id}/biodata`} className="rounded-full border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 transition hover:border-cyan-600 hover:text-cyan-700">
+                        <Link href={`/crewing/seafarers/${crew.id}/biodata`} className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 transition hover:border-cyan-600 hover:text-cyan-700">
                           Biodata
                         </Link>
                       ) : null}
                       {canOpenPrepareJoining ? (
-                        <Link href="/crewing/prepare-joining" className="rounded-full border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 transition hover:border-cyan-600 hover:text-cyan-700">
+                        <Link href="/crewing/prepare-joining" className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 transition hover:border-cyan-600 hover:text-cyan-700">
                           Prepare Joining
                         </Link>
                       ) : null}
@@ -395,18 +416,22 @@ export default async function ReadinessPage() {
                   </div>
                   <div className="mt-4 flex flex-wrap gap-2">
                     {crew.gaps.map((gap, index) => (
-                      <span key={`${crew.id}-${gap.type}-${index}`} className="rounded-full bg-rose-100 px-3 py-1 text-xs font-semibold text-rose-700">
+                      <span key={`${crew.id}-${gap.type}-${index}`} className="rounded-lg bg-rose-100 px-3 py-1 text-xs font-semibold text-rose-700">
                         {gap.label}: {gap.detail}
                       </span>
                     ))}
+                    {regulatoryReadiness?.buckets.map((bucket) => (
+                      <StatusBadge key={`${crew.id}-${bucket.code}`} status={bucket.status} label={bucket.code.replace(/_/g, " ")} />
+                    ))}
                   </div>
                 </div>
-              ))
+              );
+              })
             )}
           </div>
         </div>
 
-        <div className="rounded-3xl border border-slate-200 bg-white shadow-sm">
+        <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
           <div className="border-b border-slate-200 px-6 py-4">
             <h2 className="text-lg font-semibold text-slate-900">Crew Readiness Detail</h2>
             <p className="mt-1 text-sm text-slate-500">Per-crew drill-down using the current operational record only.</p>
@@ -415,14 +440,16 @@ export default async function ReadinessPage() {
             {dashboard.crew.length === 0 ? (
               <div className="px-6 py-10 text-center text-sm text-slate-500">No standby crew are available for readiness review.</div>
             ) : (
-              dashboard.crew.map((crew) => (
+              dashboard.crew.map((crew) => {
+                const regulatoryReadiness = regulatoryByCrewId.get(crew.id);
+                return (
                 <details key={crew.id} className="group px-6 py-5">
                   <summary className="flex cursor-pointer list-none flex-col gap-3 md:flex-row md:items-start md:justify-between">
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
                         <p className="text-lg font-semibold text-slate-900">{crew.fullName}</p>
-                        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${crew.isReadyToDeploy ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"}`}>
-                          {crew.isReadyToDeploy ? "Ready to Deploy" : "Not Ready"}
+                        <span className={`rounded-lg px-3 py-1 text-xs font-semibold ${crew.isReadyToDeploy ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"}`}>
+                          {crew.isReadyToDeploy ? "Ready for Nomination" : "Not Ready"}
                         </span>
                       </div>
                       <p className="text-sm text-slate-500">
@@ -444,62 +471,91 @@ export default async function ReadinessPage() {
                       <div key={`${crew.id}-${item.label}`} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                         <div className="flex items-center justify-between gap-3">
                           <p className="font-semibold text-slate-900">{item.label}</p>
-                          <span className={`rounded-full px-3 py-1 text-xs font-semibold ${getCheckBadge(item.value.status)}`}>
-                            {getCheckLabel(item.value.status)}
-                          </span>
+                          <StatusBadge status={item.value.status} label={getCheckLabel(item.value.status)} />
                         </div>
                         <p className="mt-3 text-sm text-slate-700">{item.value.detail}</p>
                       </div>
                     ))}
                   </div>
 
+                  {regulatoryReadiness ? (
+                    <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Regulatory Readiness</p>
+                          <p className="mt-1 text-sm text-slate-600">
+                            MLC 2006 medical fitness, STCW 2010 certificates, and core travel papers.
+                          </p>
+                        </div>
+                        <StatusBadge
+                          status={regulatoryReadiness.overallStatus}
+                          label={
+                            regulatoryReadiness.overallStatus === "APPROVED"
+                              ? "Regulatory Ready"
+                              : regulatoryReadiness.overallStatus === "WARNING"
+                                ? "Follow-Up Required"
+                                : regulatoryReadiness.overallStatus === "EXPIRED"
+                                  ? "Regulatory Blocker"
+                                  : "Review Pending"
+                          }
+                        />
+                      </div>
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        {regulatoryReadiness.buckets.map((bucket) => (
+                          <StatusBadge key={`${crew.id}-${bucket.code}`} status={bucket.status} label={bucket.label} />
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+
                   <div className="mt-5 flex flex-wrap gap-2">
                     {canOpenBiodata ? (
-                      <Link href={`/crewing/seafarers/${crew.id}/biodata`} className="rounded-full border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 transition hover:border-cyan-600 hover:text-cyan-700">
+                      <Link href={`/crewing/seafarers/${crew.id}/biodata`} className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 transition hover:border-cyan-600 hover:text-cyan-700">
                         Biodata
                       </Link>
                     ) : null}
                     {canOpenCrewDocuments ? (
-                      <Link href={`/crewing/seafarers/${crew.id}/documents`} className="rounded-full border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 transition hover:border-cyan-600 hover:text-cyan-700">
+                      <Link href={`/crewing/seafarers/${crew.id}/documents`} className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 transition hover:border-cyan-600 hover:text-cyan-700">
                         Documents
                       </Link>
                     ) : null}
                     {canOpenCrewMedical ? (
-                      <Link href={`/crewing/seafarers/${crew.id}/medical`} className="rounded-full border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 transition hover:border-cyan-600 hover:text-cyan-700">
+                      <Link href={`/crewing/seafarers/${crew.id}/medical`} className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 transition hover:border-cyan-600 hover:text-cyan-700">
                         Medical
                       </Link>
                     ) : null}
                     {canOpenCrewTraining ? (
-                      <Link href={`/crewing/seafarers/${crew.id}/trainings`} className="rounded-full border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 transition hover:border-cyan-600 hover:text-cyan-700">
+                      <Link href={`/crewing/seafarers/${crew.id}/trainings`} className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 transition hover:border-cyan-600 hover:text-cyan-700">
                         Trainings
                       </Link>
                     ) : null}
                     {canOpenPrepareJoining ? (
-                      <Link href="/crewing/prepare-joining" className="rounded-full border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 transition hover:border-cyan-600 hover:text-cyan-700">
+                      <Link href="/crewing/prepare-joining" className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 transition hover:border-cyan-600 hover:text-cyan-700">
                         Prepare Joining
                       </Link>
                     ) : null}
                     {canCreateApplication && crew.isReadyToDeploy ? (
-                      <Link href="/crewing/applications/new" className="rounded-full border border-cyan-300 px-3 py-1.5 text-sm font-semibold text-cyan-700 transition hover:border-cyan-600 hover:text-cyan-800">
-                        Create Application
+                      <Link href="/crewing/applications/new" className="rounded-lg border border-cyan-300 px-3 py-1.5 text-sm font-semibold text-cyan-700 transition hover:border-cyan-600 hover:text-cyan-800">
+                        Open Nomination
                       </Link>
                     ) : !canCreateApplication && crew.isReadyToDeploy ? (
-                      <span className="rounded-full border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-600">
+                      <span className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-600">
                         Review Ready Crew
                       </span>
                     ) : null}
                     {canOpenDocuments ? (
-                      <Link href="/crewing/documents?filter=expiring" className="rounded-full border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 transition hover:border-cyan-600 hover:text-cyan-700">
+                      <Link href="/crewing/documents?filter=expiring" className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 transition hover:border-cyan-600 hover:text-cyan-700">
                         Expiring Documents
                       </Link>
                     ) : null}
                   </div>
                 </details>
-              ))
+              );
+              })
             )}
           </div>
         </div>
-      </div>
+      </section>
     </div>
   );
 }

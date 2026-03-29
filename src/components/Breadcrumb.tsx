@@ -56,8 +56,8 @@ function generateBreadcrumbs(
     'office-expense': 'Office Expense',
     'crew-portal': 'Crew Portal',
     documents: 'Documents',
-    'prepare-joining': 'Pre-Departure Preparation',
-    applications: 'Lamaran',
+    'prepare-joining': 'Prepare Joining',
+    applications: 'Applications',
     assignments: 'Assignments',
     contracts: 'Contracts',
     dispatch: 'Dispatch',
@@ -186,13 +186,13 @@ export function Breadcrumb() {
   const breadcrumbs = generateBreadcrumbs(pathname, dynamicLabels);
 
   return (
-    <nav aria-label="Breadcrumb" className="mb-4">
-      <ol className="flex items-center space-x-2 text-sm">
+    <nav aria-label="Breadcrumb" className="overflow-x-auto">
+      <ol className="flex min-w-max items-center space-x-1.5 text-sm">
         {/* Home Icon */}
         <li>
           <Link
             href="/dashboard"
-            className="inline-flex items-center px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
+            className="inline-flex items-center rounded-lg px-2.5 py-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"
             title="Go to Dashboard"
           >
             <Home className="w-4 h-4" />
@@ -203,15 +203,15 @@ export function Breadcrumb() {
         {/* Breadcrumb Items */}
         {breadcrumbs.map((item) => (
           <li key={item.href} className="flex items-center">
-            <ChevronRight className="w-4 h-4 text-gray-400 mx-1" />
+            <ChevronRight className="mx-1 h-4 w-4 text-slate-300" />
             {item.current ? (
-              <span className="px-3 py-2 text-gray-900 font-semibold bg-gray-50 rounded-lg">
+              <span className="rounded-lg bg-slate-100 px-3 py-2 font-semibold text-slate-900">
                 {item.label}
               </span>
             ) : (
               <Link
                 href={item.href}
-                className="px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                className="rounded-lg px-3 py-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
               >
                 {item.label}
               </Link>
@@ -220,25 +220,5 @@ export function Breadcrumb() {
         ))}
       </ol>
     </nav>
-  );
-}
-
-/**
- * Breadcrumb Wrapper Component
- * Use this in layouts to automatically show breadcrumbs on all pages
- */
-export function BreadcrumbWrapper() {
-  const pathname = usePathname();
-
-  if (pathname.startsWith("/auth")) {
-    return null;
-  }
-
-  return (
-    <div className="bg-white border-b border-gray-200 sticky top-0 z-40">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-        <Breadcrumb />
-      </div>
-    </div>
   );
 }

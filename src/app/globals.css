@@ -62,15 +62,18 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  background: #eef3f9;
 }
 
 body {
+  min-height: 100vh;
   margin: 0;
   padding: 0;
   background: linear-gradient(180deg, #f8fbff 0%, #f2f5fb 45%, #f8fbff 100%);
   color: var(--color-foreground);
   font-family: var(--font-sans);
   font-weight: 400;
+  overflow-x: hidden;
 }
 
 /* ============================================
@@ -396,7 +399,7 @@ tbody tr:last-child td {
    ============================================ */
 .page-shell {
   width: 100%;
-  max-width: 1200px;
+  max-width: 1480px;
   margin: 0 auto;
 }
 
@@ -408,17 +411,15 @@ tbody tr:last-child td {
 
 .surface-card {
   background: var(--color-surface);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: 1rem;
-  box-shadow: 0 28px 48px -32px rgba(15, 23, 42, 0.4);
-  backdrop-filter: blur(10px);
+  border: 1px solid #dbe4f0;
+  border-radius: 1.25rem;
+  box-shadow: 0 18px 40px -30px rgba(15, 23, 42, 0.28);
   transition: border-color 0.24s ease, box-shadow 0.24s ease, transform 0.24s ease;
 }
 
 .surface-card:hover {
-  border-color: var(--color-border-strong);
-  box-shadow: 0 32px 54px -30px rgba(15, 23, 42, 0.45);
-  transform: translateY(-1px);
+  border-color: #c3d5eb;
+  box-shadow: 0 24px 48px -32px rgba(15, 23, 42, 0.32);
 }
 
 .surface-card__header {
@@ -457,4 +458,58 @@ tbody tr:last-child td {
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.01em;
+}
+
+.office-shell {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top, rgba(14, 116, 144, 0.08), transparent 24%),
+    linear-gradient(180deg, #f7fafc 0%, #edf3f9 100%);
+}
+
+.office-sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 50;
+  display: flex;
+  width: 18rem;
+  max-width: 88vw;
+  flex-direction: column;
+  border-right: 1px solid #d9e2ec;
+  background: rgba(247, 250, 252, 0.96);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 24px 50px -32px rgba(15, 23, 42, 0.35);
+  transition: transform 0.24s ease;
+}
+
+.office-main {
+  min-height: 100vh;
+}
+
+.office-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  border-bottom: 1px solid rgba(217, 226, 236, 0.9);
+  background: rgba(248, 251, 255, 0.88);
+  padding: 1.25rem 1rem 1.5rem;
+  backdrop-filter: blur(18px);
+}
+
+.office-content {
+  padding: 1.25rem 1rem 2rem;
+}
+
+@media (min-width: 1024px) {
+  .office-main {
+    margin-left: 18rem;
+  }
+
+  .office-topbar {
+    padding: 1.5rem 2rem 1.75rem;
+  }
+
+  .office-content {
+    padding: 1.75rem 2rem 2.5rem;
+  }
 }

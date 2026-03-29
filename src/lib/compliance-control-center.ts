@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { buildCrewReadinessDashboard } from "@/lib/crewing-readiness";
 import { QMSAdvancedAnalytics } from "@/lib/qms/advanced-analytics";
 import { getHRComplianceStats } from "@/lib/compliance/service";
+import { buildContractExpiryAlert } from "@/lib/contract-expiry";
 import { ComplianceStatus, PrepareJoiningStatus } from "@prisma/client";
 
 const READINESS_STATUSES: PrepareJoiningStatus[] = [
@@ -70,6 +71,18 @@ export type ComplianceControlCenterData = {
   cards: ControlCenterCard[];
   standards: ControlCenterStandardItem[];
   readinessWatch: ControlCenterWatchItem[];
+  contractExpiryWatch: Array<{
+    id: string;
+    crewId: string;
+    crewName: string;
+    vesselName: string;
+    rank: string;
+    contractEnd: string;
+    daysRemaining: number;
+    band: string;
+    nextAction: string;
+    href: string;
+  }>;
   expiringDocuments: Array<{
     id: string;
     crewId: string;
@@ -120,9 +133,12 @@ export async function getComplianceControlCenterData(): Promise<ComplianceContro
   const now = new Date();
   const warningDate = new Date(now);
   warningDate.setDate(warningDate.getDate() + 30);
+  const contractWarningDate = new Date(now);
+  contractWarningDate.setDate(contractWarningDate.getDate() + 90);
 
   const [
     standbyCrews,
+    onboardContractAlerts,
     expiringDocuments,
     externalQueueRaw,
     qmsMetrics,
@@ -180,6 +196,41 @@ export async function getComplianceControlCenterData(): Promise<ComplianceContro
             status: true,
             vessel: { select: { name: true } },
             principal: { select: { name: true } },
+          },
+        },
+      },
+    }),
+    prisma.employmentContract.findMany({
+      where: {
+        contractEnd: {
+          lte: contractWarningDate,
+        },
+        status: {
+          notIn: ["COMPLETED", "TERMINATED", "CANCELLED"],
+        },
+        crew: {
+          assignments: {
+            some: {
+              status: {
+                in: ["ONBOARD", "ACTIVE"],
+              },
+            },
+          },
+        },
+      },
+      orderBy: { contractEnd: "asc" },
+      take: 8,
+      include: {
+        crew: {
+          select: {
+            id: true,
+            fullName: true,
+            rank: true,
+          },
+        },
+        vessel: {
+          select: {
+            name: true,
           },
         },
       },
@@ -255,14 +306,14 @@ export async function getComplianceControlCenterData(): Promise<ComplianceContro
       label: "Ready to deploy",
       value: readiness.totals.readyToDeploy,
       tone: "emerald",
-      detail: "Standby crew meeting core deployment checks",
+      detail: "Standby crew currently passing core deployment checks",
       href: "/crewing/readiness",
     },
     {
       label: "Blocked crew",
       value: readiness.totals.notReady,
       tone: "rose",
-      detail: "Crew with MLC/STCW blocking gaps",
+      detail: "Crew with MLC or STCW blocking gaps requiring review",
       href: "/crewing/readiness",
     },
     {
@@ -270,7 +321,17 @@ export async function getComplianceControlCenterData(): Promise<ComplianceContro
       value: readiness.totals.expiringSoon,
       tone: "amber",
       detail: "Passport, seaman book, or medical nearing expiry",
-      href: "/crewing/readiness-board",
+      href: "/crewing/readiness",
+    },
+    {
+      label: "Contracts ≤ 45 days",
+      value: onboardContractAlerts.filter((item) => {
+        const alert = buildContractExpiryAlert(item, now);
+        return ["EXPIRED", "CRITICAL", "URGENT"].includes(alert.band);
+      }).length,
+      tone: "rose",
+      detail: "Onboard contracts approaching expiry and needing renewal or reliever planning",
+      href: "/crewing/crew-list",
     },
     {
       label: "Open QMS alerts",
@@ -299,14 +360,14 @@ export async function getComplianceControlCenterData(): Promise<ComplianceContro
     {
       code: "MLC 2006",
       title: "Crew welfare and employment readiness",
-      detail: "Contracts, medical fitness, welfare evidence, and deployment checks before sign-on.",
+      detail: "Monitor contracts, medical fitness, welfare evidence, and deployment checks before sign-on.",
       href: "/crewing/readiness",
     },
     {
       code: "IMO STCW",
       title: "Training and certificate validity",
       detail: "Monitor certificate expiry, training completion, and readiness gaps affecting mobilization.",
-      href: "/crewing/readiness-board",
+      href: "/crewing/readiness",
     },
     {
       code: "IMO ISM",
@@ -326,7 +387,7 @@ export async function getComplianceControlCenterData(): Promise<ComplianceContro
       rank: crew.rank,
       issue: firstGap?.label ?? "Readiness review",
       detail: firstGap?.detail ?? "Crew has unresolved readiness items.",
-      href: `/crewing/seafarers/${crew.id}/biodata`,
+      href: "/crewing/readiness",
     };
   });
 
@@ -350,11 +411,30 @@ export async function getComplianceControlCenterData(): Promise<ComplianceContro
     href: "/nonconformity",
   }));
 
+  const contractExpiryWatch = onboardContractAlerts.map((item) => {
+    const alert = buildContractExpiryAlert(item, now);
+    return {
+      id: item.id,
+      crewId: item.crewId,
+      crewName: item.crew.fullName,
+      vesselName: item.vessel?.name ?? "Unassigned vessel",
+      rank: item.crew.rank ?? "-",
+      contractEnd: alert.contractEnd,
+      daysRemaining: alert.daysRemaining,
+      band: alert.band,
+      nextAction: alert.nextAction,
+      href: `/crewing/crew-list/vessel/${item.vesselId ?? ""}`,
+    };
+  });
+
+  const nonOkContractWatch = contractExpiryWatch.filter((item) => item.band !== "OK");
+
   return {
     generatedAt: new Date().toISOString(),
     cards,
     standards,
     readinessWatch,
+    contractExpiryWatch: nonOkContractWatch,
     expiringDocuments: expiringDocuments.map((item) => ({
       id: item.id,
       crewId: item.crewId,

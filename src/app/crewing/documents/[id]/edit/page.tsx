@@ -5,6 +5,10 @@ import { useParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { DOCUMENT_TYPES, getDocumentTypeLabel } from '@/lib/document-types';
+import { WorkspaceLoadingState, WorkspaceState } from '@/components/layout/WorkspaceState';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
 
 interface DocumentEditForm {
   docType: string;
@@ -25,8 +29,13 @@ interface DocumentDetail {
   fileUrl: string | null;
   crew: {
     id: string;
-    fullName: string;
+    fullName: string | null;
   };
+}
+
+function getCrewDisplayName(crew: DocumentDetail["crew"]) {
+  const normalized = crew.fullName?.trim();
+  return normalized && normalized.length > 0 ? normalized : `Crew ${crew.id}`;
 }
 
 export default function EditDocumentPage() {
@@ -51,7 +60,17 @@ export default function EditDocumentPage() {
     try {
       const response = await fetch(`/api/documents/${id}`);
       if (!response.ok) {
-        throw new Error('Failed to load document');
+        const payload = await response.json().catch(() => null);
+
+        if (response.status === 403) {
+          throw new Error(payload?.error || 'You do not have access to edit this document.');
+        }
+
+        if (response.status === 404) {
+          throw new Error(payload?.error || 'Document not found or already removed.');
+        }
+
+        throw new Error(payload?.error || 'Failed to load document');
       }
       const data = (await response.json()) as DocumentDetail;
       setDocument(data);
@@ -77,7 +96,7 @@ export default function EditDocumentPage() {
       setError(null);
     } catch (err) {
       console.error(err);
-      setError('Gagal memuat detail dokumen. Silakan coba lagi.');
+      setError(err instanceof Error ? err.message : 'Could not load document details. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -121,7 +140,7 @@ export default function EditDocumentPage() {
     try {
       // Validate required fields
       if (!formData.docType || !formData.docNumber || !formData.issueDate || !formData.expiryDate) {
-        throw new Error('Mohon isi semua field yang diperlukan');
+        throw new Error('Please complete all required fields.');
       }
 
       const submitFormData = new FormData();
@@ -142,13 +161,13 @@ export default function EditDocumentPage() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Gagal menyimpan dokumen');
+        throw new Error(errorData.error || 'Failed to save document');
       }
 
       // Redirect to view page
       router.push(`/crewing/documents/${id}/view`);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Terjadi kesalahan saat menyimpan';
+      const message = err instanceof Error ? err.message : 'An error occurred while saving.';
       setError(message);
       console.error(err);
     } finally {
@@ -157,12 +176,7 @@ export default function EditDocumentPage() {
   };
 
   if (status === 'loading' || loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 flex flex-col items-center justify-center gap-4">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
-        <p className="text-sm font-semibold text-gray-700">Memuat dokumen…</p>
-      </div>
-    );
+    return <WorkspaceLoadingState label="Loading document edit workspace..." />;
   }
 
   if (!session) {
@@ -171,70 +185,66 @@ export default function EditDocumentPage() {
 
   if (error && !document) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
-        <div className="max-w-3xl mx-auto py-16 px-6">
-          <div className="surface-card p-8 text-center space-y-4">
-            <h1 className="text-2xl font-semibold text-gray-900">Gagal Memuat Dokumen</h1>
-            <p className="text-sm text-gray-600">{error}</p>
-            <div className="flex items-center justify-center gap-3">
-              <Link href="/crewing/documents" className="action-pill">
-                ← Kembali ke Daftar
-              </Link>
-              <button
-                type="button"
-                onClick={() => {
-                  setLoading(true);
-                  setError(null);
-                  loadDocument();
-                }}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition"
-              >
-                Coba Lagi
-              </button>
-            </div>
+      <WorkspaceState
+        eyebrow="Document Update"
+        title="Document record could not be opened"
+        description={error}
+        tone="danger"
+        action={(
+          <div className="flex flex-wrap justify-center gap-3">
+            <Link href="/crewing/documents" className="inline-flex items-center rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-cyan-600 hover:text-cyan-800">
+              Return to Document Register
+            </Link>
+            <Button
+              type="button"
+              onClick={() => {
+                setLoading(true);
+                setError(null);
+                loadDocument();
+              }}
+            >
+              Reload Record
+            </Button>
           </div>
-        </div>
-      </div>
+        )}
+      />
     );
   }
 
   if (!document) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
-        <div className="max-w-3xl mx-auto py-16 px-6">
-          <div className="surface-card p-8 text-center space-y-3">
-            <h1 className="text-2xl font-semibold text-gray-900">Dokumen tidak ditemukan</h1>
-            <p className="text-sm text-gray-600">Dokumen yang Anda cari mungkin telah dihapus atau tidak available.</p>
-            <Link href="/crewing/documents" className="action-pill">
-              ← Kembali ke Daftar
-            </Link>
-          </div>
-        </div>
-      </div>
+      <WorkspaceState
+        eyebrow="Document Update"
+        title="Document record not available"
+        description="The requested document is no longer available in the active register. Return to document control before starting a new update."
+        tone="danger"
+        action={(
+          <Link href="/crewing/documents" className="inline-flex items-center rounded-xl bg-cyan-700 px-4 py-3 text-sm font-semibold text-white transition hover:bg-cyan-800">
+            Return to Document Register
+          </Link>
+        )}
+      />
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-sm font-semibold text-blue-600 uppercase">Edit Dokumen</p>
-            <h1 className="text-3xl font-bold text-gray-900 mt-1">
+    <div className="section-stack">
+      <section className="surface-card p-7">
+        <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+          <div className="max-w-4xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-blue-700">Edit Document</p>
+            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950">
               {getDocumentTypeLabel(document.docType)}
-            </h1>
-            <p className="text-sm text-gray-600 mt-2">Untuk {document.crew.fullName}</p>
+            </h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">Update controlled document data for {getCrewDisplayName(document.crew)}.</p>
           </div>
-          <div className="flex flex-wrap gap-3">
-            <Link href="/crewing/documents" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm font-semibold transition">
-              ← Batal
-            </Link>
-          </div>
+          <Link href="/crewing/documents" className="action-pill text-sm">
+            Back to documents
+          </Link>
         </div>
-      </header>
+      </section>
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <form onSubmit={handleSubmit} className="surface-card p-8 space-y-6">
+      <form onSubmit={handleSubmit} className="surface-card p-8 space-y-6">
           {error && (
             <div className="rounded-lg bg-red-50 border border-red-200 p-4">
               <p className="text-sm text-red-800">{error}</p>
@@ -242,82 +252,54 @@ export default function EditDocumentPage() {
           )}
 
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            {/* Document Type */}
-            <div>
-              <label htmlFor="docType" className="block text-sm font-medium text-gray-700 mb-2">
-                Jenis Dokumen <span className="text-red-500">*</span>
-              </label>
-              <select
+            <Select
                 id="docType"
                 name="docType"
+                label="Document Type"
                 value={formData.docType}
                 onChange={handleInputChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Pilih Jenis Dokumen</option>
-                {DOCUMENT_TYPES.map((docType) => (
-                  <option key={docType.value} value={docType.value}>
-                    {docType.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+                placeholder="Select document type"
+                options={DOCUMENT_TYPES.map((docType) => ({
+                  value: docType.value,
+                  label: docType.label,
+                }))}
+              />
 
-            {/* Document Number */}
-            <div>
-              <label htmlFor="docNumber" className="block text-sm font-medium text-gray-700 mb-2">
-                Nomor Dokumen <span className="text-red-500">*</span>
-              </label>
-              <input
+            <Input
                 id="docNumber"
-                type="text"
                 name="docNumber"
+                label="Document Number"
                 value={formData.docNumber}
                 onChange={handleInputChange}
                 required
-                placeholder="Masukkan nomor dokumen"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter document number"
               />
-            </div>
 
-            {/* Issue Date */}
-            <div>
-              <label htmlFor="issueDate" className="block text-sm font-medium text-gray-700 mb-2">
-                Tanggal Terbit <span className="text-red-500">*</span>
-              </label>
-              <input
+            <Input
                 id="issueDate"
-                type="date"
                 name="issueDate"
+                label="Issue Date"
+                type="date"
                 value={formData.issueDate}
                 onChange={handleInputChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-            </div>
 
-            {/* Expiry Date */}
-            <div>
-              <label htmlFor="expiryDate" className="block text-sm font-medium text-gray-700 mb-2">
-                Tanggal Kedaluwarsa <span className="text-red-500">*</span>
-              </label>
-              <input
+            <Input
                 id="expiryDate"
-                type="date"
                 name="expiryDate"
+                label="Expiry Date"
+                type="date"
                 value={formData.expiryDate}
                 onChange={handleInputChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-            </div>
           </div>
 
-          {/* Remarks */}
           <div>
-            <label htmlFor="remarks" className="block text-sm font-medium text-gray-700 mb-2">
-              Catatan / Keterangan
+            <label htmlFor="remarks" className="mb-2 block text-sm font-medium text-gray-700">
+              Remarks
             </label>
             <textarea
               id="remarks"
@@ -325,19 +307,18 @@ export default function EditDocumentPage() {
               value={formData.remarks}
               onChange={handleInputChange}
               rows={4}
-              placeholder="Masukkan catatan jika diperlukan"
+              placeholder="Enter remarks if needed"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
-          {/* File Upload */}
-          <div>
-            <label htmlFor="file" className="block text-sm font-medium text-gray-700 mb-2">
-              Berkas Dokumen (Opsional)
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <label htmlFor="file" className="mb-2 block text-sm font-medium text-gray-700">
+              Document File (Optional)
             </label>
             {document.fileUrl && (
-              <p className="text-xs text-gray-600 mb-2">
-                Berkas saat ini: <a href={document.fileUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Lihat berkas</a>
+              <p className="mb-2 text-xs text-gray-600">
+                Current file: <a href={document.fileUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Open file</a>
               </p>
             )}
             <input
@@ -350,27 +331,21 @@ export default function EditDocumentPage() {
             />
             {formData.file && (
               <p className="text-xs text-green-600 mt-2">
-                File yang dipilih: {formData.file.name}
+                Selected file: {formData.file.name}
               </p>
             )}
             <p className="text-xs text-gray-500 mt-2">Format: PDF, JPG, PNG, DOC, DOCX</p>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex gap-3 pt-6 border-t border-gray-200">
-            <button
-              type="submit"
-              disabled={saving}
-              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {saving ? 'Menyimpan...' : 'Simpan Perubahan'}
-            </button>
-            <Link href="/crewing/documents" className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold transition">
-              Batal
-            </Link>
+          <div className="flex flex-wrap gap-3 pt-6 border-t border-gray-200">
+            <Button type="submit" isLoading={saving}>
+              Save changes
+            </Button>
+            <Button type="button" variant="secondary" onClick={() => router.push('/crewing/documents')}>
+              Cancel
+            </Button>
           </div>
-        </form>
-      </main>
+      </form>
     </div>
   );
 }

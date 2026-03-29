@@ -9,6 +9,7 @@ import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { checkPermission, PermissionLevel } from "@/lib/permission-middleware";
+import { WorkspaceHero } from "@/components/layout/WorkspaceHero";
 import RiskListContent from "./RiskListContent";
 
 export const metadata: Metadata = {
@@ -45,27 +46,26 @@ export default async function RisksPage() {
   const canEdit = checkPermission(session, "quality", PermissionLevel.EDIT_ACCESS);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Risk Management</h1>
-            <p className="text-gray-600 mt-2">ISO 9001:2015 Clause 6.1 Risk Assessment & Treatment</p>
-          </div>
-          {canEdit && (
-            <Link
-              href="/hgqs/risks/new"
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-            >
-              + New Risk
-            </Link>
-          )}
-        </div>
-
-        {/* Content */}
+    <div className="section-stack">
+      <WorkspaceHero
+        eyebrow="Quality Workspace"
+        title="Risk Management"
+        subtitle="ISO 9001:2015 clause 6.1 risk assessment and treatment tracked in one structured quality workspace."
+        helperLinks={[
+          { href: "/quality/risks", label: "Risk Register" },
+          { href: "/hgqs/audits", label: "Audit Management" },
+          { href: "/nonconformity", label: "Non-Conformities" },
+        ]}
+        actions={canEdit ? (
+          <Link
+            href="/hgqs/risks/new"
+            className="rounded-full bg-cyan-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-800"
+          >
+            New Risk
+          </Link>
+        ) : null}
+      />
         <RiskListContent canEdit={canEdit} />
-      </div>
     </div>
   );
 }

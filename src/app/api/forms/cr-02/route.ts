@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import path from "path";
 import ExcelJS from "exceljs";
+import { ensureOfficeApiPathAccess } from "@/lib/office-api-access";
 
 const CR02_TEMPLATE_PATH = path.join(
   process.cwd(),
@@ -13,18 +14,14 @@ const CR02_TEMPLATE_PATH = path.join(
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Check permissions: only DIRECTOR, CDMO, ACCOUNTING can generate this AMBER form
-    const allowedRoles = ["DIRECTOR", "CDMO", "ACCOUNTING"];
-    const userRoles = session.user.roles || [];
-    if (!userRoles.some(role => allowedRoles.includes(role))) {
-      return NextResponse.json(
-        { error: "Insufficient permissions. Only DIRECTOR, CDMO, and ACCOUNTING can generate this form." },
-        { status: 403 }
-      );
+    const authError = ensureOfficeApiPathAccess(
+      session,
+      "/api/forms/cr-02",
+      "POST",
+      "Insufficient permissions to generate employment application forms"
+    );
+    if (authError) {
+      return authError;
     }
 
     const body = await request.json();

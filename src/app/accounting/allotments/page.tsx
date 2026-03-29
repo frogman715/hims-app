@@ -1,17 +1,35 @@
-'use client';
+"use client";
 
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { WorkspaceHero } from "@/components/layout/WorkspaceHero";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
+import { pushAppNotice } from "@/lib/app-notice";
+
+interface CrewOption {
+  id: string;
+  fullName: string;
+  rank: string;
+}
+
+interface ContractOption {
+  id: string;
+  crewId: string;
+  contractNumber: string;
+}
 
 interface Allotment {
-  id: number;
-  seafarerId: number;
+  id: string;
+  contractId: string;
+  contractNumber: string;
   amount: number;
-  bankDetails: string | null;
+  currency: string;
   seafarer: {
-    id: number;
+    id: string;
     name: string;
     rank: string;
   };
@@ -21,206 +39,239 @@ export default function Allotments() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [allotments, setAllotments] = useState<Allotment[]>([]);
+  const [crews, setCrews] = useState<CrewOption[]>([]);
+  const [contracts, setContracts] = useState<ContractOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
-    seafarerId: '',
-    amount: '',
-    bankDetails: '',
+    crewId: "",
+    contractId: "",
+    amount: "",
   });
 
   useEffect(() => {
     if (status === "loading") return;
     if (!session) {
       router.push("/auth/signin");
-    } else {
-      fetchAllotments();
+      return;
     }
+    void fetchData();
   }, [session, status, router]);
 
-  const fetchAllotments = async () => {
+  async function fetchData() {
     try {
-      const response = await fetch("/api/accounting/allotments");
-      if (response.ok) {
-        const data = await response.json();
-        setAllotments(data);
+      const [allotmentResponse, crewResponse, contractResponse] = await Promise.all([
+        fetch("/api/accounting/allotments"),
+        fetch("/api/crew?limit=1000"),
+        fetch("/api/contracts"),
+      ]);
+
+      if (allotmentResponse.ok) {
+        setAllotments(await allotmentResponse.json());
+      }
+      if (crewResponse.ok) {
+        const data = await crewResponse.json();
+        setCrews(data.crews || []);
+      }
+      if (contractResponse.ok) {
+        setContracts(await contractResponse.json());
       }
     } catch (error) {
       console.error("Error fetching allotments:", error);
     } finally {
       setLoading(false);
     }
-  };
+  }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  async function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
+
     try {
       const response = await fetch("/api/accounting/allotments", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          seafarerId: parseInt(formData.seafarerId),
-          amount: parseFloat(formData.amount),
-          bankDetails: formData.bankDetails,
+          crewId: formData.crewId,
+          contractId: formData.contractId || undefined,
+          amount: Number(formData.amount),
         }),
       });
 
-      if (response.ok) {
-        setShowForm(false);
-        setFormData({ seafarerId: '', amount: '', bankDetails: '' });
-        fetchAllotments();
+      if (!response.ok) {
+        throw new Error("Failed to save allotment");
       }
+
+      setShowForm(false);
+      setFormData({ crewId: "", contractId: "", amount: "" });
+      await fetchData();
     } catch (error) {
       console.error("Error creating allotment:", error);
+      pushAppNotice({
+        tone: "error",
+        title: "Allotment could not be saved",
+        message: "The home allotment record could not be saved.",
+      });
     }
-  };
+  }
 
   if (status === "loading" || loading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="section-stack">
+        <section className="surface-card flex min-h-[320px] items-center justify-center p-8">
+          <div className="text-center">
+            <div className="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-slate-200 border-t-cyan-700" />
+            <p className="mt-4 text-sm text-slate-600">Loading allotment register...</p>
+          </div>
+        </section>
+      </div>
+    );
   }
 
   if (!session) {
     return null;
   }
 
+  const linkedContracts = allotments.filter((allotment) => allotment.contractId).length;
+  const totalAllotment = allotments.reduce((sum, allotment) => sum + allotment.amount, 0);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      {/* Header */}
-      <header className="bg-white backdrop-blur-lg shadow-2xl border-b border-white/20">
-        <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
-                Salary Allotments
-              </h1>
-              <p className="text-lg text-gray-700 mt-2 font-medium">Manage seafarer salary allotments and bank details</p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Link
-                href="/accounting"
-                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
-              >
-                ← Back to Accounting
-              </Link>
-              <button
-                onClick={() => setShowForm(true)}
-                className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
-              >
-                + Add Allotment
+    <div className="section-stack">
+      <WorkspaceHero
+        eyebrow="Accounting Workspace"
+        title="Home Allotments"
+        subtitle="Maintain approved home allotment values against live sea contracts so payroll transfers, family remittance planning, and contract review stay aligned."
+        highlights={[
+          {
+            label: "Active Records",
+            value: allotments.length,
+            detail: "Crew allotment instructions currently active in the register.",
+          },
+          {
+            label: "Linked Contracts",
+            value: linkedContracts,
+            detail: "Entries already tied to a current contract reference.",
+          },
+          {
+            label: "Register Value",
+            value: `USD ${totalAllotment.toLocaleString("en-US", { minimumFractionDigits: 2 })}`,
+            detail: "Total allotment exposure captured in the current register.",
+          },
+        ]}
+        helperLinks={[
+          { href: "/accounting/salary", label: "Salary Desk" },
+          { href: "/contracts", label: "Contract Register" },
+          { href: "/crewing/assignments", label: "Assignment Desk" },
+        ]}
+        actions={(
+          <div className="flex items-center gap-3">
+            <Link href="/accounting/salary">
+              <Button variant="secondary" size="sm">Salary Desk</Button>
+            </Link>
+            <Button size="sm" onClick={() => setShowForm(true)}>Set Allotment</Button>
+          </div>
+        )}
+      />
+
+      <section className="surface-card space-y-6 p-6">
+        <div className="rounded-2xl border border-cyan-100 bg-cyan-50/80 p-5 text-sm leading-6 text-slate-700">
+          Keep allotment values aligned with the latest sea contract or payroll instruction so salary transfers remain traceable and current.
+        </div>
+
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="border-b border-slate-200 px-6 py-5">
+            <h2 className="text-xl font-semibold text-slate-900">Allotment Records</h2>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-slate-200">
+              <thead className="bg-slate-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Crew</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Contract</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Amount</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200 bg-white">
+                {allotments.map((allotment) => (
+                  <tr key={allotment.id} className="hover:bg-slate-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-slate-900">{allotment.seafarer.name}</div>
+                      <div className="text-sm text-slate-500">{allotment.seafarer.rank}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700">{allotment.contractNumber}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">
+                      {allotment.currency} {allotment.amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                    </td>
+                  </tr>
+                ))}
+                {allotments.length === 0 ? (
+                  <tr>
+                    <td colSpan={3} className="px-6 py-10 text-center text-sm text-slate-500">
+                      No allotment values found yet.
+                    </td>
+                  </tr>
+                ) : null}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      {showForm ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 px-4">
+          <div className="w-full max-w-xl rounded-3xl border border-slate-200 bg-white p-8 shadow-2xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h3 className="text-xl font-semibold text-slate-900">Set Home Allotment</h3>
+                <p className="mt-1 text-sm text-slate-600">Assign the approved allotment value to the selected crew record.</p>
+              </div>
+              <button type="button" className="text-sm font-medium text-slate-500 hover:text-slate-900" onClick={() => setShowForm(false)}>
+                Close
               </button>
             </div>
-          </div>
-        </div>
-      </header>
 
-      <main className="max-w-7xl mx-auto py-8 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          {/* Allotments Table */}
-          <div className="bg-white backdrop-blur-md rounded-2xl shadow-lg border border-white overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-300">
-              <h2 className="text-xl font-semibold text-gray-900">Salary Allotments</h2>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-300">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Seafarer
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Amount
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Bank Details
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {allotments.map((allotment) => (
-                    <tr key={allotment.id} className="hover:bg-gray-100">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{allotment.seafarer.name}</div>
-                        <div className="text-sm text-gray-500">{allotment.seafarer.rank}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        ${allotment.amount.toLocaleString()}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-900">
-                        {allotment.bankDetails || 'Not specified'}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </main>
+            <form onSubmit={handleSubmit} className="mt-6 space-y-5">
+              <Select
+                id="crewId"
+                name="crewId"
+                label="Crew"
+                required
+                value={formData.crewId}
+                onChange={(event) => setFormData((current) => ({ ...current, crewId: event.target.value, contractId: "" }))}
+                options={crews.map((crew) => ({ value: crew.id, label: `${crew.fullName} - ${crew.rank}` }))}
+                placeholder="Select crew"
+              />
 
-      {/* Add Allotment Form Modal */}
-      {showForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4">
-            <h3 className="text-xl font-extrabold text-gray-900 mb-6">Add Salary Allotment</h3>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
-                  Seafarer ID
-                </label>
-                <input
-                  type="number"
-                  required
-                  value={formData.seafarerId}
-                  onChange={(e) => setFormData({ ...formData, seafarerId: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
-                  Amount
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  required
-                  value={formData.amount}
-                  onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2 font-semibold">
-                  Bank Details
-                </label>
-                <textarea
-                  value={formData.bankDetails}
-                  onChange={(e) => setFormData({ ...formData, bankDetails: e.target.value })}
-                  placeholder="Bank name, account number, etc."
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:border-transparent"
-                />
-              </div>
-              <div className="flex space-x-3 pt-4">
-                <button
-                  type="submit"
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium transition-colors"
-                >
-                  Add Allotment
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowForm(false)}
-                  className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-2 px-4 rounded-lg font-medium transition-colors"
-                >
-                  Cancel
-                </button>
+              <Select
+                id="contractId"
+                name="contractId"
+                label="Contract"
+                value={formData.contractId}
+                onChange={(event) => setFormData((current) => ({ ...current, contractId: event.target.value }))}
+                options={contracts
+                  .filter((contract) => !formData.crewId || contract.crewId === formData.crewId)
+                  .map((contract) => ({ value: contract.id, label: contract.contractNumber }))}
+                placeholder="Latest sea contract"
+              />
+
+              <Input
+                id="amount"
+                name="amount"
+                type="number"
+                step="0.01"
+                label="Allotment Amount"
+                required
+                value={formData.amount}
+                onChange={(event) => setFormData((current) => ({ ...current, amount: event.target.value }))}
+              />
+
+              <div className="flex flex-col gap-3 border-t border-slate-200 pt-6 sm:flex-row sm:justify-end">
+                <Button type="button" variant="secondary" onClick={() => setShowForm(false)}>Cancel</Button>
+                <Button type="submit">Save Allotment</Button>
               </div>
             </form>
           </div>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

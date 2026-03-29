@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { WorkspaceHero } from "@/components/layout/WorkspaceHero";
+import { Button } from "@/components/ui/Button";
 
 interface ManpowerRequisitionSummary {
   id: string;
@@ -30,6 +32,12 @@ interface PurchaseOrderSummary {
   status: string;
   requestDate: string;
 }
+
+const MANAGEMENT_STATUS_LABELS: Record<string, string> = {
+  APPROVED: "Approved",
+  PENDING: "Pending Review",
+  RECEIVED: "Received",
+};
 
 export default function HRManagementPage() {
   const [activeTab, setActiveTab] = useState("REQUISITIONS");
@@ -80,121 +88,165 @@ export default function HRManagementPage() {
     fetchData();
   }, [fetchData]);
 
+  const moduleCards = [
+    {
+      key: "REQUISITIONS",
+      title: "Manpower Requisition",
+      description: "Form HCF-AD-25: staffing requests and vacancy approvals.",
+    },
+    {
+      key: "APPRAISALS",
+      title: "Performance Appraisal",
+      description: "Form HCF-AD-06: employee performance and recommendation records.",
+    },
+    {
+      key: "PURCHASES",
+      title: "Purchase Orders",
+      description: "Form HCF-AD-15: procurement support for office and operational needs.",
+    },
+  ] as const;
+
+  const requisitionPendingCount = requisitions.filter((item) => item.status === "PENDING").length;
+  const appraisalAverageScore = appraisals.length
+    ? (appraisals.reduce((sum, item) => sum + item.overallScore, 0) / appraisals.length).toFixed(1)
+    : "0.0";
+  const purchasePendingCount = purchases.filter((item) => item.status !== "RECEIVED").length;
+
   return (
-    <div className="min-h-screen bg-gray-100 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <nav className="flex mb-4" aria-label="Breadcrumb">
-          <ol className="inline-flex items-center space-x-1">
-            <li><Link href="/dashboard" className="text-gray-700 hover:text-blue-700">Dashboard</Link></li>
-            <li><span className="ml-1 text-gray-500">HR & Administration</span></li>
-          </ol>
-        </nav>
+    <div className="section-stack">
+      <WorkspaceHero
+        eyebrow="HR Management"
+        title="HR and administration management"
+        subtitle="Decision-driven workspace for manpower requisitions, appraisal records, and purchasing support references."
+        helperLinks={[
+          { href: "/hr", label: "HR Workspace" },
+          { href: "/dashboard", label: "Dashboard" },
+        ]}
+        highlights={[
+          { label: "Pending Requisitions", value: requisitionPendingCount, detail: "Staffing requests still waiting for review or release." },
+          { label: "Appraisal Average", value: appraisalAverageScore, detail: "Average score across loaded appraisal records." },
+          { label: "Open Purchases", value: purchasePendingCount, detail: "Purchasing items that are not yet fully received." },
+        ]}
+        actions={(
+          <Link href="/dashboard" className="inline-flex items-center rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-cyan-600 hover:text-cyan-800">
+            Dashboard
+          </Link>
+        )}
+      />
 
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">HR & Administration Management</h1>
-          <p className="text-gray-700 mt-1">HGQS Annex E - Human Resources, Administration & Purchasing</p>
+      <section className="surface-card space-y-8 p-6">
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1.7fr)_minmax(280px,0.9fr)]">
+          <div className="rounded-2xl border border-cyan-100 bg-cyan-50/80 p-5 text-sm text-slate-700">
+            <h2 className="text-base font-semibold text-slate-900">Procedure alignment</h2>
+            <p className="mt-2 leading-6">
+              Keep manpower requisitions, appraisal outputs, and purchasing support records aligned with the approved HR and administration procedure. Use this desk for internal review, follow-up, and reference.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+            <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Desk Focus</h2>
+            <ul className="mt-3 space-y-2 text-sm leading-6 text-slate-700">
+              <li>Track staffing requests and approval status.</li>
+              <li>Review appraisal outcomes and recommendations.</li>
+              <li>Monitor purchasing references for support services.</li>
+            </ul>
+          </div>
         </div>
 
-        {/* Module Cards */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
-          <button
-            onClick={() => setActiveTab("REQUISITIONS")}
-            className={`p-6 rounded-xl text-left transition-all ${
-              activeTab === "REQUISITIONS"
-                ? "bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg"
-                : "bg-white text-gray-800 border-2 border-gray-300 hover:border-blue-300"
-            }`}
-          >
-            <div className="text-4xl mb-3">👥</div>
-            <h3 className="text-xl font-extrabold mb-2">Manpower Requisition</h3>
-            <p className={`text-sm ${activeTab === "REQUISITIONS" ? "text-blue-100" : "text-gray-700"}`}>
-              Form HCF-AD-25: Request new employees
-            </p>
-          </button>
-
-          <button
-            onClick={() => setActiveTab("APPRAISALS")}
-            className={`p-6 rounded-xl text-left transition-all ${
-              activeTab === "APPRAISALS"
-                ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg"
-                : "bg-white text-gray-800 border-2 border-gray-300 hover:border-purple-300"
-            }`}
-          >
-            <div className="text-4xl mb-3">⭐</div>
-            <h3 className="text-xl font-extrabold mb-2">Performance Appraisal</h3>
-            <p className={`text-sm ${activeTab === "APPRAISALS" ? "text-purple-100" : "text-gray-700"}`}>
-              Form HCF-AD-06: Employee evaluations
-            </p>
-          </button>
-
-          <button
-            onClick={() => setActiveTab("PURCHASES")}
-            className={`p-6 rounded-xl text-left transition-all ${
-              activeTab === "PURCHASES"
-                ? "bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg"
-                : "bg-white text-gray-800 border-2 border-gray-300 hover:border-green-300"
-            }`}
-          >
-            <div className="text-4xl mb-3">🛒</div>
-            <h3 className="text-xl font-extrabold mb-2">Purchase Orders</h3>
-            <p className={`text-sm ${activeTab === "PURCHASES" ? "text-green-100" : "text-gray-700"}`}>
-              Form HCF-AD-15: Equipment & supplies
-            </p>
-          </button>
+        <div className="grid gap-3 md:grid-cols-3">
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <p className="text-sm font-semibold text-slate-900">1. Review active queue</p>
+            <p className="mt-2 text-sm text-slate-600">Start with items pending approval, recommendation, or procurement follow-up.</p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <p className="text-sm font-semibold text-slate-900">2. Use one desk at a time</p>
+            <p className="mt-2 text-sm text-slate-600">Switch by business function so staffing, appraisal, and purchase decisions do not mix.</p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <p className="text-sm font-semibold text-slate-900">3. Keep outcomes traceable</p>
+            <p className="mt-2 text-sm text-slate-600">Statuses and recommendations should stay readable for management review and audit follow-up.</p>
+          </div>
         </div>
 
-        {/* Content Area */}
-        <div className="bg-white rounded-xl shadow-lg p-6">
+        <div className="grid gap-4 lg:grid-cols-3">
+          {moduleCards.map((card) => {
+            const isActive = activeTab === card.key;
+            return (
+              <button
+                key={card.key}
+                type="button"
+                onClick={() => setActiveTab(card.key)}
+                className={`rounded-2xl border p-5 text-left transition ${
+                  isActive
+                    ? "border-cyan-700 bg-slate-900 text-white shadow-sm"
+                    : "border-slate-200 bg-white text-slate-900 hover:border-cyan-300 hover:bg-slate-50"
+                }`}
+              >
+                <p className={`text-xs font-semibold uppercase tracking-[0.18em] ${isActive ? "text-cyan-200" : "text-slate-500"}`}>
+                  {card.key}
+                </p>
+                <h3 className="mt-3 text-lg font-semibold">{card.title}</h3>
+                <p className={`mt-2 text-sm leading-6 ${isActive ? "text-slate-200" : "text-slate-600"}`}>
+                  {card.description}
+                </p>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           {loading ? (
-            <div className="flex justify-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <div className="flex min-h-[280px] items-center justify-center">
+              <div className="h-10 w-10 animate-spin rounded-full border-2 border-slate-200 border-t-cyan-700" />
             </div>
           ) : (
             <>
               {activeTab === "REQUISITIONS" && (
                 <div>
-                  <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-extrabold text-gray-900">Manpower Requisitions</h2>
-                    <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
-                      + New Requisition
-                    </button>
+                  <div className="mb-6 flex flex-col gap-4 border-b border-slate-200 pb-5 md:flex-row md:items-center md:justify-between">
+                    <div>
+                      <h2 className="text-2xl font-semibold text-slate-900">Manpower Requisitions</h2>
+                      <p className="mt-1 text-sm text-slate-600">
+                        Review staffing requests, headcount justification, and approval progress.
+                      </p>
+                    </div>
+                    <Button size="sm">New Requisition</Button>
                   </div>
                   {requisitions.length === 0 ? (
-                    <div className="text-center py-12">
-                      <div className="text-6xl mb-4">📋</div>
-                      <p className="text-gray-700">No requisitions found</p>
+                    <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-12 text-center">
+                      <p className="text-sm font-medium text-slate-700">No requisitions recorded.</p>
+                      <p className="mt-2 text-sm text-slate-500">Open a new request when a vacancy or replacement demand is approved.</p>
                     </div>
                   ) : (
-                    <div className="overflow-x-auto">
-                      <table className="w-full">
-                        <thead className="bg-gray-50">
+                    <div className="overflow-x-auto rounded-2xl border border-slate-200">
+                      <table className="w-full min-w-[720px]">
+                        <thead className="bg-slate-50">
                           <tr>
-                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Form No.</th>
-                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Position</th>
-                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Department</th>
-                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Vacancies</th>
-                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
-                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Actions</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Form No.</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Position</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Department</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Vacancies</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Status</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Actions</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-200">
+                        <tbody className="divide-y divide-slate-200">
                           {requisitions.map((req) => (
-                            <tr key={req.id} className="hover:bg-gray-100">
-                              <td className="px-4 py-3 text-sm text-gray-900">{req.formNumber}</td>
-                              <td className="px-4 py-3 text-sm font-medium text-gray-900">{req.position}</td>
-                              <td className="px-4 py-3 text-sm text-gray-700">{req.department}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{req.numberOfVacancy}</td>
+                            <tr key={req.id} className="hover:bg-slate-50">
+                              <td className="px-4 py-3 text-sm text-slate-700">{req.formNumber}</td>
+                              <td className="px-4 py-3 text-sm font-medium text-slate-900">{req.position}</td>
+                              <td className="px-4 py-3 text-sm text-slate-700">{req.department}</td>
+                              <td className="px-4 py-3 text-sm text-slate-900">{req.numberOfVacancy}</td>
                               <td className="px-4 py-3">
-                                <span className={`px-4 py-2 text-xs font-semibold rounded-full ${
-                                  req.status === "APPROVED" ? "bg-green-100 text-green-800" :
-                                  req.status === "PENDING" ? "bg-yellow-100 text-yellow-800" :
-                                  "bg-gray-100 text-gray-800"
+                                <span className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                                  req.status === "APPROVED" ? "bg-emerald-100 text-emerald-700" :
+                                  req.status === "PENDING" ? "bg-amber-100 text-amber-700" :
+                                  "bg-slate-100 text-slate-700"
                                 }`}>
-                                  {req.status}
+                                  {MANAGEMENT_STATUS_LABELS[req.status] ?? req.status}
                                 </span>
                               </td>
                               <td className="px-4 py-3">
-                                <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">View</button>
+                                <button type="button" className="text-sm font-medium text-cyan-700 hover:text-cyan-900">View</button>
                               </td>
                             </tr>
                           ))}
@@ -207,33 +259,36 @@ export default function HRManagementPage() {
 
               {activeTab === "APPRAISALS" && (
                 <div>
-                  <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-extrabold text-gray-900">Performance Appraisals</h2>
-                    <button className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium">
-                      + New Appraisal
-                    </button>
+                  <div className="mb-6 flex flex-col gap-4 border-b border-slate-200 pb-5 md:flex-row md:items-center md:justify-between">
+                    <div>
+                      <h2 className="text-2xl font-semibold text-slate-900">Performance Appraisals</h2>
+                      <p className="mt-1 text-sm text-slate-600">
+                        Review scoring outcomes, department context, and appraisal recommendations.
+                      </p>
+                    </div>
+                    <Button size="sm">New Appraisal</Button>
                   </div>
                   {appraisals.length === 0 ? (
-                    <div className="text-center py-12">
-                      <div className="text-6xl mb-4">⭐</div>
-                      <p className="text-gray-700">No appraisals found</p>
+                    <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-12 text-center">
+                      <p className="text-sm font-medium text-slate-700">No appraisal records found.</p>
+                      <p className="mt-2 text-sm text-slate-500">Create an appraisal record after the formal performance review cycle is completed.</p>
                     </div>
                   ) : (
                     <div className="space-y-6">
                       {appraisals.map((appraisal) => (
-                        <div key={appraisal.id} className="border rounded-lg p-4">
-                          <div className="flex justify-between">
+                        <div key={appraisal.id} className="rounded-2xl border border-slate-200 p-5">
+                          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                             <div>
-                              <h3 className="font-bold text-gray-900">{appraisal.employeeName}</h3>
-                              <p className="text-sm text-gray-800">{appraisal.position} - {appraisal.department}</p>
-                              <p className="text-sm text-gray-500">Period: {appraisal.appraisalPeriod}</p>
+                              <h3 className="font-semibold text-slate-900">{appraisal.employeeName}</h3>
+                              <p className="mt-1 text-sm text-slate-700">{appraisal.position} - {appraisal.department}</p>
+                              <p className="mt-1 text-sm text-slate-500">Period: {appraisal.appraisalPeriod}</p>
                             </div>
-                            <div className="text-right">
-                              <div className="text-2xl font-extrabold text-blue-600">{appraisal.overallScore}/5.0</div>
-                              <span className={`px-4 py-2 text-xs font-semibold rounded-full ${
-                                appraisal.recommendation === "EXCELLENT_PROMOTE" ? "bg-green-100 text-green-800" :
-                                appraisal.recommendation === "GOOD_MAINTAIN" ? "bg-blue-100 text-blue-800" :
-                                "bg-yellow-100 text-yellow-800"
+                            <div className="text-left md:text-right">
+                              <div className="text-2xl font-bold text-cyan-700">{appraisal.overallScore}/5.0</div>
+                              <span className={`mt-2 inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
+                                appraisal.recommendation === "EXCELLENT_PROMOTE" ? "bg-emerald-100 text-emerald-700" :
+                                appraisal.recommendation === "GOOD_MAINTAIN" ? "bg-cyan-100 text-cyan-700" :
+                                "bg-amber-100 text-amber-700"
                               }`}>
                                 {appraisal.recommendation.replace(/_/g, " ")}
                               </span>
@@ -248,45 +303,48 @@ export default function HRManagementPage() {
 
               {activeTab === "PURCHASES" && (
                 <div>
-                  <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-extrabold text-gray-900">Purchase Orders</h2>
-                    <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium">
-                      + New Purchase Order
-                    </button>
+                  <div className="mb-6 flex flex-col gap-4 border-b border-slate-200 pb-5 md:flex-row md:items-center md:justify-between">
+                    <div>
+                      <h2 className="text-2xl font-semibold text-slate-900">Purchase Orders</h2>
+                      <p className="mt-1 text-sm text-slate-600">
+                        Monitor purchasing references, suppliers, and request status for administration support.
+                      </p>
+                    </div>
+                    <Button size="sm">New Purchase Order</Button>
                   </div>
                   {purchases.length === 0 ? (
-                    <div className="text-center py-12">
-                      <div className="text-6xl mb-4">🛒</div>
-                      <p className="text-gray-700">No purchase orders found</p>
+                    <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-12 text-center">
+                      <p className="text-sm font-medium text-slate-700">No purchase orders recorded.</p>
+                      <p className="mt-2 text-sm text-slate-500">Add a purchasing record once the internal request is approved for procurement follow-up.</p>
                     </div>
                   ) : (
-                    <div className="overflow-x-auto">
-                      <table className="w-full">
-                        <thead className="bg-gray-50">
+                    <div className="overflow-x-auto rounded-2xl border border-slate-200">
+                      <table className="w-full min-w-[720px]">
+                        <thead className="bg-slate-50">
                           <tr>
-                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">PO Number</th>
-                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Supplier</th>
-                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Amount</th>
-                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
-                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Date</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">PO Number</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Supplier</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Amount</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Status</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Date</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-200">
+                        <tbody className="divide-y divide-slate-200">
                           {purchases.map((po) => (
-                            <tr key={po.id} className="hover:bg-gray-100">
-                              <td className="px-4 py-3 text-sm font-medium text-gray-900">{po.poNumber}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{po.supplierName}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">${po.totalAmount.toLocaleString()}</td>
+                            <tr key={po.id} className="hover:bg-slate-50">
+                              <td className="px-4 py-3 text-sm font-medium text-slate-900">{po.poNumber}</td>
+                              <td className="px-4 py-3 text-sm text-slate-700">{po.supplierName}</td>
+                              <td className="px-4 py-3 text-sm text-slate-900">${po.totalAmount.toLocaleString()}</td>
                               <td className="px-4 py-3">
-                                <span className={`px-4 py-2 text-xs font-semibold rounded-full ${
-                                  po.status === "RECEIVED" ? "bg-green-100 text-green-800" :
-                                  po.status === "APPROVED" ? "bg-blue-100 text-blue-800" :
-                                  "bg-yellow-100 text-yellow-800"
+                                <span className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                                  po.status === "RECEIVED" ? "bg-emerald-100 text-emerald-700" :
+                                  po.status === "APPROVED" ? "bg-cyan-100 text-cyan-700" :
+                                  "bg-amber-100 text-amber-700"
                                 }`}>
-                                  {po.status}
+                                  {MANAGEMENT_STATUS_LABELS[po.status] ?? po.status}
                                 </span>
                               </td>
-                              <td className="px-4 py-3 text-sm text-gray-700">
+                              <td className="px-4 py-3 text-sm text-slate-700">
                                 {new Date(po.requestDate).toLocaleDateString()}
                               </td>
                             </tr>
@@ -301,10 +359,10 @@ export default function HRManagementPage() {
           )}
         </div>
 
-        <div className="mt-12 text-center text-gray-500 text-sm">
+        <div className="border-t border-slate-200 pt-6 text-center text-sm text-slate-500">
           <p>HGQS Procedures Manual - Annex E | HR, Administration & Purchasing Procedures</p>
         </div>
-      </div>
+      </section>
     </div>
   );
 }

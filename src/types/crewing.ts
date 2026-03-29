@@ -146,16 +146,27 @@ export interface ModuleCategory {
 // ZOD VALIDATION SCHEMAS
 // ===========================
 
-export const createSeafarerSchema = z.object({
-  fullName: z.string().min(2, "Full name must be at least 2 characters"),
-  rank: z.string().min(2, "Rank is required"),
-  dateOfBirth: z.string().optional().nullable(),
-  placeOfBirth: z.string().optional().nullable(),
-  nationality: z.string().min(2, "Nationality is required"),
+const optionalDateField = (label: string) =>
+  z
+    .string()
+    .trim()
+    .optional()
+    .nullable()
+    .refine((value) => !value || !Number.isNaN(new Date(value).getTime()), {
+      message: `${label} is invalid`,
+    });
+
+const seafarerSchemaFields = {
+  fullName: z.string().trim().min(2, "Full name must be at least 2 characters"),
+  rank: z.string().trim().min(2, "Rank is required"),
+  crewStatus: z.enum(["AVAILABLE", "ON_BOARD", "STANDBY", "MEDICAL", "DOCUMENT_ISSUE"]).optional(),
+  dateOfBirth: optionalDateField("Date of birth"),
+  placeOfBirth: z.string().trim().optional().nullable(),
+  nationality: z.string().trim().min(2, "Nationality is required"),
   passportNumber: z.string().optional().nullable(),
-  passportExpiry: z.string().optional().nullable(),
+  passportExpiry: optionalDateField("Passport expiry"),
   seamanBookNumber: z.string().optional().nullable(),
-  seamanBookExpiry: z.string().optional().nullable(),
+  seamanBookExpiry: optionalDateField("Seaman book expiry"),
   phone: z.string().optional().nullable(),
   email: z.string().email("Invalid email").optional().nullable().or(z.literal("")),
   address: z.string().optional().nullable(),
@@ -168,12 +179,111 @@ export const createSeafarerSchema = z.object({
   coverallSize: z.string().optional().nullable(),
   shoeSize: z.string().optional().nullable(),
   waistSize: z.string().optional().nullable(),
-});
+};
+
+function applySeafarerRefinements<
+  TSchema extends z.ZodObject<Record<string, z.ZodTypeAny>>
+>(schema: TSchema) {
+  return schema.superRefine((data, ctx) => {
+  const payload = data as {
+    dateOfBirth?: string | null;
+    emergencyContactName?: string | null;
+    emergencyContactPhone?: string | null;
+  };
+
+  if (payload.dateOfBirth) {
+    const dateOfBirth = new Date(payload.dateOfBirth);
+    if (dateOfBirth > new Date()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Date of birth cannot be in the future",
+        path: ["dateOfBirth"],
+      });
+    }
+  }
+
+  const emergencyContactName = payload.emergencyContactName?.trim();
+  const emergencyContactPhone = payload.emergencyContactPhone?.trim();
+
+  if (emergencyContactName && !emergencyContactPhone) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Emergency contact phone is required when name is provided",
+      path: ["emergencyContactPhone"],
+    });
+  }
+
+  if (emergencyContactPhone && !emergencyContactName) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Emergency contact name is required when phone is provided",
+      path: ["emergencyContactName"],
+    });
+  }
+  });
+}
+
+export const createSeafarerSchema = applySeafarerRefinements(z.object(seafarerSchemaFields));
 
 export type CreateSeafarerInput = z.infer<typeof createSeafarerSchema>;
 
-export const updateSeafarerSchema = createSeafarerSchema.partial();
+export const updateSeafarerSchema = applySeafarerRefinements(z.object(seafarerSchemaFields).partial());
 export type UpdateSeafarerInput = z.infer<typeof updateSeafarerSchema>;
+
+export const createSeaServiceHistorySchema = z
+  .object({
+    vesselName: z.string().trim().min(2, "Vessel name is required"),
+    companyName: z.string().trim().optional().nullable(),
+    vesselType: z.string().trim().optional().nullable(),
+    grt: z.number().int().nonnegative().optional().nullable(),
+    engineOutput: z.string().trim().optional().nullable(),
+    flag: z.string().trim().optional().nullable(),
+    rank: z.string().trim().min(2, "Rank is required"),
+    signOnDate: z.string().min(1, "Sign-on date is required"),
+    signOffDate: z.string().optional().nullable(),
+    status: z.enum(["COMPLETED", "ONGOING", "TERMINATED"]).default("COMPLETED"),
+    sourceDocumentType: z.string().trim().optional().nullable(),
+    remarks: z.string().trim().optional().nullable(),
+  })
+  .superRefine((data, ctx) => {
+    const signOnDate = new Date(data.signOnDate);
+    if (Number.isNaN(signOnDate.getTime())) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Sign-on date is invalid",
+        path: ["signOnDate"],
+      });
+    }
+
+    if (data.signOffDate) {
+      const signOffDate = new Date(data.signOffDate);
+      if (Number.isNaN(signOffDate.getTime())) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Sign-off date is invalid",
+          path: ["signOffDate"],
+        });
+      }
+
+      if (!Number.isNaN(signOnDate.getTime()) && !Number.isNaN(signOffDate.getTime()) && signOffDate < signOnDate) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Sign-off date cannot be before sign-on date",
+          path: ["signOffDate"],
+        });
+      }
+    }
+
+    if (data.status !== "ONGOING" && !data.signOffDate) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Sign-off date is required unless status is ongoing",
+        path: ["signOffDate"],
+      });
+    }
+  });
+
+export type CreateSeaServiceHistoryInput = z.infer<typeof createSeaServiceHistorySchema>;
 
 export const createApplicationSchema = z.object({
   crewId: z.string().min(1, "Crew ID is required"),
@@ -217,7 +327,7 @@ export type UpdateAssignmentInput = z.infer<typeof updateAssignmentSchema>;
 export const APPLICATION_STATE_TRANSITIONS: Record<string, string[]> = {
   RECEIVED: ["REVIEWING", "REJECTED"],
   REVIEWING: ["INTERVIEW", "REJECTED", "CANCELLED"],
-  INTERVIEW: ["PASSED", "FAILED", "CANCELLED"],
+  INTERVIEW: ["PASSED", "REJECTED", "CANCELLED"],
   PASSED: ["OFFERED", "REJECTED"],
   OFFERED: ["ACCEPTED", "REJECTED", "CANCELLED"],
   ACCEPTED: [],

@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { WorkspaceHero } from '@/components/layout/WorkspaceHero';
+import { Button } from '@/components/ui/Button';
 
 interface NationalHoliday {
   id: string;
@@ -18,6 +20,8 @@ export default function NationalHolidaysPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingHoliday, setEditingHoliday] = useState<NationalHoliday | null>(null);
+  const [feedback, setFeedback] = useState<{ tone: 'success' | 'danger'; message: string } | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     country: '',
     holidayName: '',
@@ -75,13 +79,17 @@ export default function NationalHolidaysPage() {
         });
         setShowForm(false);
         setEditingHoliday(null);
+        setFeedback({
+          tone: 'success',
+          message: editingHoliday ? 'Holiday reference updated successfully.' : 'Holiday reference registered successfully.',
+        });
         fetchHolidays();
       } else {
-        alert(`Error ${editingHoliday ? 'updating' : 'creating'} national holiday`);
+        setFeedback({ tone: 'danger', message: editingHoliday ? 'Holiday reference update failed.' : 'Holiday reference registration failed.' });
       }
     } catch (error) {
       console.error('Error:', error);
-      alert(`Error ${editingHoliday ? 'updating' : 'creating'} national holiday`);
+      setFeedback({ tone: 'danger', message: editingHoliday ? 'Holiday reference update failed.' : 'Holiday reference registration failed.' });
     }
   };
 
@@ -99,21 +107,21 @@ export default function NationalHolidaysPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this national holiday?')) return;
-
     try {
       const response = await fetch(`/api/national-holidays/${id}`, {
         method: 'DELETE',
       });
 
       if (response.ok) {
+        setPendingDeleteId(null);
+        setFeedback({ tone: 'success', message: 'Holiday reference removed from the register.' });
         fetchHolidays();
       } else {
-        alert('Error deleting national holiday');
+        setFeedback({ tone: 'danger', message: 'Holiday reference could not be removed.' });
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('Error deleting national holiday');
+      setFeedback({ tone: 'danger', message: 'Holiday reference could not be removed.' });
     }
   };
 
@@ -138,40 +146,77 @@ export default function NationalHolidaysPage() {
     });
   };
 
+  const recurringCount = holidays.filter((holiday) => holiday.isRecurring).length;
+  const oneTimeCount = holidays.length - recurringCount;
+  const countriesCovered = new Set(holidays.map((holiday) => holiday.country)).size;
+  const formTitle = editingHoliday ? 'Update Holiday Reference' : 'Register Holiday Reference';
+  const formIntro = editingHoliday
+    ? 'Adjust the holiday only when the official date or coverage rule has changed.'
+    : 'Create one controlled holiday reference so payroll and planning teams can rely on the same office calendar.';
+  const formSteps = [
+    {
+      label: 'Step 1',
+      title: 'Select the country scope',
+      detail: 'Choose the country calendar that the payroll or planning rule should follow.',
+    },
+    {
+      label: 'Step 2',
+      title: 'Record the official holiday',
+      detail: 'Use the recognized holiday name and the exact calendar date from the official source.',
+    },
+    {
+      label: 'Step 3',
+      title: 'Mark recurrence correctly',
+      detail: 'Use recurring only when the holiday repeats annually on the same date.',
+    },
+  ];
+
   return (
-    <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => router.push('/dashboard')}
-              className="flex items-center gap-2 bg-gray-500 hover:bg-gray-600 text-white font-semibold px-4 py-2 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              Back
-            </button>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">National Holidays Management</h1>
-              <p className="mt-2 text-gray-700">Manage national holidays for payroll and scheduling</p>
-            </div>
-          </div>
-          <button
-            onClick={() => setShowForm(!showForm)}
-            className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105"
-          >
-            {showForm ? 'Cancel' : '+ Add National Holiday'}
-          </button>
+    <div className="section-stack">
+      <WorkspaceHero
+        eyebrow="Reference Workspace"
+        title="National Holidays Management"
+        subtitle="Maintain country holiday references for payroll, planning, scheduling, and contract administration without forcing teams to cross-check outside the system."
+        highlights={[
+          { label: 'Holiday Records', value: holidays.length, detail: 'Holiday references currently available in the register.' },
+          { label: 'Recurring Rules', value: recurringCount, detail: 'Annual recurring holidays available for ongoing payroll logic.' },
+          { label: 'One-Time Entries', value: oneTimeCount, detail: 'Single-year holiday exceptions requiring date-specific handling.' },
+          { label: 'Countries Covered', value: countriesCovered, detail: 'Distinct country calendars currently represented.' },
+        ]}
+        helperLinks={[
+          { href: '/accounting/salary', label: 'Salary Desk' },
+          { href: '/hr', label: 'HR Workspace' },
+          { href: '/contracts', label: 'Contract Register' },
+        ]}
+        actions={(
+          <>
+            <Button variant="secondary" size="sm" onClick={() => router.push('/dashboard')}>Dashboard</Button>
+            <Button size="sm" onClick={() => setShowForm(!showForm)}>{showForm ? 'Close Intake Form' : 'Register Holiday Reference'}</Button>
+          </>
+        )}
+      />
+
+      {feedback ? (
+        <div className={`rounded-2xl border px-4 py-3 text-sm ${feedback.tone === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-rose-200 bg-rose-50 text-rose-800'}`}>
+          {feedback.message}
         </div>
-      </div>
+      ) : null}
 
       {/* Add/Edit Form */}
       {showForm && (
-        <div className="bg-gradient-to-r from-white to-purple-50 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-300 p-8 mb-8">
+        <div className="surface-card space-y-8 p-8">
           <div className="mb-8">
-            <h2 className="text-2xl font-extrabold text-gray-900 mb-2">{editingHoliday ? 'Edit National Holiday' : 'Add New National Holiday'}</h2>
-            <p className="text-gray-700">Add holidays for payroll calculations and crew scheduling</p>
+            <h2 className="mb-2 text-2xl font-extrabold text-gray-900">{formTitle}</h2>
+            <p className="text-gray-700">{formIntro}</p>
+          </div>
+          <div className="grid gap-4 md:grid-cols-3">
+            {formSteps.map((item) => (
+              <div key={item.label} className="rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-4">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">{item.label}</p>
+                <p className="mt-2 text-base font-semibold text-slate-950">{item.title}</p>
+                <p className="mt-1 text-sm leading-6 text-slate-600">{item.detail}</p>
+              </div>
+            ))}
           </div>
           <form onSubmit={handleSubmit} className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -281,14 +326,14 @@ export default function NationalHolidaysPage() {
                 type="submit"
                 className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-semibold px-8 py-3 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105"
               >
-                {editingHoliday ? 'Update Holiday' : 'Save National Holiday'}
+                {editingHoliday ? 'Save Holiday Update' : 'Register Holiday'}
               </button>
               <button
                 type="button"
                 onClick={handleCancel}
                 className="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-semibold px-8 py-3 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105"
               >
-                Cancel
+                Close Without Saving
               </button>
             </div>
           </form>
@@ -296,10 +341,25 @@ export default function NationalHolidaysPage() {
       )}
 
       {/* National Holidays List */}
-      <div className="bg-gradient-to-r from-white to-gray-50 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-300 overflow-hidden">
+      <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
         <div className="px-8 py-6 border-b border-gray-300">
           <h2 className="text-xl font-extrabold text-gray-900">National Holidays</h2>
         </div>
+
+        {pendingDeleteId ? (
+          <div className="border-b border-rose-200 bg-rose-50 px-8 py-4">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="text-sm font-semibold text-rose-900">Remove this holiday reference?</p>
+                <p className="mt-1 text-sm text-rose-800">Use removal only when the holiday was entered incorrectly and should not remain in the office calendar.</p>
+              </div>
+              <div className="flex gap-3">
+                <Button type="button" variant="secondary" size="sm" onClick={() => setPendingDeleteId(null)}>Keep Record</Button>
+                <Button type="button" variant="danger" size="sm" onClick={() => handleDelete(pendingDeleteId)}>Confirm Removal</Button>
+              </div>
+            </div>
+          </div>
+        ) : null}
 
         {isLoading ? (
           <div className="p-8 text-center">
@@ -308,7 +368,7 @@ export default function NationalHolidaysPage() {
           </div>
         ) : holidays.length === 0 ? (
           <div className="p-8 text-center">
-            <p className="text-gray-700">No national holidays found. Add your first holiday above.</p>
+            <p className="text-gray-700">No holiday references are registered yet. Add one official holiday so payroll, scheduling, and contract desks can use the same calendar basis.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -357,7 +417,7 @@ export default function NationalHolidaysPage() {
                         Edit
                       </button>
                       <button
-                        onClick={() => handleDelete(holiday.id)}
+                        onClick={() => setPendingDeleteId(holiday.id)}
                         className="text-red-600 hover:text-red-900 font-semibold"
                       >
                         Delete

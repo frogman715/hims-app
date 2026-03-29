@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function ChangePasswordPage() {
   const router = useRouter();
@@ -107,6 +108,13 @@ export default function ChangePasswordPage() {
           >
             {isSubmitting ? "Updating..." : "Update password"}
           </button>
+
+          <Link
+            href="/dashboard"
+            className="block text-center text-sm font-medium text-slate-500 transition hover:text-slate-900"
+          >
+            Return to dashboard
+          </Link>
         </form>
       </div>
     </div>

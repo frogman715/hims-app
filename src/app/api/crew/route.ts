@@ -3,12 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { withPermission } from "@/lib/api-middleware";
 import { PermissionLevel } from "@/lib/permission-middleware";
 import { handleApiError, ApiError } from "@/lib/error-handler";
-enum CrewStatus {
-  ACTIVE = "ACTIVE",
-  INACTIVE = "INACTIVE",
-  RETIRED = "RETIRED",
-  DECEASED = "DECEASED",
-}
+import { createCrewWithGeneratedCode } from "@/lib/crew-ops";
 
 interface CreateCrewPayload {
   fullName: string;
@@ -52,12 +47,8 @@ export const GET = withPermission(
 
       const where: Record<string, unknown> = {};
 
-      if (
-        status &&
-        status !== "all" &&
-        Object.values(CrewStatus).includes(status as CrewStatus)
-      ) {
-        where.status = status as CrewStatus;
+      if (status && status !== "all") {
+        where.status = status;
       }
 
       if (search) {
@@ -122,16 +113,16 @@ export const POST = withPermission(
         throw new ApiError(400, "Invalid crew payload", "VALIDATION_ERROR");
       }
 
-      const crew = await prisma.crew.create({
-        data: {
-          fullName: payload.fullName,
-          rank: payload.rank,
-          phone: payload.phone ?? null,
-          email: payload.email ?? null,
-        },
+      const createdCrew = await createCrewWithGeneratedCode(prisma.crew, {
+        fullName: payload.fullName,
+        rank: payload.rank,
+        phone: payload.phone ?? null,
+        email: payload.email ?? null,
+        crewStatus: "AVAILABLE",
+        status: "STANDBY",
       });
 
-      return NextResponse.json(crew, { status: 201 });
+      return NextResponse.json(createdCrew, { status: 201 });
     } catch (error) {
       return handleApiError(error);
     }

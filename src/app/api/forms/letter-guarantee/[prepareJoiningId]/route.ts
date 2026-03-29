@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { checkPermission, PermissionLevel } from "@/lib/permission-middleware";
 import { handleApiError } from "@/lib/error-handler";
+import { ensureOfficeApiPathAccess } from "@/lib/office-api-access";
 
 interface LetterGuaranteeHandlingAgent {
   name: string;
@@ -52,12 +52,13 @@ export async function GET(
   const { prepareJoiningId } = await context.params;
   try {
     const session = await getServerSession(authOptions);
-    if (!checkPermission(session, "crewing", PermissionLevel.VIEW_ACCESS)) {
-      return NextResponse.json(
-        { error: "Insufficient permissions" },
-        { status: 403 }
-      );
-    }
+    const authError = ensureOfficeApiPathAccess(
+      session,
+      `/api/forms/letter-guarantee/${prepareJoiningId}`,
+      "GET",
+      "Insufficient permissions to view Letter of Guarantee"
+    );
+    if (authError) return authError;
 
     const prepareJoining = await prisma.prepareJoining.findUnique({
       where: { id: prepareJoiningId },
@@ -383,12 +384,13 @@ export async function POST(
   try {
     const { prepareJoiningId } = await context.params;
     const session = await getServerSession(authOptions);
-    if (!checkPermission(session, "crewing", PermissionLevel.EDIT_ACCESS)) {
-      return NextResponse.json(
-        { error: "Insufficient permissions" },
-        { status: 403 }
-      );
-    }
+    const authError = ensureOfficeApiPathAccess(
+      session,
+      `/api/forms/letter-guarantee/${prepareJoiningId}`,
+      "POST",
+      "Insufficient permissions to create Letter of Guarantee"
+    );
+    if (authError) return authError;
 
     const body = await req.json();
     const { formData } = body as { formData?: unknown };

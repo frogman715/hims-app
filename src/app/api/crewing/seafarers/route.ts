@@ -5,6 +5,19 @@ import { PermissionLevel } from "@/lib/permission-middleware";
 import { handleApiError, ApiError, validatePagination } from "@/lib/error-handler";
 import { createSeafarerSchema } from "@/types/crewing";
 import type { Prisma } from "@prisma/client";
+import { createCrewWithGeneratedCode, normalizeCrewOperationalStatus } from "@/lib/crew-ops";
+import { getAbsolutePath } from "@/lib/upload-path";
+import fs from "fs";
+
+function getStablePhotoUrl(photoUrl: string | null) {
+  if (!photoUrl?.startsWith("/api/files/")) {
+    return photoUrl;
+  }
+
+  const relativePath = photoUrl.replace("/api/files/", "");
+  const absolutePath = getAbsolutePath(relativePath);
+  return fs.existsSync(absolutePath) ? photoUrl : null;
+}
 
 /**
  * GET /api/crewing/seafarers
@@ -25,7 +38,15 @@ export const GET = withPermission(
         searchParams.get("offset") || undefined
       );
 
-      const where: Record<string, unknown> = {};
+      const where: Record<string, unknown> = {
+        recruitments: {
+          none: {
+            status: {
+              in: ["APPLICANT", "SCREENING", "INTERVIEW", "SELECTED", "APPROVED", "ON_HOLD", "WITHDRAWN", "REJECTED"],
+            },
+          },
+        },
+      };
       
       if (status && status !== "all") {
         where.status = status;
@@ -70,7 +91,10 @@ export const GET = withPermission(
       ]);
 
       return NextResponse.json({
-        data: seafarers,
+        data: seafarers.map((seafarer) => ({
+          ...seafarer,
+          photoUrl: getStablePhotoUrl(seafarer.photoUrl ?? null),
+        })),
         pagination: {
           total,
           limit,
@@ -91,7 +115,7 @@ export const GET = withPermission(
 export const POST = withPermission(
   "crew",
   PermissionLevel.EDIT_ACCESS,
-  async (req: NextRequest) => {
+  async (req: NextRequest, session) => {
     try {
       const body = await req.json();
       
@@ -130,17 +154,22 @@ export const POST = withPermission(
         seamanBookNumber: data.seamanBookNumber || null,
         placeOfBirth: data.placeOfBirth || null,
         status: "STANDBY",
+        crewStatus: normalizeCrewOperationalStatus(data.crewStatus),
         dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth) : null,
         passportExpiry: data.passportExpiry ? new Date(data.passportExpiry) : null,
         seamanBookExpiry: data.seamanBookExpiry ? new Date(data.seamanBookExpiry) : null,
       };
 
-      const seafarer = await prisma.crew.create({
-        data: seafarerData,
-      });
+      const seafarer = await createCrewWithGeneratedCode(prisma.crew, seafarerData);
 
       return NextResponse.json(seafarer, { status: 201 });
     } catch (error) {
+      console.error("[api/crewing/seafarers][POST] save failed", {
+        actorUserId: session.user.id,
+        actorRole: session.user.role,
+        error: error instanceof Error ? error.message : String(error),
+        timestamp: new Date().toISOString(),
+      });
       return handleApiError(error);
     }
   }

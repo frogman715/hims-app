@@ -5,6 +5,8 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Plus, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
+import { WorkspaceHero } from '@/components/layout/WorkspaceHero';
+import { StatusBadge } from '@/components/ui/StatusBadge';
 
 interface NonConformity {
   id: string;
@@ -69,39 +71,19 @@ export default function NonConformityPage() {
     }
   }, [status, fetchNonconformities]);
 
-  const getSeverityColor = (severity: string) => {
-    switch (severity?.toUpperCase()) {
-      case 'CRITICAL':
-        return 'bg-red-100 text-red-800';
-      case 'MAJOR':
-        return 'bg-orange-100 text-orange-800';
-      case 'MINOR':
-        return 'bg-yellow-100 text-yellow-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status?.toUpperCase()) {
-      case 'OPEN':
-        return 'bg-red-100 text-red-800';
-      case 'IN_PROGRESS':
-        return 'bg-blue-100 text-blue-800';
-      case 'CLOSED':
-        return 'bg-green-100 text-green-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
+  const openCases = nonconformities.filter((nc) => nc.status?.toUpperCase() === 'OPEN').length;
+  const criticalCases = nonconformities.filter((nc) => nc.severity?.toUpperCase() === 'CRITICAL').length;
+  const dueCases = nonconformities.filter((nc) => Boolean(nc.dueDate)).length;
 
   if (status === 'loading' || loading) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
-          <p className="text-gray-600">Loading non-conformities...</p>
-        </div>
+      <div className="section-stack">
+        <section className="surface-card flex min-h-[320px] items-center justify-center p-8">
+          <div className="text-center">
+            <div className="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-slate-200 border-t-cyan-700" />
+            <p className="mt-4 text-sm text-slate-600">Loading non-conformity register...</p>
+          </div>
+        </section>
       </div>
     );
   }
@@ -111,42 +93,58 @@ export default function NonConformityPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
+    <div className="section-stack">
+      <WorkspaceHero
+        eyebrow="Quality Workspace"
+        title="Non-Conformities"
+        subtitle="Review audit findings, severity, status, and closure deadlines from the active register so CAPA ownership and follow-up stay visible."
+        highlights={[
+          { label: 'Registered Cases', value: nonconformities.length, detail: 'Non-conformity records currently available in the register.' },
+          { label: 'Open Cases', value: openCases, detail: 'Items still open and requiring closure action.' },
+          { label: 'Critical Severity', value: criticalCases, detail: 'Immediate-priority findings requiring management attention.' },
+          { label: 'With Due Dates', value: dueCases, detail: 'Cases already assigned a tracked closure deadline.' },
+        ]}
+        helperLinks={[
+          { href: '/quality/qmr-dashboard', label: 'QMR Dashboard' },
+          { href: '/hgqs/audits', label: 'Audit Management' },
+          { href: '/quality/risks', label: 'Risk Register' },
+        ]}
+        actions={(
+          <>
             <Link
               href="/dashboard"
-              className="inline-flex items-center justify-center w-10 h-10 rounded-lg hover:bg-gray-200 transition-colors"
+              className="inline-flex items-center gap-2 rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-cyan-300 hover:text-cyan-700"
             >
-              <ArrowLeft className="w-5 h-5" />
+              <ArrowLeft className="h-4 w-4" />
+              Dashboard
             </Link>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Non-Conformities</h1>
-              <p className="text-gray-600 mt-1">Review audit findings, severity, status, and closure deadlines from the active register.</p>
-            </div>
-          </div>
-        </div>
+            <Link
+              href="/hgqs/audits"
+              className="inline-flex items-center gap-2 rounded-full bg-cyan-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-800"
+            >
+              <Plus className="h-4 w-4" />
+              Audit Management
+            </Link>
+          </>
+        )}
+      />
 
-        <div className="mb-6 rounded-xl border border-amber-100 bg-amber-50 px-5 py-4 text-sm text-amber-900">
-          Use this page to review findings that have already been recorded. If the list is empty, continue from Audit Management to create or open the related audit.
-        </div>
+      <div className="rounded-3xl border border-amber-100 bg-amber-50 px-5 py-4 text-sm text-amber-900">
+        Use this page to review findings that have already been recorded. If the list is empty, continue from Audit Management to create or open the related audit.
+      </div>
 
-        {/* Error Message */}
-        {error && (
-          <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
+      {error && (
+        <div className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4">
             <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
             <div>
               <h3 className="font-semibold text-red-900">Error</h3>
               <p className="text-red-700">{error}</p>
             </div>
-          </div>
-        )}
+        </div>
+      )}
 
-        {/* Content */}
-        {nonconformities.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-12 text-center">
+      {nonconformities.length === 0 ? (
+        <div className="surface-card p-12 text-center">
             <AlertCircle className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-700 mb-2">No Non-Conformities Found</h3>
             <p className="text-gray-600 mb-6">
@@ -159,9 +157,9 @@ export default function NonConformityPage() {
               <Plus className="w-5 h-5" />
               Open Audit Management
             </Link>
-          </div>
-        ) : (
-          <div className="bg-white rounded-lg shadow overflow-hidden">
+        </div>
+      ) : (
+        <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
             <table className="w-full">
               <thead className="bg-gray-50 border-b">
                 <tr>
@@ -177,14 +175,10 @@ export default function NonConformityPage() {
                   <tr key={nc.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 text-sm text-gray-900">{nc.description}</td>
                     <td className="px-6 py-4 text-sm">
-                      <span className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${getSeverityColor(nc.severity)}`}>
-                        {nc.severity}
-                      </span>
+                      <StatusBadge status={nc.severity} />
                     </td>
                     <td className="px-6 py-4 text-sm">
-                      <span className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(nc.status)}`}>
-                        {nc.status}
-                      </span>
+                      <StatusBadge status={nc.status} />
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600">
                       {nc.dueDate ? new Date(nc.dueDate).toLocaleDateString() : '-'}
@@ -196,9 +190,8 @@ export default function NonConformityPage() {
                 ))}
               </tbody>
             </table>
-          </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

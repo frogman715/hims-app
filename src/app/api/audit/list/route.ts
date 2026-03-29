@@ -3,12 +3,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { authOptions } from '@/lib/auth';
 import * as auditService from '@/lib/audit/service';
 import { ComplianceAuditStatus, ComplianceAuditType } from '@prisma/client';
+import { checkPermission, PermissionLevel } from '@/lib/permission-middleware';
 
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    if (!checkPermission(session, 'quality', PermissionLevel.EDIT_ACCESS)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const data = await req.json();
@@ -44,6 +49,10 @@ export async function GET(req: NextRequest) {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    if (!checkPermission(session, 'quality', PermissionLevel.VIEW_ACCESS)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const { searchParams } = new URL(req.url);

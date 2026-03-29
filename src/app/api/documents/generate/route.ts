@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import puppeteer from 'puppeteer';
 import { checkPermission, PermissionLevel } from "@/lib/permission-middleware";
+import { getOfficeSafePdfError } from "@/lib/pdf-generator";
 
 type DocumentRequestType = "pkl_contract" | "sea_agreement" | "crew_certificate" | "dispatch_letter";
 
@@ -134,25 +135,43 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate PDF using Puppeteer
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
-    });
+    let browser;
+    let pdfBuffer;
+    try {
+      browser = await puppeteer.launch({
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+      });
 
-    const page = await browser.newPage();
-    await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
-    const pdfBuffer = await page.pdf({
-      format: 'A4',
-      printBackground: true,
-      margin: {
-        top: '20mm',
-        right: '15mm',
-        bottom: '20mm',
-        left: '15mm'
+      const page = await browser.newPage();
+      await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+      pdfBuffer = await page.pdf({
+        format: 'A4',
+        printBackground: true,
+        margin: {
+          top: '20mm',
+          right: '15mm',
+          bottom: '20mm',
+          left: '15mm'
+        }
+      });
+    } catch (pdfError) {
+      console.error("Error generating document PDF:", {
+        type: parsedBody.type,
+        id: parsedBody.id,
+        error: pdfError instanceof Error ? pdfError.message : String(pdfError),
+        officeSafeError: getOfficeSafePdfError(pdfError),
+        timestamp: new Date().toISOString(),
+      });
+      return NextResponse.json(
+        { error: getOfficeSafePdfError(pdfError) },
+        { status: 503 }
+      );
+    } finally {
+      if (browser) {
+        await browser.close();
       }
-    });
-
-    await browser.close();
+    }
 
     // Return PDF as response
     return new NextResponse(Buffer.from(pdfBuffer), {
@@ -163,9 +182,13 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error("Error generating document:", error);
+    console.error("Error generating document:", {
+      error: error instanceof Error ? error.message : String(error),
+      officeSafeError: getOfficeSafePdfError(error),
+      timestamp: new Date().toISOString(),
+    });
     return NextResponse.json(
-      { error: "Failed to generate document" },
+      { error: getOfficeSafePdfError(error) || "Failed to generate document" },
       { status: 500 }
     );
   }

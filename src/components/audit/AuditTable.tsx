@@ -1,6 +1,7 @@
 'use client';
 
 import { Eye, Edit2 } from 'lucide-react';
+import { StatusBadge } from '@/components/ui/StatusBadge';
 
 interface Audit {
   id: string;
@@ -15,39 +16,9 @@ interface Audit {
 
 interface AuditTableProps {
   audits: Audit[];
-  onEdit: (audit: Audit) => void;
+  onEdit?: (audit: Audit) => void;
   onView: (auditId: string) => void;
 }
-
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'PLANNED':
-      return 'bg-blue-100 text-blue-800';
-    case 'IN_PROGRESS':
-      return 'bg-yellow-100 text-yellow-800';
-    case 'COMPLETED':
-      return 'bg-green-100 text-green-800';
-    case 'CLOSED':
-      return 'bg-gray-100 text-gray-800';
-    default:
-      return 'bg-gray-100 text-gray-800';
-  }
-};
-
-const getTypeColor = (type: string) => {
-  switch (type) {
-    case 'INTERNAL':
-      return 'bg-purple-100 text-purple-800';
-    case 'EXTERNAL':
-      return 'bg-orange-100 text-orange-800';
-    case 'COMPLIANCE':
-      return 'bg-red-100 text-red-800';
-    case 'MANAGEMENT_REVIEW':
-      return 'bg-indigo-100 text-indigo-800';
-    default:
-      return 'bg-gray-100 text-gray-800';
-  }
-};
 
 const formatDate = (dateString: string) => {
   if (!dateString) return '-';
@@ -92,14 +63,10 @@ export default function AuditTable({
                 {audit.auditNumber}
               </td>
               <td className="px-6 py-4 text-sm">
-                <span className={`px-3 py-1 rounded-full text-xs font-medium ${getTypeColor(audit.auditType)}`}>
-                  {audit.auditType}
-                </span>
+                <StatusBadge status={audit.auditType} />
               </td>
               <td className="px-6 py-4 text-sm">
-                <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(audit.status)}`}>
-                  {audit.status}
-                </span>
+                <StatusBadge status={audit.status} />
               </td>
               <td className="px-6 py-4 text-sm text-gray-700">
                 {formatDate(audit.auditDate)}
@@ -113,13 +80,15 @@ export default function AuditTable({
                   >
                     <Eye size={16} />
                   </button>
-                  <button
-                    onClick={() => onEdit(audit)}
-                    className="p-2 text-green-600 hover:bg-green-50 rounded"
-                    title="Edit"
-                  >
-                    <Edit2 size={16} />
-                  </button>
+                  {onEdit ? (
+                    <button
+                      onClick={() => onEdit(audit)}
+                      className="p-2 text-green-600 hover:bg-green-50 rounded"
+                      title="Edit"
+                    >
+                      <Edit2 size={16} />
+                    </button>
+                  ) : null}
                 </div>
               </td>
             </tr>

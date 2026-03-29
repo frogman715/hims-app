@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { prisma } from '@/lib/prisma';
 import { authOptions } from '@/lib/auth';
+import { hasExplicitRoleAccess } from '@/lib/authorization';
 
 export async function GET(
   request: NextRequest,
@@ -60,7 +61,16 @@ export async function PUT(
     }
 
     // Only QMR and higher can update forms
-    if (!['QMR', 'CDMO', 'DIRECTOR'].includes(session.user.role || '')) {
+    if (
+      !hasExplicitRoleAccess(
+        {
+          roles: session.user.roles,
+          role: session.user.role,
+          isSystemAdmin: session.user.isSystemAdmin === true,
+        },
+        ['QMR', 'CDMO', 'DIRECTOR']
+      )
+    ) {
       return NextResponse.json(
         { error: 'Only QMR and above can update forms' },
         { status: 403 }
@@ -111,7 +121,16 @@ export async function DELETE(
     }
 
     // Only CDMO and DIRECTOR can delete forms
-    if (!['CDMO', 'DIRECTOR'].includes(session.user.role || '')) {
+    if (
+      !hasExplicitRoleAccess(
+        {
+          roles: session.user.roles,
+          role: session.user.role,
+          isSystemAdmin: session.user.isSystemAdmin === true,
+        },
+        ['CDMO', 'DIRECTOR']
+      )
+    ) {
       return NextResponse.json(
         { error: 'Only CDMO and above can delete forms' },
         { status: 403 }

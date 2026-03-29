@@ -11,6 +11,9 @@ import {
   type ContractExpiryAlert,
   type ContractLike,
 } from "@/lib/contract-expiry";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 
 interface AssignmentResponseItem {
   id: string | number;
@@ -80,20 +83,6 @@ function formatDate(value?: string) {
   return new Date(value).toLocaleDateString("en-GB");
 }
 
-function getStatusColor(status: CrewMember["status"]) {
-  if (status === "ONBOARD") return "bg-emerald-100 text-emerald-800";
-  if (status === "DEPARTED") return "bg-rose-100 text-rose-800";
-  if (status === "PLANNED") return "bg-sky-100 text-sky-800";
-  return "bg-slate-100 text-slate-700";
-}
-
-function getStatusText(status: CrewMember["status"]) {
-  if (status === "ONBOARD") return "Onboard";
-  if (status === "DEPARTED") return "Departed";
-  if (status === "PLANNED") return "Planned";
-  return "Unknown";
-}
-
 function getNextAction(member: CrewMember) {
   if (member.contractAlert && member.contractAlert.band !== "OK") {
     return member.contractAlert.nextAction;
@@ -152,12 +141,12 @@ export default function CrewListPage() {
       try {
         setError(null);
         const [assignmentsRes, contractsRes] = await Promise.all([fetch("/api/assignments"), fetch("/api/contracts")]);
-        if (!assignmentsRes.ok || !contractsRes.ok) {
+        if (!assignmentsRes.ok) {
           throw new Error("Failed to fetch crew assignments");
         }
 
         const assignments = (await assignmentsRes.json()) as AssignmentResponseItem[];
-        const contracts = (await contractsRes.json()) as ContractResponseItem[];
+        const contracts = contractsRes.ok ? ((await contractsRes.json()) as ContractResponseItem[]) : [];
         const vesselMap = new Map<string, VesselCrew>();
         const contractsByCrew = new Map<string, ContractResponseItem[]>();
 
@@ -254,9 +243,9 @@ export default function CrewListPage() {
 
   if (status === "loading" || loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex flex-col items-center justify-center gap-4">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
-        <p className="text-sm font-semibold text-gray-700">Loading crew list...</p>
+      <div className="flex min-h-[40vh] flex-col items-center justify-center gap-4">
+        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-slate-900" />
+        <p className="text-sm font-semibold text-slate-600">Loading crew list...</p>
       </div>
     );
   }
@@ -267,14 +256,10 @@ export default function CrewListPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-red-800 mb-2">Error Loading Crew List</h3>
-            <p className="text-red-700">{error}</p>
-          </div>
-        </div>
-      </div>
+      <section className="surface-card border-rose-200 bg-rose-50 p-6">
+        <h3 className="text-lg font-semibold text-rose-900">Error Loading Crew List</h3>
+        <p className="mt-2 text-sm text-rose-700">{error}</p>
+      </section>
     );
   }
 
@@ -298,27 +283,26 @@ export default function CrewListPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-center space-x-4">
-              <Link href="/dashboard" className="action-pill text-sm">
-                Back to Dashboard
-              </Link>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">Crew Onboard</h1>
-                <p className="text-gray-800">Monitor onboard crew by vessel using active assignment data.</p>
-              </div>
-            </div>
-            <Link
-              href="/crewing/assignments/new"
-              className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-indigo-600 to-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-md transition hover:shadow-lg"
-            >
-              Create Assignment
+    <div className="section-stack">
+      <section className="surface-card p-7">
+        <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+          <div className="max-w-4xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-indigo-700">Vessel Manning</p>
+            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950">Crew onboard board</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              Monitor onboard, planned, and departed crew by vessel using live assignment data and contract alerts.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <Button type="button" variant="secondary" onClick={() => router.push("/crewing")}>
+              Back to crewing
+            </Button>
+            <Link href="/crewing/assignments/new" className="action-pill text-sm">
+              Create assignment
             </Link>
           </div>
         </div>
+      </section>
 
         <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
           <div className="surface-card p-6">
@@ -343,30 +327,28 @@ export default function CrewListPage() {
           </div>
         </div>
 
-        <div className="mb-8 grid gap-4 lg:grid-cols-[1fr,320px]">
-          <div className="rounded-2xl border border-sky-200 bg-sky-50 p-5">
+      <section className="grid gap-4 lg:grid-cols-[1fr,320px]">
+          <div className="surface-card border-sky-200 bg-sky-50 p-5">
             <p className="text-sm font-semibold text-sky-900">How to use this board</p>
             <p className="mt-1 text-sm text-sky-800">
               This page is generated from active assignment records. Create or update movements from the Transport Assignment page,
               then return here to monitor onboard, planned, and departed crew by vessel.
             </p>
           </div>
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <label htmlFor="crew-list-search" className="block text-sm font-semibold text-slate-900">
-              Search vessel, crew, or rank
-            </label>
-            <input
+          <div className="surface-card p-5">
+            <Input
               id="crew-list-search"
               type="text"
+              label="Search vessel, crew, or rank"
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
               placeholder="Type a keyword"
-              className="mt-2 w-full rounded-lg border border-slate-300 px-4 py-3 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              helperText="Search by vessel name, crew member, or rank to narrow the current board."
             />
           </div>
-        </div>
+      </section>
 
-        <div className="space-y-8">
+        <div className="section-stack">
           {filteredVesselCrews.map((vessel) => (
             <div key={vessel.vesselId} className="surface-card overflow-hidden">
               <div className="bg-gradient-to-r from-indigo-600/95 via-indigo-500/90 to-blue-600/90 px-6 py-4">
@@ -431,9 +413,7 @@ export default function CrewListPage() {
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">{formatDate(member.signOnDate)}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">{formatDate(member.signOffDate)}</td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`inline-flex px-4 py-2 text-xs font-semibold rounded-full ${getStatusColor(member.status)}`}>
-                              {getStatusText(member.status)}
-                            </span>
+                            <StatusBadge status={member.status} className="px-4 py-2" />
                           </td>
                           <td className="px-6 py-4 text-sm">
                             {member.contractAlert ? (
@@ -504,26 +484,22 @@ export default function CrewListPage() {
         </div>
 
         {filteredVesselCrews.length === 0 ? (
-          <div className="text-center py-12">
-            <h3 className="mt-2 text-sm font-medium text-gray-900">
+          <section className="surface-card py-12 text-center">
+            <h3 className="mt-2 text-sm font-medium text-slate-900">
               {vesselCrews.length === 0 ? "No crew data available" : "No crew record matches the current search"}
             </h3>
-            <p className="mt-1 text-sm text-gray-700">
+            <p className="mt-1 text-sm text-slate-600">
               {vesselCrews.length === 0
                 ? "Crew lists are generated automatically from assignment records."
                 : "Adjust the keyword to see more vessels or crew members."}
             </p>
             <div className="mt-6">
-              <Link
-                href="/crewing/assignments/new"
-                className="inline-flex items-center px-4 py-2 border border-transparent shadow-md text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700"
-              >
+              <Link href="/crewing/assignments/new" className="action-pill">
                 Create Assignment
               </Link>
             </div>
-          </div>
+          </section>
         ) : null}
-      </div>
     </div>
   );
 }

@@ -1,9 +1,11 @@
-'use client';
+"use client";
 
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
 import Link from "next/link";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { WorkspaceHero } from "@/components/layout/WorkspaceHero";
+import { Button } from "@/components/ui/Button";
 
 export default function SalaryPage() {
   const { data: session, status } = useSession();
@@ -17,7 +19,16 @@ export default function SalaryPage() {
   }, [session, status, router]);
 
   if (status === "loading") {
-    return <div>Loading...</div>;
+    return (
+      <div className="section-stack">
+        <section className="surface-card flex min-h-[320px] items-center justify-center p-8">
+          <div className="text-center">
+            <div className="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-slate-200 border-t-cyan-700" />
+            <p className="mt-4 text-sm text-slate-600">Loading payroll workspace...</p>
+          </div>
+        </section>
+      </div>
+    );
   }
 
   if (!session) {
@@ -27,132 +38,108 @@ export default function SalaryPage() {
   const summaryCards = [
     {
       title: "Crew Wages",
-      description: "Monthly wage processing",
+      description: "Process contract wages, payroll records, and salary preparation for seafarers.",
       href: "/accounting/wages",
-      icon: "💰",
-      color: "from-green-500 to-green-600",
+      tag: "Payroll",
     },
     {
       title: "Allotments",
-      description: "Family allotment transfers",
+      description: "Maintain family allotment instructions and approved transfer values.",
       href: "/accounting/allotments",
-      icon: "🏦",
-      color: "from-blue-500 to-blue-600",
+      tag: "Transfer",
     },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      {/* Header */}
-      <header className="bg-white backdrop-blur-lg shadow-2xl border-b border-white/20">
-        <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-emerald-600 to-emerald-700 bg-clip-text text-transparent">
-                Crew Salaries & Payroll
-              </h1>
-              <p className="text-lg text-gray-700 mt-2 font-medium">Manage seafarer compensation and payments</p>
-            </div>
+    <div className="section-stack">
+      <WorkspaceHero
+        eyebrow="Payroll Desk"
+        title="Crew Salaries And Payroll"
+        subtitle="Coordinate crew salary administration, wage references, and approved allotment processing from one payroll workspace."
+        helperLinks={[
+          { href: "/accounting", label: "Accounting Workspace" },
+          { href: "/accounting/wages", label: "Wages" },
+          { href: "/accounting/allotments", label: "Allotments" },
+        ]}
+        highlights={[
+          {
+            label: "Linked Modules",
+            value: summaryCards.length,
+            detail: "Core payroll desks available from this workspace.",
+          },
+          {
+            label: "Primary Focus",
+            value: "Crew Payroll",
+            detail: "Monthly pay preparation, wage control, and finance follow-up.",
+          },
+          {
+            label: "Transfer Control",
+            value: "Allotments",
+            detail: "Beneficiary transfer instructions should stay aligned with approved payroll values.",
+          },
+        ]}
+        actions={(
+          <Link href="/accounting">
+            <Button size="sm">Back to Accounting</Button>
+          </Link>
+        )}
+      />
+
+      <section className="surface-card space-y-6 p-6">
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1.7fr)_minmax(280px,0.9fr)]">
+          <div className="rounded-2xl border border-cyan-100 bg-cyan-50/80 p-5">
+            <h2 className="text-base font-semibold text-slate-900">Payroll control note</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-700">
+              Use this hub to access crew payroll functions, maintain wage records, and keep allotment instructions aligned with approved salary administration procedures.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+            <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Desk Scope</h2>
+            <ul className="mt-3 space-y-2 text-sm leading-6 text-slate-700">
+              <li>Review wage processing references.</li>
+              <li>Control family allotment values.</li>
+              <li>Support monthly salary preparation.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-2">
+          {summaryCards.map((card) => (
             <Link
-              href="/accounting"
-              className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-2xl"
+              key={card.href}
+              href={card.href}
+              className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-cyan-300 hover:shadow-md"
             >
-              ← Back to Accounting
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{card.tag}</p>
+              <h3 className="mt-3 text-xl font-semibold text-slate-900">{card.title}</h3>
+              <p className="mt-2 text-sm leading-6 text-slate-600">{card.description}</p>
+              <div className="mt-5 text-sm font-semibold text-cyan-700">Open module</div>
             </Link>
+          ))}
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-2">
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h3 className="text-lg font-semibold text-slate-900">Wage Processing</h3>
+            <ul className="mt-4 space-y-3 text-sm leading-6 text-slate-700">
+              <li>Monthly wage calculations for active crew records.</li>
+              <li>Allowance, overtime, and payroll support references.</li>
+              <li>Operational review before salary release.</li>
+              <li>Coordination with approved finance workflows.</li>
+            </ul>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h3 className="text-lg font-semibold text-slate-900">Allotment Management</h3>
+            <ul className="mt-4 space-y-3 text-sm leading-6 text-slate-700">
+              <li>Maintain beneficiary transfer instructions.</li>
+              <li>Reference active sea contracts when setting values.</li>
+              <li>Keep transfer amounts traceable and current.</li>
+              <li>Support payroll reconciliation and follow-up.</li>
+            </ul>
           </div>
         </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto py-8 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          {/* Info Card */}
-          <div className="bg-white backdrop-blur-md rounded-2xl shadow-lg border border-white p-6 mb-6">
-            <div className="flex items-start gap-4">
-              <div className="text-4xl">👥</div>
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900 mb-2">Salary Management Hub</h2>
-                <p className="text-gray-700 leading-relaxed">
-                  This module provides comprehensive salary management for seafarers. Use the sections below to access
-                  wage processing and allotment transfers. All salary calculations follow MLC 2006 standards and
-                  Indonesian maritime regulations.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Quick Access Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            {summaryCards.map((card) => (
-              <Link
-                key={card.href}
-                href={card.href}
-                className="bg-white backdrop-blur-md rounded-2xl shadow-lg border border-white p-8 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1"
-              >
-                <div className="flex items-start gap-4">
-                  <div className="text-5xl">{card.icon}</div>
-                  <div className="flex-1">
-                    <h3 className={`text-2xl font-bold bg-gradient-to-r ${card.color} bg-clip-text text-transparent mb-2`}>
-                      {card.title}
-                    </h3>
-                    <p className="text-gray-600 text-base">{card.description}</p>
-                    <div className="mt-4 text-blue-600 font-medium flex items-center gap-2">
-                      Open Module
-                      <span>→</span>
-                    </div>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-
-          {/* Information Sections */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white backdrop-blur-md rounded-2xl shadow-lg border border-white p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">📋 Wage Processing</h3>
-              <ul className="space-y-2 text-gray-700 text-sm">
-                <li className="flex items-start gap-2">
-                  <span className="text-green-600 mt-1">✓</span>
-                  <span>Monthly wage calculations for active crew</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-green-600 mt-1">✓</span>
-                  <span>Automatic currency conversion and exchange rates</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-green-600 mt-1">✓</span>
-                  <span>Overtime and special allowances tracking</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-green-600 mt-1">✓</span>
-                  <span>Payment status monitoring and approval workflow</span>
-                </li>
-              </ul>
-            </div>
-
-            <div className="bg-white backdrop-blur-md rounded-2xl shadow-lg border border-white p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">🏦 Allotment Management</h3>
-              <ul className="space-y-2 text-gray-700 text-sm">
-                <li className="flex items-start gap-2">
-                  <span className="text-blue-600 mt-1">✓</span>
-                  <span>Family allotment transfers to beneficiaries</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-blue-600 mt-1">✓</span>
-                  <span>Bank account details and transfer records</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-blue-600 mt-1">✓</span>
-                  <span>Automatic percentage or fixed amount calculations</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-blue-600 mt-1">✓</span>
-                  <span>Transfer history and proof of payment</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </main>
+      </section>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { InlineNotice } from "@/components/feedback/InlineNotice";
 import { DOCUMENT_TYPES } from "@/lib/document-types";
 
 type FeedbackState = {
@@ -45,14 +46,14 @@ export default function UploadForm() {
     if (!isSupported) {
       return {
         valid: false,
-        message: "Format tidak didukung. Gunakan JPG, PNG, HEIC, atau PDF.",
+        message: "Unsupported file format. Use JPG, PNG, HEIC, or PDF.",
       } as const;
     }
 
     if (candidate.size > maxSizeBytes) {
       return {
         valid: false,
-        message: "Ukuran file terlalu besar (maksimal 10 MB).",
+        message: "File size exceeds the 10 MB limit.",
       } as const;
     }
 
@@ -98,12 +99,12 @@ export default function UploadForm() {
       });
 
       if (!response.ok) {
-        throw new Error("Upload gagal, please coba ulang.");
+        throw new Error("Upload could not be completed. Please try again.");
       }
 
       setFeedback({
         tone: "success",
-        message: "Upload sukses! Dokumen akan diverifikasi oleh staff kantor.",
+        message: "Upload completed. The office team will verify this document before it is cleared.",
       });
       setProgress(100);
       setFile(null);
@@ -115,7 +116,7 @@ export default function UploadForm() {
         resetProgressTimer();
       }, 1000);
     } catch (error: unknown) {
-      const details = error instanceof Error ? error.message : "Terjadi kesalahan yang tidak diketahui.";
+      const details = error instanceof Error ? error.message : "An unexpected error occurred during upload.";
       setFeedback({ tone: "error", message: details });
       resetProgressTimer();
       setProgress(null);
@@ -124,12 +125,6 @@ export default function UploadForm() {
       resetProgressTimer();
     }
   };
-
-  const feedbackClasses = {
-    success: "bg-emerald-500/15 text-emerald-300 border border-emerald-400/40",
-    error: "bg-rose-500/15 text-rose-300 border border-rose-400/40",
-    info: "bg-sky-500/15 text-sky-200 border border-sky-400/30",
-  } as const;
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selected = event.target.files?.[0] ?? null;
@@ -156,15 +151,15 @@ export default function UploadForm() {
     <form onSubmit={handleSubmit} className="space-y-5">
       <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-5 shadow-lg">
         <div className="space-y-1.5">
-          <h2 className="text-base font-semibold text-slate-100">Informasi Dokumen</h2>
+          <h2 className="text-base font-semibold text-slate-100">Document Intake</h2>
           <p className="text-sm text-slate-400">
-            Ensure photo is clear and all certificate pages are readable.
+            Submit a clear scan so the office can verify your record without follow-up delay.
           </p>
         </div>
 
         <div className="mt-5 space-y-4">
           <label className="block text-sm font-medium text-slate-200">
-            Jenis Dokumen
+            Document Type
             <select
               value={documentType}
               onChange={(event) => setDocumentType(event.target.value)}
@@ -179,7 +174,7 @@ export default function UploadForm() {
           </label>
 
           <label className="block text-sm font-medium text-slate-200">
-            File Dokumen
+            Document File
             <div className="mt-2 rounded-2xl border border-dashed border-slate-700 bg-slate-950/60 p-5 text-center">
               <input
                 ref={fileInputRef}
@@ -190,11 +185,11 @@ export default function UploadForm() {
                 className="mx-auto block text-sm text-slate-300"
               />
               <p className="mt-3 text-xs text-slate-500">
-                Maksimal 10 MB, format JPG, PNG, atau PDF. Gunakan kamera belakang untuk result terbaik.
+                Maximum 10 MB. Use JPG, PNG, HEIC, or PDF. Use the rear camera for the clearest result.
               </p>
               {file && (
                 <p className="mt-3 text-xs font-medium text-slate-200">
-                  Dipilih: {file.name}
+                  Selected file: {file.name}
                 </p>
               )}
             </div>
@@ -206,7 +201,7 @@ export default function UploadForm() {
           disabled={loading}
           className="mt-6 w-full rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-slate-950 shadow-sm transition hover:bg-emerald-400 focus-visible:ring-2 focus-visible:ring-emerald-400 disabled:cursor-not-allowed disabled:bg-emerald-700/40 disabled:text-emerald-200"
         >
-          {loading ? "Mengunggah..." : "Kirim Dokumen"}
+          {loading ? "Uploading..." : "Submit Document"}
         </button>
 
         {progress !== null && (
@@ -226,13 +221,11 @@ export default function UploadForm() {
       </div>
 
       {feedback && (
-        <div
-          role="status"
-          aria-live="polite"
-          className={`rounded-2xl px-4 py-3 text-sm font-medium ${feedbackClasses[feedback.tone]}`}
-        >
-          {feedback.message}
-        </div>
+        <InlineNotice
+          tone={feedback.tone}
+          message={feedback.message}
+          className="border-slate-700/60 bg-slate-900/80 text-slate-100 shadow-none"
+        />
       )}
     </form>
   );

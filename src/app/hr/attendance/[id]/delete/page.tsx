@@ -3,6 +3,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
+import { WorkspaceHero } from '@/components/layout/WorkspaceHero';
+import { WorkspaceLoadingState, WorkspaceState } from '@/components/layout/WorkspaceState';
+import { Button } from '@/components/ui/Button';
+import { StatusBadge } from '@/components/ui/StatusBadge';
 
 interface Attendance {
   id: string;
@@ -20,6 +24,14 @@ interface Attendance {
   };
 }
 
+const ATTENDANCE_STATUS_LABELS: Record<string, string> = {
+  present: 'Present',
+  absent: 'Absent',
+  late: 'Late',
+  'half-day': 'Half Day',
+  leave: 'On Leave',
+};
+
 export default function DeleteAttendancePage() {
   const router = useRouter();
   const params = useParams();
@@ -28,19 +40,23 @@ export default function DeleteAttendancePage() {
   const [attendance, setAttendance] = useState<Attendance | null>(null);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const fetchAttendance = useCallback(async () => {
     try {
+      setErrorMessage(null);
       const response = await fetch(`/api/attendances/${attendanceId}`);
       if (response.ok) {
         const data = await response.json();
         setAttendance(data);
       } else {
         console.error('Failed to fetch attendance');
+        setErrorMessage('Attendance record could not be loaded.');
         router.push('/hr/attendance');
       }
     } catch (error) {
       console.error('Error fetching attendance:', error);
+      setErrorMessage('Attendance record could not be loaded.');
       router.push('/hr/attendance');
     } finally {
       setLoading(false);
@@ -53,6 +69,7 @@ export default function DeleteAttendancePage() {
 
   const handleDelete = async () => {
     setDeleting(true);
+    setErrorMessage(null);
 
     try {
       const response = await fetch(`/api/attendances/${attendanceId}`, {
@@ -63,64 +80,64 @@ export default function DeleteAttendancePage() {
         router.push('/hr/attendance');
       } else {
         const error = await response.json();
-        alert(`Error: ${error.error}`);
+        setErrorMessage(error.error || 'Attendance record could not be deleted.');
       }
     } catch (error) {
       console.error('Error deleting attendance:', error);
-      alert('An error occurred while deleting the attendance record.');
+      setErrorMessage('An error occurred while deleting the attendance record.');
     } finally {
       setDeleting(false);
     }
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-          <p className="mt-4 text-gray-700">Loading attendance record...</p>
-        </div>
-      </div>
-    );
+    return <WorkspaceLoadingState label="Loading attendance record..." />;
   }
 
   if (!attendance) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-2xl text-gray-700">Attendance record not found</div>
-          <Link
-            href="/hr/attendance"
-            className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700"
-          >
-            Back to Attendance
+      <WorkspaceState
+        eyebrow="Attendance Removal"
+        title="Attendance record not available"
+        description="The requested attendance entry could not be found in the HR register. Return to the attendance desk before attempting a removal review."
+        tone="danger"
+        action={(
+          <Link href="/hr/attendance" className="inline-flex items-center rounded-xl bg-cyan-700 px-4 py-3 text-sm font-semibold text-white transition hover:bg-cyan-800">
+            Return to Attendance Desk
           </Link>
-        </div>
-      </div>
+        )}
+      />
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-6">
-      <div className="max-w-2xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Delete Attendance Record</h1>
-              <p className="text-gray-800">Are you sure you want to delete this attendance record?</p>
-            </div>
-            <Link
-              href="/hr/attendance"
-              className="inline-flex items-center px-4 py-2 border border-gray-400 rounded-lg text-sm font-semibold text-gray-900 bg-white hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
-            >
-              ← Back to Attendance
-            </Link>
-          </div>
-        </div>
+    <div className="section-stack">
+      <WorkspaceHero
+        eyebrow="Attendance Removal"
+        title="Delete attendance record"
+        subtitle="Review the entry details carefully before removing this attendance record from the HR register."
+        helperLinks={[
+          { href: '/hr/attendance', label: 'Attendance' },
+          { href: '/hr/employees', label: 'Employee Register' },
+        ]}
+        highlights={[
+          { label: 'Employee', value: attendance.employee.fullName, detail: `${attendance.employee.position} • ${attendance.employee.department}` },
+          { label: 'Work Date', value: new Date(attendance.date).toLocaleDateString('en-GB'), detail: 'Attendance date on this record.' },
+          { label: 'Current Status', value: ATTENDANCE_STATUS_LABELS[attendance.status] ?? attendance.status, detail: 'Delete only if this record should not exist at all.' },
+        ]}
+        actions={(
+          <Link href="/hr/attendance" className="inline-flex items-center rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-cyan-600 hover:text-cyan-800">
+            Back to Attendance
+          </Link>
+        )}
+      />
 
-        {/* Confirmation Card */}
-        <div className="bg-white rounded-xl shadow-lg p-8">
+      <section className="surface-card p-6">
+        <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+          {errorMessage ? (
+            <div className="mb-6 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{errorMessage}</div>
+          ) : null}
+
           <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-6">
             <div className="flex">
               <div className="flex-shrink-0">
@@ -140,59 +157,51 @@ export default function DeleteAttendancePage() {
           </div>
 
           {/* Attendance Details */}
-          <div className="bg-gray-100 rounded-lg p-6 mb-6">
-            <h4 className="text-lg font-medium text-gray-900 mb-4">Attendance Details</h4>
+          <div className="mb-6 rounded-2xl bg-slate-50 p-6">
+            <h4 className="mb-4 text-lg font-medium text-slate-900">Attendance Details</h4>
             <dl className="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
               <div>
                 <dt className="text-sm font-medium text-gray-500">Employee</dt>
-                <dd className="mt-1 text-sm text-gray-900">{attendance.employee.fullName}</dd>
+                <dd className="mt-1 text-sm text-slate-900">{attendance.employee.fullName}</dd>
               </div>
               <div>
                 <dt className="text-sm font-medium text-gray-500">Position</dt>
-                <dd className="mt-1 text-sm text-gray-900">{attendance.employee.position}</dd>
+                <dd className="mt-1 text-sm text-slate-900">{attendance.employee.position}</dd>
               </div>
               <div>
                 <dt className="text-sm font-medium text-gray-500">Department</dt>
-                <dd className="mt-1 text-sm text-gray-900">{attendance.employee.department}</dd>
+                <dd className="mt-1 text-sm text-slate-900">{attendance.employee.department}</dd>
               </div>
               <div>
                 <dt className="text-sm font-medium text-gray-500">Date</dt>
-                <dd className="mt-1 text-sm text-gray-900">{new Date(attendance.date).toLocaleDateString()}</dd>
+                <dd className="mt-1 text-sm text-slate-900">{new Date(attendance.date).toLocaleDateString()}</dd>
               </div>
               <div>
                 <dt className="text-sm font-medium text-gray-500">Check In</dt>
-                <dd className="mt-1 text-sm text-gray-900">
+                <dd className="mt-1 text-sm text-slate-900">
                   {attendance.checkIn ? new Date(attendance.checkIn).toLocaleTimeString() : 'Not recorded'}
                 </dd>
               </div>
               <div>
                 <dt className="text-sm font-medium text-gray-500">Check Out</dt>
-                <dd className="mt-1 text-sm text-gray-900">
+                <dd className="mt-1 text-sm text-slate-900">
                   {attendance.checkOut ? new Date(attendance.checkOut).toLocaleTimeString() : 'Not recorded'}
                 </dd>
               </div>
               <div>
                 <dt className="text-sm font-medium text-gray-500">Status</dt>
-                <dd className="mt-1 text-sm text-gray-900">
-                  <span className={`inline-flex px-4 py-2 text-xs font-semibold rounded-full ${
-                    attendance.status === 'present'
-                      ? 'bg-green-100 text-green-800'
-                      : attendance.status === 'absent'
-                      ? 'bg-red-100 text-red-800'
-                      : attendance.status === 'late'
-                      ? 'bg-yellow-100 text-yellow-800'
-                      : attendance.status === 'half-day'
-                      ? 'bg-orange-100 text-orange-800'
-                      : 'bg-gray-100 text-gray-800'
-                  }`}>
-                    {attendance.status.charAt(0).toUpperCase() + attendance.status.slice(1)}
-                  </span>
+                <dd className="mt-1 text-sm text-slate-900">
+                  <StatusBadge
+                    status={attendance.status}
+                    label={ATTENDANCE_STATUS_LABELS[attendance.status] ?? attendance.status}
+                    className="px-4 py-2"
+                  />
                 </dd>
               </div>
               {attendance.notes && (
                 <div className="sm:col-span-2">
                   <dt className="text-sm font-medium text-gray-500">Notes</dt>
-                  <dd className="mt-1 text-sm text-gray-900">{attendance.notes}</dd>
+                  <dd className="mt-1 text-sm text-slate-900">{attendance.notes}</dd>
                 </div>
               )}
             </dl>
@@ -200,22 +209,15 @@ export default function DeleteAttendancePage() {
 
           {/* Action Buttons */}
           <div className="flex justify-end space-x-4">
-            <Link
-              href="/hr/attendance"
-              className="px-6 py-3 border border-gray-400 rounded-lg text-sm font-semibold text-gray-900 bg-white hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
-            >
-              Cancel
+            <Link href="/hr/attendance" className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50">
+              Return Without Removing
             </Link>
-            <button
-              onClick={handleDelete}
-              disabled={deleting}
-              className="px-6 py-3 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed disabled:cursor-not-allowed transition-colors"
-            >
-              {deleting ? 'Deleting...' : 'Delete Attendance'}
-            </button>
+            <Button type="button" variant="danger" onClick={handleDelete} disabled={deleting} isLoading={deleting}>
+              {deleting ? 'Deleting...' : 'Delete attendance record'}
+            </Button>
           </div>
         </div>
-      </div>
+      </section>
     </div>
   );
 }

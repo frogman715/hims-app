@@ -4,6 +4,7 @@ import {
   type RolePermissionOverride,
   UserRole,
 } from "@/lib/permissions";
+import { normalizeRoleToken } from "@/lib/role-normalization";
 
 type AuthorizationSubject = {
   roles?: string[] | null;
@@ -13,11 +14,12 @@ type AuthorizationSubject = {
 };
 
 function normalizeRole(value: string | null | undefined): UserRole | null {
-  if (!value) {
+  const normalized = normalizeRoleToken(value);
+  if (!normalized) {
     return null;
   }
 
-  const upper = value.toUpperCase();
+  const upper = normalized;
   return Object.values(UserRole).includes(upper as UserRole) ? (upper as UserRole) : null;
 }
 
@@ -80,4 +82,3 @@ export function hasModuleAccess(
     subject.permissionOverrides
   );
 }
-

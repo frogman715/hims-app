@@ -3,6 +3,9 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
+import { canAccessOfficePath } from "@/lib/office-access";
+import { normalizeToUserRoles } from "@/lib/type-guards";
+import { WorkspaceHero } from "@/components/layout/WorkspaceHero";
 
 interface QMRStats {
   pendingAudits: number;
@@ -27,11 +30,25 @@ const defaultStats: QMRStats = {
   overdueItems: 0,
 };
 
+const STAT_CARD_STYLES: Record<string, { border: string; text: string; iconBg: string }> = {
+  blue: { border: "border-sky-300", text: "text-sky-700", iconBg: "bg-sky-100" },
+  orange: { border: "border-amber-300", text: "text-amber-700", iconBg: "bg-amber-100" },
+  purple: { border: "border-violet-300", text: "text-violet-700", iconBg: "bg-violet-100" },
+  red: { border: "border-rose-300", text: "text-rose-700", iconBg: "bg-rose-100" },
+};
+
 export default function QMRDashboard() {
   const { data: session } = useSession();
   const [stats, setStats] = useState<QMRStats>(defaultStats);
   const [tasks, setTasks] = useState<QMRTaskItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const userRoles = normalizeToUserRoles(session?.user?.roles ?? session?.user?.role);
+  const isSystemAdmin = session?.user?.isSystemAdmin === true;
+  const canManageAudits = canAccessOfficePath("/api/quality/audits", userRoles, isSystemAdmin, "POST");
+  const canManageCapa = canAccessOfficePath("/api/quality/corrective-actions", userRoles, isSystemAdmin, "POST");
+  const canManageRisks = canAccessOfficePath("/api/quality/risks", userRoles, isSystemAdmin, "POST");
+  const canManageReviews = canAccessOfficePath("/api/quality/reviews", userRoles, isSystemAdmin, "POST");
 
   useEffect(() => {
     fetchQMRData();
@@ -39,29 +56,45 @@ export default function QMRDashboard() {
 
   const fetchQMRData = async () => {
     try {
-      const [statsRes, tasksRes] = await Promise.all([
+      setLoadError(null);
+      const [statsResult, tasksResult] = await Promise.allSettled([
         fetch("/api/quality/qmr/stats"),
         fetch("/api/quality/qmr/tasks")
       ]);
 
-      if (statsRes.ok) {
-        const rawStats = await statsRes.json();
+      let primaryLoaded = false;
+
+      if (statsResult.status === "fulfilled" && statsResult.value.ok) {
+        const rawStats = await statsResult.value.json();
+        primaryLoaded = true;
         setStats({
           pendingAudits: Number(rawStats.pendingAudits) || 0,
           openCAPAs: Number(rawStats.openCAPAs) || 0,
           pendingApprovals: Number(rawStats.pendingApprovals) || 0,
           overdueItems: Number(rawStats.overdueItems) || 0,
         });
+      } else {
+        setStats(defaultStats);
       }
-      if (tasksRes.ok) {
-        const data = await tasksRes.json();
+
+      if (tasksResult.status === "fulfilled" && tasksResult.value.ok) {
+        const data = await tasksResult.value.json();
         const taskList = Array.isArray(data.tasks)
           ? (data.tasks as QMRTaskItem[])
           : [];
         setTasks(taskList);
+      } else {
+        setTasks([]);
+      }
+
+      if (!primaryLoaded) {
+        setLoadError("Quality dashboard metrics are temporarily unavailable. Task queue remains available when its service responds.");
       }
     } catch (error) {
       console.error("Failed to fetch QMR data:", error);
+      setLoadError("Failed to load QMR dashboard data.");
+      setStats(defaultStats);
+      setTasks([]);
     } finally {
       setLoading(false);
     }
@@ -75,47 +108,55 @@ export default function QMRDashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-4xl font-bold text-gray-900 mb-2">QMR Dashboard</h1>
-              <p className="text-gray-700">Quality Management Representative - {session?.user?.name}</p>
-              <p className="text-sm text-gray-500 mt-1">ISO 9001:2015 & MLC 2006 Quality Management System</p>
-            </div>
-            <div className="text-right">
-              <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 text-white text-3xl">
-                👔
-              </div>
-            </div>
-          </div>
-        </div>
+    <div className="section-stack mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+      <WorkspaceHero
+        eyebrow="Quality Leadership"
+        title="QMR dashboard"
+        subtitle={`Quality Management Representative workspace for audit planning, CAPA control, approvals, and overdue quality issues${session?.user?.name ? ` for ${session.user.name}` : ""}.`}
+        helperLinks={[
+          { href: "/quality/audits", label: "Audits" },
+          { href: "/quality/corrective-actions", label: "Corrective actions" },
+          { href: "/quality/risks", label: "Risks" },
+          { href: "/quality/documents", label: "Documents" },
+        ]}
+        highlights={[
+          { label: "Pending Audits", value: stats.pendingAudits.toLocaleString("id-ID"), detail: "Audit plans and active reviews awaiting action." },
+          { label: "Open CAPAs", value: stats.openCAPAs.toLocaleString("id-ID"), detail: "Corrective actions still owned by the quality function." },
+          { label: "Pending Approvals", value: stats.pendingApprovals.toLocaleString("id-ID"), detail: "Document or quality approvals still in queue." },
+          { label: "Overdue Items", value: stats.overdueItems.toLocaleString("id-ID"), detail: "Quality items outside expected completion timing." },
+        ]}
+      />
 
         {/* Quick Stats */}
         <div className="grid md:grid-cols-4 gap-6 mb-8">
-          {statCards.map((card) => (
+          {statCards.map((card) => {
+            const styles = STAT_CARD_STYLES[card.color];
+            return (
             <Link key={card.title} href={card.link}>
-              <div className={`bg-white rounded-xl shadow-lg hover:shadow-2xl transition-shadow p-6 border-l-4 border-${card.color}-500 cursor-pointer`}>
+              <div className={`rounded-3xl border bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg ${styles.border} cursor-pointer`}>
                 <div className="flex justify-between items-start mb-4">
-                  <div className="text-4xl">{card.icon}</div>
-                  <div className={`text-3xl font-bold text-${card.color}-600`}>{card.value}</div>
+                  <div className={`inline-flex h-12 w-12 items-center justify-center rounded-2xl text-2xl ${styles.iconBg}`}>{card.icon}</div>
+                  <div className={`text-3xl font-bold ${styles.text}`}>{card.value}</div>
                 </div>
                 <h3 className="text-gray-700 font-semibold">{card.title}</h3>
               </div>
             </Link>
-          ))}
+          )})}
         </div>
 
         {/* Main Content Grid */}
         <div className="grid md:grid-cols-2 gap-6 mb-8">
           {/* Pending Tasks */}
-          <div className="bg-white rounded-xl shadow-lg p-6">
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
             <h2 className="text-2xl font-extrabold text-gray-900 mb-6 flex items-center">
               <span className="mr-2">📌</span>
               My Tasks
             </h2>
+            {loadError ? (
+              <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                {loadError}
+              </div>
+            ) : null}
             {loading ? (
               <div className="flex justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -151,40 +192,40 @@ export default function QMRDashboard() {
           </div>
 
           {/* Quick Actions */}
-          <div className="bg-white rounded-xl shadow-lg p-6">
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
             <h2 className="text-2xl font-extrabold text-gray-900 mb-6 flex items-center">
               <span className="mr-2">⚡</span>
               Quick Actions
             </h2>
             <div className="grid grid-cols-2 gap-4">
-              <Link href="/quality/audits/new">
+              <Link href="/quality/audits">
                 <div className="p-4 border-2 border-blue-200 rounded-lg hover:border-blue-400 hover:bg-blue-100 transition-all cursor-pointer text-center">
                   <div className="text-3xl mb-2">📋</div>
-                  <div className="text-sm font-semibold text-gray-800">Schedule Audit</div>
+                  <div className="text-sm font-semibold text-gray-800">{canManageAudits ? "Schedule Audit" : "Review Audits"}</div>
                 </div>
               </Link>
-              <Link href="/quality/corrective-actions/new">
+              <Link href="/quality/corrective-actions">
                 <div className="p-4 border-2 border-orange-200 rounded-lg hover:border-orange-400 hover:bg-orange-50 transition-all cursor-pointer text-center">
                   <div className="text-3xl mb-2">🔧</div>
-                  <div className="text-sm font-semibold text-gray-800">Create CAPA</div>
+                  <div className="text-sm font-semibold text-gray-800">{canManageCapa ? "Create CAPA" : "Review CAPA"}</div>
                 </div>
               </Link>
               <Link href="/quality/risks">
                 <div className="p-4 border-2 border-purple-200 rounded-lg hover:border-purple-400 hover:bg-purple-50 transition-all cursor-pointer text-center">
                   <div className="text-3xl mb-2">⚠️</div>
-                  <div className="text-sm font-semibold text-gray-800">Risk Assessment</div>
+                  <div className="text-sm font-semibold text-gray-800">{canManageRisks ? "Risk Assessment" : "Risk Review"}</div>
                 </div>
               </Link>
-              <Link href="/quality/reviews/new">
+              <Link href="/quality/reviews">
                 <div className="p-4 border-2 border-green-200 rounded-lg hover:border-green-400 hover:bg-green-50 transition-all cursor-pointer text-center">
                   <div className="text-3xl mb-2">📊</div>
-                  <div className="text-sm font-semibold text-gray-800">Management Review</div>
+                  <div className="text-sm font-semibold text-gray-800">{canManageReviews ? "Management Review" : "Review Meetings"}</div>
                 </div>
               </Link>
-              <Link href="/quality/forms">
+              <Link href="/quality/forms/reference">
                 <div className="p-4 border-2 border-cyan-200 rounded-lg hover:border-cyan-400 hover:bg-cyan-50 transition-all cursor-pointer text-center">
                   <div className="text-3xl mb-2">📄</div>
-                  <div className="text-sm font-semibold text-gray-800">HGQS Forms</div>
+                  <div className="text-sm font-semibold text-gray-800">Forms Library</div>
                 </div>
               </Link>
               <Link href="/quality/documents">
@@ -198,8 +239,8 @@ export default function QMRDashboard() {
         </div>
 
         {/* QMR Responsibilities */}
-        <div className="bg-gradient-to-r from-blue-900 via-purple-900 to-blue-900 rounded-xl shadow-2xl p-8 text-white">
-          <h2 className="text-3xl font-bold text-gray-900 mb-6">QMR Core Responsibilities</h2>
+        <div className="rounded-[2rem] border border-slate-200 bg-gradient-to-r from-slate-950 via-slate-900 to-cyan-950 p-8 text-white shadow-2xl">
+          <h2 className="text-3xl font-bold text-white mb-6">QMR Core Responsibilities</h2>
           <div className="grid md:grid-cols-3 gap-6">
             <div>
               <h3 className="font-semibold mb-3 flex items-center">
@@ -240,7 +281,6 @@ export default function QMRDashboard() {
         <div className="mt-8 text-center text-gray-500 text-sm">
           <p>Quality Management Representative Dashboard | ISO 9001:2015 Compliant</p>
         </div>
-      </div>
     </div>
   );
 }

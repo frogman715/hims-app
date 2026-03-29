@@ -2,34 +2,30 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
+import { UserRole } from '@/lib/permissions';
+import { normalizeToUserRoles } from '@/lib/type-guards';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
+import { WorkspaceHero } from '@/components/layout/WorkspaceHero';
 
 interface ApplicationFormData {
   crewId: string;
   position: string;
   vesselType: string;
   principalId: string;
-  vesselId?: string;
   applicationDate: string;
 }
 
 interface Crew {
   id: string;
-  fullName: string;
+  fullName: string | null;
 }
 
 interface Principal {
   id: string;
   name: string;
-}
-
-interface Vessel {
-  id: string;
-  name: string;
-  principalId: string;
-  type?: string;
-  imoNumber?: string;
-  flag?: string;
-  status?: string;
 }
 
 const VESSEL_TYPES = [
@@ -64,8 +60,26 @@ const POSITIONS = [
   'Galley Boy',
 ];
 
+const APPLICATION_ENTRY_STEPS = [
+  {
+    title: '1. Confirm seafarer',
+    detail: 'Use a live seafarer profile that already passed readiness review and is ready for nomination.',
+  },
+  {
+    title: '2. Set nomination scope',
+    detail: 'Record the target rank, principal, and optional vessel segment used for this nomination case.',
+  },
+  {
+    title: '3. Release to workflow',
+    detail: 'After saving, document control continues intake, CV readiness, and director handoff from the application desk.',
+  },
+] as const;
+
 export default function NewApplicationPage() {
   const router = useRouter();
+  const { data: session, status } = useSession();
+  const userRoles = normalizeToUserRoles(session?.user?.roles ?? session?.user?.role);
+  const canManageApplications = userRoles.includes(UserRole.CDMO);
   const [formData, setFormData] = useState<ApplicationFormData>({
     crewId: '',
     position: '',
@@ -75,21 +89,33 @@ export default function NewApplicationPage() {
   });
   const [crew, setCrew] = useState<Crew[]>([]);
   const [principals, setPrincipals] = useState<Principal[]>([]);
-  const [vessels, setVessels] = useState<Vessel[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (status === 'loading') {
+      return;
+    }
+
+    if (!session) {
+      router.push('/auth/signin');
+      return;
+    }
+
+    if (!canManageApplications) {
+      return;
+    }
+
     const fetchData = async () => {
       try {
         const [crewRes, principalsRes] = await Promise.all([
-          fetch('/api/seafarers'),
+          fetch('/api/crewing/seafarers'),
           fetch('/api/principals'),
         ]);
 
         if (crewRes.ok) {
           const crewData = await crewRes.json();
-          setCrew(crewData);
+          setCrew(Array.isArray(crewData?.data) ? crewData.data : []);
         }
 
         if (principalsRes.ok) {
@@ -103,63 +129,16 @@ export default function NewApplicationPage() {
     };
 
     fetchData();
-  }, []);
-
-  // Fetch vessels when principal changes
-  useEffect(() => {
-    const fetchVessels = async () => {
-      if (!formData.principalId) {
-        setVessels([]);
-        // Reset vessel type when principal is cleared
-        setFormData(prev => ({
-          ...prev,
-          vesselId: undefined,
-          vesselType: '',
-        }));
-        return;
-      }
-
-      try {
-        const response = await fetch(`/api/principals/${formData.principalId}/vessels`);
-        if (response.ok) {
-          const data = await response.json();
-          setVessels(data);
-          // Reset vessel selection and type when principal changes
-          setFormData(prev => ({
-            ...prev,
-            vesselId: undefined,
-            vesselType: '',
-          }));
-        }
-      } catch (err) {
-        console.error('Error fetching vessels:', err);
-      }
-    };
-
-    fetchVessels();
-  }, [formData.principalId]);
-
-  // Auto-populate vessel type when vessel is selected
-  useEffect(() => {
-    if (!formData.vesselId || vessels.length === 0) {
-      return;
-    }
-
-    const selectedVessel = vessels.find(v => v.id === formData.vesselId);
-    if (selectedVessel && selectedVessel.type) {
-      console.log('Auto-populating vessel type:', selectedVessel.type, 'for vessel:', selectedVessel.name);
-      setFormData(prev => ({
-        ...prev,
-        vesselType: selectedVessel.type || '',
-      }));
-    } else {
-      console.log('Selected vessel:', selectedVessel);
-      console.log('Available vessels:', vessels);
-    }
-  }, [formData.vesselId, vessels]);
+  }, [canManageApplications, router, session, status]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!canManageApplications) {
+      setError('Nomination intake is limited to Document Staff.');
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -214,12 +193,12 @@ export default function NewApplicationPage() {
 
         router.push('/crewing/applications');
       } else {
-        const errorData = await response.json();
-        setError(errorData.error || 'Failed to create application');
+        const errorData = await response.json().catch(() => null);
+        setError(errorData?.error || 'Failed to create application');
       }
     } catch (err) {
       console.error('Error:', err);
-      setError('Error creating application');
+      setError(err instanceof Error ? err.message : 'Error creating application');
     } finally {
       setLoading(false);
     }
@@ -233,170 +212,165 @@ export default function NewApplicationPage() {
     }));
   };
 
+  if (status === 'loading') {
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center">
+        <div className="text-sm font-medium text-slate-600">Loading application form...</div>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return null;
+  }
+
+  if (!canManageApplications) {
+    return (
+      <div className="section-stack">
+        <WorkspaceHero
+          eyebrow="Nomination Workflow"
+          title="Nomination intake"
+          subtitle="Review only. Nomination intake remains with Document Staff."
+          helperLinks={[
+            { href: '/crewing/applications', label: 'Applications' },
+            { href: '/crewing/workflow', label: 'Workflow' },
+          ]}
+          actions={(
+            <Button type="button" variant="secondary" onClick={() => router.push('/crewing/applications')}>
+              Back to applications
+            </Button>
+          )}
+        />
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <div className="max-w-2xl mx-auto">
-        <div className="bg-white rounded-lg shadow-lg border border-gray-300 p-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-6">Add New Application</h1>
+    <div className="section-stack">
+      <WorkspaceHero
+        eyebrow="Nomination Workflow"
+        title="Create nomination application"
+        subtitle="Use this form only after the crew member is active in the seafarer pool and readiness review is complete."
+        helperLinks={[
+          { href: '/crewing/applications', label: 'Applications' },
+          { href: '/crewing/readiness', label: 'Readiness review' },
+          { href: '/crewing/workflow', label: 'Workflow' },
+        ]}
+        highlights={[
+          { label: 'Entry Owner', value: 'Document Control', detail: 'This intake stays with document control until director handoff.' },
+          { label: 'Required Scope', value: 'Seafarer + Rank + Principal', detail: 'These three fields are the minimum nomination data set.' },
+          { label: 'Downstream Handoff', value: 'Prepare Joining Later', detail: 'Vessel assignment and mobilization happen after principal decision.' },
+        ]}
+        actions={(
+          <Button type="button" variant="secondary" onClick={() => router.push('/crewing/applications')}>
+            Back to applications
+          </Button>
+        )}
+      />
+
+      <section className="surface-card p-8">
+          <div className="mb-6 grid gap-3 md:grid-cols-3">
+            {APPLICATION_ENTRY_STEPS.map((step) => (
+              <div key={step.title} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <p className="text-sm font-semibold text-slate-900">{step.title}</p>
+                <p className="mt-2 text-sm text-slate-600">{step.detail}</p>
+              </div>
+            ))}
+          </div>
+          <p className="mb-6 text-sm text-slate-600">
+            Create a nomination application against a real seafarer, target rank, and principal. Vessel assignment stays in the downstream mobilization flow because this application record does not store vessel linkage yet.
+          </p>
+          <div className="mb-6 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900">
+            Required order: select seafarer, set target position, choose principal, then record the nomination date. Vessel assignment is handled later in mobilization.
+          </div>
 
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+            <div className="mb-6 rounded-lg border border-rose-200 bg-rose-50 p-4 text-rose-700">
               {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Seafarer Selection */}
-            <div>
-              <label htmlFor="crewId" className="block text-sm font-semibold text-gray-900 mb-2">
-                Seafarer *
-              </label>
-              <select
-                id="crewId"
-                name="crewId"
-                required
-                value={formData.crewId}
-                onChange={handleChange}
-                className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="">Select a seafarer</option>
-                {crew.map(c => (
-                  <option key={c.id} value={c.id}>
-                    {c.fullName}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <Select
+              id="crewId"
+              name="crewId"
+              label="Seafarer"
+              required
+              value={formData.crewId}
+              onChange={handleChange}
+              placeholder="Select a seafarer"
+              options={crew.map((member) => ({
+                value: member.id,
+                label: member.fullName?.trim() || `Crew ${member.id}`,
+              }))}
+              helperText="Pick the live seafarer profile that already passed readiness review."
+            />
 
-            {/* Position */}
-            <div>
-              <label htmlFor="position" className="block text-sm font-semibold text-gray-900 mb-2">
-                Applied Position/Rank *
-              </label>
-              <select
-                id="position"
-                name="position"
-                required
-                value={formData.position}
-                onChange={handleChange}
-                className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="">Select position</option>
-                {POSITIONS.map(pos => (
-                  <option key={pos} value={pos}>
-                    {pos}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <Select
+              id="position"
+              name="position"
+              label="Applied Position/Rank"
+              required
+              value={formData.position}
+              onChange={handleChange}
+              placeholder="Select position"
+              options={POSITIONS.map((position) => ({ value: position, label: position }))}
+              helperText="Use the nomination rank being submitted to director and principal."
+            />
 
-            {/* Principal/Company */}
-            <div>
-              <label htmlFor="principalId" className="block text-sm font-semibold text-gray-900 mb-2">
-                Target Principal/Ship Owner *
-              </label>
-              <select
-                id="principalId"
-                name="principalId"
-                required
-                value={formData.principalId}
-                onChange={handleChange}
-                className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="">Select company/principal</option>
-                {principals.map(principal => (
-                  <option key={principal.id} value={principal.id}>
-                    {principal.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <Select
+              id="principalId"
+              name="principalId"
+              label="Target Principal"
+              required
+              value={formData.principalId}
+              onChange={handleChange}
+              placeholder="Select company/principal"
+              options={principals.map((principal) => ({ value: principal.id, label: principal.name }))}
+              helperText="Principal selection is required before this case moves to principal review."
+            />
 
-            {/* Vessel Selection (conditional) */}
-            {formData.principalId && (
-              <div>
-                <label htmlFor="vesselId" className="block text-sm font-semibold text-gray-900 mb-2">
-                  Target Vessel (from selected principal)
-                </label>
-                <select
-                  id="vesselId"
-                  name="vesselId"
-                  value={formData.vesselId || ''}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="">Select vessel (optional)</option>
-                  {vessels.map(vessel => (
-                    <option key={vessel.id} value={vessel.id}>
-                      {vessel.name}
-                    </option>
-                  ))}
-                </select>
-                {vessels.length === 0 && formData.principalId && (
-                  <p className="text-sm text-gray-500 mt-2">No vessels found for this principal</p>
-                )}
-              </div>
-            )}
+            <Select
+              id="vesselType"
+              name="vesselType"
+              label="Vessel Type"
+              value={formData.vesselType}
+              onChange={handleChange}
+              placeholder="Select vessel type (optional)"
+              options={VESSEL_TYPES.map((type) => ({ value: type, label: type }))}
+              helperText="Optional. Use when the nomination is tied to a vessel segment or owner preference."
+            />
 
-            {/* Vessel Type */}
-            <div>
-              <label htmlFor="vesselType" className="block text-sm font-semibold text-gray-900 mb-2">
-                Preferred Vessel Type
-                {formData.vesselId && formData.vesselType && (
-                  <span className="text-xs font-normal text-gray-500 ml-2">(auto-populated from vessel)</span>
-                )}
-              </label>
-              <select
-                id="vesselType"
-                name="vesselType"
-                value={formData.vesselType}
-                onChange={handleChange}
-                className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="">Select vessel type (optional)</option>
-                {VESSEL_TYPES.map(type => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <Input
+              type="date"
+              id="applicationDate"
+              name="applicationDate"
+              label="Nomination Date"
+              required
+              value={formData.applicationDate}
+              onChange={handleChange}
+              helperText="Record the office submission date for this nomination case."
+            />
 
-            {/* Application Date */}
-            <div>
-              <label htmlFor="applicationDate" className="block text-sm font-semibold text-gray-900 mb-2">
-                Application Date *
-              </label>
-              <input
-                type="date"
-                id="applicationDate"
-                name="applicationDate"
-                required
-                value={formData.applicationDate}
-                onChange={handleChange}
-                className="w-full px-4 py-3 text-gray-900 bg-white border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-
-            <div className="flex gap-4 pt-6 border-t border-gray-300 mt-6">
-              <button
+            <div className="mt-6 flex gap-4 border-t border-slate-300 pt-6">
+              <Button
                 type="submit"
-                disabled={loading}
-                className="flex-1 bg-blue-600 text-white font-semibold px-8 py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-md hover:shadow-lg"
+                isLoading={loading}
+                className="flex-1"
               >
-                {loading ? 'Creating...' : 'Create Application'}
-              </button>
-              <button
+                {loading ? 'Creating...' : 'Create nomination'}
+              </Button>
+              <Button
                 type="button"
+                variant="secondary"
                 onClick={() => router.back()}
-                className="flex-1 bg-gray-600 text-white font-semibold px-8 py-3 rounded-lg hover:bg-gray-700 transition-colors shadow-md hover:shadow-lg"
+                className="flex-1"
               >
-                Cancel
-              </button>
+                Close Form
+              </Button>
             </div>
           </form>
-        </div>
-      </div>
+      </section>
     </div>
   );
 }
